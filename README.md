@@ -54,7 +54,7 @@ $$\text{container} \longrightarrow \text{row} \longrightarrow \text{col-*}$$
 
 ---
 
-## 📂 Cấu Trúc Thư Mục
+##  Cấu Trúc Thư Mục
 
 ```text
 fashion-kids/
@@ -72,3 +72,30 @@ fashion-kids/
 ├── content.php              # Khối hiển thị chi tiết và danh sách sản phẩm
 ├── index.php                # Trang chủ điều hướng trung tâm
 └── README.md                # Tài liệu hướng dẫn dự án
+💻 Hướng Dẫn Cài Đặt & Chạy Thử
+Cài đặt môi trường: Đảm bảo máy tính đã cài đặt phần mềm XAMPP (hỗ trợ PHP 7.4 trở lên).
+
+Tải mã nguồn:
+
+Clone repository này về máy hoặc tải file .zip giải nén vào thư mục htdocs của XAMPP:
+
+Bash
+git clone [https://github.com/baovacai-beep/Phattrienweb_vip10.git](https://github.com/baovacai-beep/Phattrienweb_vip10.git) C:/xampp/htdocs/fashion-kids
+Khởi động Server:
+
+Mở XAMPP Control Panel và nhấn Start tại module Apache.
+
+Truy cập ứng dụng:
+
+Mở trình duyệt web và nhập địa chỉ:
+
+Plaintext
+http://localhost/fashion-kids/index.php
+👨‍🏫 Giảng Viên Hướng Dẫn
+Giảng viên: ThS. Đặng Ngọc Hoàng Thành
+
+Email: thanhdnh@ueh.edu.vn
+
+Bộ môn: Phát triển ứng dụng Web
+
+Đơn vị: Khoa Công nghệ thông tin kinh doanh – Trường Đại học Kinh tế TP. Hồ Chí Minh (UEH)
