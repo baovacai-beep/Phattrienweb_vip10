@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Giới Thiệu Dự Án
+## 📖 1. Giới Thiệu Dự Án
 
 **FashionKids** là nền tảng thương mại điện tử chuyên cung cấp các sản phẩm thời trang an toàn, kháng khuẩn dành riêng cho trẻ em (từ sơ sinh đến 6 tuổi). Hệ thống được xây dựng theo mô hình MVC hiện đại kết hợp với cơ chế quản lý dữ liệu toàn vẹn trên hệ quản trị MySQL thông qua 12 Stored Procedures & Functions nghiệp vụ.
 
@@ -21,7 +21,7 @@
 
 ---
 
-## 2. Thành Viên Nhóm & Phân Công Nhiệm Vụ
+## 👥 2. Thành Viên Nhóm & Phân Công Nhiệm Vụ
 
 Dự án áp dụng quy chuẩn tiền tố cá nhân (`<prefix>_<entity/routine>`) để quản lý mã nguồn và cơ sở dữ liệu:
 
@@ -34,7 +34,7 @@ Dự án áp dụng quy chuẩn tiền tố cá nhân (`<prefix>_<entity/routine
 
 ---
 
-## 3. Tính Năng Nổi Bật
+## ✨ 3. Tính Năng Nổi Bật
 
 ### Phân Hệ Khách Hàng (Customer & Guest)
 * **Thuật toán gợi ý size tự động (AJAX Size Recommendation):** Nhập chiều cao hoặc độ dài bàn chân của bé, hệ thống tự động trả về kích cỡ chuẩn dựa trên danh mục sản phẩm tương ứng.
@@ -48,7 +48,7 @@ Dự án áp dụng quy chuẩn tiền tố cá nhân (`<prefix>_<entity/routine
 
 ---
 
-##  4. Hệ Thống Màu Sắc & Thiết Kế Giao Diện
+## 🎨 4. Hệ Thống Màu Sắc & Thiết Kế Giao Diện
 
 Giao diện áp dụng phong cách **Bright Pastel Palette** theo tỷ lệ thị giác **60 - 30 - 10**:
 
@@ -61,7 +61,7 @@ Giao diện áp dụng phong cách **Bright Pastel Palette** theo tỷ lệ th�
 
 ---
 
-##  5. Sơ Đồ Thực Thể Quan Hệ (ERD)
+## 🗄️ 5. Sơ Đồ Thực Thể Quan Hệ (ERD)
 
 Hệ thống gồm **8 bảng thực thể (71 thuộc tính)** và **100% liên kết khép kín**, loại bỏ hoàn toàn tình trạng bảng độc lập:
 
@@ -163,7 +163,9 @@ erDiagram
         boolean is_read
         datetime created_at
     }
-    graph TD
+
+
+graph TD
     ROOT["<b>HỆ THỐNG THỜI TRANG TRẺ EM FASHIONKIDS</b>"]
     
     MOD1["<b>1. QL TÀI KHOẢN & VIP</b><br/><i>Hồ Gia Bảo (hgb_)</i>"]
@@ -199,7 +201,8 @@ erDiagram
     MOD4 --> F43["4.3. Chat trực tuyến tư vấn CSKH"]
     MOD4 --> F44["4.4. Định danh phiên chat khách (Session)"]
     MOD4 --> F45["4.5. Đánh dấu đã đọc & Trả lời tin nhắn"]
-    fashionkids/
+
+fashionkids/
 ├── assets/
 │   ├── css/              # Bảng mã CSS thuần & CSS tùy biến màu Pastel
 │   ├── js/               # Xử lý AJAX gợi ý size, provinces API, chatbox
@@ -224,14 +227,12 @@ erDiagram
 ├── database/
 │   └── fashionkids_db.sql# Kịch bản nạp toàn bộ Bảng và 12 Routines
 └── index.php             # Điểm tiếp nhận trung tâm điều hướng (Router)
-⚙️ 8. Hướng Dẫn Cài Đặt & Chạy Cục Bộ (Local Deployment)Yêu Cầu Môi TrườngMáy chủ Web: XAMPP (khuyến nghị phiên bản PHP $\ge 8.0$)Hệ quản trị CSDL: MariaDB / MySQL 5.7+Trình duyệt: Chrome, Microsoft Edge, FirefoxCác Bước Thực HiệnSao chép mã nguồn về máy:Bashcd C:/xampp/htdocs/
-git clone [https://github.com/](https://github.com/)<tai-khoan-cua-ban>/fashionkids.git
-Cấu hình Cơ sở dữ liệu:Khởi động dịch vụ Apache và MySQL trên phần mềm XAMPP Control Panel.Truy cập phpMyAdmin qua đường dẫn: http://localhost/phpmyadmin/.Tạo cơ sở dữ liệu mới có tên: db_fashionkids10 (chọn bảng mã utf8mb4_unicode_ci).Chọn tab SQL, mở tệp database/fashionkids_db.sql, sao chép toàn bộ nội dung dán vào và bấm Go (Thực hiện).Cấu hình kết nối ứng dụng:Mở tệp config/database.php và kiểm tra thông số kết nối:PHPdefine('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'db_fashionkids10');
-Khởi chạy ứng dụng:Mở trình duyệt web và truy cập địa chỉ:Plaintexthttp://localhost/fashionkids/
-🧪 9. Kiểm Thử Nghiệp Vụ Stored RoutinesKiểm thử nhanh 4 nghiệp vụ cốt lõi trực tiếp trên tab SQL của phpMyAdmin:SQL-- 1. [hgb_] Thêm khách hàng mới và tự động gán Hạng Đồng (0 điểm)
+
+Kiểm Thử Nghiệp Vụ Stored Routines
+Kiểm thử nhanh 4 nghiệp vụ cốt lõi trực tiếp trên tab SQL của phpMyAdmin:
+
+SQL
+-- 1. [hgb_] Thêm khách hàng mới và tự động gán Hạng Đồng (0 điểm)
 CALL hgb_insert_user('baobao', 'hashpass123', 'Hồ Gia Bảo', 'bao.ho@ueh.edu.vn', '0901234567', 'TP.HCM', 'customer');
 
 -- 2. [hgb_] Cộng 1.600 điểm tích lũy -> Hệ thống tự động nâng hạng lên Vàng (Gold)
@@ -242,4 +243,5 @@ SELECT lnkt_suggest_size('clothing', 'girl', 95.0) AS size_de_xuat;
 
 -- 4. [tgb_] Đánh dấu toàn bộ tin nhắn trong phiên tư vấn là đã đọc
 CALL tgb_mark_chat_as_read('sess_client_999');
-📜 10. Bản Quyền & Giấy PhépDự án được xây dựng phục vụ mục đích học tập và báo cáo học phần Công nghệ Web tại Trường Đại học Kinh tế TP. Hồ Chí Minh (UEH). Toàn bộ mã nguồn mở được phát hành theo giấy phép MIT License.
+ Bản Quyền & Giấy Phép
+Dự án được xây dựng phục vụ mục đích học tập và báo cáo học phần Công nghệ Web tại Trường Đại học Kinh tế TP. Hồ Chí Minh (UEH). Toàn bộ mã nguồn mở được phát hành theo giấy phép MIT License.
