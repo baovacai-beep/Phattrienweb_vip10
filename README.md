@@ -163,3 +163,83 @@ erDiagram
         boolean is_read
         datetime created_at
     }
+    graph TD
+    ROOT["<b>HỆ THỐNG THỜI TRANG TRẺ EM FASHIONKIDS</b>"]
+    
+    MOD1["<b>1. QL TÀI KHOẢN & VIP</b><br/><i>Hồ Gia Bảo (hgb_)</i>"]
+    MOD2["<b>2. QL DANH MỤC & KHO</b><br/><i>Lê Bảo Ngọc (lbn_)</i>"]
+    MOD3["<b>3. BÁN HÀNG & SIZE</b><br/><i>L.N. Khánh Trình (lnkt_)</i>"]
+    MOD4["<b>4. ĐƠN HÀNG & CSKH</b><br/><i>Trần Gia Bảo (tgb_)</i>"]
+
+    ROOT --> MOD1
+    ROOT --> MOD2
+    ROOT --> MOD3
+    ROOT --> MOD4
+
+    MOD1 --> F11["1.1. Đăng ký & Đăng nhập (Auth)"]
+    MOD1 --> F12["1.2. Quản lý hồ sơ & Địa chỉ nhận hàng"]
+    MOD1 --> F13["1.3. Tự động tích lũy điểm mua hàng"]
+    MOD1 --> F14["1.4. Phân hạng & Thăng hạng thẻ VIP"]
+    MOD1 --> F15["1.5. Phân quyền Admin / Staff / User"]
+
+    MOD2 --> F21["2.1. Phân nhóm danh mục (Trai/Gái/Unisex)"]
+    MOD2 --> F22["2.2. Quản lý sản phẩm thời trang & Giá bán"]
+    MOD2 --> F23["2.3. Quản lý số lượng tồn kho (Stock)"]
+    MOD2 --> F24["2.4. Công bố thông tin an toàn da bé"]
+    MOD2 --> F25["2.5. Thống kê sản phẩm theo danh mục"]
+
+    MOD3 --> F31["3.1. Quản lý quy chuẩn size theo danh mục"]
+    MOD3 --> F32["3.2. Thuật toán gợi ý size tự động (AJAX)"]
+    MOD3 --> F33["3.3. Giỏ hàng & Tự động giảm giá VIP"]
+    MOD3 --> F34["3.4. Đặt hàng & Tích hợp Tỉnh/Huyện API"]
+    MOD3 --> F35["3.5. Xử lý & Cập nhật trạng thái đơn"]
+
+    MOD4 --> F41["4.1. Chi tiết dòng món đặt (Order Items)"]
+    MOD4 --> F42["4.2. Tự động trừ tồn kho khi chốt đơn"]
+    MOD4 --> F43["4.3. Chat trực tuyến tư vấn CSKH"]
+    MOD4 --> F44["4.4. Định danh phiên chat khách (Session)"]
+    MOD4 --> F45["4.5. Đánh dấu đã đọc & Trả lời tin nhắn"]
+    fashionkids/
+├── assets/
+│   ├── css/              # Bảng mã CSS thuần & CSS tùy biến màu Pastel
+│   ├── js/               # Xử lý AJAX gợi ý size, provinces API, chatbox
+│   └── images/           # Ảnh icon, banner thương hiệu
+├── config/
+│   └── database.php      # Kết nối CSDL MySQL (PDO/MySQLi UTF-8)
+├── controllers/          # Bộ điều khiển tiếp nhận yêu cầu (MVC)
+│   ├── AuthController.php
+│   ├── ProductController.php
+│   ├── OrderController.php
+│   └── ChatController.php
+├── models/               # Xử lý dữ liệu & gọi Stored Procedures / Functions
+│   ├── UserModel.php
+│   ├── ProductModel.php
+│   ├── OrderModel.php
+│   └── ChatModel.php
+├── views/                # Giao diện người dùng
+│   ├── client/           # 9 Màn hình phía Khách hàng
+│   ├── staff/            # 2 Màn hình phía Nhân viên
+│   └── admin/            # 4 Màn hình Quản trị viên
+├── uploads/              # Thư mục lưu trữ hình ảnh sản phẩm tải lên
+├── database/
+│   └── fashionkids_db.sql# Kịch bản nạp toàn bộ Bảng và 12 Routines
+└── index.php             # Điểm tiếp nhận trung tâm điều hướng (Router)
+⚙️ 8. Hướng Dẫn Cài Đặt & Chạy Cục Bộ (Local Deployment)Yêu Cầu Môi TrườngMáy chủ Web: XAMPP (khuyến nghị phiên bản PHP $\ge 8.0$)Hệ quản trị CSDL: MariaDB / MySQL 5.7+Trình duyệt: Chrome, Microsoft Edge, FirefoxCác Bước Thực HiệnSao chép mã nguồn về máy:Bashcd C:/xampp/htdocs/
+git clone [https://github.com/](https://github.com/)<tai-khoan-cua-ban>/fashionkids.git
+Cấu hình Cơ sở dữ liệu:Khởi động dịch vụ Apache và MySQL trên phần mềm XAMPP Control Panel.Truy cập phpMyAdmin qua đường dẫn: http://localhost/phpmyadmin/.Tạo cơ sở dữ liệu mới có tên: db_fashionkids10 (chọn bảng mã utf8mb4_unicode_ci).Chọn tab SQL, mở tệp database/fashionkids_db.sql, sao chép toàn bộ nội dung dán vào và bấm Go (Thực hiện).Cấu hình kết nối ứng dụng:Mở tệp config/database.php và kiểm tra thông số kết nối:PHPdefine('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'db_fashionkids10');
+Khởi chạy ứng dụng:Mở trình duyệt web và truy cập địa chỉ:Plaintexthttp://localhost/fashionkids/
+🧪 9. Kiểm Thử Nghiệp Vụ Stored RoutinesKiểm thử nhanh 4 nghiệp vụ cốt lõi trực tiếp trên tab SQL của phpMyAdmin:SQL-- 1. [hgb_] Thêm khách hàng mới và tự động gán Hạng Đồng (0 điểm)
+CALL hgb_insert_user('baobao', 'hashpass123', 'Hồ Gia Bảo', 'bao.ho@ueh.edu.vn', '0901234567', 'TP.HCM', 'customer');
+
+-- 2. [hgb_] Cộng 1.600 điểm tích lũy -> Hệ thống tự động nâng hạng lên Vàng (Gold)
+CALL hgb_update_user_points(1, 1600);
+
+-- 3. [lnkt_] Tra cứu thuật toán gợi ý size quần áo cho bé gái cao 95cm
+SELECT lnkt_suggest_size('clothing', 'girl', 95.0) AS size_de_xuat;
+
+-- 4. [tgb_] Đánh dấu toàn bộ tin nhắn trong phiên tư vấn là đã đọc
+CALL tgb_mark_chat_as_read('sess_client_999');
+📜 10. Bản Quyền & Giấy PhépDự án được xây dựng phục vụ mục đích học tập và báo cáo học phần Công nghệ Web tại Trường Đại học Kinh tế TP. Hồ Chí Minh (UEH). Toàn bộ mã nguồn mở được phát hành theo giấy phép MIT License.
