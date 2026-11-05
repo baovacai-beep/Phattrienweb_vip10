@@ -1,1 +1,259 @@
 ﻿
+/* ==========================================================================
+   FASHIONKIDS D2C E-COMMERCE - BRIGHT PASTEL PALETTE (60-30-10)
+   Tac gia: Ho Gia Bao (Nhom truong - Nhom 10 UEH)
+   ========================================================================== */
+
+:root {
+    /* 60% Nen tang chu dao */
+    --bg-milk-cream: #FAF8F5;          /* Nen toan trang web, diu mat */
+    
+    /* 25% Diem nhan thuong hieu & CTA */
+    --primary-peach: #FF9E93;          /* Mau cam dao thuong hieu */
+    --primary-peach-hover: #ff8578;    /* Trang thai Hover */
+    
+    /* 5% Diem nhan gioi tinh & thuoc do */
+    --secondary-sky: #A8DADC;          /* Xanh da troi pastel */
+    --secondary-sky-hover: #8ecae6;
+    
+    /* 5% Diem nhan chung thuc an toan */
+    --accent-mint: #B8E0D2;            /* Xanh bac ha huu co */
+    --accent-mint-dark: #234E52;
+    
+    /* 5% Diem nhan danh gia & VIP Gold */
+    --accent-buttercup: #FDE2B8;       /* Vang bo */
+    --accent-gold-dark: #8C6D1F;
+    
+    /* Chu & Vien tuong phan cao WCAG 2.1 */
+    --text-slate: #3D4852;             /* Mau chu tieu de & noi dung */
+    --text-muted-custom: #718096;      /* Mau chu phu, chu thich */
+    --card-radius: 16px;               /* Bo goc the mem mai */
+    --btn-radius: 50px;                /* Bo tron pill-button */
+}
+
+/* Base Body Styling */
+body {
+    background-color: var(--bg-milk-cream);
+    color: var(--text-slate);
+    font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.6;
+}
+
+/* Background Utility Classes */
+.bg-milk-cream {
+    background-color: var(--bg-milk-cream);
+}
+.bg-peach {
+    background-color: var(--primary-peach);
+}
+.bg-mint-soft {
+    background-color: var(--accent-mint);
+}
+.bg-buttercup-soft {
+    background-color: var(--accent-buttercup);
+}
+
+/* Text Colors */
+.text-peach {
+    color: var(--primary-peach) !important;
+}
+.text-slate {
+    color: var(--text-slate) !important;
+}
+.text-muted-custom {
+    color: var(--text-muted-custom) !important;
+}
+.text-mint-dark {
+    color: var(--accent-mint-dark) !important;
+}
+
+/* Custom Buttons - Chuan Bright Pastel */
+.btn-pastel-primary {
+    background-color: var(--primary-peach);
+    color: #ffffff !important;
+    font-weight: 600;
+    border-radius: var(--btn-radius);
+    border: none;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+}
+.btn-pastel-primary:hover {
+    background-color: var(--primary-peach-hover);
+    box-shadow: 0 4px 14px rgba(255, 158, 147, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-pastel-outline {
+    background-color: transparent;
+    border: 2px solid var(--primary-peach);
+    color: var(--primary-peach) !important;
+    font-weight: 600;
+    border-radius: var(--btn-radius);
+    padding: 8px 22px;
+    transition: all 0.3s ease;
+}
+.btn-pastel-outline:hover {
+    background-color: var(--primary-peach);
+    color: #ffffff !important;
+}
+
+.btn-pastel-sky {
+    background-color: var(--secondary-sky);
+    color: var(--text-slate) !important;
+    font-weight: 600;
+    border-radius: var(--btn-radius);
+    border: none;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+}
+.btn-pastel-sky:hover {
+    background-color: var(--secondary-sky-hover);
+    transform: translateY(-2px);
+}
+
+/* Card Pastel Bo Tron 16px */
+.card-pastel {
+    background-color: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-pastel:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(61, 72, 82, 0.08);
+}
+
+/* Navbar Custom Component */
+.navbar-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+.brand-logo {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--primary-peach);
+    letter-spacing: -0.5px;
+}
+.search-input-custom {
+    border-radius: var(--btn-radius) 0 0 var(--btn-radius);
+    border-right: none;
+}
+.search-btn-custom {
+    border-radius: 0 var(--btn-radius) var(--btn-radius) 0;
+    border-left: none;
+    background-color: #ffffff;
+    color: var(--primary-peach);
+}
+.cart-badge-custom {
+    background-color: var(--primary-peach);
+    color: #ffffff;
+    font-size: 0.75rem;
+}
+.dropdown-menu-custom {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Nav Tabs Pill Switcher */
+.nav-pills-custom {
+    background-color: var(--bg-milk-cream);
+    padding: 6px;
+    border-radius: var(--btn-radius);
+}
+.nav-pills-custom .nav-link {
+    border-radius: var(--btn-radius);
+    color: var(--text-muted-custom);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+}
+.nav-pills-custom .nav-link.active {
+    background-color: var(--primary-peach);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(255, 158, 147, 0.35);
+}
+
+/* O Nhap Ma OTP 6 So (MH 20) */
+.otp-box {
+    width: 48px;
+    height: 56px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    color: var(--text-slate);
+    transition: all 0.2s ease;
+}
+.otp-box:focus {
+    border-color: var(--primary-peach);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 158, 147, 0.25);
+    background-color: #ffffff;
+}
+
+/* The VIP Dien Tu 4 Cap Bac (MH 07) */
+.vip-card-box {
+    border-radius: 20px;
+    color: #ffffff;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+.vip-card-box::after {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+}
+.vip-card-bronze {
+    background: linear-gradient(135deg, #8B5A2B 0%, #CD853F 100%);
+}
+.vip-card-silver {
+    background: linear-gradient(135deg, #708090 0%, #B0C4DE 100%);
+}
+.vip-card-gold {
+    background: linear-gradient(135deg, #D4AF37 0%, #FDE2B8 100%);
+    color: var(--text-slate);
+}
+.vip-card-diamond {
+    background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 50%, #63B3ED 100%);
+}
+
+.vip-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+.vip-divider-gold {
+    border-top: 1px solid rgba(61, 72, 82, 0.25);
+}
+
+/* Badges Chuyen Dung */
+.badge-mint {
+    background-color: var(--accent-mint);
+    color: var(--accent-mint-dark);
+    font-weight: 700;
+}
+.badge-gold {
+    background-color: var(--accent-buttercup);
+    color: var(--accent-gold-dark);
+    font-weight: 700;
+}
+.badge-sky {
+    background-color: var(--secondary-sky);
+    color: #1A365D;
+    font-weight: 700;
+}
+
+/* Footer & Support Banner */
+.footer-support-box {
+    background-color: var(--bg-milk-cream);
+    border-left: 4px solid var(--primary-peach);
+    border-radius: 8px;
+}
