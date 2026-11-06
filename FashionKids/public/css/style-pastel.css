@@ -1,4 +1,4 @@
-﻿
+
 /* ==========================================================================
    FASHIONKIDS D2C E-COMMERCE - BRIGHT PASTEL PALETTE (60-30-10)
    Tac gia: Ho Gia Bao (Nhom truong - Nhom 10 UEH)
@@ -256,4 +256,222 @@ body {
     background-color: var(--bg-milk-cream);
     border-left: 4px solid var(--primary-peach);
     border-radius: 8px;
+}
+
+
+/* ==========================================================================
+   PHÂN HỆ ĐẢM NHIỆM: LÊ NGUYỄN KHÁNH TRÌNH (lnkt_)
+   Homepage Carousel, Size Chart Modal, Checkout, Order Tracking, KOL & Banners
+   ========================================================================== */
+
+/* MH 01: Banner Carousel 4 Giay & Cum Nut Tron Danh Muc */
+.lnkt-carousel-banner {
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(61, 72, 82, 0.08);
+}
+
+.lnkt-slide-summer {
+    background: linear-gradient(135deg, #E6FFFA 0%, #B8E0D2 55%, #A8DADC 100%);
+    min-height: 380px;
+}
+
+.lnkt-slide-kol {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FDE2B8 55%, #FFD6CE 100%);
+    min-height: 380px;
+}
+
+.lnkt-hero-illustration {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.65);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+}
+
+.lnkt-cat-circle {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 16px rgba(61, 72, 82, 0.08);
+}
+
+.lnkt-cat-link:hover .lnkt-cat-circle {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 12px 24px rgba(255, 158, 147, 0.3);
+}
+
+.lnkt-cat-girl {
+    background-color: #FFE3E0;
+    color: #E56B5E;
+}
+
+.lnkt-cat-boy {
+    background-color: var(--secondary-sky);
+    color: #1A365D;
+}
+
+.lnkt-cat-shoes {
+    background-color: var(--accent-buttercup);
+    color: var(--accent-gold-dark);
+}
+
+.lnkt-cat-size {
+    background-color: var(--accent-mint);
+    color: var(--accent-mint-dark);
+}
+
+.lnkt-product-thumb {
+    height: 190px;
+    background: linear-gradient(180deg, #FAF8F5 0%, #F0F4F8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* MH 04: Modal Goi Y Size Thuoc Day - Khung Ket Qua Nen Xanh Mint (#B8E0D2) */
+.lnkt-size-result-box {
+    background-color: var(--accent-mint);
+    color: var(--accent-mint-dark);
+    border-radius: 16px;
+    border: 2px dashed #38B2AC;
+    transition: all 0.3s ease;
+}
+
+/* MH 05: Gio Hang & Thanh Toan */
+.lnkt-qty-input {
+    width: 64px !important;
+    text-align: center;
+    font-weight: 700;
+}
+
+.lnkt-cart-item-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background-color: var(--bg-milk-cream);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* MH 06: Stepper Timeline 5 Buoc Don Hang & Nut Vang Bo (#FDE2B8) */
+.lnkt-stepper-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.lnkt-stepper-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    left: 10%;
+    right: 10%;
+    height: 4px;
+    background-color: #E2E8F0;
+    z-index: 1;
+}
+
+.lnkt-stepper-item {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.lnkt-step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 3px solid #CBD5E0;
+    color: #A0AEC0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.lnkt-stepper-item.completed .lnkt-step-circle {
+    background-color: var(--accent-mint);
+    border-color: #38B2AC;
+    color: var(--accent-mint-dark);
+}
+
+.lnkt-stepper-item.active .lnkt-step-circle {
+    background-color: var(--primary-peach);
+    border-color: var(--primary-peach);
+    color: #ffffff;
+    box-shadow: 0 0 0 5px rgba(255, 158, 147, 0.25);
+}
+
+.lnkt-stepper-item.cancelled .lnkt-step-circle {
+    background-color: #FED7D7;
+    border-color: #E53E3E;
+    color: #9B2C2C;
+}
+
+.btn-buttercup-custom {
+    background-color: var(--accent-buttercup);
+    color: var(--accent-gold-dark) !important;
+    font-weight: 700;
+    border-radius: var(--btn-radius);
+    border: 2px solid #F6AD55;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn-buttercup-custom:hover {
+    background-color: #fbd38d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(246, 173, 85, 0.35);
+}
+
+/* MH 16: Cong Casting KOL Nhi - Khu Vuc Tai Anh (2 - 5 anh) */
+.lnkt-upload-zone {
+    border: 2px dashed var(--primary-peach);
+    border-radius: 16px;
+    background-color: #FFF9F8;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.lnkt-upload-zone:hover {
+    background-color: #FFF0ED;
+    border-color: var(--primary-peach-hover);
+}
+
+.lnkt-preview-card {
+    width: 96px;
+    height: 96px;
+    border-radius: 12px;
+    border: 2px solid #E2E8F0;
+    overflow: hidden;
+    position: relative;
+    background-color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* MH 23: Quan Tri Banner Preview */
+.lnkt-banner-thumb {
+    width: 120px;
+    height: 60px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
