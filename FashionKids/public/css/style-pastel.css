@@ -1,4 +1,4 @@
-﻿
+
 /* ==========================================================================
    FASHIONKIDS D2C E-COMMERCE - BRIGHT PASTEL PALETTE (60-30-10)
    Tac gia: Ho Gia Bao (Nhom truong - Nhom 10 UEH)
@@ -256,4 +256,212 @@ body {
     background-color: var(--bg-milk-cream);
     border-left: 4px solid var(--primary-peach);
     border-radius: 8px;
+}
+
+
+/* ==========================================================================
+   PHÂN HỆ ĐẢM NHIỆM: LÊ BẢO NGỌC (lbn_)
+   Catalog & Multi-Filter (MH 02), Product Detail PDP (MH 03), Admin Inventory (MH 13)
+   ========================================================================== */
+
+/* MH 02: Card San Pham Bo Tron 16px & Hover Nhac Nhe translateY(-5px) */
+.lbn-product-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lbn-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px rgba(61, 72, 82, 0.12);
+}
+
+/* Khung anh dai dien san pham tren luoi Catalog & PDP */
+.lbn-product-img-wrap {
+    height: 220px;
+    background: linear-gradient(145deg, #FAF8F5 0%, #FFF0EE 50%, #EBF8FF 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.lbn-product-img-wrap .lbn-main-icon {
+    font-size: 4.2rem;
+    transition: transform 0.35s ease;
+}
+
+.lbn-product-card:hover .lbn-product-img-wrap .lbn-main-icon {
+    transform: scale(1.08);
+}
+
+/* Huy hieu Vai Soi Tre Khang Khuan (MH 02 & MH 03) */
+.lbn-badge-bamboo {
+    background-color: var(--accent-mint);
+    color: var(--accent-mint-dark);
+    font-weight: 700;
+    font-size: 0.75rem;
+    border-radius: 50px;
+    padding: 5px 12px;
+    box-shadow: 0 2px 8px rgba(35, 78, 82, 0.1);
+}
+
+.lbn-badge-bamboo-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+}
+
+.lbn-badge-gender-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+}
+
+/* Sidebar Bo Loc Da Tieu Chi (MH 02) */
+.lbn-filter-sidebar {
+    border-radius: 16px;
+    background-color: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.lbn-filter-group-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-slate);
+    letter-spacing: 0.2px;
+}
+
+.lbn-cat-filter-item {
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.lbn-cat-filter-item:hover {
+    background-color: var(--bg-milk-cream);
+}
+
+.lbn-cat-filter-item.active {
+    background-color: #FFF5F4;
+    border-color: var(--primary-peach);
+    color: var(--primary-peach);
+    font-weight: 700;
+}
+
+/* Thanh truot khoang gia (Price Range Slider) */
+.lbn-price-slider {
+    accent-color: var(--primary-peach);
+    cursor: pointer;
+}
+
+/* MH 03: Slider Anh San Pham Da Goc Chup (PDP) */
+.lbn-pdp-slider-main {
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #FAF8F5 0%, #FFF5F5 50%, #E6FFFA 100%);
+    min-height: 390px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.lbn-pdp-slide-item {
+    min-height: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.lbn-pdp-thumb {
+    border-radius: 12px;
+    height: 76px;
+    cursor: pointer;
+    background-color: #ffffff;
+    border: 2px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.lbn-pdp-thumb:hover,
+.lbn-pdp-thumb.active {
+    border-color: var(--primary-peach);
+    background-color: #FFF5F4;
+    transform: translateY(-2px);
+}
+
+/* Nhan Giam Gia Tu Dong Theo Cap Bac VIP (MH 03) */
+.lbn-vip-price-box {
+    background: linear-gradient(135deg, #FFFDF9 0%, #FEF6E4 100%);
+    border: 1px dashed #D4AF37;
+    border-radius: 14px;
+}
+
+.lbn-size-option-btn {
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background-color: #ffffff;
+    color: var(--text-slate);
+    font-weight: 700;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lbn-size-option-btn:hover {
+    border-color: var(--primary-peach);
+}
+
+.lbn-size-option-btn.active {
+    background-color: var(--primary-peach);
+    border-color: var(--primary-peach);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(255, 158, 147, 0.35);
+}
+
+/* MH 13: Quan Tri Ton Kho & Cảnh Bao Sap Het Hang */
+.lbn-inv-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background-color: var(--bg-milk-cream);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+}
+
+.lbn-badge-low-stock {
+    background-color: #E53E3E;
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 50px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 6px rgba(229, 62, 62, 0.3);
+}
+
+.lbn-upload-dropzone {
+    border: 2px dashed var(--primary-peach);
+    border-radius: 16px;
+    background-color: #FFF9F8;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.lbn-upload-dropzone:hover {
+    background-color: #FFF0EE;
+    border-color: var(--primary-peach-hover);
 }
