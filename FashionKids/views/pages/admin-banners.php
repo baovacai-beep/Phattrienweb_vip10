@@ -125,7 +125,7 @@ $lnkt_banners_list = [
                                                 <div>
                                                     <div class="font-weight-bold text-slate"><?= htmlspecialchars($bn['title']) ?></div>
                                                     <small class="text-muted-custom d-block mb-1"><?= htmlspecialchars($bn['subtitle']) ?></small>
-                                                    <span class="badge px-2 py-1 text-white" style="background-color: <?= htmlspecialchars($bn['cta_color']) ?>;">
+                                                    <span class="badge px-2 py-1 text-white" data-fk-bg="<?= htmlspecialchars($bn['cta_color']) ?>">
                                                         CTA: <?= htmlspecialchars($bn['cta_label']) ?>
                                                     </span>
                                                 </div>

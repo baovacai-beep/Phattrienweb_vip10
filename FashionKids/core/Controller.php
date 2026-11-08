@@ -57,6 +57,12 @@ abstract class Controller {
      * @return void
      */
     protected function jsonResponse(array $data, int $statusCode = 200): void {
+        // Xóa mọi output đã đệm (notice/BOM/khoảng trắng) để JSON luôn hợp lệ.
+        // Dùng vòng lặp kiểm tra mức buffer thay vì ob_clean() trần: ob_clean() khi không có
+        // buffer nào sẽ phát sinh E_NOTICE ngay trong phản hồi JSON.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);

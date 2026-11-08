@@ -178,7 +178,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                     <!-- Khung Carousel Ảnh Chính -->
                     <div id="lbn_pdpImageSlider" class="carousel slide lbn-pdp-slider-main shadow-sm position-relative mb-3" data-ride="carousel" data-interval="false">
                         <!-- Badges Nổi Bật -->
-                        <div class="position-absolute" style="top: 15px; left: 15px; z-index: 5;">
+                        <div class="position-absolute fk-pos-tl-15">
                             <span class="badge lbn-badge-bamboo px-3 py-2 shadow-sm d-inline-block mb-1">
                                 <i class="fa-solid fa-leaf mr-1"></i><?= htmlspecialchars($prod['bamboo_label']) ?>
                             </span>
@@ -190,7 +190,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 
                         <!-- Cảnh báo tồn kho nếu <= 5 -->
                         <?php if ($prod['stock_quantity'] <= 5): ?>
-                            <div class="position-absolute" style="top: 15px; right: 15px; z-index: 5;">
+                            <div class="position-absolute fk-pos-tr-15">
                                 <span class="badge lbn-badge-low-stock shadow-sm">
                                     <i class="fa-solid fa-triangle-exclamation mr-1"></i>Chỉ còn <?= $prod['stock_quantity'] ?> cái
                                 </span>
@@ -200,28 +200,28 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <div class="carousel-inner text-center">
                             <div class="carousel-item active">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid <?= $prod['icon'] ?> display-1 text-peach mb-3" style="font-size: 8rem; opacity: 0.9;"></i>
+                                    <i class="fa-solid <?= $prod['icon'] ?> display-1 text-peach mb-3 fk-icon-hero"></i>
                                     <h6 class="font-weight-bold text-slate">Ảnh Mặt Trước (Góc Chụp Chuẩn)</h6>
                                     <small class="text-muted-custom">100% Sợi Tre Organic • Đường May Chìm Êm Da</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-shirt display-1 text-info mb-3" style="font-size: 8rem; opacity: 0.9;"></i>
+                                    <i class="fa-solid fa-shirt display-1 text-info mb-3 fk-icon-hero"></i>
                                     <h6 class="font-weight-bold text-slate">Ảnh Mặt Sau &amp; Chi Tiết Khóa/Bo Chun</h6>
                                     <small class="text-muted-custom">Khóa Kéo Giọt Nước An Toàn • Không Cấn Gáy Bé</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-microscope display-1 text-success mb-3" style="font-size: 8rem; opacity: 0.9;"></i>
+                                    <i class="fa-solid fa-microscope display-1 text-success mb-3 fk-icon-hero"></i>
                                     <h6 class="font-weight-bold text-slate">Cận Cảnh Sớ Vải Dệt Kháng Khuẩn</h6>
                                     <small class="text-muted-custom">Mềm Mịn Như Lụa • Thấm Hút Mồ Hôi Gấp 2 Lần Cotton</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-camera display-1 text-warning mb-3" style="font-size: 8rem; opacity: 0.9;"></i>
+                                    <i class="fa-solid fa-camera display-1 text-warning mb-3 fk-icon-hero"></i>
                                     <h6 class="font-weight-bold text-slate">Ảnh Bé Mẫu Thực Tế (Lookbook 2026)</h6>
                                     <small class="text-muted-custom">Bé Sam (28 tháng - 13kg) Mặc Vừa Vặn Size 2</small>
                                 </div>
@@ -230,11 +230,11 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 
                         <!-- Điều Hướng Trái / Phải -->
                         <a class="carousel-control-prev" href="#lbn_pdpImageSlider" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon rounded-circle bg-dark p-2" aria-hidden="true" style="opacity: 0.5;"></span>
+                            <span class="carousel-control-prev-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
                             <span class="sr-only">Previous</span>
                         </a>
                         <a class="carousel-control-next" href="#lbn_pdpImageSlider" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon rounded-circle bg-dark p-2" aria-hidden="true" style="opacity: 0.5;"></span>
+                            <span class="carousel-control-next-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
                             <span class="sr-only">Next</span>
                         </a>
                     </div>
@@ -244,25 +244,25 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb active" onclick="lbnSwitchPdpSlide(0, this)">
                                 <i class="fa-solid <?= $prod['icon'] ?> text-peach mb-1"></i>
-                                <span class="small font-weight-bold text-slate" style="font-size: 0.75rem;">Mặt Trước</span>
+                                <span class="small font-weight-bold text-slate fk-fs-075">Mặt Trước</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(1, this)">
                                 <i class="fa-solid fa-shirt text-info mb-1"></i>
-                                <span class="small font-weight-bold text-slate" style="font-size: 0.75rem;">Mặt Sau</span>
+                                <span class="small font-weight-bold text-slate fk-fs-075">Mặt Sau</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(2, this)">
                                 <i class="fa-solid fa-microscope text-success mb-1"></i>
-                                <span class="small font-weight-bold text-slate" style="font-size: 0.75rem;">Cận Vải</span>
+                                <span class="small font-weight-bold text-slate fk-fs-075">Cận Vải</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(3, this)">
                                 <i class="fa-solid fa-camera text-warning mb-1"></i>
-                                <span class="small font-weight-bold text-slate" style="font-size: 0.75rem;">Bé Mặc</span>
+                                <span class="small font-weight-bold text-slate fk-fs-075">Bé Mặc</span>
                             </div>
                         </div>
                     </div>
@@ -374,7 +374,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <div class="d-flex align-items-center flex-wrap">
                             <?php foreach ($prod['colors'] as $c): ?>
                                 <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate <?= $c['active'] ? 'border-primary' : '' ?>">
-                                    <span class="d-inline-block rounded-circle mr-1" style="width: 12px; height: 12px; background-color: <?= $c['code'] ?>; border: 1px solid #cbd5e0;"></span>
+                                    <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($c['code']) ?>"></span>
                                     <?= htmlspecialchars($c['name']) ?>
                                 </button>
                             <?php endforeach; ?>
@@ -413,7 +413,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                             Số lượng đặt mua:
                         </label>
                         <div class="d-flex align-items-center">
-                            <div class="input-group input-group-sm mr-3" style="width: 120px;">
+                            <div class="input-group input-group-sm mr-3 fk-w-120">
                                 <div class="input-group-prepend">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(-1)">
                                         <i class="fa-solid fa-minus"></i>
@@ -549,39 +549,39 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 
                 <div class="col-12 col-md-8 pl-md-4">
                     <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap" style="width: 50px;">5 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 78%;" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100"></div>
+                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">5 <i class="fa-solid fa-star text-warning"></i></span>
+                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100" data-fk-width="78"></div>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold" style="width: 35px;">96</span>
+                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">96</span>
                     </div>
                     <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap" style="width: 50px;">4 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 18%;" aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"></div>
+                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">4 <i class="fa-solid fa-star text-warning"></i></span>
+                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="18" aria-valuemin="0" aria-valuemax="100" data-fk-width="18"></div>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold" style="width: 35px;">22</span>
+                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">22</span>
                     </div>
                     <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap" style="width: 50px;">3 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 5%;" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100"></div>
+                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">3 <i class="fa-solid fa-star text-warning"></i></span>
+                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" data-fk-width="5"></div>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold" style="width: 35px;">6</span>
+                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">6</span>
                     </div>
                     <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap" style="width: 50px;">2 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 2%;" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100"></div>
+                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">2 <i class="fa-solid fa-star text-warning"></i></span>
+                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100" data-fk-width="2"></div>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold" style="width: 35px;">3</span>
+                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">3</span>
                     </div>
                     <div class="d-flex align-items-center">
-                        <span class="small font-weight-bold mr-2 text-nowrap" style="width: 50px;">1 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 1%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100"></div>
+                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">1 <i class="fa-solid fa-star text-warning"></i></span>
+                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" data-fk-width="1"></div>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold" style="width: 35px;">1</span>
+                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">1</span>
                     </div>
                 </div>
             </div>
@@ -603,7 +603,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                     <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3" style="width: 44px; height: 44px;">
+                                <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
                                     MB
                                 </div>
                                 <div>
@@ -642,7 +642,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                     <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle badge-gold text-dark font-weight-bold d-flex align-items-center justify-content-center mr-3" style="width: 44px; height: 44px;">
+                                <div class="rounded-circle badge-gold text-dark font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
                                     TB
                                 </div>
                                 <div>
@@ -697,10 +697,10 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                     <div class="col-12 col-md-4 mb-3">
                         <div class="card lbn-product-card h-100 shadow-sm border-0">
                             <div class="lbn-product-img-box text-center p-4 bg-milk-cream position-relative">
-                                <span class="badge badge-pill <?= $other_p['gender_badge'] ?> position-absolute" style="top: 10px; left: 10px;">
+                                <span class="badge badge-pill <?= $other_p['gender_badge'] ?> position-absolute fk-pos-tl-10">
                                     <?= htmlspecialchars($other_p['gender_label']) ?>
                                 </span>
-                                <i class="fa-solid <?= $other_p['icon'] ?> display-4 my-2 text-peach" style="font-size: 3.5rem;"></i>
+                                <i class="fa-solid <?= $other_p['icon'] ?> display-4 my-2 text-peach fk-fs-35"></i>
                             </div>
                             <div class="card-body p-3 d-flex flex-column justify-content-between">
                                 <div>

@@ -699,3 +699,81 @@ body {
 .w-360 { max-width: 360px; width: 100%; }
 .img-product-thumb { width: 64px; height: 64px; object-fit: cover; }
 .img-product-card { height: 220px; object-fit: cover; width: 100%; }
+
+
+/* ==========================================================================
+   TIỆN ÍCH THAY THẾ INLINE CSS (sinh từ quá trình chuẩn hóa views)
+   !important để giữ nguyên độ ưu tiên như thuộc tính style="" trước đây
+   ========================================================================== */
+.avatar-44 { width: 44px !important; height: 44px !important; min-width: 44px; }
+.fk-h-10 { height: 10px !important; }
+.fk-w-35  { width: 35px !important; }
+.fk-w-50  { width: 50px !important; }
+.fk-w-112 { width: 112px !important; }
+.fk-w-120 { width: 120px !important; }
+.fk-w-125 { width: 125px !important; }
+.fk-w-140 { width: 140px !important; }
+.fk-w-185 { width: 185px !important; }
+.fk-minw-170 { min-width: 170px !important; }
+.fk-minw-215 { min-width: 215px !important; }
+.fk-ellipsis-220 { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fk-bg-soft-danger { background-color: #FFF5F5; }
+.fk-sticky-85 { top: 85px; z-index: 10; }
+.fk-pos-tl-15 { top: 15px; left: 15px; z-index: 5; }
+.fk-pos-tr-15 { top: 15px; right: 15px; z-index: 5; }
+.fk-pos-tl-10 { top: 10px; left: 10px; }
+.fk-icon-hero { font-size: 8rem; opacity: 0.9; }
+.fk-opacity-50 { opacity: 0.5; }
+.fk-fs-075 { font-size: 0.75rem; }
+.fk-fs-35 { font-size: 3.5rem; }
+.fk-chat-dot { bottom: 0; right: 0; width: 10px; height: 10px; padding: 0; }
+.fk-color-dot { width: 12px; height: 12px; border: 1px solid #cbd5e0; }
+
+/* ==========================================================================
+   PHÂN HỆ hgb_: FORM ĐĂNG NHẬP / ĐĂNG KÝ / OTP (MH 09 & MH 20)
+   ========================================================================== */
+
+/* Sửa lỗi lệch giao diện: card & modal chứa form KHÔNG được nhảy lên khi rê chuột
+   (hiệu ứng nâng của .card-pastel làm form dịch chuyển khi người dùng đang nhập liệu) */
+.hgb-auth-card:hover,
+.modal-content.card-pastel:hover {
+    transform: none;
+    box-shadow: 0 6px 18px rgba(61, 72, 82, 0.08);
+}
+
+/* Trạng thái kiểm tra hợp lệ theo bảng màu Bright Pastel (thay màu xanh/đỏ mặc định của Bootstrap) */
+.form-control.is-valid,
+.was-validated .form-control:valid {
+    border-color: #7CC6A8;
+    background-image: none;
+    padding-right: 0.75rem;
+}
+.form-control.is-valid:focus {
+    border-color: #7CC6A8;
+    box-shadow: 0 0 0 3px rgba(184, 224, 210, 0.55);
+}
+.form-control.is-invalid,
+.was-validated .form-control:invalid {
+    border-color: #F28B82;
+    background-image: none;
+    padding-right: 0.75rem;
+}
+.form-control.is-invalid:focus {
+    border-color: #F28B82;
+    box-shadow: 0 0 0 3px rgba(242, 139, 130, 0.25);
+}
+.valid-feedback { color: #3B8F6E; font-size: 0.8rem; }
+.invalid-feedback { color: #D6574E; font-size: 0.8rem; }
+
+/* Ô OTP báo lỗi */
+.otp-box.is-invalid {
+    border-color: #F28B82;
+    background-color: #FFF5F5;
+}
+.hgb-otp-close { top: 12px; right: 18px; z-index: 2; }
+
+/* Màn hình hẹp (< 400px): thu nhỏ ô OTP để 6 ô không bị tràn khỏi modal */
+@media (max-width: 399.98px) {
+    .otp-box { width: 40px; height: 48px; font-size: 1.3rem; }
+    .hgb-auth-card .card-body { padding: 1.25rem !important; }
+}
