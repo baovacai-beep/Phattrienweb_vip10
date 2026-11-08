@@ -1,50 +1,42 @@
 <!-- MODAL XÁC THỰC OTP 6 SỐ - MH 20 (Đảm nhiệm: Hồ Gia Bảo - hgb_)
      Logic xử lý nằm trong public/js/auth-ajax.js (AJAX tới AuthController::ajaxSendOtp / ajaxVerifyOtp) -->
-<div class="modal fade" id="hgb_modal_otp" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="hgb_modalOtpTitle" aria-hidden="true">
+<div class="modal fade" id="hgb_modal_otp" tabindex="-1" role="dialog" aria-labelledby="modalOtpLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg text-center card-pastel">
-            <div class="modal-body p-4 p-md-5">
-                <button type="button" class="close text-slate position-absolute hgb-otp-close" data-dismiss="modal" aria-label="Đóng">
+        <div class="modal-content rounded-card border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-weight-bold text-slate" id="modalOtpLabel">
+                    <i class="fas fa-shield-alt text-primary mr-2"></i>Xác thực mã bảo vệ OTP
+                </h5>
+                <button type="button" class="close text-slate" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-
-                <div class="mb-3">
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm p-3 bg-milk-cream border">
-                        <i class="fa-solid fa-shield-halved text-success h2 mb-0"></i>
-                    </span>
-                </div>
-
-                <h4 class="font-weight-bold mb-1 text-slate" id="hgb_modalOtpTitle">Xác Thực Mã OTP</h4>
-                <p class="text-muted-custom small mb-3">
-                    Mã xác thực gồm 6 chữ số đã được gửi tới email
-                    <strong id="hgb_display_otp_email" class="text-slate"></strong>.
-                    Vui lòng nhập mã để kích hoạt tài khoản.
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    Hệ thống đã gửi mã OTP 6 chữ số đến địa chỉ email: <strong id="hgb_display_otp_email" class="text-dark"></strong>. Vui lòng nhập mã để kích hoạt tài khoản.
                 </p>
 
-                <div id="hgb_otp_alert" class="alert small py-2 d-none" role="alert"></div>
+                <div id="hgb_otp_alert" class="alert d-none small py-2"></div>
 
                 <form id="hgb_form_verify_otp" novalidate autocomplete="off">
-                    <!-- Cụm 6 ô nhập mã OTP -->
-                    <div class="d-flex justify-content-center mb-4">
-                        <?php for ($i = 1; $i <= 6; $i++): ?>
-                            <input type="text" maxlength="1" class="form-control otp-box hgb-otp-box mx-1"
-                                   data-index="<?= $i ?>" pattern="[0-9]*" inputmode="numeric"
-                                   autocomplete="one-time-code" aria-label="Chữ số OTP thứ <?= $i ?>">
-                        <?php endfor; ?>
+                    <div class="form-group text-center">
+                        <label for="hgb_otp_input" class="sr-only">Mã OTP</label>
+                        <input type="text" class="form-control text-center font-weight-bold text-primary rounded-pill letter-spacing-lg hgb-otp-input" 
+                               id="hgb_otp_input" name="otp" maxlength="6" placeholder="• • • • • •" 
+                               required autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*">
+                        <div class="invalid-feedback text-left" id="hgb_otp_feedback">Mã xác thực gồm 6 chữ số.</div>
                     </div>
-
-                    <button type="submit" id="hgb_btn_submit_otp" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm mb-3">
-                        <i class="fa-solid fa-circle-check mr-1"></i> Xác Nhận OTP
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="small text-muted">
+                            Không nhận được mã?
+                            <span id="hgb_countdownTimer" class="font-weight-bold text-danger ml-1"></span>
+                        </span>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-primary font-weight-bold" id="hgb_btn_resend_otp">Gửi lại mã</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block rounded-pill py-2 font-weight-bold" id="hgb_btn_submit_otp">
+                        Xác nhận OTP
                     </button>
                 </form>
-
-                <div class="small text-muted-custom">
-                    Chưa nhận được mã?
-                    <span id="hgb_countdownTimer" class="font-weight-bold text-danger ml-1"></span>
-                    <button type="button" id="hgb_btn_resend_otp" class="btn btn-link btn-sm p-0 align-baseline d-none font-weight-bold text-peach ml-1">
-                        Gửi lại mã OTP
-                    </button>
-                </div>
             </div>
         </div>
     </div>
