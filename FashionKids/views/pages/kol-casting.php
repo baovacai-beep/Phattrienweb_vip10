@@ -11,7 +11,8 @@ $lnkt_kol_stars = [
         'spec'   => 'Cao 96 cm • Nặng 14.5 kg',
         'talent' => 'Tạo dáng Lookbook, Biểu cảm tự nhiên trước ống kính',
         'badge'  => 'Quán Quân Mùa Xuân',
-        'icon'   => 'fa-crown text-warning'
+        'icon'   => 'fa-crown text-warning',
+        'image'  => '/FashionKids/images/banner-mua-he-2026.jpg'
     ],
     [
         'name'   => 'Bé Trần Minh Khôi (Bơ)',
@@ -19,7 +20,8 @@ $lnkt_kol_stars = [
         'spec'   => 'Cao 104 cm • Nặng 16.8 kg',
         'talent' => 'Catwalk năng động, Nhảy hiện đại thiếu nhi',
         'badge'  => 'Gương Mặt Ấn Tượng',
-        'icon'   => 'fa-star text-peach'
+        'icon'   => 'fa-star text-peach',
+        'image'  => '/FashionKids/images/banner-kol-nhi-2026.jpg'
     ],
     [
         'name'   => 'Bé Lê Hà My (Bông)',
@@ -27,7 +29,8 @@ $lnkt_kol_stars = [
         'spec'   => 'Cao 89 cm • Nặng 12.8 kg',
         'talent' => 'Cười tỏa nắng, Phối đồ Váy công chúa sợi tre',
         'badge'  => 'Thiên Thần Sợi Tre',
-        'icon'   => 'fa-heart text-danger'
+        'icon'   => 'fa-heart text-danger',
+        'image'  => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'
     ]
 ];
 ?>
@@ -204,21 +207,21 @@ $lnkt_kol_stars = [
                             <div id="lnkt_kolMediaPreviewList" class="row mx-n1 mt-2">
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <i class="fa-solid fa-face-smile-beam text-peach h4 mb-1 d-block"></i>
+                                        <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Chân dung bé Sam" class="img-fluid rounded mb-1">
                                         <span class="font-weight-bold text-slate d-block text-truncate">1. chan-dung-be-sam.jpg</span>
                                         <small class="text-success">Ảnh chân dung</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <i class="fa-solid fa-child-dress text-info h4 mb-1 d-block"></i>
+                                        <img src="/FashionKids/images/vay-cong-chua-hoa-cuc.jpg" alt="Toàn thân váy sợi tre" class="img-fluid rounded mb-1">
                                         <span class="font-weight-bold text-slate d-block text-truncate">2. toan-than-vay-tre.jpg</span>
                                         <small class="text-success">Ảnh toàn thân</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <i class="fa-solid fa-camera text-warning h4 mb-1 d-block"></i>
+                                        <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" alt="Góc nghiêng studio" class="img-fluid rounded mb-1">
                                         <span class="font-weight-bold text-slate d-block text-truncate">3. goc-nghieng-studio.jpg</span>
                                         <small class="text-success">Góc tự nhiên</small>
                                     </div>
@@ -287,7 +290,7 @@ $lnkt_kol_stars = [
                 <?php foreach ($lnkt_kol_stars as $star): ?>
                     <div class="p-3 rounded bg-milk-cream border mb-3 d-flex align-items-center">
                         <span class="lbn-inv-thumb mr-3 flex-shrink-0">
-                            <i class="fa-solid <?= $star['icon'] ?> h4 mb-0"></i>
+                            <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
                         </span>
                         <div>
                             <div class="d-flex flex-wrap align-items-center mb-1">

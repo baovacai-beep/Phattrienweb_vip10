@@ -1,10 +1,5 @@
 <?php
-/**
- * index.php - Front Controller & Router duy nhất của FashionKids
- * Điều phối toàn bộ các yêu cầu HTTP theo mô hình MVC hướng đối tượng
- * Hỗ trợ linh hoạt cả 2 kiểu tham số: ?c=product&a=catalog hoặc ?url=product/catalog
- */
-
+// 1. Khởi tạo Session toàn cục tại file điều phối chính (Front Controller)
 if (session_status() === PHP_SESSION_NONE) {
     $savePath = session_save_path();
     if (empty($savePath) || !is_writable($savePath)) {
@@ -13,27 +8,40 @@ if (session_status() === PHP_SESSION_NONE) {
             @session_save_path($tempDir);
         }
     }
-    @session_start();
+    session_start();
 }
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-// 1. Phân tích tham số định tuyến (ưu tiên ?c=...&a=..., sau đó ?url=...)
+/**
+ * 2. Khớp nối quy tắc điều hướng Router
+ * Hỗ trợ linh hoạt và đồng nhất cả 3 dạng tham số:
+ *  - Dạng viết tắt: ?c=auth&a=ajaxSendOtp
+ *  - Dạng tường minh: ?controller=auth&action=ajaxSendOtp
+ *  - Dạng RESTful/Friendly URL: ?url=auth/ajaxSendOtp
+ */
+$cParam = $_GET['c'] ?? $_GET['controller'] ?? null;
+$aParam = $_GET['a'] ?? $_GET['action'] ?? null;
+
 $controllerKey = 'product';
 $actionKey     = 'catalog';
 $params        = [];
 
-if (isset($_GET['c'])) {
-    $controllerKey = trim($_GET['c']);
-    $actionKey     = isset($_GET['a']) ? trim($_GET['a']) : 'catalog';
+if ($cParam !== null) {
+    $controllerKey = strtolower(trim($cParam));
+    if ($aParam !== null && trim($aParam) !== '') {
+        $actionKey = trim($aParam);
+    } else {
+        $actionKey = ($controllerKey === 'product') ? 'catalog' : 'index';
+    }
 } elseif (isset($_GET['url'])) {
     $urlParts = explode('/', trim($_GET['url'], '/'));
-    if (!empty($urlParts[0])) $controllerKey = $urlParts[0];
-    if (!empty($urlParts[1])) $actionKey     = $urlParts[1];
+    if (!empty($urlParts[0])) $controllerKey = strtolower(trim($urlParts[0]));
+    if (!empty($urlParts[1])) $actionKey     = trim($urlParts[1]);
     if (count($urlParts) > 2) $params        = array_slice($urlParts, 2);
 }
 
-// 2. Định danh tên lớp Controller
+// 3. Định danh tên lớp Controller theo chuẩn PSR
 $controllerName = ucfirst($controllerKey) . 'Controller';
 $controllerFile = __DIR__ . '/controllers/' . $controllerName . '.php';
 
@@ -51,7 +59,7 @@ if (file_exists($controllerFile)) {
     }
 }
 
-// 3. Fallback mặc định an toàn: hiển thị Cửa hàng sản phẩm
+// 4. Fallback mặc định an toàn: hiển thị Cửa hàng sản phẩm
 require_once __DIR__ . '/controllers/ProductController.php';
 $defaultCtrl = new ProductController();
 $defaultCtrl->catalog();

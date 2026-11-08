@@ -16,6 +16,7 @@ $lbn_products = [
     [
         'id'             => 101,
         'sku'            => 'FK-LBN-01',
+        'image'          => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
         'category_id'    => 1,
         'category_slug'  => 'vay_cong_chua',
         'category_name'  => 'Váy công chúa',
@@ -36,6 +37,7 @@ $lbn_products = [
     [
         'id'             => 102,
         'sku'            => 'FK-LBN-02',
+        'image'          => '/FashionKids/images/bo-thun-khung-long.jpg',
         'category_id'    => 2,
         'category_slug'  => 'bo_thun',
         'category_name'  => 'Bộ thun',
@@ -56,6 +58,7 @@ $lbn_products = [
     [
         'id'             => 103,
         'sku'            => 'FK-LBN-03',
+        'image'          => '/FashionKids/images/giay-sandal-tap-di.jpg',
         'category_id'    => 4,
         'category_slug'  => 'giay_sandal',
         'category_name'  => 'Giày sandal',
@@ -76,6 +79,7 @@ $lbn_products = [
     [
         'id'             => 104,
         'sku'            => 'FK-LBN-04',
+        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -96,6 +100,7 @@ $lbn_products = [
     [
         'id'             => 105,
         'sku'            => 'FK-LBN-05',
+        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
         'category_id'    => 1,
         'category_slug'  => 'vay_cong_chua',
         'category_name'  => 'Váy công chúa',
@@ -116,6 +121,7 @@ $lbn_products = [
     [
         'id'             => 106,
         'sku'            => 'FK-LBN-06',
+        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
         'category_id'    => 2,
         'category_slug'  => 'bo_thun',
         'category_name'  => 'Bộ thun',
@@ -136,6 +142,7 @@ $lbn_products = [
     [
         'id'             => 107,
         'sku'            => 'FK-LBN-07',
+        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -156,6 +163,7 @@ $lbn_products = [
     [
         'id'             => 108,
         'sku'            => 'FK-LBN-08',
+        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
         'category_id'    => 4,
         'category_slug'  => 'giay_sandal',
         'category_name'  => 'Giày sandal',
@@ -176,6 +184,7 @@ $lbn_products = [
     [
         'id'             => 109,
         'sku'            => 'FK-LBN-09',
+        'image'          => '/FashionKids/images/ao-khoac-bomber.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -231,7 +240,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
             </h3>
         </div>
         <div class="mt-2 mt-md-0">
-            <span class="badge lbn-badge-bamboo px-3 py-2">
+            <span class="badge lbn-badge-bamboo">
                 <i class="fa-solid fa-leaf mr-1"></i> Chuẩn OEKO-TEX® 100 &amp; Sợi Tre Kháng Khuẩn Tự Nhiên
             </span>
         </div>
@@ -242,7 +251,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
              CỘT TRÁI (SIDEBAR FILTER): DANH MỤC, GIỚI TÍNH, KHOẢNG GIÁ
              ================================================================ -->
         <div class="col-12 col-lg-3 mb-4">
-            <div class="lbn-filter-sidebar p-4 shadow-sm sticky-top" style="top: 85px; z-index: 10;">
+            <div class="lbn-filter-sidebar p-4 shadow-sm sticky-top fk-sticky-85">
                 <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-sliders text-peach mr-2"></i>Bộ Lọc Đa Tiêu Chí
@@ -360,7 +369,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     </div>
                     <div class="d-flex align-items-center">
                         <label for="lbn_sortSelect" class="small font-weight-bold text-muted-custom mb-0 mr-2">Sắp xếp:</label>
-                        <select id="lbn_sortSelect" class="custom-select custom-select-sm rounded-pill font-weight-bold" style="width: 185px;">
+                        <select id="lbn_sortSelect" class="custom-select custom-select-sm rounded-pill font-weight-bold fk-w-185">
                             <option value="newest">Mới nhất (BST 2026)</option>
                             <option value="price_asc">Giá: Thấp đến Cao</option>
                             <option value="price_desc">Giá: Cao đến Thấp</option>
@@ -389,21 +398,21 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                 </span>
 
                                 <?php if ($prod['gender'] === 'girl'): ?>
-                                    <span class="badge badge-pill bg-peach text-white lbn-badge-gender-overlay px-2 py-1">
+                                    <span class="badge badge-pill bg-peach text-white lbn-badge-gender-overlay">
                                         <i class="fa-solid fa-venus mr-1"></i>Bé gái
                                     </span>
                                 <?php elseif ($prod['gender'] === 'boy'): ?>
-                                    <span class="badge badge-pill badge-sky lbn-badge-gender-overlay px-2 py-1">
+                                    <span class="badge badge-pill badge-sky lbn-badge-gender-overlay">
                                         <i class="fa-solid fa-mars mr-1"></i>Bé trai
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge badge-pill badge-gold lbn-badge-gender-overlay px-2 py-1">
+                                    <span class="badge badge-pill badge-gold lbn-badge-gender-overlay">
                                         <i class="fa-solid fa-venus-mars mr-1"></i>Unisex
                                     </span>
                                 <?php endif; ?>
 
-                                <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="text-decoration-none">
-                                    <i class="fa-solid <?= $prod['icon'] ?> lbn-main-icon"></i>
+                                <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="lbn-img-link text-decoration-none">
+                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-product-img">
                                 </a>
                             </div>
 

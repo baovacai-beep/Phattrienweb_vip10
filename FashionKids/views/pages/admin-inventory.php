@@ -16,6 +16,7 @@ $lbn_inventory_list = [
     [
         'id'             => 101,
         'sku'            => 'FK-LBN-01',
+        'image'          => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
         'name'           => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
         'category_id'    => 1,
         'category_name'  => 'Váy công chúa',
@@ -30,6 +31,7 @@ $lbn_inventory_list = [
     [
         'id'             => 104,
         'sku'            => 'FK-LBN-04',
+        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg',
         'name'           => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
         'category_id'    => 3,
         'category_name'  => 'Áo khoác',
@@ -44,6 +46,7 @@ $lbn_inventory_list = [
     [
         'id'             => 102,
         'sku'            => 'FK-LBN-02',
+        'image'          => '/FashionKids/images/bo-thun-khung-long.jpg',
         'name'           => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
         'category_id'    => 2,
         'category_name'  => 'Bộ thun',
@@ -58,6 +61,7 @@ $lbn_inventory_list = [
     [
         'id'             => 107,
         'sku'            => 'FK-LBN-07',
+        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
         'name'           => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
         'category_id'    => 3,
         'category_name'  => 'Áo khoác',
@@ -72,6 +76,7 @@ $lbn_inventory_list = [
     [
         'id'             => 103,
         'sku'            => 'FK-LBN-03',
+        'image'          => '/FashionKids/images/giay-sandal-tap-di.jpg',
         'name'           => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
         'category_id'    => 4,
         'category_name'  => 'Giày sandal',
@@ -86,6 +91,7 @@ $lbn_inventory_list = [
     [
         'id'             => 108,
         'sku'            => 'FK-LBN-08',
+        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
         'name'           => 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ',
         'category_id'    => 4,
         'category_name'  => 'Giày sandal',
@@ -100,6 +106,7 @@ $lbn_inventory_list = [
     [
         'id'             => 105,
         'sku'            => 'FK-LBN-05',
+        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
         'name'           => 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc',
         'category_id'    => 1,
         'category_name'  => 'Váy công chúa',
@@ -114,6 +121,7 @@ $lbn_inventory_list = [
     [
         'id'             => 106,
         'sku'            => 'FK-LBN-06',
+        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
         'name'           => 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè',
         'category_id'    => 2,
         'category_name'  => 'Bộ thun',
@@ -201,7 +209,7 @@ foreach ($lbn_inventory_list as $inv) {
                         </h3>
                         <small class="text-danger font-weight-bold">Cần nhập bổ sung ngay</small>
                     </div>
-                    <span class="lbn-inv-thumb" style="background-color: #FFF5F5;">
+                    <span class="lbn-inv-thumb fk-bg-soft-danger">
                         <i class="fa-solid fa-triangle-exclamation text-danger h4 mb-0"></i>
                     </span>
                 </div>
@@ -300,11 +308,7 @@ foreach ($lbn_inventory_list as $inv) {
                                         </td>
 
                                         <!-- 2. Ảnh -->
-                                        <td class="text-center">
-                                            <span class="lbn-inv-thumb">
-                                                <i class="fa-solid <?= $prod['icon'] ?> h4 mb-0"></i>
-                                            </span>
-                                        </td>
+                                        <td class="text-center"><span class="lbn-inv-thumb"><img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-thumb-img"></span></td>
 
                                         <!-- 3. Tên Sản Phẩm -->
                                         <td>
@@ -332,7 +336,7 @@ foreach ($lbn_inventory_list as $inv) {
                                         </td>
 
                                         <!-- 6. Tồn kho + Huy hiệu đỏ "Sắp hết hàng" nếu tồn kho <= 5 -->
-                                        <td class="text-center" style="min-width: 170px;">
+                                        <td class="text-center fk-minw-170">
                                             <div id="lbn_stockBadgeCell_<?= $prod['id'] ?>" class="mb-2">
                                                 <?php if ($prod['stock_quantity'] <= 5): ?>
                                                     <span class="badge badge-danger lbn-badge-low-stock px-2 py-1">
@@ -346,7 +350,7 @@ foreach ($lbn_inventory_list as $inv) {
                                             </div>
 
                                             <!-- Ô cập nhật nhanh tồn kho (lbn_update_stock) -->
-                                            <div class="input-group input-group-sm justify-content-center mx-auto" style="width: 125px;">
+                                            <div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">
                                                 <input type="number" id="lbn_stockInput_<?= $prod['id'] ?>"
                                                        class="form-control text-center font-weight-bold"
                                                        value="<?= $prod['stock_quantity'] ?>" min="0">

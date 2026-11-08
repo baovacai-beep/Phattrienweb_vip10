@@ -3,7 +3,7 @@
     <div class="container">
         <!-- Logo Thuong Hieu -->
         <a class="navbar-brand brand-logo d-flex align-items-center" href="/FashionKids/views/pages/home.php">
-            <i class="fa-solid fa-shapes mr-2 text-peach"></i>Fashion<span class="text-slate">Kids</span>
+            <img src="/FashionKids/images/logo-fashionkids.jpg" alt="FashionKids Logo" class="fk-brand-logo mr-2"><span>Fashion<span class="text-slate">Kids</span></span>
         </a>
 
         <!-- Nut Hamburger Menu Chuan Bootstrap cho Mobile -->

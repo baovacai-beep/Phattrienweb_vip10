@@ -14,7 +14,7 @@
           <span><i class="far fa-heart mr-1 text-danger"></i> 256 yêu thích</span>
         </div>
 
-        <img src="/uploads/banners/blog-cover-1.jpg" class="img-fluid rounded-lg blog-header-banner w-100 mb-4" alt="Chi tiết bài viết">
+        <img src="/FashionKids/images/banner-mua-he-2026.jpg" class="img-fluid rounded-lg blog-header-banner w-100 mb-4" alt="Chi tiết bài viết">
 
         <!-- Nội dung Rich-Text -->
         <div class="blog-article-content text-secondary mb-5">

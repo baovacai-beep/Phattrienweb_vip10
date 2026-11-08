@@ -9,6 +9,7 @@ $lnkt_cart_items = [
         'item_id'       => 1,
         'product_id'    => 101,
         'sku'           => 'FK-LBN-01',
+        'image'         => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
         'name'          => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
         'category_name' => 'Váy công chúa',
         'size'          => 'Size 2 (2-3T)',
@@ -20,6 +21,7 @@ $lnkt_cart_items = [
         'item_id'       => 2,
         'product_id'    => 102,
         'sku'           => 'FK-LBN-02',
+        'image'         => '/FashionKids/images/bo-thun-khung-long.jpg',
         'name'          => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
         'category_name' => 'Bộ thun',
         'size'          => 'Size 3 (2-3T)',
@@ -31,6 +33,7 @@ $lnkt_cart_items = [
         'item_id'       => 3,
         'product_id'    => 103,
         'sku'           => 'FK-LBN-03',
+        'image'         => '/FashionKids/images/giay-sandal-tap-di.jpg',
         'name'          => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
         'category_name' => 'Giày sandal',
         'size'          => 'Size 22 (13cm)',
@@ -103,7 +106,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                 <tr>
                                     <th>Sản Phẩm &amp; Phân Loại Size</th>
                                     <th class="text-right">Đơn Giá</th>
-                                    <th class="text-center" style="width: 140px;">Số Lượng</th>
+                                    <th class="text-center fk-w-140">Số Lượng</th>
                                     <th class="text-right">Đơn Giá Chốt</th>
                                     <th class="text-center">Xóa</th>
                                 </tr>
@@ -117,9 +120,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                         data-price="<?= $item['price'] ?>">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <span class="lbn-inv-thumb mr-3 flex-shrink-0">
-                                                    <i class="fa-solid <?= $item['icon'] ?> h4 mb-0"></i>
-                                                </span>
+                                                <span class="lbn-inv-thumb mr-3 flex-shrink-0"><img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="lbn-thumb-img"></span>
                                                 <div>
                                                     <a href="/FashionKids/views/pages/product-detail.php?id=<?= $item['product_id'] ?>"
                                                        class="font-weight-bold text-slate text-decoration-none d-block">
@@ -140,7 +141,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                         </td>
 
                                         <td class="text-center">
-                                            <div class="input-group input-group-sm mx-auto" style="width: 112px;">
+                                            <div class="input-group input-group-sm mx-auto fk-w-112">
                                                 <div class="input-group-prepend">
                                                     <button type="button" class="btn btn-light border font-weight-bold"
                                                             onclick="lnktChangeCartQty(<?= $item['item_id'] ?>, -1)">
@@ -293,7 +294,7 @@ $init_reward_points = floor($init_total_amount / 10000);
              CỘT PHẢI (5 CỘT): TÍNH TOÁN CHI PHÍ TỰ ĐỘNG & CHỐT ĐẶT HÀNG
              ================================================================ -->
         <div class="col-12 col-lg-5">
-            <div class="card card-pastel shadow-sm sticky-top" style="top: 85px; z-index: 10;">
+            <div class="card card-pastel shadow-sm sticky-top fk-sticky-85">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-calculator text-peach mr-2"></i>3. Bảng Tổng Hợp Dòng Tiền Tự Động
