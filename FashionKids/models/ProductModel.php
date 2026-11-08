@@ -2,7 +2,8 @@
 /**
  * Lớp Model Sản Phẩm (models/ProductModel.php)
  * Đảm nhiệm: lbn_ (Lê Bảo Ngọc)
- * Tích hợp Stored Procedures: sp_lbn_them_san_pham_moi, fn_lbn_kiem_tra_ton_kho, sp_lbn_nhap_them_kho_hang
+ * Khớp chuẩn 100% với CSDL phpMyAdmin (lbn_san_pham & lbn_danh_muc)
+ * Tích hợp Stored Function: fn_lbn_kiem_tra_ton_kho & Stored Procedure: sp_lbn_nhap_them_kho_hang
  */
 
 require_once __DIR__ . '/../core/Model.php';
@@ -12,53 +13,57 @@ require_once __DIR__ . '/entities/SanPhamGiayDep.php';
 class ProductModel extends Model {
     private array $mockProducts = [
         [
-            'ma_san_pham'     => 101,
+            'ma_san_pham'     => 1,
             'ma_danh_muc'     => 1,
-            'ten_san_pham'    => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
-            'gia_ban'         => 285000,
-            'so_luong_ton_kho'=> 45,
-            'duong_dan_anh'   => '/FashionKids/public/uploads/products/dress-flower-01.jpg',
-            'mo_ta_chat_lieu' => '100% sợi tre tự nhiên mềm mịn, thoáng khí, kháng khuẩn vượt trội.',
+            'ten_san_pham'    => 'Váy Công Chúa Elsa Bạch Tuyết Cao Cấp',
+            'gia_ban'         => 450000.00,
+            'so_luong_ton_kho'=> 25,
+            'duong_dan_anh'   => 'vay_cong_chua_elsa.jpg',
+            'mo_ta_chat_lieu' => 'Vải cotton sợi tre 100% hữu cơ, kháng khuẩn, không gây ngứa da',
             'loai_kich_co'    => 'quan_ao',
-            'ten_danh_muc'    => 'Váy công chúa'
+            'ten_danh_muc'    => 'Váy đầm công chúa bé gái',
+            'gioi_tinh'       => 'be_gai'
         ],
         [
-            'ma_san_pham'     => 102,
+            'ma_san_pham'     => 2,
             'ma_danh_muc'     => 2,
-            'ten_san_pham'    => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
-            'gia_ban'         => 225000,
-            'so_luong_ton_kho'=> 60,
-            'duong_dan_anh'   => '/FashionKids/public/uploads/products/dino-set-02.jpg',
-            'mo_ta_chat_lieu' => 'Chất liệu thun sợi tre Bamboo co giãn 4 chiều, thấm hút mồ hôi tối ưu.',
+            'ten_san_pham'    => 'Bộ Thun Thể Thao Khủng Long Năng Động',
+            'gia_ban'         => 280000.00,
+            'so_luong_ton_kho'=> 30,
+            'duong_dan_anh'   => 'bo_thun_khung_long.jpg',
+            'mo_ta_chat_lieu' => 'Chất cotton 4 chiều co giãn thoáng mồ hôi cho bé trai vận động',
             'loai_kich_co'    => 'quan_ao',
-            'ten_danh_muc'    => 'Bộ thun'
+            'ten_danh_muc'    => 'Bộ quần áo thun thể thao bé trai',
+            'gioi_tinh'       => 'be_trai'
         ],
         [
-            'ma_san_pham'     => 103,
-            'ma_danh_muc'     => 4,
-            'ten_san_pham'    => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
-            'gia_ban'         => 210000,
-            'so_luong_ton_kho'=> 35,
-            'duong_dan_anh'   => '/FashionKids/public/uploads/products/sandal-bamboo-03.jpg',
-            'mo_ta_chat_lieu' => 'Đế cao su non uốn dẻo 360 độ, lót đệm sợi tre chống trơn trượt.',
-            'loai_kich_co'    => 'giay_dep',
-            'ten_danh_muc'    => 'Giày dép'
-        ],
-        [
-            'ma_san_pham'     => 104,
+            'ma_san_pham'     => 3,
             'ma_danh_muc'     => 3,
-            'ten_san_pham'    => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
-            'gia_ban'         => 320000,
+            'ten_san_pham'    => 'Áo Khoác Gió Bomber Trẻ Em 2 Lớp',
+            'gia_ban'         => 390000.00,
             'so_luong_ton_kho'=> 20,
-            'duong_dan_anh'   => '/FashionKids/public/uploads/products/cardigan-uv-04.jpg',
-            'mo_ta_chat_lieu' => 'Sợi tre dệt 2 lớp chống tia cực tím UPF 50+, giữ ấm nhẹ nhàng ban đêm.',
+            'duong_dan_anh'   => 'ao_khoac_bomber.jpg',
+            'mo_ta_chat_lieu' => 'Chất vải dù cản gió chống nước nhẹ, giữ ấm ngày mưa gió',
             'loai_kich_co'    => 'quan_ao',
-            'ten_danh_muc'    => 'Áo khoác'
+            'ten_danh_muc'    => 'Áo khoác dạo phố năng động',
+            'gioi_tinh'       => 'chung'
+        ],
+        [
+            'ma_san_pham'     => 4,
+            'ma_danh_muc'     => 4,
+            'ten_san_pham'    => 'Giày Sandal Tập Đi Êm Ái Chống Trượt',
+            'gia_ban'         => 320000.00,
+            'so_luong_ton_kho'=> 15,
+            'duong_dan_anh'   => 'sandal_tap_di.jpg',
+            'mo_ta_chat_lieu' => 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé',
+            'loai_kich_co'    => 'giay_dep',
+            'ten_danh_muc'    => 'Giày sandal tập đi êm chân',
+            'gioi_tinh'       => 'chung'
         ]
     ];
 
     /**
-     * Lấy danh sách sản phẩm theo danh mục và khoảng giá
+     * Lấy danh sách sản phẩm theo danh mục và lọc giá
      */
     public function layDanhSachSanPham(?int $maDanhMuc = null, float $minPrice = 0, float $maxPrice = 10000000): array {
         if ($this->hasConnection()) {
@@ -74,10 +79,13 @@ class ProductModel extends Model {
                     $params[':maDanhMuc'] = $maDanhMuc;
                 }
                 $sql .= " ORDER BY sp.ma_san_pham DESC";
+
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute($params);
                 return $stmt->fetchAll();
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                error_log("Lỗi lấy danh sách sản phẩm: " . $e->getMessage());
+            }
         }
         return $this->mockProducts;
     }
@@ -90,7 +98,7 @@ class ProductModel extends Model {
     public function getFeaturedProducts(int $limit = 8): array {
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc 
+                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
                                             FROM lbn_san_pham sp 
                                             JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
                                             WHERE sp.so_luong_ton_kho > 0 
@@ -105,25 +113,28 @@ class ProductModel extends Model {
     }
 
     /**
-     * Lấy chi tiết sản phẩm
+     * Chi tiết sản phẩm phục vụ trang PDP
      */
     public function layChiTietSanPham(int $id): ?array {
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc 
+                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
                                             FROM lbn_san_pham sp 
                                             JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
-                                            WHERE sp.ma_san_pham = :id LIMIT 1");
+                                            WHERE sp.ma_san_pham = :id 
+                                            LIMIT 1");
                 $stmt->execute([':id' => $id]);
-                $item = $stmt->fetch();
-                return $item ?: null;
-            } catch (PDOException $e) {}
+                $product = $stmt->fetch();
+                return $product ?: null;
+            } catch (PDOException $e) {
+                error_log("Lỗi chi tiết sản phẩm: " . $e->getMessage());
+            }
         }
 
         foreach ($this->mockProducts as $p) {
             if ($p['ma_san_pham'] === $id) return $p;
         }
-        return null;
+        return $this->mockProducts[0] ?? null;
     }
 
     public function getProductById(int $productId): ?array {
@@ -131,7 +142,7 @@ class ProductModel extends Model {
     }
 
     /**
-     * Kiểm tra hàng tồn kho thông qua Stored Function
+     * Gọi Stored Function kiểm tra tồn kho trước khi bấm mua
      */
     public function kiemTraTonKho(int $maSanPham, int $soLuongCanMua): bool {
         if ($this->hasConnection()) {
@@ -153,7 +164,7 @@ class ProductModel extends Model {
     }
 
     /**
-     * Gợi ý kích cỡ thông minh (kết hợp Stored Function và Đa hình OOP)
+     * Gợi ý kích cỡ thông minh qua thực thể Đa hình OOP
      */
     public function suggestSize(int $categoryId, float $measurement): string {
         if ($categoryId === 4) {
@@ -165,20 +176,17 @@ class ProductModel extends Model {
     }
 
     /**
-     * Cập nhật tồn kho
+     * Nhập thêm kho hàng qua sp_lbn_nhap_them_kho_hang
      */
     public function updateStock(int $productId, int $quantityChange): bool {
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare("CALL sp_lbn_nhap_them_kho_hang(:pid, :qty)");
-                return $stmt->execute([':pid' => $productId, ':qty' => $quantityChange]);
+                $res = $stmt->execute([':pid' => $productId, ':qty' => $quantityChange]);
+                $stmt->closeCursor();
+                return $res;
             } catch (PDOException $e) {
-                try {
-                    $stmt = $this->db->prepare("CALL lbn_update_stock(:pid, :qty)");
-                    return $stmt->execute([':pid' => $productId, ':qty' => $quantityChange]);
-                } catch (PDOException $e2) {
-                    return false;
-                }
+                return false;
             }
         }
         return true;

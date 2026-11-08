@@ -2,15 +2,17 @@
 /**
  * Lớp Model Bảng Kích Cỡ (models/SizeChartModel.php)
  * Đảm nhiệm: lnkt_ (Lê Nguyễn Khánh Trình)
- * Tích hợp Stored Function: fn_lnkt_goi_y_kich_co_chuan (lnkt_suggest_size)
+ * Khớp chuẩn 100% với CSDL phpMyAdmin (lnkt_bang_kich_co)
+ * Tích hợp Stored Function: fn_lnkt_goi_y_kich_co_chuan
  */
 
 require_once __DIR__ . '/../core/Model.php';
 require_once __DIR__ . '/entities/BangKichCo.php';
 
 class SizeChartModel extends Model {
+
     /**
-     * Dò tìm size chuẩn qua Function Stored từ MySQL
+     * Gọi Stored Function fn_lnkt_goi_y_kich_co_chuan đối chiếu bảng size
      */
     public function goiYSizeChuan(
         int $maDanhMuc,
@@ -30,26 +32,20 @@ class SizeChartModel extends Model {
                     ':chan'  => $daiChan
                 ]);
                 $res = $stmt->fetch();
-                if (!empty($res['size_goi_y'])) return $res['size_goi_y'];
+                if (!empty($res['size_goi_y'])) {
+                    return $res['size_goi_y'];
+                }
             } catch (PDOException $e) {
-                try {
-                    $measure = ($maDanhMuc === 4 && $daiChan) ? $daiChan : $chieuCao;
-                    $stmt = $this->db->prepare("SELECT lnkt_suggest_size(:ma_dm, :measure) AS size_goi_y");
-                    $stmt->execute([':ma_dm' => $maDanhMuc, ':measure' => $measure]);
-                    $res = $stmt->fetch();
-                    if (!empty($res['size_goi_y'])) return $res['size_goi_y'];
-                } catch (PDOException $e2) {}
+                error_log("Lỗi gọi Stored Function fn_lnkt_goi_y_kich_co_chuan: " . $e->getMessage());
             }
         }
 
         // Fallback thuật toán nếu MySQL chưa khởi động
         if ($maDanhMuc === 4) {
-            $val = $daiChan ?: 13.8;
-            if ($val <= 12.5) return 'Size 21 (1-2T)';
-            if ($val <= 13.5) return 'Size 22 (2-3T)';
-            if ($val <= 14.9) return 'Size 24 (3-4T)';
-            if ($val <= 15.9) return 'Size 26 (4-5T)';
-            return 'Size 28 (5-6T)';
+            $val = $daiChan ?: 14.5;
+            if ($val <= 14.9) return 'Size 24';
+            if ($val <= 15.9) return 'Size 26';
+            return 'Size 28';
         } else {
             $val = $chieuCao ?: 88.0;
             if ($val < 90) return 'Size 1 (1-2T)';
