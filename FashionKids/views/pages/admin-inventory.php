@@ -1,7 +1,7 @@
 <?php
 $page_title = "Quản Lý Sản Phẩm & Tồn Kho (MH 13)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh sách Danh mục chuẩn lbn_categories
 $lbn_admin_categories = [
@@ -539,4 +539,5 @@ foreach ($lbn_inventory_list as $inv) {
     </div>
 </div>
 
-<?php require_once "../layouts/footer.php"; ?>
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>
+

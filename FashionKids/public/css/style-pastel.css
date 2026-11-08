@@ -685,3 +685,17 @@ body {
     background: linear-gradient(135deg, #F0FFF4 0%, #FFFDF5 100%);
     border: 1px solid #B8E0D2;
 }
+
+
+/* ==========================================================================
+   TIỆN ÍCH BỔ SUNG TRIỆT TIÊU INLINE CSS (BOOTSTRAP 4 UTILITIES)
+   ========================================================================== */
+.avatar-56 { width: 56px !important; height: 56px !important; min-width: 56px; }
+.avatar-48 { width: 48px !important; height: 48px !important; min-width: 48px; }
+.avatar-40 { width: 40px !important; height: 40px !important; min-width: 40px; }
+.chart-container-220 { height: 220px; border-bottom: 2px solid #e2e8f0; }
+.progress-sm { height: 8px !important; }
+.progress-xs { height: 6px !important; }
+.w-360 { max-width: 360px; width: 100%; }
+.img-product-thumb { width: 64px; height: 64px; object-fit: cover; }
+.img-product-card { height: 220px; object-fit: cover; width: 100%; }

@@ -1,7 +1,7 @@
 <?php
 $page_title = "Theo Dõi Tiến Trình Đơn Hàng (MH 06)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Trạng thái khởi tạo mặc định (có thể truyền qua ?status=hoan_tat, mặc định 'hoan_tat' để hiển thị ngay nút ★ Viết đánh giá sản phẩm hoặc chuyển đổi trực tiếp)
 $init_status = isset($_GET['status']) ? htmlspecialchars($_GET['status']) : 'hoan_tat';
@@ -373,7 +373,8 @@ $lnkt_tracked_items = [
 
 <?php
 if (file_exists("../modals/modal-review.php")) {
-    require_once "../modals/modal-review.php";
+    require_once __DIR__ . "/../modals/modal-review.php";
 }
-require_once "../layouts/footer.php";
+require_once __DIR__ . "/../layouts/footer.php";
 ?>
+

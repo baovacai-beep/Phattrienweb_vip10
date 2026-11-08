@@ -1,7 +1,7 @@
 <?php
 $page_title = "Giỏ Hàng & Thanh Toán Đặt Hàng (MH 05)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh sách món đồ trong giỏ hàng mẫu (liên kết tgb_order_items & lbn_products)
 $lnkt_cart_items = [
@@ -406,6 +406,7 @@ $init_reward_points = floor($init_total_amount / 10000);
 </div>
 
 <?php
-require_once "../modals/modal-suggest-size.php";
-require_once "../layouts/footer.php";
+require_once __DIR__ . "/../modals/modal-suggest-size.php";
+require_once __DIR__ . "/../layouts/footer.php";
 ?>
+

@@ -1,4 +1,4 @@
-﻿
+
 <footer class="mt-5 border-top pt-5 pb-4 bg-white">
     <div class="container">
         <div class="row">
@@ -63,5 +63,6 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 <script src="/FashionKids/public/js/main-interactive.js"></script>
+<script src="/FashionKids/public/js/mvc-ajax-bridge.js"></script>
 </body>
 </html>

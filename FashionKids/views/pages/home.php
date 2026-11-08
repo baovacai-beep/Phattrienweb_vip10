@@ -1,7 +1,7 @@
 <?php
 $page_title = "Trang Chủ & Banner Carousel 4 Giây (MH 01)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh sách sản phẩm nổi bật BST Mùa Hè 2026 trên Trang chủ (liên kết trực tiếp sang MH 02, MH 03, MH 05)
 $lnkt_featured_products = [
@@ -396,6 +396,7 @@ $lnkt_featured_products = [
 </div>
 
 <?php
-require_once "../modals/modal-suggest-size.php";
-require_once "../layouts/footer.php";
+require_once __DIR__ . "/../modals/modal-suggest-size.php";
+require_once __DIR__ . "/../layouts/footer.php";
 ?>
+

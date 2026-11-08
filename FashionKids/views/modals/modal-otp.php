@@ -1,4 +1,4 @@
-﻿<!-- MODAL XÁC THỰC OTP 6 SỐ - MH 20 (Đảm nhiệm: Hồ Gia Bảo - hgb_) -->
+<!-- MODAL XÁC THỰC OTP 6 SỐ - MH 20 (Đảm nhiệm: Hồ Gia Bảo - hgb_) -->
 <div class="modal fade" id="modalVerifyOtp" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="hgb_modalOtpTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg text-center card-pastel">

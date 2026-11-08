@@ -1,7 +1,7 @@
 <?php
 $page_title = "Cổng Tuyển Chọn Siêu Sao Nhí KOL (MH 16)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh sách các hồ sơ gương mặt KOL nhí nổi bật
 $lnkt_kol_stars = [
@@ -304,4 +304,5 @@ $lnkt_kol_stars = [
     </div>
 </div>
 
-<?php require_once "../layouts/footer.php"; ?>
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>
+

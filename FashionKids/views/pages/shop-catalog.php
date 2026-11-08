@@ -1,7 +1,7 @@
 <?php
 $page_title = "Cửa Hàng & Bộ Lọc Đa Tiêu Chí (MH 02)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh mục chuẩn của Lê Bảo Ngọc (lbn_categories)
 $lbn_categories = [
@@ -493,4 +493,5 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
 </script>
 <?php endif; ?>
 
-<?php require_once "../layouts/footer.php"; ?>
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>
+

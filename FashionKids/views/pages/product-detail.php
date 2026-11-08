@@ -1,7 +1,7 @@
 <?php
 $page_title = "Chi Tiết Sản Phẩm & Đánh Giá Thực Tế (MH 03)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Danh mục chuẩn của Lê Bảo Ngọc (lbn_categories)
 $lbn_categories = [
@@ -730,7 +730,8 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 </div>
 
 <?php
-require_once "../modals/modal-suggest-size.php";
-require_once "../modals/modal-review.php";
-require_once "../layouts/footer.php";
+require_once __DIR__ . "/../modals/modal-suggest-size.php";
+require_once __DIR__ . "/../modals/modal-review.php";
+require_once __DIR__ . "/../layouts/footer.php";
 ?>
+

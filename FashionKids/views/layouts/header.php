@@ -1,6 +1,13 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    $savePath = session_save_path();
+    if (empty($savePath) || !is_writable($savePath)) {
+        $temp = sys_get_temp_dir();
+        if (is_writable($temp)) {
+            @session_save_path($temp);
+        }
+    }
+    @session_start();
 }
 ?>
 <!DOCTYPE html>
