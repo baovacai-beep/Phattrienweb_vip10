@@ -201,7 +201,7 @@ foreach ($lbn_inventory_list as $inv) {
                         </h3>
                         <small class="text-danger font-weight-bold">Cần nhập bổ sung ngay</small>
                     </div>
-                    <span class="lbn-inv-thumb" style="background-color: #FFF5F5;">
+                    <span class="lbn-inv-thumb fk-bg-soft-danger">
                         <i class="fa-solid fa-triangle-exclamation text-danger h4 mb-0"></i>
                     </span>
                 </div>
@@ -332,7 +332,7 @@ foreach ($lbn_inventory_list as $inv) {
                                         </td>
 
                                         <!-- 6. Tồn kho + Huy hiệu đỏ "Sắp hết hàng" nếu tồn kho <= 5 -->
-                                        <td class="text-center" style="min-width: 170px;">
+                                        <td class="text-center fk-minw-170">
                                             <div id="lbn_stockBadgeCell_<?= $prod['id'] ?>" class="mb-2">
                                                 <?php if ($prod['stock_quantity'] <= 5): ?>
                                                     <span class="badge badge-danger lbn-badge-low-stock px-2 py-1">
@@ -346,7 +346,7 @@ foreach ($lbn_inventory_list as $inv) {
                                             </div>
 
                                             <!-- Ô cập nhật nhanh tồn kho (lbn_update_stock) -->
-                                            <div class="input-group input-group-sm justify-content-center mx-auto" style="width: 125px;">
+                                            <div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">
                                                 <input type="number" id="lbn_stockInput_<?= $prod['id'] ?>"
                                                        class="form-control text-center font-weight-bold"
                                                        value="<?= $prod['stock_quantity'] ?>" min="0">

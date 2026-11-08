@@ -159,7 +159,7 @@ $low_stock_products = [
                             <i class="fa-solid fa-arrow-trend-up mr-1"></i>+14.2% so với tháng trước
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 bg-peach text-white d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <div class="rounded-circle p-3 bg-peach text-white d-flex align-items-center justify-content-center avatar-56">
                         <i class="fa-solid fa-sack-dollar h4 mb-0"></i>
                     </div>
                 </div>
@@ -177,7 +177,7 @@ $low_stock_products = [
                             <i class="fa-solid fa-clock mr-1"></i>28 đơn đang chờ xử lý
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 bg-sky text-dark d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <div class="rounded-circle p-3 bg-sky text-dark d-flex align-items-center justify-content-center avatar-56">
                         <i class="fa-solid fa-cart-shopping h4 mb-0 text-info"></i>
                     </div>
                 </div>
@@ -195,7 +195,7 @@ $low_stock_products = [
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>Xem danh sách thiếu hàng
                         </a>
                     </div>
-                    <div class="rounded-circle p-3 bg-danger text-white d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <div class="rounded-circle p-3 bg-danger text-white d-flex align-items-center justify-content-center avatar-56">
                         <i class="fa-solid fa-box-open h4 mb-0"></i>
                     </div>
                 </div>
@@ -213,7 +213,7 @@ $low_stock_products = [
                             <i class="fa-solid fa-crown mr-1"></i>Tổng 1.250 khách hàng VIP
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center avatar-56">
                         <i class="fa-solid fa-award h4 mb-0 text-warning"></i>
                     </div>
                 </div>
@@ -237,40 +237,40 @@ $low_stock_products = [
                 </div>
                 <div class="card-body p-4 pt-2">
                     <!-- Mô phỏng biểu đồ cột 7 ngày -->
-                    <div class="d-flex justify-content-between align-items-end pt-4 pb-2 text-center" style="height: 220px; border-bottom: 2px solid #e2e8f0;">
+                    <div class="d-flex justify-content-between align-items-end pt-4 pb-2 text-center chart-container-220">
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-slate mb-1">14.2M</small>
-                            <div class="w-100 bg-sky rounded-top" style="height: 110px;" title="Thứ Hai: 14.200.000 đ"></div>
+                            <div class="w-100 bg-sky rounded-top" title="Thứ Hai: 14.200.000 đ" data-fk-height="110"></div>
                             <small class="text-muted-custom mt-2 font-weight-bold">T2 (02/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-slate mb-1">16.8M</small>
-                            <div class="w-100 bg-sky rounded-top" style="height: 135px;" title="Thứ Ba: 16.800.000 đ"></div>
+                            <div class="w-100 bg-sky rounded-top" title="Thứ Ba: 16.800.000 đ" data-fk-height="135"></div>
                             <small class="text-muted-custom mt-2 font-weight-bold">T3 (03/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-slate mb-1">19.5M</small>
-                            <div class="w-100 bg-sky rounded-top" style="height: 155px;" title="Thứ Tư: 19.500.000 đ"></div>
+                            <div class="w-100 bg-sky rounded-top" title="Thứ Tư: 19.500.000 đ" data-fk-height="155"></div>
                             <small class="text-muted-custom mt-2 font-weight-bold">T4 (04/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-slate mb-1">17.2M</small>
-                            <div class="w-100 bg-sky rounded-top" style="height: 138px;" title="Thứ Năm: 17.200.000 đ"></div>
+                            <div class="w-100 bg-sky rounded-top" title="Thứ Năm: 17.200.000 đ" data-fk-height="138"></div>
                             <small class="text-muted-custom mt-2 font-weight-bold">T5 (05/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-peach mb-1">24.6M</small>
-                            <div class="w-100 bg-peach rounded-top" style="height: 190px;" title="Thứ Sáu: 24.600.000 đ"></div>
+                            <div class="w-100 bg-peach rounded-top" title="Thứ Sáu: 24.600.000 đ" data-fk-height="190"></div>
                             <small class="text-peach mt-2 font-weight-bold">T6 (06/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-peach mb-1">21.8M</small>
-                            <div class="w-100 bg-peach rounded-top" style="height: 172px;" title="Thứ Bảy: 21.800.000 đ"></div>
+                            <div class="w-100 bg-peach rounded-top" title="Thứ Bảy: 21.800.000 đ" data-fk-height="172"></div>
                             <small class="text-peach mt-2 font-weight-bold">T7 (07/11)</small>
                         </div>
                         <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
                             <small class="font-weight-bold text-slate mb-1">14.3M</small>
-                            <div class="w-100 bg-mint-soft rounded-top" style="height: 115px;" title="Hôm nay: 14.350.000 đ"></div>
+                            <div class="w-100 bg-mint-soft rounded-top" title="Hôm nay: 14.350.000 đ" data-fk-height="115"></div>
                             <small class="text-success mt-2 font-weight-bold">CN (Hôm nay)</small>
                         </div>
                     </div>
@@ -298,8 +298,8 @@ $low_stock_products = [
                             <span><i class="fa-solid fa-wand-magic-sparkles text-peach mr-2"></i>Váy Công Chúa (Bé gái)</span>
                             <span class="text-slate">38% (48.8M)</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-peach" role="progressbar" style="width: 38%;"></div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-peach" role="progressbar" data-fk-width="38"></div>
                         </div>
                     </div>
 
@@ -308,8 +308,8 @@ $low_stock_products = [
                             <span><i class="fa-solid fa-shirt text-info mr-2"></i>Bộ Thun Sợi Tre (Bé trai &amp; Unisex)</span>
                             <span class="text-slate">32% (41.1M)</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-sky" role="progressbar" style="width: 32%;"></div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-sky" role="progressbar" data-fk-width="32"></div>
                         </div>
                     </div>
 
@@ -318,8 +318,8 @@ $low_stock_products = [
                             <span><i class="fa-solid fa-shoe-prints text-warning mr-2"></i>Giày Sandal Tập Đi (Đế cao su)</span>
                             <span class="text-slate">18% (23.1M)</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar badge-gold" role="progressbar" style="width: 18%;"></div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar badge-gold" role="progressbar" data-fk-width="18"></div>
                         </div>
                     </div>
 
@@ -328,8 +328,8 @@ $low_stock_products = [
                             <span><i class="fa-solid fa-vest-patches text-success mr-2"></i>Áo Khoác Chống Nắng UV</span>
                             <span class="text-slate">12% (15.4M)</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-mint-soft" role="progressbar" style="width: 12%;"></div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-mint-soft" role="progressbar" data-fk-width="12"></div>
                         </div>
                     </div>
 
@@ -381,7 +381,7 @@ $low_stock_products = [
                                             <small class="text-muted-custom"><i class="fa-solid fa-phone mr-1"></i><?= htmlspecialchars($ord['phone']) ?></small>
                                         </td>
                                         <td>
-                                            <small class="text-slate d-inline-block" style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= htmlspecialchars($ord['address']) ?>">
+                                            <small class="text-slate d-inline-block fk-ellipsis-220" title="<?= htmlspecialchars($ord['address']) ?>">
                                                 <?= htmlspecialchars($ord['address']) ?>
                                             </small>
                                         </td>

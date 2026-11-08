@@ -257,7 +257,7 @@ function lnktRenderOrderStatusBadge($status) {
                                     <th>Khu Vực Giao Vận</th>
                                     <th class="text-right">Dòng Tiền Đơn</th>
                                     <th class="text-center">Trạng Thái Hiện Tại</th>
-                                    <th class="text-center" style="min-width: 215px;">Cập Nhật Giao Vận</th>
+                                    <th class="text-center fk-minw-215">Cập Nhật Giao Vận</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -337,7 +337,7 @@ function lnktRenderOrderStatusBadge($status) {
              CỘT PHẢI (4 CỘT): PHIẾU KIỂM ĐƠN & ĐIỀU PHỐI NHANH
              ================================================================ -->
         <div class="col-12 col-xl-4 mb-4">
-            <div class="card card-pastel shadow-sm sticky-top" style="top: 85px; z-index: 10;">
+            <div class="card card-pastel shadow-sm sticky-top fk-sticky-85">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-file-invoice text-peach mr-1"></i> Phiếu Chi Tiết Vận Đơn Đang Chọn

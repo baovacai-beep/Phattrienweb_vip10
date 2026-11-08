@@ -103,7 +103,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                 <tr>
                                     <th>Sản Phẩm &amp; Phân Loại Size</th>
                                     <th class="text-right">Đơn Giá</th>
-                                    <th class="text-center" style="width: 140px;">Số Lượng</th>
+                                    <th class="text-center fk-w-140">Số Lượng</th>
                                     <th class="text-right">Đơn Giá Chốt</th>
                                     <th class="text-center">Xóa</th>
                                 </tr>
@@ -140,7 +140,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                         </td>
 
                                         <td class="text-center">
-                                            <div class="input-group input-group-sm mx-auto" style="width: 112px;">
+                                            <div class="input-group input-group-sm mx-auto fk-w-112">
                                                 <div class="input-group-prepend">
                                                     <button type="button" class="btn btn-light border font-weight-bold"
                                                             onclick="lnktChangeCartQty(<?= $item['item_id'] ?>, -1)">
@@ -293,7 +293,7 @@ $init_reward_points = floor($init_total_amount / 10000);
              CỘT PHẢI (5 CỘT): TÍNH TOÁN CHI PHÍ TỰ ĐỘNG & CHỐT ĐẶT HÀNG
              ================================================================ -->
         <div class="col-12 col-lg-5">
-            <div class="card card-pastel shadow-sm sticky-top" style="top: 85px; z-index: 10;">
+            <div class="card card-pastel shadow-sm sticky-top fk-sticky-85">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-calculator text-peach mr-2"></i>3. Bảng Tổng Hợp Dòng Tiền Tự Động

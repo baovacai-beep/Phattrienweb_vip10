@@ -242,7 +242,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
              CỘT TRÁI (SIDEBAR FILTER): DANH MỤC, GIỚI TÍNH, KHOẢNG GIÁ
              ================================================================ -->
         <div class="col-12 col-lg-3 mb-4">
-            <div class="lbn-filter-sidebar p-4 shadow-sm sticky-top" style="top: 85px; z-index: 10;">
+            <div class="lbn-filter-sidebar p-4 shadow-sm sticky-top fk-sticky-85">
                 <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-sliders text-peach mr-2"></i>Bộ Lọc Đa Tiêu Chí
@@ -360,7 +360,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     </div>
                     <div class="d-flex align-items-center">
                         <label for="lbn_sortSelect" class="small font-weight-bold text-muted-custom mb-0 mr-2">Sắp xếp:</label>
-                        <select id="lbn_sortSelect" class="custom-select custom-select-sm rounded-pill font-weight-bold" style="width: 185px;">
+                        <select id="lbn_sortSelect" class="custom-select custom-select-sm rounded-pill font-weight-bold fk-w-185">
                             <option value="newest">Mới nhất (BST 2026)</option>
                             <option value="price_asc">Giá: Thấp đến Cao</option>
                             <option value="price_desc">Giá: Cao đến Thấp</option>

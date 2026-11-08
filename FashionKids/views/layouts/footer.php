@@ -64,5 +64,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 <script src="/FashionKids/public/js/main-interactive.js"></script>
 <script src="/FashionKids/public/js/mvc-ajax-bridge.js"></script>
+<script src="/FashionKids/public/js/auth-ajax.js"></script>
+<script src="/FashionKids/public/js/fk-ui.js"></script>
 </body>
 </html>

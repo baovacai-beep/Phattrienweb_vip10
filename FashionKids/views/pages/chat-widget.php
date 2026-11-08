@@ -13,7 +13,7 @@
         <div class="d-flex align-items-center">
             <div class="position-relative mr-2">
                 <i class="fas fa-headset fa-2x"></i>
-                <span class="badge badge-success rounded-circle position-absolute" style="bottom: 0; right: 0; width: 10px; height: 10px; padding: 0;"> </span>
+                <span class="badge badge-success rounded-circle position-absolute fk-chat-dot"> </span>
             </div>
             <div>
                 <h6 class="mb-0 font-weight-bold">Tư vấn FashionKids</h6>
