@@ -11,54 +11,114 @@ require_once __DIR__ . '/entities/SanPhamQuanAo.php';
 require_once __DIR__ . '/entities/SanPhamGiayDep.php';
 
 class ProductModel extends Model {
-    private array $mockProducts = [
+        private array $mockProducts = [
         [
-            'ma_san_pham'     => 1,
+            'ma_san_pham'     => 101,
             'ma_danh_muc'     => 1,
-            'ten_san_pham'    => 'Váy Công Chúa Elsa Bạch Tuyết Cao Cấp',
-            'gia_ban'         => 450000.00,
-            'so_luong_ton_kho'=> 25,
-            'duong_dan_anh'   => 'vay_cong_chua_elsa.jpg',
+            'ten_san_pham'    => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
+            'gia_ban'         => 285000.00,
+            'so_luong_ton_kho'=> 18,
+            'duong_dan_anh'   => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
             'mo_ta_chat_lieu' => 'Vải cotton sợi tre 100% hữu cơ, kháng khuẩn, không gây ngứa da',
             'loai_kich_co'    => 'quan_ao',
             'ten_danh_muc'    => 'Váy đầm công chúa bé gái',
             'gioi_tinh'       => 'be_gai'
         ],
         [
-            'ma_san_pham'     => 2,
+            'ma_san_pham'     => 102,
             'ma_danh_muc'     => 2,
-            'ten_san_pham'    => 'Bộ Thun Thể Thao Khủng Long Năng Động',
-            'gia_ban'         => 280000.00,
-            'so_luong_ton_kho'=> 30,
-            'duong_dan_anh'   => 'bo_thun_khung_long.jpg',
-            'mo_ta_chat_lieu' => 'Chất cotton 4 chiều co giãn thoáng mồ hôi cho bé trai vận động',
+            'ten_san_pham'    => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
+            'gia_ban'         => 225000.00,
+            'so_luong_ton_kho'=> 24,
+            'duong_dan_anh'   => '/FashionKids/images/bo-thun-khung-long.jpg',
+            'mo_ta_chat_lieu' => 'Chất sợi tre 4 chiều co giãn thoáng mồ hôi cho bé trai vận động',
             'loai_kich_co'    => 'quan_ao',
             'ten_danh_muc'    => 'Bộ quần áo thun thể thao bé trai',
             'gioi_tinh'       => 'be_trai'
         ],
         [
-            'ma_san_pham'     => 3,
+            'ma_san_pham'     => 103,
+            'ma_danh_muc'     => 4,
+            'ten_san_pham'    => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
+            'gia_ban'         => 210000.00,
+            'so_luong_ton_kho'=> 14,
+            'duong_dan_anh'   => '/FashionKids/images/giay-sandal-tap-di.jpg',
+            'mo_ta_chat_lieu' => 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé',
+            'loai_kich_co'    => 'giay_dep',
+            'ten_danh_muc'    => 'Giày sandal tập đi êm chân',
+            'gioi_tinh'       => 'chung'
+        ],
+        [
+            'ma_san_pham'     => 104,
             'ma_danh_muc'     => 3,
-            'ten_san_pham'    => 'Áo Khoác Gió Bomber Trẻ Em 2 Lớp',
-            'gia_ban'         => 390000.00,
-            'so_luong_ton_kho'=> 20,
-            'duong_dan_anh'   => 'ao_khoac_bomber.jpg',
-            'mo_ta_chat_lieu' => 'Chất vải dù cản gió chống nước nhẹ, giữ ấm ngày mưa gió',
+            'ten_san_pham'    => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
+            'gia_ban'         => 320000.00,
+            'so_luong_ton_kho'=> 5,
+            'duong_dan_anh'   => '/FashionKids/images/ao-khoac-cardigan.jpg',
+            'mo_ta_chat_lieu' => 'Sợi tre dệt kim UPF 50+ chống tia cực tím, cúc gỗ tự nhiên',
             'loai_kich_co'    => 'quan_ao',
             'ten_danh_muc'    => 'Áo khoác dạo phố năng động',
             'gioi_tinh'       => 'chung'
         ],
         [
-            'ma_san_pham'     => 4,
+            'ma_san_pham'     => 105,
+            'ma_danh_muc'     => 1,
+            'ten_san_pham'    => 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc',
+            'gia_ban'         => 365000.00,
+            'so_luong_ton_kho'=> 11,
+            'duong_dan_anh'   => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
+            'mo_ta_chat_lieu' => 'Lớp lót 100% sợi tre kháng khuẩn phối voan tùng xòe dự tiệc',
+            'loai_kich_co'    => 'quan_ao',
+            'ten_danh_muc'    => 'Váy đầm công chúa bé gái',
+            'gioi_tinh'       => 'be_gai'
+        ],
+        [
+            'ma_san_pham'     => 106,
+            'ma_danh_muc'     => 2,
+            'ten_san_pham'    => 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè',
+            'gia_ban'         => 195000.00,
+            'so_luong_ton_kho'=> 32,
+            'duong_dan_anh'   => '/FashionKids/images/bo-thun-gau-nhi.jpg',
+            'mo_ta_chat_lieu' => '100% sợi tre tự nhiên làm mát, thêu gấu nhí đáng yêu',
+            'loai_kich_co'    => 'quan_ao',
+            'ten_danh_muc'    => 'Bộ quần áo thun thể thao bé trai',
+            'gioi_tinh'       => 'chung'
+        ],
+        [
+            'ma_san_pham'     => 107,
+            'ma_danh_muc'     => 3,
+            'ten_san_pham'    => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
+            'gia_ban'         => 340000.00,
+            'so_luong_ton_kho'=> 4,
+            'duong_dan_anh'   => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
+            'mo_ta_chat_lieu' => 'Nỉ bông sợi tre hữu cơ kháng khuẩn, mũ phối tai thỏ',
+            'loai_kich_co'    => 'quan_ao',
+            'ten_danh_muc'    => 'Áo khoác dạo phố năng động',
+            'gioi_tinh'       => 'be_gai'
+        ],
+        [
+            'ma_san_pham'     => 108,
             'ma_danh_muc'     => 4,
-            'ten_san_pham'    => 'Giày Sandal Tập Đi Êm Ái Chống Trượt',
-            'gia_ban'         => 320000.00,
-            'so_luong_ton_kho'=> 15,
-            'duong_dan_anh'   => 'sandal_tap_di.jpg',
-            'mo_ta_chat_lieu' => 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé',
+            'ten_san_pham'    => 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ',
+            'gia_ban'         => 245000.00,
+            'so_luong_ton_kho'=> 16,
+            'duong_dan_anh'   => '/FashionKids/images/giay-sandal-be-trai.jpg',
+            'mo_ta_chat_lieu' => 'Quai vải canvas phối sợi tre êm cổ chân, đế rãnh chống trượt',
             'loai_kich_co'    => 'giay_dep',
             'ten_danh_muc'    => 'Giày sandal tập đi êm chân',
-            'gioi_tinh'       => 'chung'
+            'gioi_tinh'       => 'be_trai'
+        ],
+        [
+            'ma_san_pham'     => 109,
+            'ma_danh_muc'     => 3,
+            'ten_san_pham'    => 'Áo Khoác Bomber Sợi Tre Phi Hành Gia Nhí Bé Trai',
+            'gia_ban'         => 350000.00,
+            'so_luong_ton_kho'=> 9,
+            'duong_dan_anh'   => '/FashionKids/images/ao-khoac-bomber.jpg',
+            'mo_ta_chat_lieu' => 'Chất vải sợi tre 2 lớp cản gió, huy hiệu phi hành gia thêu nổi',
+            'loai_kich_co'    => 'quan_ao',
+            'ten_danh_muc'    => 'Áo khoác dạo phố năng động',
+            'gioi_tinh'       => 'be_trai'
         ]
     ];
 

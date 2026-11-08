@@ -23,7 +23,7 @@
       <!-- Thẻ hồ sơ bé 1 -->
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100">
-          <img src="/uploads/casting/model-kid-1.jpg" class="card-img-top casting-card-img" alt="Bé Cherry">
+          <img src="/FashionKids/images/banner-mua-he-2026.jpg" class="card-img-top casting-card-img" alt="Bé Cherry">
           <div class="card-body p-3 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="font-weight-bold text-dark mb-0">Bé Cherry (Bảo Hân)</h5>
@@ -64,7 +64,7 @@
       <!-- Thẻ hồ sơ bé 2 -->
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100">
-          <img src="/uploads/casting/model-kid-2.jpg" class="card-img-top casting-card-img" alt="Bé Ken">
+          <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" class="card-img-top casting-card-img" alt="Bé Ken">
           <div class="card-body p-3 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="font-weight-bold text-dark mb-0">Bé Ken (Gia Khiêm)</h5>

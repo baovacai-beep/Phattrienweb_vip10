@@ -20,7 +20,7 @@
       <!-- Bài 1 -->
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 rounded-lg shadow-sm overflow-hidden">
-          <img src="/uploads/banners/blog-cover-1.jpg" class="card-img-top blog-card-img" alt="Blog 1">
+          <img src="/FashionKids/images/vay-cong-chua-no-pastel.jpg" class="card-img-top blog-card-img" alt="Blog 1">
           <div class="card-body p-4 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="badge badge-pill bg-pastel-mint text-pastel-mint">Mẹo phối đồ</span>
@@ -46,7 +46,7 @@
       <!-- Bài 2 -->
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 rounded-lg shadow-sm overflow-hidden">
-          <img src="/uploads/banners/blog-cover-2.jpg" class="card-img-top blog-card-img" alt="Blog 2">
+          <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" class="card-img-top blog-card-img" alt="Blog 2">
           <div class="card-body p-4 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="badge badge-pill bg-pastel-butter text-pastel-butter">Hậu trường</span>
@@ -72,7 +72,7 @@
       <!-- Bài 3 -->
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 rounded-lg shadow-sm overflow-hidden">
-          <img src="/uploads/banners/blog-cover-3.jpg" class="card-img-top blog-card-img" alt="Blog 3">
+          <img src="/FashionKids/images/bo-thun-gau-nhi.jpg" class="card-img-top blog-card-img" alt="Blog 3">
           <div class="card-body p-4 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="badge badge-pill bg-pastel-blue text-pastel-blue">Chất liệu</span>

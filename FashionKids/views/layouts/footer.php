@@ -5,7 +5,7 @@
             <!-- Cot 1: Thuong Hieu FashionKids -->
             <div class="col-12 col-md-4 mb-4">
                 <h5 class="font-weight-bold text-peach mb-3">
-                    <i class="fa-solid fa-shapes mr-1"></i>FashionKids Official
+                    <img src="/FashionKids/images/logo-fashionkids.jpg" alt="FashionKids Logo" class="fk-brand-logo-sm mr-2">FashionKids Official
                 </h5>
                 <p class="text-muted-custom small">
                     Nền tảng thương mại điện tử D2C độc quyền phân phối các sản phẩm thời trang trẻ em sản xuất từ 100% sợi tre tự nhiên và cotton hữu cơ. Chứng nhận an toàn tuyệt đối cho làn da bé.
@@ -59,12 +59,15 @@
 </footer>
 
 <!-- Tai Tron Bo JavaScript Libraries -->
+<?php
+$appBase = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
+?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-<script src="/FashionKids/public/js/main-interactive.js"></script>
-<script src="/FashionKids/public/js/mvc-ajax-bridge.js"></script>
-<script src="/FashionKids/public/js/auth-ajax.js"></script>
-<script src="/FashionKids/public/js/fk-ui.js"></script>
+<script src="<?= $appBase ?>/public/js/main-interactive.js"></script>
+<script src="<?= $appBase ?>/public/js/mvc-ajax-bridge.js"></script>
+<script src="<?= $appBase ?>/public/js/auth-ajax.js"></script>
+<script src="<?= $appBase ?>/public/js/fk-ui.js"></script>
 </body>
 </html>

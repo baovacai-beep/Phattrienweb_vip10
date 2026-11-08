@@ -12,6 +12,15 @@ $hgb_flash_error = isset($_GET['error']) ? htmlspecialchars((string)$_GET['error
         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
             <div class="card card-pastel shadow-sm hgb-auth-card">
                 <div class="card-body p-4 p-md-5">
+                    <!-- Logo Thuong Hieu FashionKids -->
+                    <div class="text-center mb-4">
+                        <a href="/FashionKids/views/pages/home.php" class="text-decoration-none d-inline-flex align-items-center justify-content-center mb-1">
+                            <img src="/FashionKids/images/logo-fashionkids.jpg" alt="FashionKids Logo" class="fk-brand-logo mr-2">
+                            <span class="brand-logo">Fashion<span class="text-slate">Kids</span></span>
+                        </a>
+                        <div class="small text-muted-custom">Thời trang sợi tre kháng khuẩn an toàn cho bé</div>
+                    </div>
+
                     <!-- Nav Tabs Pill Bootstrap -->
                     <ul class="nav nav-pills nav-fill nav-pills-custom mb-4" role="tablist">
                         <li class="nav-item">

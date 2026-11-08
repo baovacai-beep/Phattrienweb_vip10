@@ -8,6 +8,7 @@ $lnkt_featured_products = [
     [
         'id'            => 101,
         'sku'           => 'FK-LBN-01',
+        'image'         => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
         'name'          => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
         'category_name' => 'Váy công chúa',
         'gender_label'  => 'Bé Gái',
@@ -21,6 +22,7 @@ $lnkt_featured_products = [
     [
         'id'            => 102,
         'sku'           => 'FK-LBN-02',
+        'image'         => '/FashionKids/images/bo-thun-khung-long.jpg',
         'name'          => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
         'category_name' => 'Bộ thun',
         'gender_label'  => 'Bé Trai',
@@ -34,6 +36,7 @@ $lnkt_featured_products = [
     [
         'id'            => 103,
         'sku'           => 'FK-LBN-03',
+        'image'         => '/FashionKids/images/giay-sandal-tap-di.jpg',
         'name'          => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
         'category_name' => 'Giày dép',
         'gender_label'  => 'Unisex',
@@ -47,6 +50,7 @@ $lnkt_featured_products = [
     [
         'id'            => 104,
         'sku'           => 'FK-LBN-04',
+        'image'         => '/FashionKids/images/ao-khoac-cardigan.jpg',
         'name'          => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
         'category_name' => 'Áo khoác',
         'gender_label'  => 'Unisex',
@@ -103,7 +107,7 @@ $lnkt_featured_products = [
                                 <div class="lnkt-floating-badge-top badge badge-gold px-3 py-1 rounded-pill shadow-sm">
                                     <i class="fa-solid fa-sun mr-1"></i>Chống Tia UV UPF 50+
                                 </div>
-                                <i class="fa-solid fa-child-reaching text-peach display-1 my-3"></i>
+                                <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="BST Mùa Hè 2026" class="lnkt-hero-banner-img my-2">
                                 <h5 class="font-weight-bold text-slate mb-1">Mềm Mịn Như Vòng Tay Mẹ</h5>
                                 <small class="text-muted-custom d-block">Dành cho bé từ Sơ sinh đến 6 tuổi (50cm - 125cm)</small>
                                 <div class="mt-3 d-flex justify-content-center">
@@ -147,7 +151,7 @@ $lnkt_featured_products = [
                                 <div class="lnkt-floating-badge-top badge badge-mint px-3 py-1 rounded-pill shadow-sm">
                                     <i class="fa-solid fa-camera-retro mr-1"></i>Casting Toàn Quốc
                                 </div>
-                                <i class="fa-solid fa-star text-warning display-1 my-3"></i>
+                                <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" alt="Siêu Sao Nhí KOL 2026" class="lnkt-hero-banner-img my-2">
                                 <h5 class="font-weight-bold text-slate mb-1">Gương Mặt Đại Sứ Nhí 2026</h5>
                                 <small class="text-muted-custom d-block">Dành cho bé từ 6 tháng đến 6 tuổi tự tin trước ống kính</small>
                                 <div class="mt-3 d-flex justify-content-center">
@@ -190,9 +194,7 @@ $lnkt_featured_products = [
             <!-- Nút tròn 1: Bé Gái -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?gender=girl" class="lnkt-category-circle-link text-decoration-none d-block">
-                    <div class="lnkt-category-circle lnkt-circle-girl mx-auto mb-3 shadow-sm">
-                        <i class="fa-solid fa-person-dress"></i>
-                    </div>
+                    <div class="lnkt-category-circle lnkt-circle-girl mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/vay-cong-chua-hoa-cuc.jpg" alt="Bé Gái" class="lnkt-cat-circle-img"></div>
                     <h5 class="font-weight-bold text-slate mb-1">Bé Gái</h5>
                     <small class="text-muted-custom d-block">Đầm công chúa, váy xòe sợi tre</small>
                     <span class="badge badge-pill badge-light border mt-2 px-3 py-1 text-peach font-weight-bold">
@@ -204,9 +206,7 @@ $lnkt_featured_products = [
             <!-- Nút tròn 2: Bé Trai -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?gender=boy" class="lnkt-category-circle-link text-decoration-none d-block">
-                    <div class="lnkt-category-circle lnkt-circle-boy mx-auto mb-3 shadow-sm">
-                        <i class="fa-solid fa-child"></i>
-                    </div>
+                    <div class="lnkt-category-circle lnkt-circle-boy mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/bo-thun-khung-long.jpg" alt="Bé Trai" class="lnkt-cat-circle-img"></div>
                     <h5 class="font-weight-bold text-slate mb-1">Bé Trai</h5>
                     <small class="text-muted-custom d-block">Bộ thun làm mát, áo khoác năng động</small>
                     <span class="badge badge-pill badge-light border mt-2 px-3 py-1 text-info font-weight-bold">
@@ -218,9 +218,7 @@ $lnkt_featured_products = [
             <!-- Nút tròn 3: Giày dép -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?type=giay_dep" class="lnkt-category-circle-link text-decoration-none d-block">
-                    <div class="lnkt-category-circle lnkt-circle-shoes mx-auto mb-3 shadow-sm">
-                        <i class="fa-solid fa-shoe-prints"></i>
-                    </div>
+                    <div class="lnkt-category-circle lnkt-circle-shoes mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/giay-sandal-tap-di.jpg" alt="Giày Dép" class="lnkt-cat-circle-img"></div>
                     <h5 class="font-weight-bold text-slate mb-1">Giày dép</h5>
                     <small class="text-muted-custom d-block">Sandal tập đi đế cao su non chống trượt</small>
                     <span class="badge badge-pill badge-light border mt-2 px-3 py-1 text-warning font-weight-bold">
@@ -283,11 +281,11 @@ $lnkt_featured_products = [
                             <span class="lbn-badge-bamboo lbn-badge-bamboo-overlay">
                                 <i class="fa-solid fa-leaf mr-1"></i>Sợi Tre Làm Mát
                             </span>
-                            <span class="badge badge-pill <?= $prod['gender_badge'] ?> lbn-badge-gender-overlay px-2 py-1">
+                            <span class="badge badge-pill <?= $prod['gender_badge'] ?> lbn-badge-gender-overlay">
                                 <?= htmlspecialchars($prod['gender_label']) ?>
                             </span>
-                            <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="text-decoration-none">
-                                <i class="fa-solid <?= $prod['icon'] ?> lbn-main-icon"></i>
+                            <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="lbn-img-link text-decoration-none">
+                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-product-img">
                             </a>
                         </div>
 

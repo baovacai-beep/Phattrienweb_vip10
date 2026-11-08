@@ -1,7 +1,10 @@
 <?php
 /**
  * Bộ định tuyến Front Controller (core/App.php)
- * Phân tích URL định dạng: /controller/action/param1/param2 hoặc index.php?url=controller/action
+ * Phân tích và điều hướng yêu cầu theo cả 3 quy ước:
+ *  1. ?c=auth&a=ajaxCheckDuplicate (viết tắt)
+ *  2. ?controller=auth&action=ajaxCheckDuplicate (tường minh)
+ *  3. ?url=auth/ajaxCheckDuplicate hoặc /auth/ajaxCheckDuplicate (friendly URL)
  */
 
 class App {
@@ -10,11 +13,23 @@ class App {
     protected $params     = [];
 
     public function __construct() {
+        // Đảm bảo session sẵn sàng
+        if (session_status() === PHP_SESSION_NONE) {
+            $savePath = session_save_path();
+            if (empty($savePath) || !is_writable($savePath)) {
+                $tempDir = sys_get_temp_dir();
+                if (is_writable($tempDir)) {
+                    @session_save_path($tempDir);
+                }
+            }
+            session_start();
+        }
+
         $url = $this->parseUrl();
 
         // 1. Kiểm tra và xác định Controller
         if (!empty($url[0])) {
-            $candidate = ucfirst($url[0]) . 'Controller';
+            $candidate = ucfirst(strtolower($url[0])) . 'Controller';
             $controllerPath = __DIR__ . '/../controllers/' . $candidate . '.php';
 
             if (file_exists($controllerPath)) {
@@ -42,17 +57,29 @@ class App {
     }
 
     /**
-     * Tách và làm sạch chuỗi URL
+     * Tách và làm sạch chuỗi URL, hỗ trợ linh hoạt ?c=&a=, ?controller=&action= và ?url=
      *
      * @return array
      */
     protected function parseUrl(): array {
+        // Quy tắc 1: Tham số ?c= và ?a= hoặc ?controller= và ?action=
+        $c = $_GET['c'] ?? $_GET['controller'] ?? null;
+        $a = $_GET['a'] ?? $_GET['action'] ?? null;
+        if ($c !== null) {
+            $parts = [trim($c)];
+            if ($a !== null && trim($a) !== '') {
+                $parts[] = trim($a);
+            }
+            return $parts;
+        }
+
+        // Quy tắc 2: Tham số ?url=controller/action
         if (isset($_GET['url'])) {
             $rawUrl = filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL);
             return explode('/', $rawUrl);
         }
 
-        // Phân tích PATH_INFO nếu URL Rewrite được cấu hình
+        // Quy tắc 3: PATH_INFO nếu URL Rewrite được bật
         if (isset($_SERVER['PATH_INFO'])) {
             $rawPath = trim($_SERVER['PATH_INFO'], '/');
             if (!empty($rawPath)) {

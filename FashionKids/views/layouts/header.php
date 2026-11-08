@@ -19,7 +19,12 @@ require_once __DIR__ . '/../../core/Csrf.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <meta name="csrf-token" content="<?= htmlspecialchars(Csrf::token()) ?>">
     <meta name="fk-endpoint" content="<?= htmlspecialchars(APP_ENDPOINT) ?>">
-    <title><?= isset($page_title) ? htmlspecialchars($page_title) . " - FashionKids" : "FashionKids - Thời Trang Trẻ Em An Toàn" ?></title>
+        <title><?= isset($page_title) ? htmlspecialchars($page_title) . " - FashionKids" : "FashionKids - Thời Trang Trẻ Em An Toàn" ?></title>
+    
+    <!-- Favicon Logo Nhom 10 FashionKids (Hien thi tren Tab & Thanh tim kiem trinh duyet) -->
+    <link rel="icon" type="image/jpeg" href="/FashionKids/images/logo-fashionkids.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/FashionKids/images/logo-fashionkids.jpg">
+    <link rel="apple-touch-icon" href="/FashionKids/images/logo-fashionkids.jpg">
     
     <!-- Google Fonts: Quicksand Font Than Thien Tre Em -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

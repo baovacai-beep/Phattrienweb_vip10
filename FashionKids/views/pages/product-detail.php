@@ -16,6 +16,7 @@ $lbn_products = [
     101 => [
         'id'             => 101,
         'sku'            => 'FK-LBN-01',
+        'image'          => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
         'category_id'    => 1,
         'category_slug'  => 'vay_cong_chua',
         'category_name'  => 'Váy công chúa',
@@ -48,6 +49,7 @@ $lbn_products = [
     102 => [
         'id'             => 102,
         'sku'            => 'FK-LBN-02',
+        'image'          => '/FashionKids/images/bo-thun-khung-long.jpg',
         'category_id'    => 2,
         'category_slug'  => 'bo_thun',
         'category_name'  => 'Bộ thun',
@@ -80,6 +82,7 @@ $lbn_products = [
     103 => [
         'id'             => 103,
         'sku'            => 'FK-LBN-03',
+        'image'          => '/FashionKids/images/giay-sandal-tap-di.jpg',
         'category_id'    => 4,
         'category_slug'  => 'giay_sandal',
         'category_name'  => 'Giày sandal',
@@ -138,7 +141,166 @@ $lbn_products = [
         'description'    => 'Áo khoác Cardigan sợi tre dệt 2 lớp mềm xốp, trang bị chỉ số chống nắng tự nhiên UPF 50+ cản 98% tia UVA/UVB, cúc gỗ mài nhẵn không xước da bé.',
         'material'       => '100% Sợi tre dệt kim tự nhiên Organic Bamboo.',
         'certifications' => ['Chứng nhận chống tia cực tím UPF 50+', 'OEKO-TEX Standard 100'],
-        'wash_guide'     => 'Giặt tay nhẹ nhàng hoặc dùng túi giặt chế độ đồ len em bé.'
+                'wash_guide'     => 'Giặt tay nhẹ nhàng hoặc dùng túi giặt chế độ đồ len em bé.',
+        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg'
+    ],
+    105 => [
+        'id'             => 105,
+        'sku'            => 'FK-LBN-05',
+        'category_id'    => 1,
+        'category_slug'  => 'vay_cong_chua',
+        'category_name'  => 'Váy công chúa',
+        'name'           => 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc',
+        'gender'         => 'girl',
+        'gender_label'   => 'Bé gái',
+        'gender_badge'   => 'badge-peach',
+        'price'          => 365000,
+        'original_price' => 420000,
+        'stock_quantity' => 11,
+        'rating'         => 5.0,
+        'reviews'        => 64,
+        'sold_count'     => 290,
+        'is_bamboo'      => 1,
+        'bamboo_label'   => 'Lót Sợi Tre Hữu Cơ & Voan Tùng Xòe Cao Cấp',
+        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (1-2T)',
+        'type'           => 'quan_ao',
+        'icon'           => 'fa-crown text-peach',
+        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
+        'colors'         => [
+            ['name' => 'Cam Đào Pastel', 'code' => '#FF9E93', 'active' => true],
+            ['name' => 'Kem Sữa Công Chúa', 'code' => '#FAF8F5', 'active' => false]
+        ],
+        'description'    => 'Thiết kế đầm dự tiệc lộng lẫy với 3 lớp voan mềm phối nơ lụa bản to phía trước, lớp lót trong 100% sợi tre thấm hút mồ hôi tuyệt đối.',
+        'material'       => 'Lớp trong 100% Organic Bamboo, lớp ngoài Tulle mềm không gây ngứa.',
+        'certifications' => ['OEKO-TEX® Standard 100', 'An toàn cho làn da nhạy cảm'],
+        'wash_guide'     => 'Giặt tay nhẹ nhàng, treo phẳng tự nhiên.'
+    ],
+    106 => [
+        'id'             => 106,
+        'sku'            => 'FK-LBN-06',
+        'category_id'    => 2,
+        'category_slug'  => 'bo_thun',
+        'category_name'  => 'Bộ thun',
+        'name'           => 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè',
+        'gender'         => 'unisex',
+        'gender_label'   => 'Unisex',
+        'gender_badge'   => 'badge-gold',
+        'price'          => 195000,
+        'original_price' => 240000,
+        'stock_quantity' => 32,
+        'rating'         => 4.8,
+        'reviews'        => 51,
+        'sold_count'     => 410,
+        'is_bamboo'      => 1,
+        'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Thoáng Khí',
+        'size_range'     => ['Size 1 (0-1T)', 'Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)'],
+        'default_size'   => 'Size 2 (1-2T)',
+        'type'           => 'quan_ao',
+        'icon'           => 'fa-baby text-success',
+        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
+        'colors'         => [
+            ['name' => 'Vàng Bơ Kem Sữa', 'code' => '#FDE2B8', 'active' => true],
+            ['name' => 'Xanh Mint Nhạt', 'code' => '#B8E0D2', 'active' => false]
+        ],
+        'description'    => 'Bộ đồ mặc nhà và dạo phố cộc tay thêu hình chú gấu nhí đáng yêu, chất vải sợi tre mát mịn giúp bé ngủ ngon suốt đêm hè.',
+        'material'       => '95% Bamboo Fiber, 5% Spandex.',
+        'certifications' => ['OEKO-TEX® Class 1 Baby', 'Không chứa BPA'],
+        'wash_guide'     => 'Giặt máy chế độ nhẹ dưới 30°C.'
+    ],
+    107 => [
+        'id'             => 107,
+        'sku'            => 'FK-LBN-07',
+        'category_id'    => 3,
+        'category_slug'  => 'ao_khoac',
+        'category_name'  => 'Áo khoác',
+        'name'           => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
+        'gender'         => 'girl',
+        'gender_label'   => 'Bé gái',
+        'gender_badge'   => 'badge-peach',
+        'price'          => 340000,
+        'original_price' => 395000,
+        'stock_quantity' => 4,
+        'rating'         => 4.9,
+        'reviews'        => 19,
+        'sold_count'     => 145,
+        'is_bamboo'      => 1,
+        'bamboo_label'   => 'Nỉ Bông Sợi Tre Giữ Ấm & Chống Nắng',
+        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (1-2T)',
+        'type'           => 'quan_ao',
+        'icon'           => 'fa-shirt text-peach',
+        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
+        'colors'         => [
+            ['name' => 'Hồng Đào Pastel', 'code' => '#FFD1DC', 'active' => true],
+            ['name' => 'Trắng Kem Sữa', 'code' => '#FAF8F5', 'active' => false]
+        ],
+        'description'    => 'Áo khoác có mũ phối đôi tai thỏ rủ siêu cưng cho bé gái, khóa kéo bọc vải chống kẹt cằm và giữ ấm ngực bé khi ra ngoài.',
+        'material'       => 'Nỉ bông sợi tre hữu cơ Organic Bamboo.',
+        'certifications' => ['OEKO-TEX® Standard 100', 'Kháng khuẩn 99.8%'],
+        'wash_guide'     => 'Giặt máy trong túi giặt, phơi nơi thoáng mát.'
+    ],
+    108 => [
+        'id'             => 108,
+        'sku'            => 'FK-LBN-08',
+        'category_id'    => 4,
+        'category_slug'  => 'giay_sandal',
+        'category_name'  => 'Giày sandal',
+        'name'           => 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ',
+        'gender'         => 'boy',
+        'gender_label'   => 'Bé trai',
+        'gender_badge'   => 'badge-sky',
+        'price'          => 245000,
+        'original_price' => 295000,
+        'stock_quantity' => 16,
+        'rating'         => 4.7,
+        'reviews'        => 23,
+        'sold_count'     => 210,
+        'is_bamboo'      => 1,
+        'bamboo_label'   => 'Lót Sợi Tre Êm Chân & Quai Dán Linh Hoạt',
+        'size_range'     => ['Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)', 'Size 30 (17.5cm)'],
+        'default_size'   => 'Size 24 (14cm)',
+        'type'           => 'giay_dep',
+        'icon'           => 'fa-shoe-prints text-info',
+        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
+        'colors'         => [
+            ['name' => 'Xanh Sky Phối Kem', 'code' => '#A8DADC', 'active' => true]
+        ],
+        'description'    => 'Giày sandal thể thao siêu nhẹ cho bé trai chạy nhảy, 2 quai dán điều chỉnh độ rộng dễ dàng và đế chống trượt an toàn.',
+        'material'       => 'Vải canvas phối lót sợi tre khử mùi, đế EVA cao su non.',
+        'certifications' => ['Chuẩn công thái học bàn chân trẻ em'],
+        'wash_guide'     => 'Vệ sinh bằng bàn chải mềm và khăn ẩm.'
+    ],
+    109 => [
+        'id'             => 109,
+        'sku'            => 'FK-LBN-09',
+        'category_id'    => 3,
+        'category_slug'  => 'ao_khoac',
+        'category_name'  => 'Áo khoác',
+        'name'           => 'Áo Khoác Bomber Sợi Tre Phi Hành Gia Nhí Bé Trai',
+        'gender'         => 'boy',
+        'gender_label'   => 'Bé trai',
+        'gender_badge'   => 'badge-sky',
+        'price'          => 350000,
+        'original_price' => 410000,
+        'stock_quantity' => 9,
+        'rating'         => 4.9,
+        'reviews'        => 31,
+        'sold_count'     => 175,
+        'is_bamboo'      => 1,
+        'bamboo_label'   => 'Sợi Tre 2 Lớp Cản Gió & Thoáng Khí',
+        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 3 (2-3T)',
+        'type'           => 'quan_ao',
+        'icon'           => 'fa-user-astronaut text-primary',
+        'image'          => '/FashionKids/images/ao-khoac-bomber.jpg',
+        'colors'         => [
+            ['name' => 'Xanh Vũ Trụ Phối Kem', 'code' => '#A8DADC', 'active' => true]
+        ],
+        'description'    => 'Áo khoác dáng Varsity Bomber cực ngầu với huy hiệu phi hành gia thêu nổi sắc nét, bo viền cổ và tay áo mềm mại.',
+        'material'       => 'Vải sợi tre dệt dày 2 lớp cản gió, lót cotton hữu cơ.',
+        'certifications' => ['OEKO-TEX® Standard 100'],
+        'wash_guide'     => 'Giặt máy chế độ nhẹ, lộn mặt trái khi phơi.'
     ]
 ];
 
@@ -177,13 +339,12 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                 <div class="col-12 col-lg-6 mb-4 mb-lg-0">
                     <!-- Khung Carousel Ảnh Chính -->
                     <div id="lbn_pdpImageSlider" class="carousel slide lbn-pdp-slider-main shadow-sm position-relative mb-3" data-ride="carousel" data-interval="false">
-                        <!-- Badges Nổi Bật -->
-                        <div class="position-absolute fk-pos-tl-15">
-                            <span class="badge lbn-badge-bamboo px-3 py-2 shadow-sm d-inline-block mb-1">
+                        <!-- Badges Nổi Bật (Gọn gàng, không che ảnh sản phẩm) -->
+                        <div class="position-absolute fk-pos-tl-15 d-flex flex-wrap align-items-center">
+                            <span class="lbn-badge-bamboo lbn-pdp-bamboo-badge shadow-sm mr-2 mb-1">
                                 <i class="fa-solid fa-leaf mr-1"></i><?= htmlspecialchars($prod['bamboo_label']) ?>
                             </span>
-                            <br>
-                            <span class="badge badge-pill <?= $prod['gender_badge'] ?> px-2 py-1 shadow-sm font-weight-bold">
+                            <span class="badge badge-pill <?= $prod['gender_badge'] ?> lbn-pdp-gender-badge shadow-sm font-weight-bold mb-1">
                                 <?= htmlspecialchars($prod['gender_label']) ?>
                             </span>
                         </div>
@@ -197,32 +358,32 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                             </div>
                         <?php endif; ?>
 
-                        <div class="carousel-inner text-center">
+                                                <div class="carousel-inner text-center">
                             <div class="carousel-item active">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid <?= $prod['icon'] ?> display-1 text-peach mb-3 fk-icon-hero"></i>
-                                    <h6 class="font-weight-bold text-slate">Ảnh Mặt Trước (Góc Chụp Chuẩn)</h6>
+                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-pdp-main-img mb-2">
+                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Mặt Trước (Góc Chụp Chuẩn Studio)</h6>
                                     <small class="text-muted-custom">100% Sợi Tre Organic • Đường May Chìm Êm Da</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-shirt display-1 text-info mb-3 fk-icon-hero"></i>
-                                    <h6 class="font-weight-bold text-slate">Ảnh Mặt Sau &amp; Chi Tiết Khóa/Bo Chun</h6>
-                                    <small class="text-muted-custom">Khóa Kéo Giọt Nước An Toàn • Không Cấn Gáy Bé</small>
+                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Chi tiết mặt sau" class="lbn-pdp-main-img mb-2">
+                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Chi Tiết Thiết Kế &amp; Đường May</h6>
+                                    <small class="text-muted-custom">Cúc Bấm &amp; Bo Chun An Toàn • Không Cấn Làn Da Bé</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-microscope display-1 text-success mb-3 fk-icon-hero"></i>
-                                    <h6 class="font-weight-bold text-slate">Cận Cảnh Sớ Vải Dệt Kháng Khuẩn</h6>
+                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Cận cảnh sớ vải sợi tre" class="lbn-pdp-main-img mb-2">
+                                    <h6 class="font-weight-bold text-slate mb-0">Cận Cảnh Sớ Vải Dệt Kháng Khuẩn</h6>
                                     <small class="text-muted-custom">Mềm Mịn Như Lụa • Thấm Hút Mồ Hôi Gấp 2 Lần Cotton</small>
                                 </div>
                             </div>
                             <div class="carousel-item">
                                 <div class="lbn-pdp-slide-item">
-                                    <i class="fa-solid fa-camera display-1 text-warning mb-3 fk-icon-hero"></i>
-                                    <h6 class="font-weight-bold text-slate">Ảnh Bé Mẫu Thực Tế (Lookbook 2026)</h6>
+                                    <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Lookbook 2026" class="lbn-pdp-main-img mb-2">
+                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Bé Mẫu Thực Tế (Lookbook 2026)</h6>
                                     <small class="text-muted-custom">Bé Sam (28 tháng - 13kg) Mặc Vừa Vặn Size 2</small>
                                 </div>
                             </div>
@@ -239,29 +400,29 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         </a>
                     </div>
 
-                    <!-- Hàng Thumbnail Bấm Đổi Slide Ảnh -->
+                                        <!-- Hàng Thumbnail Bấm Đổi Slide Ảnh -->
                     <div class="row no-gutters">
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb active" onclick="lbnSwitchPdpSlide(0, this)">
-                                <i class="fa-solid <?= $prod['icon'] ?> text-peach mb-1"></i>
+                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Mặt trước" class="lbn-pdp-thumb-img">
                                 <span class="small font-weight-bold text-slate fk-fs-075">Mặt Trước</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(1, this)">
-                                <i class="fa-solid fa-shirt text-info mb-1"></i>
-                                <span class="small font-weight-bold text-slate fk-fs-075">Mặt Sau</span>
+                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Chi tiết" class="lbn-pdp-thumb-img">
+                                <span class="small font-weight-bold text-slate fk-fs-075">Chi Tiết</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(2, this)">
-                                <i class="fa-solid fa-microscope text-success mb-1"></i>
+                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Cận vải" class="lbn-pdp-thumb-img">
                                 <span class="small font-weight-bold text-slate fk-fs-075">Cận Vải</span>
                             </div>
                         </div>
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(3, this)">
-                                <i class="fa-solid fa-camera text-warning mb-1"></i>
+                                <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Bé mặc" class="lbn-pdp-thumb-img">
                                 <span class="small font-weight-bold text-slate fk-fs-075">Bé Mặc</span>
                             </div>
                         </div>
@@ -696,11 +857,11 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                 <?php if ($other_id !== $product_id): ?>
                     <div class="col-12 col-md-4 mb-3">
                         <div class="card lbn-product-card h-100 shadow-sm border-0">
-                            <div class="lbn-product-img-box text-center p-4 bg-milk-cream position-relative">
+                            <div class="lbn-product-img-wrap position-relative">
                                 <span class="badge badge-pill <?= $other_p['gender_badge'] ?> position-absolute fk-pos-tl-10">
                                     <?= htmlspecialchars($other_p['gender_label']) ?>
                                 </span>
-                                <i class="fa-solid <?= $other_p['icon'] ?> display-4 my-2 text-peach fk-fs-35"></i>
+                                <a href="/FashionKids/views/pages/product-detail.php?id=<?= $other_id ?>" class="lbn-img-link"><img src="<?= htmlspecialchars($other_p['image']) ?>" alt="<?= htmlspecialchars($other_p['name']) ?>" class="lbn-product-img"></a>
                             </div>
                             <div class="card-body p-3 d-flex flex-column justify-content-between">
                                 <div>
