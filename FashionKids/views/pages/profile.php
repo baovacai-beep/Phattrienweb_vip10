@@ -1,7 +1,7 @@
-﻿<?php
+<?php
 $page_title = "Hồ Sơ Cá Nhân & Thẻ VIP Điện Tử (MH 07)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 $user = [
     'ho_va_ten'      => 'Võ Thị Thanh Thảo',
@@ -127,4 +127,4 @@ $progress = min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 10
     </div>
 </div>
 
-<?php require_once "../layouts/footer.php"; ?>
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

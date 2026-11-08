@@ -1,8 +1,8 @@
-﻿
+
 <?php
 $page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP (MH 15)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 
 // Du lieu gia lap nguoi dung
 $users_list = [
@@ -154,4 +154,4 @@ $tiers = [
     </div>
 </div>
 
-<?php require_once "../layouts/footer.php"; ?>
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

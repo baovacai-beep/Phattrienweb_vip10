@@ -1,7 +1,7 @@
-﻿<?php
+<?php
 $page_title = "Cổng Xác Thực Đăng Nhập / Đăng Ký (MH 09)";
-require_once "../layouts/header.php";
-require_once "../layouts/navbar.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
 ?>
 
 <div class="container my-5" id="hgb_auth_container">
@@ -97,6 +97,6 @@ require_once "../layouts/navbar.php";
 </div>
 
 <?php 
-require_once "../modals/modal-otp.php";
-require_once "../layouts/footer.php"; 
+require_once __DIR__ . "/../modals/modal-otp.php";
+require_once __DIR__ . "/../layouts/footer.php"; 
 ?>
