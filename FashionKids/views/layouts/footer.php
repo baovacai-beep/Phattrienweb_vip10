@@ -68,6 +68,7 @@ $appBase = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
 <script src="<?= $appBase ?>/public/js/main-interactive.js"></script>
 <script src="<?= $appBase ?>/public/js/mvc-ajax-bridge.js"></script>
 <script src="<?= $appBase ?>/public/js/auth-ajax.js"></script>
+<script src="<?= $appBase ?>/public/js/lbn-ajax.js"></script>
 <script src="<?= $appBase ?>/public/js/fk-ui.js"></script>
 </body>
 </html>

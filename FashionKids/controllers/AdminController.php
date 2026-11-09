@@ -68,4 +68,22 @@ class AdminController extends Controller {
             $this->json(['status' => 'error', 'message' => 'Cập nhật tồn kho thất bại hoặc tồn kho không đủ!'], 400);
         }
     }
+
+    /**
+     * AJAX Cập nhật tồn kho chi tiết & cảnh báo <= 5 (Giai đoạn 4 - Lê Bảo Ngọc)
+     */
+    public function ajaxUpdateInventoryStock(): void {
+        require_once __DIR__ . '/ProductController.php';
+        $productCtrl = new ProductController();
+        $productCtrl->ajaxUpdateInventoryStock();
+    }
+
+    /**
+     * AJAX Thêm mới / Cập nhật sản phẩm kho hàng (Giai đoạn 4 - Lê Bảo Ngọc)
+     */
+    public function ajaxSaveProduct(): void {
+        require_once __DIR__ . '/ProductController.php';
+        $productCtrl = new ProductController();
+        $productCtrl->ajaxSaveProduct();
+    }
 }
