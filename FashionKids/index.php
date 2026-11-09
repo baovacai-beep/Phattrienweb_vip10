@@ -1,14 +1,25 @@
 <?php
-// 1. Khởi tạo Session toàn cục tại file điều phối chính (Front Controller)
+// 1. Khởi tạo Output Buffering & Session toàn cục tại file điều phối chính (Front Controller)
+if (ob_get_level() === 0) {
+    ob_start();
+}
 if (session_status() === PHP_SESSION_NONE) {
     $savePath = session_save_path();
-    if (empty($savePath) || !is_writable($savePath)) {
+    $canWrite = false;
+    if (!empty($savePath) && is_dir($savePath)) {
+        $probe = @tempnam($savePath, 'fk_');
+        if ($probe !== false) {
+            @unlink($probe);
+            $canWrite = true;
+        }
+    }
+    if (!$canWrite) {
         $tempDir = sys_get_temp_dir();
-        if (is_writable($tempDir)) {
+        if (is_dir($tempDir)) {
             @session_save_path($tempDir);
         }
     }
-    session_start();
+    @session_start();
 }
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');

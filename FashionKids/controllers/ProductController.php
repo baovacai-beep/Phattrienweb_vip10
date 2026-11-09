@@ -242,6 +242,10 @@ class ProductController extends Controller {
     /**
      * Alias tương thích cho bộ lọc sản phẩm AJAX
      */
+    public function ajaxFilter(): void {
+        $this->ajaxFilterCatalog();
+    }
+
     public function ajaxFilterProducts(): void {
         $this->ajaxFilterCatalog();
     }

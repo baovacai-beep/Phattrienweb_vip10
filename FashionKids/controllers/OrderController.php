@@ -102,6 +102,9 @@ class OrderController extends Controller {
      * API AJAX Tạo đơn hàng (dành cho client gửi JSON)
      */
     public function ajaxCreateOrder(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
         $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
         $name     = trim($data['receiver_name'] ?? $data['ten_nguoi_nhan'] ?? '');

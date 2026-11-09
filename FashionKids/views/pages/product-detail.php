@@ -565,15 +565,16 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                 </button>
                             <?php endforeach; ?>
                         </div>
+                        <input type="hidden" id="lbn_pdpProductId" name="ma_san_pham" value="<?= (int)$prod['id'] ?>">
                         <input type="hidden" id="lbn_selectedSizeInput" name="size" value="<?= htmlspecialchars($prod['default_size']) ?>">
                     </div>
 
-                    <!-- Chọn Số Lượng & Tồn Kho (lbn_products.stock_quantity) -->
-                    <div class="mb-4">
+                    <!-- Chọn Số Lượng & Tồn Kho (lbn_products.stock_quantity - fn_lbn_kiem_tra_ton_kho) -->
+                    <div class="mb-3">
                         <label class="small font-weight-bold text-slate mb-2 d-block">
                             Số lượng đặt mua:
                         </label>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center flex-wrap">
                             <div class="input-group input-group-sm mr-3 fk-w-120">
                                 <div class="input-group-prepend">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(-1)">
@@ -581,29 +582,32 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                     </button>
                                 </div>
                                 <input type="number" id="lbn_pdpQuantity" name="quantity" class="form-control text-center font-weight-bold"
-                                       value="1" min="1" max="<?= $prod['stock_quantity'] ?>" data-max="<?= $prod['stock_quantity'] ?>" readonly>
+                                       value="1" min="1" max="<?= $prod['stock_quantity'] ?>" data-max="<?= $prod['stock_quantity'] ?>">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(1)">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
-                            <span class="small text-muted-custom">
-                                Còn <strong class="text-slate"><?= $prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho D2C
+                            <span class="small text-muted-custom" id="lbn_pdpStockLabelWrap">
+                                Còn <strong class="text-slate" id="lbn_pdpStockCount"><?= $prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho D2C
                             </span>
                         </div>
                     </div>
 
+                    <!-- Thông báo kiểm tra tồn kho Realtime AJAX (fn_lbn_kiem_tra_ton_kho) -->
+                    <div id="lbn_pdpStockAlert" class="alert small py-2 px-3 mb-3 d-none" role="alert"></div>
+
                     <!-- Cụm Nút Hành Động: Thêm Vào Giỏ & Mua Ngay -->
                     <div class="form-row mb-3">
                         <div class="col-12 col-sm-6 mb-2 mb-sm-0">
-                            <button type="button" class="btn btn-pastel-outline btn-block py-3 font-weight-bold" onclick="lbnAddToCartPdp()">
-                                <i class="fa-solid fa-cart-plus mr-2"></i>Thêm Vào Giỏ Hàng
+                            <button type="button" id="lbn_btnAddToCartPdp" class="btn btn-pastel-outline btn-block py-3 font-weight-bold" onclick="lbnAddToCartPdp()">
+                                <i class="fa-solid fa-cart-plus mr-2"></i><span id="lbn_btnAddToCartText">Thêm Vào Giỏ Hàng</span>
                             </button>
                         </div>
                         <div class="col-12 col-sm-6">
-                            <button type="button" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow" onclick="lbnBuyNowPdp()">
-                                <i class="fa-solid fa-bolt mr-2"></i>Mua Ngay Cho Bé
+                            <button type="button" id="lbn_btnBuyNowPdp" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow" onclick="lbnBuyNowPdp()">
+                                <i class="fa-solid fa-bolt mr-2"></i><span id="lbn_btnBuyNowText">Mua Ngay Cho Bé</span>
                             </button>
                         </div>
                     </div>

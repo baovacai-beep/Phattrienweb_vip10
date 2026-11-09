@@ -281,7 +281,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     <div class="lbn-cat-filter-item d-flex justify-content-between align-items-center mb-1 <?= $init_cat === 'all' ? 'active' : '' ?>"
                          data-cat="all" onclick="lbnSelectCategoryFilter('all', this)">
                         <span class="small"><i class="fa-solid fa-border-all mr-2 text-muted"></i>Tất cả danh mục</span>
-                        <span class="badge badge-pill badge-light border"><?= lbnCountByCatSlug($lbn_products, 'all') ?></span>
+                        <span class="badge badge-pill badge-light border" id="lbn_catCount_all"><?= lbnCountByCatSlug($lbn_products, 'all') ?></span>
                     </div>
 
                     <?php foreach ($lbn_categories as $cat): ?>
@@ -291,7 +291,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                             <span class="small">
                                 <i class="fa-solid <?= $cat['icon'] ?> mr-2"></i><?= htmlspecialchars($cat['name']) ?>
                             </span>
-                            <span class="badge badge-pill badge-light border"><?= $catCount ?></span>
+                            <span class="badge badge-pill badge-light border" id="lbn_catCount_<?= $cat['slug'] ?>"><?= $catCount ?></span>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -379,7 +379,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
             </div>
 
             <!-- Lưới sản phẩm 3 cột trên Desktop (col-lg-4) -->
-            <div class="row" id="lbn_catalogGrid">
+            <div class="row product-grid" id="lbn_catalogGrid">
                 <?php foreach ($lbn_products as $prod): ?>
                     <div class="col-12 col-sm-6 col-lg-4 mb-4 lbn-catalog-col"
                          data-id="<?= $prod['id'] ?>"
@@ -461,7 +461,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
                                         <button type="button"
-                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>)"
+                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>, <?= (int)$prod['id'] ?>)"
                                                 class="btn btn-pastel-primary btn-sm px-3 py-1">
                                             <i class="fa-solid fa-cart-plus mr-1"></i> Thêm
                                         </button>

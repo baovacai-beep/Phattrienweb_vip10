@@ -268,7 +268,12 @@ $init_reward_points = floor($init_total_amount / 10000);
                             <input type="text" id="lnkt_shippingAddress" name="dia_chi_giao_hang" class="form-control"
                                    value="Số 120 Điện Biên Phủ, Phường 17" placeholder="Nhập số nhà, tên đường, phường/xã..." required>
                         </div>
-                        <input type="hidden" name="thu_dien_tu_nhan" value="">
+                        <input type="hidden" name="thu_dien_tu_nhan" id="tgb_receiver_email" value="khachhang@fashionkids.vn">
+                        <input type="hidden" id="tgb_full_address" name="dia_chi_day_du" value="Số 120 Điện Biên Phủ, Phường 17">
+                        <input type="hidden" id="tgb_checkout_product_id" name="ma_san_pham" value="101">
+                        <input type="hidden" id="tgb_checkout_size" name="kich_co_chon" value="Size 2 (2-3T)">
+                        <input type="hidden" id="tgb_checkout_qty" name="so_luong" value="1">
+                        <input type="hidden" id="tgb_checkout_total" name="tong_tien_sau_giam" value="<?= $init_total_amount ?>">
 
                         <div class="form-group mb-0">
                             <label class="small font-weight-bold text-slate" for="lnkt_orderNote">
