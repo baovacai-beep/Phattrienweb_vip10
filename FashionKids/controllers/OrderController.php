@@ -52,10 +52,14 @@ class OrderController extends Controller {
         $productId   = (int)($_POST['ma_san_pham'] ?? 101);
         $size        = trim($_POST['kich_co_chon'] ?? 'Size 2 (2-3T)');
         $quantity    = (int)($_POST['so_luong'] ?? 1);
-        $paymentType = trim($_POST['phuong_thuc_thanh_toan'] ?? 'cod');
+        $paymentType = strtolower(trim($_POST['phuong_thuc_thanh_toan'] ?? 'cod'));
         $totalAmount = (float)($_POST['tong_tien_sau_giam'] ?? 285000);
 
         try {
+            if ($province === '' || $district === '') {
+                throw new InvalidArgumentException('Vui lòng chọn Tỉnh / Thành phố và Quận / Huyện.');
+            }
+
             // 1. Gọi Model chạy Stored Procedure tạo đơn và trừ kho
             $orderId = $this->orderModel->taoDonHang(
                 $userId, $name, $phone, $email, $address, $province, $district, $productId, $size, $quantity

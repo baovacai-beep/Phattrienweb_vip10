@@ -440,8 +440,214 @@ $(document).ready(function () {
     }
 
     // ------------------------------------------------------------------------
-    // 2. MH 04: Modal Tra cứu & Gợi ý Size Thước Dây (lnkt_suggest_size)
+    // 2. MH 04: Modal Tra cứu & Gợi ý Size Thước Dây (lnkt_suggest_size - Giai đoạn 4 AJAX)
     // ------------------------------------------------------------------------
+    // Khởi tạo radio button ẩn đồng bộ trên trang Chi tiết sản phẩm (PDP) nếu chưa có
+    if ($('#lbn_pdpSizeOptionsGroup').length && $('input[type="radio"][name="kich_co_chon"]').length === 0) {
+        $('#lbn_pdpSizeOptionsGroup .lbn-size-option-btn').each(function () {
+            let sVal = $(this).text().trim();
+            let isChecked = $(this).hasClass('active');
+            let $radio = $('<input>', {
+                type: 'radio',
+                name: 'kich_co_chon',
+                value: sVal,
+                class: 'd-none lnkt-pdp-size-radio',
+                checked: isChecked
+            });
+            $('#lbn_pdpSizeOptionsGroup').append($radio);
+        });
+    }
+
+    // Đồng bộ tự động kích cỡ gợi ý vào Radio Button & Ô chọn Size trên trang PDP / Đặt hàng
+    window.lnktSyncSizeToPdpAndOrder = function (recommendedSize) {
+        let cleanSize = String(recommendedSize || '').replace(/\s*Stored Function.*$/i, '').trim();
+        if (!cleanSize) return;
+
+        let prefixMatch = cleanSize.match(/^Size\s+\d+/i);
+        let sizePrefix = prefixMatch ? prefixMatch[0].toLowerCase() : cleanSize.toLowerCase();
+
+        // 1. Trigger chọn đúng radio button size tương ứng
+        let $radios = $('input[type="radio"][name="kich_co_chon"], input[type="radio"][name="size"], input[name="kich_co_chon"]');
+        if ($radios.length) {
+            let matchedRadio = $radios.filter(function () {
+                return $(this).val().trim().toLowerCase() === cleanSize.toLowerCase();
+            });
+            if (!matchedRadio.length && sizePrefix) {
+                matchedRadio = $radios.filter(function () {
+                    return $(this).val().trim().toLowerCase().indexOf(sizePrefix) === 0;
+                });
+            }
+            if (matchedRadio.length) {
+                $radios.prop('checked', false);
+                matchedRadio.first().prop('checked', true).trigger('change');
+            }
+        }
+
+        // 2. Đồng bộ nút chọn size hiển thị trên PDP (.lbn-size-option-btn) & input ẩn
+        let matchedBtnText = cleanSize;
+        if ($('.lbn-size-option-btn').length) {
+            let $matchedBtn = $('.lbn-size-option-btn').filter(function () {
+                return $(this).text().trim().toLowerCase() === cleanSize.toLowerCase();
+            });
+            if (!$matchedBtn.length && sizePrefix) {
+                $matchedBtn = $('.lbn-size-option-btn').filter(function () {
+                    return $(this).text().trim().toLowerCase().indexOf(sizePrefix) === 0;
+                });
+            }
+            if ($matchedBtn.length) {
+                $('.lbn-size-option-btn').removeClass('active');
+                $matchedBtn.first().addClass('active');
+                matchedBtnText = $matchedBtn.first().text().trim();
+            }
+        }
+
+        if ($('#lbn_selectedSizeText').length) {
+            $('#lbn_selectedSizeText').text(matchedBtnText);
+        }
+        if ($('#lbn_selectedSizeInput').length) {
+            $('#lbn_selectedSizeInput').val(matchedBtnText);
+        }
+    };
+
+    // Cập nhật thanh thước dây ảo trực quan
+    function lnktUpdateVirtualTape(activeType, numVal) {
+        let badge = $('#lnkt_tapeValueBadge');
+        let fill = $('#lnkt_tapeProgressFill');
+        if (!badge.length || !fill.length) return;
+
+        if (isNaN(numVal) || numVal <= 0) {
+            badge.text('Số đo chưa hợp lệ').removeClass('badge-peach').addClass('badge-danger');
+            fill.css('width', '0%');
+            return;
+        }
+
+        badge.removeClass('badge-danger').addClass('badge-peach');
+        if (activeType === 'giay_dep') {
+            badge.text('Dài chân: ' + numVal + ' cm');
+            let pct = Math.max(5, Math.min(100, ((numVal - 10) / (25 - 10)) * 100));
+            fill.css('width', pct + '%');
+        } else {
+            badge.text('Chiều cao: ' + numVal + ' cm');
+            let pct = Math.max(5, Math.min(100, ((numVal - 50) / (160 - 50)) * 100));
+            fill.css('width', pct + '%');
+        }
+    }
+
+    // Kiểm tra hợp lệ thông số đầu vào chặt chẽ (số âm, ký tự chữ, vượt ngưỡng 50-160cm)
+    function lnktValidateSizeInput(activeType, rawHeightStr, rawFootStr) {
+        let numericRegex = /^-?\d+(\.\d+)?$/;
+        if (activeType === 'quan_ao') {
+            if (!rawHeightStr) {
+                return 'Vui lòng nhập chiều cao của bé (cm)!';
+            }
+            if (!numericRegex.test(rawHeightStr)) {
+                return 'Chiều cao không hợp lệ! Vui lòng chỉ nhập chữ số (cm), không nhập chữ cái.';
+            }
+            let h = parseFloat(rawHeightStr);
+            if (h <= 0) {
+                return 'Số đo chiều cao không được là số âm hoặc bằng 0!';
+            }
+            if (h < 50 || h > 160) {
+                return 'Chiều cao của bé vượt ngưỡng cho phép! Vui lòng nhập trong khoảng từ 50cm đến 160cm.';
+            }
+        } else {
+            if (!rawFootStr) {
+                return 'Vui lòng nhập chiều dài bàn chân của bé (cm)!';
+            }
+            if (!numericRegex.test(rawFootStr)) {
+                return 'Chiều dài bàn chân không hợp lệ! Vui lòng chỉ nhập chữ số (cm), không nhập chữ cái.';
+            }
+            let f = parseFloat(rawFootStr);
+            if (f <= 0) {
+                return 'Số đo chiều dài bàn chân không được là số âm hoặc bằng 0!';
+            }
+            if (f < 10 || f > 25) {
+                return 'Chiều dài bàn chân trẻ em phải nằm trong khoảng từ 10cm đến 25cm!';
+            }
+        }
+        return null;
+    }
+
+    function lnktShowSizeError(errMsg, activeType) {
+        let $activeInput = (activeType === 'giay_dep') ? $('#lnkt_inputFootCm') : $('#lnkt_inputHeightCm');
+        $('#lnkt_inputHeightCm, #lnkt_inputFootCm').removeClass('is-valid is-invalid');
+        $activeInput.addClass('is-invalid');
+
+        $('#lnkt_size_result_box')
+            .removeClass('d-none lnkt-alert-mint-pastel alert-mint')
+            .addClass('alert-danger d-block')
+            .html('<i class="fa-solid fa-triangle-exclamation mr-2"></i><strong>Lỗi dữ liệu đo:</strong> ' + errMsg);
+
+        $('#lnkt_suggestedSizeBadge').text('Chưa hợp lệ');
+        $('#lnkt_suggestedSubSpec').text(errMsg);
+    }
+
+    function lnktComputeLocalFallback(activeType, effectiveHeight, footCm) {
+        if (activeType === 'quan_ao') {
+            if (effectiveHeight <= 72) {
+                return { size: 'Size 1 (0-1T)', spec: 'Khung chuẩn: Cao 50 - 72 cm • Ngực 44 - 47 cm • Eo 42 - 45 cm' };
+            } else if (effectiveHeight < 90) {
+                return { size: 'Size 1 (1-2T)', spec: 'Khung chuẩn: Cao 73 - 89 cm • Ngực 48 - 52 cm • Eo 46 - 50 cm' };
+            } else if (effectiveHeight <= 100) {
+                return { size: 'Size 2 (2-3T)', spec: 'Khung chuẩn: Cao 90 - 100 cm • Ngực 52 - 56 cm • Eo 50 - 53 cm' };
+            } else if (effectiveHeight <= 110) {
+                return { size: 'Size 3 (3-4T)', spec: 'Khung chuẩn: Cao 101 - 110 cm • Ngực 56 - 60 cm • Eo 53 - 55 cm' };
+            } else if (effectiveHeight <= 122) {
+                return { size: 'Size 4 (4-5T)', spec: 'Khung chuẩn: Cao 111 - 122 cm • Ngực 60 - 64 cm • Eo 55 - 57 cm' };
+            }
+            return { size: 'Size 5 (5-6T)', spec: 'Khung chuẩn: Cao 123 - 160 cm • Ngực 64 - 70 cm • Eo 58 - 62 cm' };
+        } else {
+            if (footCm <= 12.5) {
+                return { size: 'Size 21 (12cm)', spec: 'Khung chuẩn bàn chân: 10.0 - 12.5 cm • Lòng dép 12.8 cm' };
+            } else if (footCm <= 13.4) {
+                return { size: 'Size 22 (13cm)', spec: 'Khung chuẩn bàn chân: 12.6 - 13.4 cm • Lòng dép 13.6 cm' };
+            } else if (footCm <= 14.9) {
+                return { size: 'Size 24 (14cm)', spec: 'Khung chuẩn bàn chân: 13.5 - 14.9 cm • Lòng dép 14.5 cm' };
+            } else if (footCm <= 15.9) {
+                return { size: 'Size 26 (15cm)', spec: 'Khung chuẩn bàn chân: 15.0 - 15.9 cm • Lòng dép 15.6 cm' };
+            }
+            return { size: 'Size 28 (16.5cm)', spec: 'Khung chuẩn bàn chân: 16.0 - 25.0 cm • Lòng dép 17.2 cm' };
+        }
+    }
+
+    function lnktRenderSuccessResult(recommendedSize, noteText, activeType, heightCm, footCm, isChubby) {
+        let sizeBadge = $('#lnkt_suggestedSizeBadge');
+        let subSpec = $('#lnkt_suggestedSubSpec');
+        let stretchNote = $('#lnkt_materialStretchNote');
+        let summaryLabel = $('#lnkt_resultInputSummary');
+        let effectiveHeight = isChubby ? (heightCm + 7) : heightCm;
+        let localMeta = lnktComputeLocalFallback(activeType, effectiveHeight, footCm);
+        let finalSize = recommendedSize || localMeta.size;
+
+        $('#lnkt_inputHeightCm, #lnkt_inputFootCm').removeClass('is-invalid');
+        if (activeType === 'giay_dep') {
+            $('#lnkt_inputFootCm').addClass('is-valid');
+            summaryLabel.text('Số đo: Dài bàn chân ' + footCm + ' cm');
+        } else {
+            $('#lnkt_inputHeightCm').addClass('is-valid');
+            summaryLabel.text('Số đo: Chiều cao ' + heightCm + ' cm' + (isChubby ? ' (Trừ hao bé bụ bẫm)' : ''));
+        }
+
+        sizeBadge.text(finalSize);
+        subSpec.text(localMeta.spec);
+        stretchNote.html('<i class="fa-solid fa-leaf mr-1"></i><strong>Tư vấn độ co giãn chất liệu:</strong> ' + noteText);
+
+        // Hiển thị hộp thông báo kết quả dạng Alert Pastel màu xanh mint (#E8F5E9)
+        $('#lnkt_size_result_box')
+            .removeClass('d-none alert-danger')
+            .addClass('lnkt-alert-mint-pastel alert-mint text-slate d-block')
+            .html(
+                '<div class="d-flex justify-content-between align-items-center">' +
+                '<div><strong><i class="fa-solid fa-circle-check text-success mr-1"></i> Kích cỡ gợi ý chuẩn: <span class="text-peach">' + finalSize + '</span></strong>' +
+                '<div class="small mt-1">' + noteText + '</div></div>' +
+                '<span class="badge badge-pill badge-mint ml-2 px-2 py-1"><i class="fa-solid fa-bolt mr-1"></i>Đã đồng bộ PDP</span>' +
+                '</div>'
+            );
+
+        // Tự động đồng bộ kích cỡ gợi ý xuống radio button & form đặt hàng trên PDP
+        window.lnktSyncSizeToPdpAndOrder(finalSize);
+    }
+
     window.lnktSwitchSizeTab = function (typeKey) {
         $('#lnkt_activeSizeType').val(typeKey);
         window.lnktRunSuggestSize();
@@ -459,137 +665,230 @@ $(document).ready(function () {
         window.lnktRunSuggestSize();
     };
 
-    // Thuật toán mô phỏng Stored Function lnkt_suggest_size(p_category_id, p_measure_cm)
+    // Gửi AJAX tới ProductController@ajaxSuggestSize và đồng bộ kết quả
     window.lnktRunSuggestSize = function () {
         let activeType = $('#lnkt_activeSizeType').val() || 'quan_ao';
-        let sizeBadge = $('#lnkt_suggestedSizeBadge');
-        let subSpec = $('#lnkt_suggestedSubSpec');
-        let stretchNote = $('#lnkt_materialStretchNote');
-        let summaryLabel = $('#lnkt_resultInputSummary');
+        let rawHeightStr = String($('#lnkt_inputHeightCm').val() || '').trim();
+        let rawFootStr = String($('#lnkt_inputFootCm').val() || '').trim();
+        let isChubby = $('#lnkt_chubbyCheck').is(':checked');
 
-        if (activeType === 'quan_ao') {
-            let heightCm = parseFloat($('#lnkt_inputHeightCm').val()) || 88;
-            let isChubby = $('#lnkt_chubbyCheck').is(':checked');
-            let selectedOpt = $('#lnkt_clothingCategory option:selected');
-            let catStretch = selectedOpt.attr('data-stretch') || 'Vải sợi tre Organic Bamboo co giãn 4 chiều (+8% đến +12%), thấm hút mồ hôi gấp 2 lần.';
+        let catId = (activeType === 'quan_ao')
+            ? (parseInt($('#lnkt_clothingCategory').val(), 10) || 1)
+            : (parseInt($('#lnkt_shoesCategory').val(), 10) || 4);
+        $('#lnkt_modal_cat_id').val(catId);
 
-            let effectiveHeight = isChubby ? (heightCm + 7) : heightCm;
-            let suggestedSize = 'Size 2 (2-3T)';
-            let specDetail = 'Khung chuẩn: Cao 84 - 94 cm • Ngực 52 - 55 cm • Eo 49 - 51 cm';
+        let parsedVal = (activeType === 'giay_dep') ? parseFloat(rawFootStr) : parseFloat(rawHeightStr);
+        lnktUpdateVirtualTape(activeType, parsedVal);
 
-            if (effectiveHeight <= 72) {
-                suggestedSize = 'Size 1 (0-1T)';
-                specDetail = 'Khung chuẩn: Cao 55 - 72 cm • Ngực 44 - 47 cm • Eo 42 - 45 cm';
-            } else if (effectiveHeight <= 83) {
-                suggestedSize = 'Size 2 (1-2T)';
-                specDetail = 'Khung chuẩn: Cao 73 - 83 cm • Ngực 48 - 51 cm • Eo 46 - 48 cm';
-            } else if (effectiveHeight <= 94) {
-                suggestedSize = 'Size 2 (2-3T)';
-                specDetail = 'Khung chuẩn: Cao 84 - 94 cm • Ngực 52 - 55 cm • Eo 49 - 51 cm';
-            } else if (effectiveHeight <= 106) {
-                suggestedSize = 'Size 4 (3-4T)';
-                specDetail = 'Khung chuẩn: Cao 95 - 106 cm • Ngực 56 - 59 cm • Eo 52 - 54 cm';
-            } else {
-                suggestedSize = 'Size 5 (5-6T)';
-                specDetail = 'Khung chuẩn: Cao 107 - 122 cm • Ngực 60 - 64 cm • Eo 55 - 58 cm';
+        // Kiểm tra ngoại lệ phía Client trước
+        let clientErr = lnktValidateSizeInput(activeType, rawHeightStr, rawFootStr);
+        let heightNum = parseFloat(rawHeightStr);
+        let footNum = parseFloat(rawFootStr);
+        let effectiveHeight = (!isNaN(heightNum) && isChubby) ? Math.min(160, heightNum + 7) : rawHeightStr;
+
+        // Hiển thị hiệu ứng UX Spinner Loading
+        $('#lnkt_btnSpinner').removeClass('d-none');
+        $('#lnkt_btnMagicIcon').addClass('d-none');
+        $('#lnkt_btnCalculateText').text('Đang tính kích cỡ chuẩn...');
+        $('#lnkt_btnCalculateSize').prop('disabled', true);
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=product&a=ajaxSuggestSize',
+            type: 'POST',
+            data: {
+                ma_danh_muc: catId,
+                chieu_cao:   (activeType === 'quan_ao') ? effectiveHeight : 88,
+                dai_chan:    (activeType === 'giay_dep') ? rawFootStr : (isNaN(footNum) ? 13.8 : footNum)
+            },
+            dataType: 'json',
+            timeout: 2000,
+            complete: function () {
+                $('#lnkt_btnSpinner').addClass('d-none');
+                $('#lnkt_btnMagicIcon').removeClass('d-none');
+                $('#lnkt_btnCalculateText').text('Gợi Ý Kích Cỡ Ngay');
+                $('#lnkt_btnCalculateSize').prop('disabled', false);
+            },
+            success: function (res) {
+                if (clientErr) {
+                    lnktShowSizeError(clientErr, activeType);
+                    return;
+                }
+                if (res && res.status === 'success' && res.recommended_size) {
+                    let selectedOpt = (activeType === 'quan_ao')
+                        ? $('#lnkt_clothingCategory option:selected')
+                        : $('#lnkt_shoesCategory option:selected');
+                    let noteText = res.note || selectedOpt.attr('data-stretch') || '';
+                    lnktRenderSuccessResult(res.recommended_size, noteText, activeType, heightNum, footNum, isChubby);
+                } else {
+                    let msg = (res && (res.message || res.note)) ? (res.message || res.note) : 'Dữ liệu số đo không hợp lệ!';
+                    lnktShowSizeError(msg, activeType);
+                }
+            },
+            error: function (xhr) {
+                if (clientErr) {
+                    lnktShowSizeError(clientErr, activeType);
+                    return;
+                }
+                if (xhr && xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.note)) {
+                    lnktShowSizeError(xhr.responseJSON.message || xhr.responseJSON.note, activeType);
+                    return;
+                }
+                // Fallback nếu chạy tĩnh chưa bật server
+                let selectedOpt = (activeType === 'quan_ao')
+                    ? $('#lnkt_clothingCategory option:selected')
+                    : $('#lnkt_shoesCategory option:selected');
+                let fallbackMeta = lnktComputeLocalFallback(activeType, (!isNaN(heightNum) && isChubby) ? (heightNum + 7) : heightNum, footNum);
+                let noteText = selectedOpt.attr('data-stretch') || 'Kích cỡ tính toán tự động dựa trên quy chuẩn bảng size FashionKids.';
+                lnktRenderSuccessResult(fallbackMeta.size, noteText, activeType, heightNum, footNum, isChubby);
             }
-
-            summaryLabel.text('Số đo: Chiều cao ' + heightCm + ' cm' + (isChubby ? ' (Trừ hao bé bụ bẫm)' : ''));
-            sizeBadge.text(suggestedSize);
-            subSpec.text(specDetail);
-            stretchNote.html('<i class="fa-solid fa-leaf mr-1"></i><strong>Tư vấn độ co giãn chất liệu:</strong> ' + catStretch);
-        } else {
-            let footCm = parseFloat($('#lnkt_inputFootCm').val()) || 13.8;
-            let selectedShoeOpt = $('#lnkt_shoesCategory option:selected');
-            let shoeStretch = selectedShoeOpt.attr('data-stretch') || 'Đế cao su non uốn dẻo 360 độ kết hợp lót đệm sợi tre êm ái, nên cộng dư 0.5cm cho bé mang tất thoải mái.';
-
-            let suggestedShoeSize = 'Size 24 (14cm)';
-            let shoeSpec = 'Khung chuẩn bàn chân: 13.5 - 14.4 cm • Lòng dép 14.5 cm';
-
-            if (footCm <= 12.5) {
-                suggestedShoeSize = 'Size 21 (12cm)';
-                shoeSpec = 'Khung chuẩn bàn chân: 11.5 - 12.5 cm • Lòng dép 12.8 cm';
-            } else if (footCm <= 13.4) {
-                suggestedShoeSize = 'Size 22 (13cm)';
-                shoeSpec = 'Khung chuẩn bàn chân: 12.6 - 13.4 cm • Lòng dép 13.6 cm';
-            } else if (footCm <= 14.4) {
-                suggestedShoeSize = 'Size 24 (14cm)';
-                shoeSpec = 'Khung chuẩn bàn chân: 13.5 - 14.4 cm • Lòng dép 14.5 cm';
-            } else if (footCm <= 15.5) {
-                suggestedShoeSize = 'Size 26 (15cm)';
-                shoeSpec = 'Khung chuẩn bàn chân: 14.5 - 15.5 cm • Lòng dép 15.6 cm';
-            } else {
-                suggestedShoeSize = 'Size 28 (16.5cm)';
-                shoeSpec = 'Khung chuẩn bàn chân: 15.6 - 17.0 cm • Lòng dép 17.2 cm';
-            }
-
-            summaryLabel.text('Số đo: Dài bàn chân ' + footCm + ' cm');
-            sizeBadge.text(suggestedShoeSize);
-            subSpec.text(shoeSpec);
-            stretchNote.html('<i class="fa-solid fa-shoe-prints mr-1"></i><strong>Tư vấn chất liệu & độ êm:</strong> ' + shoeStretch);
-        }
+        });
     };
+
+    // Bắt sự kiện submit của form thước dây đo size bằng jQuery AJAX (ưu tiên xử lý chuẩn Giai đoạn 4)
+    setTimeout(function () {
+        $('#lnkt_form_suggest_size').off('submit').on('submit', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            window.lnktRunSuggestSize();
+        });
+
+        $('#lnkt_inputHeightCm, #lnkt_inputFootCm, #lnkt_clothingCategory, #lnkt_shoesCategory, #lnkt_chubbyCheck')
+            .off('input change')
+            .on('input change', function () {
+                clearTimeout(window.lnktAjaxSuggestDebounce);
+                window.lnktAjaxSuggestDebounce = setTimeout(function () {
+                    window.lnktRunSuggestSize();
+                }, 250);
+            });
+    }, 0);
 
     // Áp dụng size vừa gợi ý từ Modal MH 04 sang trang PDP (MH 03) nếu có
     window.lnktApplySuggestedSizeToPdp = function () {
         let chosenSize = $('#lnkt_suggestedSizeBadge').text().trim();
-        if ($('#lbn_selectedSizeText').length) {
-            $('#lbn_selectedSizeText').text(chosenSize);
-            $('#lbn_selectedSizeInput').val(chosenSize);
+        if (!chosenSize || chosenSize === 'Chưa hợp lệ') {
+            alert('Vui lòng nhập số đo hợp lệ (Chiều cao từ 50cm đến 160cm) để nhận kích cỡ gợi ý trước khi áp dụng!');
+            return;
         }
+        window.lnktSyncSizeToPdpAndOrder(chosenSize);
         $('#modalSuggestSize').modal('hide');
-        alert('Đã áp dụng kích cỡ gợi ý "' + chosenSize + '" từ thước dây thông minh (lnkt_suggest_size)!');
+        alert('Đã áp dụng kích cỡ gợi ý "' + chosenSize + '" từ thước dây thông minh (fn_lnkt_goi_y_kich_co_chuan)!');
     };
 
     // ------------------------------------------------------------------------
     // 3. MH 05: Giỏ Hàng, Tỉnh/Thành Provinces Open API & Đặt Hàng (checkout.php)
     // ------------------------------------------------------------------------
-    const lnktFallbackDistricts = {
-        'TP. Hồ Chí Minh': ['Quận Bình Thạnh', 'Quận 1', 'Quận 3', 'Quận 7', 'Quận Phú Nhuận', 'Thành phố Thủ Đức', 'Quận Tân Bình'],
-        'Thành phố Hà Nội': ['Quận Cầu Giấy', 'Quận Ba Đình', 'Quận Hoàn Kiếm', 'Quận Đống Đa', 'Quận Hai Bà Trưng', 'Quận Tây Hồ'],
-        'Thành phố Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà', 'Quận Ngũ Hành Sơn', 'Quận Liên Chiểu'],
-        'Thành phố Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy', 'Quận Ô Môn'],
-        'Tỉnh Bình Dương': ['Thành phố Thủ Dầu Một', 'Thành phố Dĩ An', 'Thành phố Thuận An', 'Thành phố Tân Uyên'],
-        'Tỉnh Đồng Nai': ['Thành phố Biên Hòa', 'Thành phố Long Khánh', 'Huyện Long Thành', 'Huyện Nhơn Trạch']
-    };
+    const lnktProvinceApiUrl = 'https://provinces.open-api.vn/api/?depth=2';
+    const lnktProvinceSelect = $('#tgb_select_province');
+    const lnktDistrictSelect = $('#tgb_select_district');
+    const lnktProvinceStatus = $('#lnkt_apiStatusText');
+    let lnktProvinceData = [];
 
-    window.lnktOnProvinceChange = function (provinceName) {
-        let districtSelect = $('#lnkt_districtSelect');
-        if (!districtSelect.length) return;
+    function lnktSetProvinceStatus(message, iconClass) {
+        if (lnktProvinceStatus.length) {
+            lnktProvinceStatus
+                .empty()
+                .append($('<i>').addClass('fa-solid ' + iconClass + ' mr-1'))
+                .append(document.createTextNode(message));
+        }
+    }
 
-        let districts = lnktFallbackDistricts[provinceName] || ['Quận Trung Tâm', 'Huyện Ngoại Thành'];
-        districtSelect.empty();
-        districts.forEach(function (dName) {
-            districtSelect.append($('<option>', { value: dName, text: dName }));
+    window.lnktOnProvinceChange = function (provinceKey) {
+        if (!lnktDistrictSelect.length) return;
+
+        const selectedProvince = lnktProvinceData.find(function (province) {
+            return String(province.code) === String(provinceKey) || province.name === provinceKey;
+        });
+
+        if (!provinceKey || !selectedProvince) {
+            lnktDistrictSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }))
+                .prop('disabled', true);
+            return;
+        }
+
+        const selectedKey = String(provinceKey);
+        lnktDistrictSelect
+            .empty()
+            .append($('<option>', { value: '', text: 'Đang tải Quận/Huyện...' }))
+            .prop('disabled', true);
+
+        window.requestAnimationFrame(function () {
+            if (String(lnktProvinceSelect.val()) !== selectedKey) return;
+
+            const districts = Array.isArray(selectedProvince.districts) ? selectedProvince.districts : [];
+            lnktDistrictSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
+
+            districts.forEach(function (district) {
+                lnktDistrictSelect.append($('<option>', {
+                    value: district.name,
+                    text: district.name
+                }));
+            });
+
+            lnktDistrictSelect.prop('disabled', districts.length === 0);
         });
     };
 
-    // Đồng bộ trực tiếp với Provinces Open API (https://provinces.open-api.vn/api/?depth=2)
+    // Chỉ tải API một lần; đổi tỉnh sử dụng dữ liệu districts đã nhận được.
     window.lnktSyncProvincesOpenApi = function () {
-        let statusEl = $('#lnkt_apiStatusText');
-        statusEl.html('<i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải dữ liệu từ provinces.open-api.vn...');
+        if (!lnktProvinceSelect.length) return;
 
-        $.ajax({
-            url: 'https://provinces.open-api.vn/api/?depth=2',
-            method: 'GET',
-            timeout: 4500,
-            success: function (data) {
-                if (Array.isArray(data) && data.length > 0) {
-                    let provSelect = $('#lnkt_provinceSelect');
-                    provSelect.empty();
-                    data.forEach(function (prov) {
-                        lnktFallbackDistricts[prov.name] = (prov.districts || []).map(function (d) { return d.name; });
-                        provSelect.append($('<option>', { value: prov.name, text: prov.name }));
-                    });
-                    window.lnktOnProvinceChange(data[0].name);
-                    statusEl.html('<i class="fa-solid fa-circle-check text-success mr-1"></i>Đã đồng bộ trực tiếp ' + data.length + ' Tỉnh/Thành từ Provinces Open API!');
+        lnktProvinceData = [];
+        lnktProvinceSelect
+            .prop('disabled', true)
+            .empty()
+            .append($('<option>', { value: '', text: 'Đang tải Tỉnh / Thành phố...' }));
+        lnktDistrictSelect
+            .prop('disabled', true)
+            .empty()
+            .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
+        lnktSetProvinceStatus('Đang tải dữ liệu từ Provinces Open API...', 'fa-spinner fa-spin text-info');
+
+        $.getJSON(lnktProvinceApiUrl)
+            .done(function (provinces) {
+                if (!Array.isArray(provinces) || provinces.length === 0) {
+                    lnktSetProvinceStatus('API không trả về danh sách Tỉnh / Thành phố hợp lệ.', 'fa-circle-exclamation text-danger');
+                    return;
                 }
-            },
-            error: function () {
-                statusEl.html('<i class="fa-solid fa-circle-check text-success mr-1"></i>Đang sử dụng bộ dữ liệu chuẩn Provinces Open API (Offline-ready).');
-            }
-        });
+
+                lnktProvinceData = provinces;
+                lnktProvinceSelect
+                    .empty()
+                    .append($('<option>', { value: '', text: '-- Chọn Tỉnh / Thành phố --' }));
+
+                provinces.forEach(function (province) {
+                    lnktProvinceSelect.append($('<option>', {
+                        value: province.name,
+                        text: province.name
+                    }));
+                });
+
+                lnktProvinceSelect.prop('disabled', false);
+                lnktSetProvinceStatus('Đã tải ' + provinces.length + ' Tỉnh / Thành phố từ Provinces Open API.', 'fa-circle-check text-success');
+            })
+            .fail(function () {
+                lnktProvinceData = [];
+                lnktProvinceSelect
+                    .empty()
+                    .append($('<option>', { value: '', text: '-- Không tải được danh sách Tỉnh / Thành phố --' }));
+                lnktSetProvinceStatus('Không thể tải dữ liệu từ Provinces Open API. Vui lòng thử lại.', 'fa-circle-exclamation text-danger');
+            })
+            .always(function () {
+                if (lnktProvinceData.length > 0) {
+                    lnktProvinceSelect.prop('disabled', false);
+                }
+            });
     };
+
+    if (lnktProvinceSelect.length) {
+        lnktProvinceSelect.on('change', function () {
+            window.lnktOnProvinceChange($(this).val());
+        });
+        window.lnktSyncProvincesOpenApi();
+    }
 
     window.lnktChangeCartQty = function (itemId, delta) {
         let inputEl = $('#lnkt_cartQty_' + itemId);
@@ -652,33 +951,6 @@ $(document).ready(function () {
         }
         $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmount));
         $('#lnkt_summaryRewardPoints').text('+' + rewardPts + ' điểm VIP');
-    };
-
-    window.lnktSubmitCheckoutOrder = function () {
-        let receiverName = ($('#lnkt_receiverName').val() || '').trim();
-        let receiverPhone = ($('#lnkt_receiverPhone').val() || '').trim();
-        let province = $('#lnkt_provinceSelect').val();
-        let district = $('#lnkt_districtSelect').val();
-        let address = ($('#lnkt_shippingAddress').val() || '').trim();
-        let totalStr = $('#lnkt_summaryTotalAmount').text().trim();
-
-        if ($('.lnkt-cart-row').length === 0) {
-            alert('Giỏ hàng đang trống! Vui lòng chọn ít nhất 1 sản phẩm trước khi thanh toán.');
-            return;
-        }
-        if (!receiverName || !receiverPhone || !address) {
-            alert('Vui lòng nhập đầy đủ Họ tên phụ huynh, Số điện thoại và Địa chỉ nhận hàng!');
-            return;
-        }
-
-        alert(
-            'Đã thực thi Stored Procedure lnkt_create_order thành công!\n' +
-            '• Mã vận đơn: #FK-ORD-202608\n' +
-            '• Người nhận: ' + receiverName + ' (' + receiverPhone + ')\n' +
-            '• Giao đến: ' + address + ', ' + district + ', ' + province + '\n' +
-            '• Tổng thanh toán thực tế: ' + totalStr
-        );
-        window.location.href = '/FashionKids/views/pages/order-tracking.php?status=cho_duyet';
     };
 
     // ------------------------------------------------------------------------
