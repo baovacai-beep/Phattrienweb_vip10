@@ -51,6 +51,32 @@
 
                 <input type="hidden" id="lnkt_activeSizeType" value="quan_ao">
 
+                <!-- Minh họa Thước Dây Ảo Trực Quan (Virtual Tape Measure - Giai đoạn 4) -->
+                <div class="lnkt-virtual-tape-box p-3 mb-3 rounded border shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small font-weight-bold text-slate">
+                            <i class="fa-solid fa-tape text-peach mr-1"></i> Thước dây ảo đo tự động (50 cm &ndash; 160 cm):
+                        </span>
+                        <span id="lnkt_tapeValueBadge" class="badge badge-pill badge-peach px-3 py-1 font-weight-bold">
+                            88 cm
+                        </span>
+                    </div>
+                    <div class="lnkt-tape-track position-relative rounded-pill overflow-hidden my-2" id="lnkt_virtualTapeRuler">
+                        <div id="lnkt_tapeProgressFill" class="lnkt-tape-fill"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted-custom fk-fs-075 font-weight-bold">
+                        <span>50 cm (Sơ sinh)</span>
+                        <span>80 cm</span>
+                        <span>105 cm</span>
+                        <span>130 cm</span>
+                        <span>160 cm (Trẻ lớn)</span>
+                    </div>
+                </div>
+
+                <!-- Form Thước Dây Gợi Ý Size (AJAX Submit -> ProductController@ajaxSuggestSize) -->
+                <form id="lnkt_form_suggest_size" action="/FashionKids/index.php?c=product&amp;a=ajaxSuggestSize" method="POST" novalidate>
+                    <input type="hidden" id="lnkt_modal_cat_id" name="ma_danh_muc" value="1">
+
                 <!-- Nội dung 2 Tab -->
                 <div class="tab-content" id="lnkt_sizeChartTabContent">
                     <!-- TAB 1: QUẦN ÁO (ĐO THEO CHIỀU CAO) -->
@@ -70,11 +96,11 @@
 
                                 <div class="form-group col-12 col-md-4 mb-2 mb-md-0">
                                     <label class="small font-weight-bold text-slate mb-1" for="lnkt_inputHeightCm">
-                                        Chiều cao của bé (<strong>cm</strong>):
+                                        Chiều cao của bé (<strong>50 - 160 cm</strong>):
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" id="lnkt_inputHeightCm" class="form-control font-weight-bold text-slate"
-                                               placeholder="VD: 88" value="88" min="45" max="135" step="0.5">
+                                        <input type="text" inputmode="decimal" id="lnkt_inputHeightCm" name="chieu_cao" class="form-control font-weight-bold text-slate"
+                                               placeholder="VD: 88 (50 - 160)" value="88" min="50" max="160" step="0.5" autocomplete="off">
                                         <div class="input-group-append">
                                             <span class="input-group-text font-weight-bold bg-white text-peach">cm</span>
                                         </div>
@@ -121,8 +147,8 @@
                                         Chiều dài bàn chân bé từ gót đến ngón cái (<strong>cm</strong>):
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" id="lnkt_inputFootCm" class="form-control font-weight-bold text-slate"
-                                               placeholder="VD: 13.8" value="13.8" min="10.5" max="20.0" step="0.1">
+                                        <input type="text" inputmode="decimal" id="lnkt_inputFootCm" name="dai_chan" class="form-control font-weight-bold text-slate"
+                                               placeholder="VD: 13.8 (10 - 25)" value="13.8" min="10.0" max="25.0" step="0.1" autocomplete="off">
                                         <div class="input-group-append">
                                             <span class="input-group-text font-weight-bold bg-white text-peach">cm</span>
                                         </div>
@@ -143,11 +169,17 @@
                     </div>
                 </div>
 
-                <!-- Nút kích hoạt Gợi Ý Kích Cỡ Ngay -->
-                <button type="button" id="lnkt_btnCalculateSize" onclick="lnktRunSuggestSize()"
-                        class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm mb-4">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Gợi Ý Kích Cỡ Ngay
+                <!-- Nút kích hoạt Gợi Ý Kích Cỡ Ngay (AJAX Submit + Spinner Loading) -->
+                <button type="submit" id="lnkt_btnCalculateSize"
+                        class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm mb-3">
+                    <span id="lnkt_btnSpinner" class="spinner-border spinner-border-sm mr-2 d-none" role="status" aria-hidden="true"></span>
+                    <i id="lnkt_btnMagicIcon" class="fa-solid fa-wand-magic-sparkles mr-1"></i>
+                    <span id="lnkt_btnCalculateText">Gợi Ý Kích Cỡ Ngay</span>
                 </button>
+                </form>
+
+                <!-- Hộp thông báo Alert Pastel màu xanh Mint (#E8F5E9) / Cảnh báo lỗi Validation -->
+                <div id="lnkt_size_result_box" class="alert lnkt-alert-mint-pastel p-3 mb-3 shadow-sm d-none" role="alert"></div>
 
                 <!-- KHUNG THÔNG BÁO KẾT QUẢ NỔI BẬT TRÊN NỀN XANH MINT (#B8E0D2) -->
                 <div id="lnkt_sizeResultContainer" class="lnkt-size-result-mint p-3 p-md-4 mb-4 shadow-sm">
