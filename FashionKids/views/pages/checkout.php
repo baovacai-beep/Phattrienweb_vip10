@@ -206,7 +206,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                 </div>
 
                 <div class="card-body p-4 pt-2">
-                    <form id="lnkt_formCheckoutOrder">
+                    <form id="lnkt_formCheckoutOrder" method="post" action="/FashionKids/index.php?c=order&amp;a=processCheckout">
                         <div class="form-row">
                             <div class="form-group col-12 col-md-6">
                                 <label class="small font-weight-bold text-slate" for="lnkt_receiverName">
@@ -216,7 +216,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white"><i class="fa-solid fa-user text-peach"></i></span>
                                     </div>
-                                    <input type="text" id="lnkt_receiverName" name="receiver_name" class="form-control"
+                                    <input type="text" id="lnkt_receiverName" name="ten_nguoi_nhan" class="form-control"
                                            value="Võ Thị Thanh Thảo" placeholder="Nhập họ tên phụ huynh..." required>
                                 </div>
                             </div>
@@ -229,7 +229,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white"><i class="fa-solid fa-phone text-peach"></i></span>
                                     </div>
-                                    <input type="tel" id="lnkt_receiverPhone" name="receiver_phone" class="form-control"
+                                    <input type="tel" id="lnkt_receiverPhone" name="so_dien_thoai_nhan" class="form-control"
                                            value="0918889999" placeholder="VD: 0918889999" pattern="[0-9]{10,11}" required>
                                 </div>
                             </div>
@@ -238,34 +238,25 @@ $init_reward_points = floor($init_total_amount / 10000);
                         <!-- Hệ thống Dropdown chọn Tỉnh/Thành phố và Quận/Huyện (Provinces Open API) -->
                         <div class="form-row">
                             <div class="form-group col-12 col-md-6">
-                                <label class="small font-weight-bold text-slate" for="lnkt_provinceSelect">
-                                    Tỉnh / Thành phố (<code>province</code>) (<span class="text-danger">*</span>):
+                                <label class="small font-weight-bold text-slate" for="tgb_select_province">
+                                    Tỉnh / Thành phố (<code>tinh_thanh_pho</code>) (<span class="text-danger">*</span>):
                                 </label>
-                                <select id="lnkt_provinceSelect" name="province" class="custom-select form-control"
-                                        onchange="lnktOnProvinceChange(this.value)" required>
-                                    <option value="TP. Hồ Chí Minh" selected>TP. Hồ Chí Minh</option>
-                                    <option value="Thành phố Hà Nội">Thành phố Hà Nội</option>
-                                    <option value="Thành phố Đà Nẵng">Thành phố Đà Nẵng</option>
-                                    <option value="Thành phố Cần Thơ">Thành phố Cần Thơ</option>
-                                    <option value="Tỉnh Bình Dương">Tỉnh Bình Dương</option>
-                                    <option value="Tỉnh Đồng Nai">Tỉnh Đồng Nai</option>
+                                <select id="tgb_select_province" name="tinh_thanh_pho" class="custom-select form-control"
+                                        required disabled>
+                                    <option value="">Đang tải Tỉnh / Thành phố...</option>
                                 </select>
                                 <small id="lnkt_apiStatusText" class="text-muted-custom d-block mt-1">
-                                    <i class="fa-solid fa-circle-check text-success mr-1"></i>Sẵn sàng kết nối <code>provinces.open-api.vn/api/?depth=2</code>
+                                    <i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải dữ liệu từ Provinces Open API...
                                 </small>
                             </div>
 
                             <div class="form-group col-12 col-md-6">
-                                <label class="small font-weight-bold text-slate" for="lnkt_districtSelect">
-                                    Quận / Huyện (<code>district</code>) (<span class="text-danger">*</span>):
+                                <label class="small font-weight-bold text-slate" for="tgb_select_district">
+                                    Quận / Huyện (<code>quan_huyen</code>) (<span class="text-danger">*</span>):
                                 </label>
-                                <select id="lnkt_districtSelect" name="district" class="custom-select form-control" required>
-                                    <option value="Quận Bình Thạnh" selected>Quận Bình Thạnh</option>
-                                    <option value="Quận 1">Quận 1</option>
-                                    <option value="Quận 3">Quận 3</option>
-                                    <option value="Quận 7">Quận 7</option>
-                                    <option value="Quận Phú Nhuận">Quận Phú Nhuận</option>
-                                    <option value="Thành phố Thủ Đức">Thành phố Thủ Đức</option>
+                                <select id="tgb_select_district" name="quan_huyen" class="custom-select form-control"
+                                        required disabled>
+                                    <option value="">-- Chọn Quận / Huyện --</option>
                                 </select>
                             </div>
                         </div>
@@ -274,9 +265,10 @@ $init_reward_points = floor($init_total_amount / 10000);
                             <label class="small font-weight-bold text-slate" for="lnkt_shippingAddress">
                                 Địa chỉ giao hàng chi tiết (Số nhà, Tên đường, Phường/Xã) (<span class="text-danger">*</span>):
                             </label>
-                            <input type="text" id="lnkt_shippingAddress" name="shipping_address" class="form-control"
+                            <input type="text" id="lnkt_shippingAddress" name="dia_chi_giao_hang" class="form-control"
                                    value="Số 120 Điện Biên Phủ, Phường 17" placeholder="Nhập số nhà, tên đường, phường/xã..." required>
                         </div>
+                        <input type="hidden" name="thu_dien_tu_nhan" value="">
 
                         <div class="form-group mb-0">
                             <label class="small font-weight-bold text-slate" for="lnkt_orderNote">
@@ -376,13 +368,13 @@ $init_reward_points = floor($init_total_amount / 10000);
                     <div class="mb-4">
                         <label class="small font-weight-bold text-slate mb-2 d-block">Phương thức thanh toán:</label>
                         <div class="custom-control custom-radio mb-2">
-                            <input type="radio" id="lnkt_payCod" name="payment_method" class="custom-control-input" value="COD" checked>
+                            <input type="radio" id="lnkt_payCod" name="phuong_thuc_thanh_toan" form="lnkt_formCheckoutOrder" class="custom-control-input" value="cod" checked>
                             <label class="custom-control-label small font-weight-bold text-slate" for="lnkt_payCod">
                                 <i class="fa-solid fa-money-bill-wave text-success mr-1"></i> Thanh toán khi nhận hàng (COD - Được đồng kiểm)
                             </label>
                         </div>
                         <div class="custom-control custom-radio">
-                            <input type="radio" id="lnkt_payBank" name="payment_method" class="custom-control-input" value="VIETQR">
+                            <input type="radio" id="lnkt_payBank" name="phuong_thuc_thanh_toan" form="lnkt_formCheckoutOrder" class="custom-control-input" value="vietqr">
                             <label class="custom-control-label small font-weight-bold text-slate" for="lnkt_payBank">
                                 <i class="fa-solid fa-qrcode text-info mr-1"></i> Chuyển khoản nhanh VietQR / Ví MoMo
                             </label>
@@ -390,7 +382,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                     </div>
 
                     <!-- Nút Chốt Đặt Hàng -->
-                    <button type="button" id="lnkt_btnSubmitCheckout" onclick="lnktSubmitCheckoutOrder()"
+                    <button type="submit" id="lnkt_btnSubmitCheckout" form="lnkt_formCheckoutOrder"
                             class="btn btn-pastel-primary btn-block font-weight-bold py-3 shadow">
                         <i class="fa-solid fa-paper-plane mr-2"></i>Xác Nhận Đặt Hàng Ngay (<code>lnkt_create_order</code>)
                     </button>
@@ -410,4 +402,3 @@ $init_reward_points = floor($init_total_amount / 10000);
 require_once __DIR__ . "/../modals/modal-suggest-size.php";
 require_once __DIR__ . "/../layouts/footer.php";
 ?>
-
