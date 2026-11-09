@@ -777,52 +777,118 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------
     // 3. MH 05: Giỏ Hàng, Tỉnh/Thành Provinces Open API & Đặt Hàng (checkout.php)
     // ------------------------------------------------------------------------
-    const lnktFallbackDistricts = {
-        'TP. Hồ Chí Minh': ['Quận Bình Thạnh', 'Quận 1', 'Quận 3', 'Quận 7', 'Quận Phú Nhuận', 'Thành phố Thủ Đức', 'Quận Tân Bình'],
-        'Thành phố Hà Nội': ['Quận Cầu Giấy', 'Quận Ba Đình', 'Quận Hoàn Kiếm', 'Quận Đống Đa', 'Quận Hai Bà Trưng', 'Quận Tây Hồ'],
-        'Thành phố Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà', 'Quận Ngũ Hành Sơn', 'Quận Liên Chiểu'],
-        'Thành phố Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy', 'Quận Ô Môn'],
-        'Tỉnh Bình Dương': ['Thành phố Thủ Dầu Một', 'Thành phố Dĩ An', 'Thành phố Thuận An', 'Thành phố Tân Uyên'],
-        'Tỉnh Đồng Nai': ['Thành phố Biên Hòa', 'Thành phố Long Khánh', 'Huyện Long Thành', 'Huyện Nhơn Trạch']
-    };
+    const lnktProvinceApiUrl = 'https://provinces.open-api.vn/api/?depth=2';
+    const lnktProvinceSelect = $('#tgb_select_province');
+    const lnktDistrictSelect = $('#tgb_select_district');
+    const lnktProvinceStatus = $('#lnkt_apiStatusText');
+    let lnktProvinceData = [];
 
-    window.lnktOnProvinceChange = function (provinceName) {
-        let districtSelect = $('#lnkt_districtSelect');
-        if (!districtSelect.length) return;
+    function lnktSetProvinceStatus(message, iconClass) {
+        if (lnktProvinceStatus.length) {
+            lnktProvinceStatus
+                .empty()
+                .append($('<i>').addClass('fa-solid ' + iconClass + ' mr-1'))
+                .append(document.createTextNode(message));
+        }
+    }
 
-        let districts = lnktFallbackDistricts[provinceName] || ['Quận Trung Tâm', 'Huyện Ngoại Thành'];
-        districtSelect.empty();
-        districts.forEach(function (dName) {
-            districtSelect.append($('<option>', { value: dName, text: dName }));
+    window.lnktOnProvinceChange = function (provinceKey) {
+        if (!lnktDistrictSelect.length) return;
+
+        const selectedProvince = lnktProvinceData.find(function (province) {
+            return String(province.code) === String(provinceKey) || province.name === provinceKey;
+        });
+
+        if (!provinceKey || !selectedProvince) {
+            lnktDistrictSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }))
+                .prop('disabled', true);
+            return;
+        }
+
+        const selectedKey = String(provinceKey);
+        lnktDistrictSelect
+            .empty()
+            .append($('<option>', { value: '', text: 'Đang tải Quận/Huyện...' }))
+            .prop('disabled', true);
+
+        window.requestAnimationFrame(function () {
+            if (String(lnktProvinceSelect.val()) !== selectedKey) return;
+
+            const districts = Array.isArray(selectedProvince.districts) ? selectedProvince.districts : [];
+            lnktDistrictSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
+
+            districts.forEach(function (district) {
+                lnktDistrictSelect.append($('<option>', {
+                    value: district.name,
+                    text: district.name
+                }));
+            });
+
+            lnktDistrictSelect.prop('disabled', districts.length === 0);
         });
     };
 
-    // Đồng bộ trực tiếp với Provinces Open API (https://provinces.open-api.vn/api/?depth=2)
+    // Chỉ tải API một lần; đổi tỉnh sử dụng dữ liệu districts đã nhận được.
     window.lnktSyncProvincesOpenApi = function () {
-        let statusEl = $('#lnkt_apiStatusText');
-        statusEl.html('<i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải dữ liệu từ provinces.open-api.vn...');
+        if (!lnktProvinceSelect.length) return;
 
-        $.ajax({
-            url: 'https://provinces.open-api.vn/api/?depth=2',
-            method: 'GET',
-            timeout: 4500,
-            success: function (data) {
-                if (Array.isArray(data) && data.length > 0) {
-                    let provSelect = $('#lnkt_provinceSelect');
-                    provSelect.empty();
-                    data.forEach(function (prov) {
-                        lnktFallbackDistricts[prov.name] = (prov.districts || []).map(function (d) { return d.name; });
-                        provSelect.append($('<option>', { value: prov.name, text: prov.name }));
-                    });
-                    window.lnktOnProvinceChange(data[0].name);
-                    statusEl.html('<i class="fa-solid fa-circle-check text-success mr-1"></i>Đã đồng bộ trực tiếp ' + data.length + ' Tỉnh/Thành từ Provinces Open API!');
+        lnktProvinceData = [];
+        lnktProvinceSelect
+            .prop('disabled', true)
+            .empty()
+            .append($('<option>', { value: '', text: 'Đang tải Tỉnh / Thành phố...' }));
+        lnktDistrictSelect
+            .prop('disabled', true)
+            .empty()
+            .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
+        lnktSetProvinceStatus('Đang tải dữ liệu từ Provinces Open API...', 'fa-spinner fa-spin text-info');
+
+        $.getJSON(lnktProvinceApiUrl)
+            .done(function (provinces) {
+                if (!Array.isArray(provinces) || provinces.length === 0) {
+                    lnktSetProvinceStatus('API không trả về danh sách Tỉnh / Thành phố hợp lệ.', 'fa-circle-exclamation text-danger');
+                    return;
                 }
-            },
-            error: function () {
-                statusEl.html('<i class="fa-solid fa-circle-check text-success mr-1"></i>Đang sử dụng bộ dữ liệu chuẩn Provinces Open API (Offline-ready).');
-            }
-        });
+
+                lnktProvinceData = provinces;
+                lnktProvinceSelect
+                    .empty()
+                    .append($('<option>', { value: '', text: '-- Chọn Tỉnh / Thành phố --' }));
+
+                provinces.forEach(function (province) {
+                    lnktProvinceSelect.append($('<option>', {
+                        value: province.name,
+                        text: province.name
+                    }));
+                });
+
+                lnktProvinceSelect.prop('disabled', false);
+                lnktSetProvinceStatus('Đã tải ' + provinces.length + ' Tỉnh / Thành phố từ Provinces Open API.', 'fa-circle-check text-success');
+            })
+            .fail(function () {
+                lnktProvinceData = [];
+                lnktProvinceSelect
+                    .empty()
+                    .append($('<option>', { value: '', text: '-- Không tải được danh sách Tỉnh / Thành phố --' }));
+                lnktSetProvinceStatus('Không thể tải dữ liệu từ Provinces Open API. Vui lòng thử lại.', 'fa-circle-exclamation text-danger');
+            })
+            .always(function () {
+                if (lnktProvinceData.length > 0) {
+                    lnktProvinceSelect.prop('disabled', false);
+                }
+            });
     };
+
+    if (lnktProvinceSelect.length) {
+        lnktProvinceSelect.on('change', function () {
+            window.lnktOnProvinceChange($(this).val());
+        });
+        window.lnktSyncProvincesOpenApi();
+    }
 
     window.lnktChangeCartQty = function (itemId, delta) {
         let inputEl = $('#lnkt_cartQty_' + itemId);
@@ -885,33 +951,6 @@ $(document).ready(function () {
         }
         $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmount));
         $('#lnkt_summaryRewardPoints').text('+' + rewardPts + ' điểm VIP');
-    };
-
-    window.lnktSubmitCheckoutOrder = function () {
-        let receiverName = ($('#lnkt_receiverName').val() || '').trim();
-        let receiverPhone = ($('#lnkt_receiverPhone').val() || '').trim();
-        let province = $('#lnkt_provinceSelect').val();
-        let district = $('#lnkt_districtSelect').val();
-        let address = ($('#lnkt_shippingAddress').val() || '').trim();
-        let totalStr = $('#lnkt_summaryTotalAmount').text().trim();
-
-        if ($('.lnkt-cart-row').length === 0) {
-            alert('Giỏ hàng đang trống! Vui lòng chọn ít nhất 1 sản phẩm trước khi thanh toán.');
-            return;
-        }
-        if (!receiverName || !receiverPhone || !address) {
-            alert('Vui lòng nhập đầy đủ Họ tên phụ huynh, Số điện thoại và Địa chỉ nhận hàng!');
-            return;
-        }
-
-        alert(
-            'Đã thực thi Stored Procedure lnkt_create_order thành công!\n' +
-            '• Mã vận đơn: #FK-ORD-202608\n' +
-            '• Người nhận: ' + receiverName + ' (' + receiverPhone + ')\n' +
-            '• Giao đến: ' + address + ', ' + district + ', ' + province + '\n' +
-            '• Tổng thanh toán thực tế: ' + totalStr
-        );
-        window.location.href = '/FashionKids/views/pages/order-tracking.php?status=cho_duyet';
     };
 
     // ------------------------------------------------------------------------
