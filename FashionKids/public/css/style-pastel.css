@@ -937,3 +937,39 @@ body {
     background-color: #FAF8F5;
     vertical-align: middle;
 }
+
+/* ==========================================================================
+   GIAI ĐOẠN 4 - LÊ NGUYỄN KHÁNH TRÌNH (lnkt_): THƯỚC DÂY ẢO & ALERT #E8F5E9
+   ========================================================================== */
+.lnkt-alert-mint-pastel {
+    background-color: #E8F5E9 !important;
+    border: 1.5px solid #A5D6A7 !important;
+    border-radius: 14px !important;
+    color: #234E52 !important;
+}
+
+.lnkt-virtual-tape-box {
+    background: linear-gradient(135deg, #FFFDF5 0%, #FAF8F5 100%);
+    border-color: #E2E8F0 !important;
+    border-radius: 14px !important;
+}
+
+.lnkt-tape-track {
+    height: 18px;
+    background: repeating-linear-gradient(
+        90deg,
+        #FDE2B8,
+        #FDE2B8 9px,
+        #D4AF37 9px,
+        #D4AF37 10px
+    );
+    border: 1px solid #E6C387;
+}
+
+.lnkt-tape-fill {
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, rgba(184, 224, 210, 0.85) 0%, rgba(255, 158, 147, 0.9) 100%);
+    border-right: 3px solid #E53E3E;
+    transition: width 0.25s ease;
+}

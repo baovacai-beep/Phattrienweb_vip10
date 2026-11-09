@@ -15,43 +15,55 @@ class SizeChartModel extends Model {
      * Gọi Stored Function fn_lnkt_goi_y_kich_co_chuan đối chiếu bảng size
      */
     public function goiYSizeChuan(
-        int $maDanhMuc,
-        float $chieuCao,
-        ?float $vongNguc = null,
-        ?float $vongEo = null,
-        ?float $daiChan = null
+        $catId,
+        $height,
+        $chest = null,
+        $waist = null,
+        $footLength = null
     ): string {
+        $maDanhMuc = (int)$catId;
+        $chieuCao  = (float)$height;
+        $vongNguc  = ($chest !== null && $chest !== '') ? (float)$chest : null;
+        $vongEo    = ($waist !== null && $waist !== '') ? (float)$waist : null;
+        $daiChan   = ($footLength !== null && $footLength !== '') ? (float)$footLength : null;
+
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("SELECT fn_lnkt_goi_y_kich_co_chuan(:ma_dm, :cao, :nguc, :eo, :chan) AS size_goi_y");
+                $stmt = $this->db->prepare("SELECT fn_lnkt_goi_y_kich_co_chuan(:cat, :h, :c, :w, :f) AS size_chuan");
                 $stmt->execute([
-                    ':ma_dm' => $maDanhMuc,
-                    ':cao'   => $chieuCao,
-                    ':nguc'  => $vongNguc,
-                    ':eo'    => $vongEo,
-                    ':chan'  => $daiChan
+                    ':cat' => $maDanhMuc,
+                    ':h'   => $chieuCao,
+                    ':c'   => $vongNguc,
+                    ':w'   => $vongEo,
+                    ':f'   => $daiChan
                 ]);
                 $res = $stmt->fetch();
-                if (!empty($res['size_goi_y'])) {
-                    return $res['size_goi_y'];
+                $sizeChuan = $res['size_chuan'] ?? $res['size_goi_y'] ?? '';
+                if (!empty($sizeChuan) && $sizeChuan !== 'Chưa có size phù hợp') {
+                    return $sizeChuan;
                 }
             } catch (PDOException $e) {
                 error_log("Lỗi gọi Stored Function fn_lnkt_goi_y_kich_co_chuan: " . $e->getMessage());
             }
         }
 
-        // Fallback thuật toán nếu MySQL chưa khởi động
+        // Fallback thuật toán nếu MySQL chưa khởi động hoặc ngoài khoảng seed mẫu
         if ($maDanhMuc === 4) {
             $val = $daiChan ?: 14.5;
+            if ($val <= 12.5) return 'Size 21 (12cm)';
+            if ($val <= 13.4) return 'Size 22 (13cm)';
             if ($val <= 14.9) return 'Size 24';
             if ($val <= 15.9) return 'Size 26';
-            return 'Size 28';
+            if ($val <= 17.0) return 'Size 28';
+            return 'Size 30';
         } else {
             $val = $chieuCao ?: 88.0;
+            if ($val <= 72) return 'Size 1 (0-1T)';
             if ($val < 90) return 'Size 1 (1-2T)';
             if ($val <= 100) return 'Size 2 (2-3T)';
             if ($val <= 110) return 'Size 3 (3-4T)';
-            return 'Size 4 (4-5T)';
+            if ($val <= 122) return 'Size 4 (4-5T)';
+            return 'Size 5 (5-6T)';
         }
     }
 
