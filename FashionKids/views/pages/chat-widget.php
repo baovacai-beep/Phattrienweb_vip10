@@ -1,45 +1,25 @@
-<!-- ==========================================
-     MH 08: LIVE CHAT WIDGET NỔI GÓC PHẢI (TGB_)
-     ========================================== -->
-<!-- Nút tròn bật Chat -->
-<button class="tgb-chat-floating-btn" id="btnToggleChat" title="Tư vấn size & chất vải">
-    <i class="fas fa-comment-dots"></i>
-</button>
+<?php
+$page_title = "Trải Nghiệm Hộp Thoại Tư Vấn Trực Tuyến (MH 08)";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
+?>
 
-<!-- Khung hộp thoại Chat -->
-<div class="tgb-chat-box-popup" id="boxChatPopup">
-    <!-- Header hộp chat -->
-    <div class="p-3 bg-peach text-white d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-            <div class="position-relative mr-2">
-                <i class="fas fa-headset fa-2x"></i>
-                <span class="badge badge-success rounded-circle position-absolute fk-chat-dot"> </span>
-            </div>
-            <div>
-                <h6 class="mb-0 font-weight-bold">Tư vấn FashionKids</h6>
-                <small class="text-white-50">Thường phản hồi trong 2 phút</small>
-            </div>
-        </div>
-        <button type="button" class="close text-white" id="btnCloseChat" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-
-    <!-- Vùng tin nhắn -->
-    <div class="tgb-chat-messages-container" id="chatMessagesArea">
-        <div class="text-center text-muted my-2"><small>Hôm nay</small></div>
-        <div class="chat-bubble chat-bubble-staff">
-            Dạ FashionKids chào ba mẹ ạ! Ba mẹ cần tư vấn chọn kích cỡ hay xem mẫu đồ cho bé trai hay bé gái ạ?
-        </div>
-    </div>
-
-    <!-- Ô gõ tin nhắn -->
-    <div class="p-2 bg-white border-top">
-        <form id="formSendChat" class="d-flex align-items-center">
-            <input type="text" class="form-control border-0 mr-2" id="inputChatMessage" placeholder="Nhập câu hỏi của bạn..." autocomplete="off" required>
-            <button type="submit" class="btn btn-peach rounded-circle px-3 py-2 text-white">
-                <i class="fas fa-paper-plane"></i>
+<div class="container my-5 text-center">
+    <div class="card card-pastel p-5 shadow-sm border-0 bg-white mx-auto w-75">
+        <span class="badge badge-pill badge-mint px-3 py-2 mb-3 mx-auto">MH 08: Live Chat Widget Realtime (<code>tgb_tin_nhan_tu_van</code>)</span>
+        <h3 class="font-weight-bold text-slate mb-2">Hộp Thoại Tư Vấn Khách Hàng Nổi Góc Phải</h3>
+        <p class="text-muted-custom mb-4">
+            Widget chat trực tuyến đã được tích hợp toàn cục ở góc dưới bên phải mọi trang web và đồng bộ trực tiếp với bàn làm việc CSKH (MH 11).
+        </p>
+        <div>
+            <button type="button" onclick="$('#customerChatWidget').collapse('show');" class="btn btn-pastel-primary px-4 py-2 font-weight-bold mr-2">
+                <i class="fa-solid fa-comments mr-1"></i>Mở Hộp Thoại Chat Ngay
             </button>
-        </form>
+            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-pastel-sky px-4 py-2 font-weight-bold">
+                <i class="fa-solid fa-headset mr-1"></i>Mở Bàn Làm Việc CSKH (MH 11)
+            </a>
+        </div>
     </div>
 </div>
+
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

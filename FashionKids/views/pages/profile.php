@@ -3,20 +3,65 @@ $page_title = "Hồ Sơ Cá Nhân & Thẻ VIP Điện Tử (MH 07)";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
-$user = [
-    'ho_va_ten'      => 'Võ Thị Thanh Thảo',
-    'ten_dang_nhap'  => 'me_be_sam',
-    'thu_dien_tu'    => 'thanhthao@gmail.com',
-    'so_dien_thoai'  => '0918889999',
-    'diem_tich_luy'  => 1650,
-    'ten_hang'       => 'VÀNG (GOLD)',
-    'hang_class'     => 'vip-card-gold',
-    'phan_tram_giam' => 10,
-    'diem_ke_tiep'   => 3000,
-    'da_xac_thuc'    => 1
-];
+$sessUser = $_SESSION['user'] ?? null;
+if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
+    $diem = (int)($sessUser['diem_tich_luy'] ?? 0);
+    if ($diem >= 3000) {
+        $tenHang = 'KIM CƯƠNG (DIAMOND)';
+        $hangClass = 'vip-card-diamond';
+        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 15);
+        $diemKeTiep = 3000;
+    } elseif ($diem >= 1500) {
+        $tenHang = 'VÀNG (GOLD)';
+        $hangClass = 'vip-card-gold';
+        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 10);
+        $diemKeTiep = 3000;
+    } elseif ($diem >= 500) {
+        $tenHang = 'BẠC (SILVER)';
+        $hangClass = 'vip-card-silver';
+        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 5);
+        $diemKeTiep = 1500;
+    } else {
+        $tenHang = strtoupper((string)($sessUser['ten_hang'] ?? 'ĐỒNG (BRONZE)'));
+        $hangClass = 'vip-card-bronze';
+        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 0);
+        $diemKeTiep = 500;
+    }
 
-$progress = min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 100));
+    $user = [
+        'ma_nguoi_dung'  => (int)($sessUser['ma_nguoi_dung'] ?? 0),
+        'ho_va_ten'      => (string)($sessUser['ho_va_ten'] ?? ''),
+        'ten_dang_nhap'  => (string)($sessUser['ten_dang_nhap'] ?? ''),
+        'thu_dien_tu'    => (string)($sessUser['thu_dien_tu'] ?? ''),
+        'so_dien_thoai'  => (string)($sessUser['so_dien_thoai'] ?? ''),
+        'dia_chi_nha'    => (string)($sessUser['dia_chi_nha'] ?? ''),
+        'diem_tich_luy'  => $diem,
+        'ten_hang'       => $tenHang,
+        'hang_class'     => $hangClass,
+        'phan_tram_giam' => $phanTramGiam,
+        'diem_ke_tiep'   => $diemKeTiep,
+        'da_xac_thuc'    => (int)($sessUser['da_xac_thuc_otp'] ?? 1),
+    ];
+} else {
+    $user = [
+        'ma_nguoi_dung'  => 3,
+        'ho_va_ten'      => 'Võ Thị Thanh Thảo',
+        'ten_dang_nhap'  => 'me_be_sam',
+        'thu_dien_tu'    => 'thanhthao@gmail.com',
+        'so_dien_thoai'  => '0918889999',
+        'dia_chi_nha'    => 'Số 120 Điện Biên Phủ, Phường 17, Quận Bình Thạnh, TP.HCM',
+        'diem_tich_luy'  => 1650,
+        'ten_hang'       => 'VÀNG (GOLD)',
+        'hang_class'     => 'vip-card-gold',
+        'phan_tram_giam' => 10,
+        'diem_ke_tiep'   => 3000,
+        'da_xac_thuc'    => 1,
+    ];
+}
+
+$progress = $user['diem_ke_tiep'] > 0 ? min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 100)) : 100;
+$diemConThieu = max(0, $user['diem_ke_tiep'] - $user['diem_tich_luy']);
+$maTheHienThi = sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']);
 ?>
 
 <div class="container my-4 my-md-5" id="hgb_profile_section">
@@ -40,25 +85,25 @@ $progress = min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 10
         <div class="col-12 col-lg-5 mb-4">
             <div id="hgb_vipCardPreview" class="vip-card-box <?= $user['hang_class'] ?> mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span class="font-weight-bold text-uppercase">
+                    <span class="font-weight-bold text-uppercase vip-card-brand">
                         <i class="fa-solid fa-crown mr-2"></i>FASHIONKIDS VIP
                     </span>
-                    <span id="hgb_vipBadgeTitle" class="badge badge-light px-3 py-1 font-weight-bold rounded-pill shadow-sm">
-                        HẠNG <?= $user['ten_hang'] ?>
+                    <span id="hgb_vipBadgeTitle" class="badge badge-light vip-card-tier-badge px-3 py-1 font-weight-bold rounded-pill shadow-sm">
+                        HẠNG <?= htmlspecialchars($user['ten_hang']) ?>
                     </span>
                 </div>
                 
-                <h4 class="font-weight-bold mb-1"><?= htmlspecialchars($user['ho_va_ten']) ?></h4>
-                <div class="small mb-4 text-muted">Mã thẻ: #FK-2026-VIP09</div>
+                <h4 class="font-weight-bold mb-1 vip-card-holder"><?= htmlspecialchars($user['ho_va_ten']) ?></h4>
+                <div class="small mb-4 font-weight-bold vip-card-code">Mã thẻ: <?= htmlspecialchars($maTheHienThi) ?></div>
 
-                <div class="d-flex justify-content-between align-items-end pt-3 vip-divider-gold">
+                <div class="d-flex justify-content-between align-items-end pt-3 vip-divider">
                     <div>
-                        <div class="small text-uppercase font-weight-bold">Đặc quyền chiết khấu</div>
-                        <div id="hgb_vipDiscount" class="h4 font-weight-bold mb-0">GIẢM <?= $user['phan_tram_giam'] ?>% MỌI ĐƠN</div>
+                        <div class="small text-uppercase font-weight-bold vip-card-label">Đặc quyền chiết khấu</div>
+                        <div id="hgb_vipDiscount" class="h4 font-weight-bold mb-0 vip-card-val">GIẢM <?= (int)$user['phan_tram_giam'] ?>% MỌI ĐƠN</div>
                     </div>
                     <div class="text-right">
-                        <div class="small text-uppercase font-weight-bold">Điểm tích lũy</div>
-                        <div class="h5 font-weight-bold mb-0"><?= number_format($user['diem_tich_luy']) ?> PTS</div>
+                        <div class="small text-uppercase font-weight-bold vip-card-label">Điểm tích lũy</div>
+                        <div id="hgb_vipCardPts" class="h5 font-weight-bold mb-0 vip-card-val"><?= number_format($user['diem_tich_luy']) ?> PTS</div>
                     </div>
                 </div>
             </div>
@@ -75,7 +120,7 @@ $progress = min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 10
                          role="progressbar" data-progress="<?= $progress ?>" aria-valuenow="<?= $progress ?>" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 <small class="text-muted-custom">
-                    <i class="fa-solid fa-circle-info text-info mr-1"></i> Tích lũy thêm <strong><?= number_format($user['diem_ke_tiep'] - $user['diem_tich_luy']) ?> điểm</strong> từ các đơn hàng may đo sợi tre để tự động nâng hạng đặc quyền.
+                    <i class="fa-solid fa-circle-info text-info mr-1"></i> Tích lũy thêm <strong><?= number_format($diemConThieu) ?> điểm</strong> từ các đơn hàng may đo sợi tre để tự động nâng hạng đặc quyền.
                 </small>
             </div>
         </div>
@@ -115,7 +160,7 @@ $progress = min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 10
 
                     <div class="form-group">
                         <label class="small font-weight-bold text-slate">Địa chỉ giao hàng mặc định:</label>
-                        <input type="text" class="form-control" name="dia_chi" value="Số 120 Điện Biên Phủ, Phường 17, Quận Bình Thạnh, TP.HCM">
+                        <input type="text" class="form-control" name="dia_chi" value="<?= htmlspecialchars($user['dia_chi_nha']) ?>">
                     </div>
 
                     <button type="button" class="btn btn-pastel-primary font-weight-bold px-4">

@@ -1,0 +1,18 @@
+# =========================================================================
+# Cấu hình Apache Rewrite (.htaccess) cho dự án FashionKids
+# Tương thích đồng thời:
+#   1. XAMPP Localhost / LAN (http://localhost/FashionKids/ hoặc http://192.168.1.15/FashionKids/)
+#   2. InfinityFree Hosting khi giải nén trực tiếp vào /htdocs/ (http://fashionkids-nhom10.infinityfreeapp.com/)
+# =========================================================================
+
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Nếu triển khai ở thư mục gốc /htdocs/ trên InfinityFree, tự động ánh xạ các đường dẫn
+    # bắt đầu bằng /FashionKids/... về thư mục gốc để CSS/JS/Ảnh và AJAX hoạt động 100% không lỗi 404
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^FashionKids/(.*)$ $1 [L,QSA]
+</IfModule>

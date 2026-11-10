@@ -11,6 +11,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../core/Csrf.php';
+require_once __DIR__ . '/../../core/Rbac.php';
+Rbac::syncSession();
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -19,7 +21,8 @@ require_once __DIR__ . '/../../core/Csrf.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <meta name="csrf-token" content="<?= htmlspecialchars(Csrf::token()) ?>">
     <meta name="fk-endpoint" content="<?= htmlspecialchars(APP_ENDPOINT) ?>">
-        <title><?= isset($page_title) ? htmlspecialchars($page_title) . " - FashionKids" : "FashionKids - Thời Trang Trẻ Em An Toàn" ?></title>
+    <meta name="fk-user-role" content="<?= htmlspecialchars(Rbac::currentRole()) ?>">
+    <title><?= isset($page_title) ? htmlspecialchars($page_title) . " - FashionKids" : "FashionKids - Thời Trang Trẻ Em An Toàn" ?></title>
     
     <!-- Favicon Logo Nhom 10 FashionKids (Hien thi tren Tab & Thanh tim kiem trinh duyet) -->
     <link rel="icon" type="image/jpeg" href="/FashionKids/images/logo-fashionkids.jpg">
@@ -40,4 +43,4 @@ require_once __DIR__ . '/../../core/Csrf.php';
     <!-- Custom Bright Pastel Theme (60-30-10) -->
     <link rel="stylesheet" href="/FashionKids/public/css/style-pastel.css">
 </head>
-<body class="bg-milk-cream">
+<body class="bg-milk-cream" data-user-role="<?= htmlspecialchars(Rbac::currentRole()) ?>">

@@ -17,6 +17,7 @@ $(document).ready(function () {
         let cardBox = $('#hgb_vipCardPreview');
         let badge = $('#hgb_vipBadgeTitle');
         let discount = $('#hgb_vipDiscount');
+        let cardPts = $('#hgb_vipCardPts');
         let progressBar = $('#hgb_vipProgressBar');
         let ptsInfo = $('#hgb_vipPtsInfo');
 
@@ -25,25 +26,29 @@ $(document).ready(function () {
         if (tier === 'bronze') {
             cardBox.addClass('vip-card-bronze');
             badge.text('HẠNG ĐỒNG (BRONZE)');
-            discount.text('GIẢM 0%');
+            discount.text('GIẢM 0% MỌI ĐƠN');
+            cardPts.text('120 PTS');
             progressBar.css('width', '25%');
             ptsInfo.text('120 / 500 PTS');
         } else if (tier === 'silver') {
             cardBox.addClass('vip-card-silver');
             badge.text('HẠNG BẠC (SILVER)');
             discount.text('GIẢM 5% MỌI ĐƠN');
+            cardPts.text('850 PTS');
             progressBar.css('width', '55%');
             ptsInfo.text('850 / 1.500 PTS');
         } else if (tier === 'gold') {
             cardBox.addClass('vip-card-gold');
             badge.text('HẠNG VÀNG (GOLD)');
             discount.text('GIẢM 10% MỌI ĐƠN');
+            cardPts.text('1.650 PTS');
             progressBar.css('width', '55%');
             ptsInfo.text('1.650 / 3.000 PTS');
         } else if (tier === 'diamond') {
             cardBox.addClass('vip-card-diamond');
             badge.text('HẠNG KIM CƯƠNG (DIAMOND)');
             discount.text('GIẢM 15% CAO CẤP');
+            cardPts.text('3.500 PTS');
             progressBar.css('width', '100%');
             ptsInfo.text('3.500 PTS (TỐI ĐA)');
         }
@@ -1666,5 +1671,816 @@ $(document).ready(function () {
             '• Target URL: ' + targetUrl + '\n' +
             '• Lịch hẹn giờ: ' + startTime + ' -> ' + endTime
         );
+    });
+});
+
+
+
+/**
+ * ============================================================================
+ * PHÂN HỆ ĐẢM NHIỆM: TẠP CHÍ & BÁO CHÍ REALTIME, LIVE CHAT & DUYỆT KOL NHÍ
+ * Đồng bộ CSDL: tgb_bai_viet_tin_tuc, tgb_binh_luan_bai_viet,
+ *               tgb_tin_nhan_tu_van, lnkt_banner_su_kien, lnkt_dang_ky_kol_nhi
+ * ============================================================================
+ */
+$(document).ready(function () {
+    function fkEsc(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // ------------------------------------------------------------------------
+    // 1. LIVE PRESS TICKER & EVENT COUNTDOWN REALTIME (blog-feeds.php & home.php)
+    // ------------------------------------------------------------------------
+    const fkPressHeadlines = [
+        '[Mới cập nhật] FashionKids chính thức nhận Chứng nhận Quốc tế OEKO-TEX® Standard 100 Hạng I cho dòng Vải Sợi Tre Mùa Hè 2026!',
+        '[Sự kiện KOL Nhí] Hơn 120 hồ sơ thiên thần nhí đã đăng ký tham gia vòng Casting Lookbook Studio tháng 11/2026!',
+        '[Báo chí Tiêu dùng] Vải sợi tre kháng khuẩn Bamboo Kun giúp hạ nhiệt độ bề mặt da bé tới -2°C trong mùa nắng nóng.',
+        '[Ưu đãi Thành viên VIP] Tích điểm tự động nâng hạng Vàng (-10%) và Kim Cương (-15%) trên mọi đơn hàng D2C!'
+    ];
+    let fkTickerIdx = 0;
+    if ($('#fk_livePressTickerText').length) {
+        setInterval(function () {
+            fkTickerIdx = (fkTickerIdx + 1) % fkPressHeadlines.length;
+            $('#fk_livePressTickerText').fadeOut(200, function () {
+                $(this).text(fkPressHeadlines[fkTickerIdx]).fadeIn(250);
+            });
+        }, 5000);
+    }
+
+    // Đồng hồ đếm ngược Lịch Sự Kiện Realtime trên Trang chủ
+    if ($('#fk_homeLiveCountdown').length) {
+        let remainingSec = (5 * 86400) + (14 * 3600) + (28 * 60) + 45;
+        setInterval(function () {
+            if (remainingSec > 0) remainingSec--;
+            let d = Math.floor(remainingSec / 86400);
+            let h = Math.floor((remainingSec % 86400) / 3600);
+            let m = Math.floor((remainingSec % 3600) / 60);
+            let s = remainingSec % 60;
+            let pad = function (n) { return n < 10 ? '0' + n : String(n); };
+            $('#fk_homeLiveCountdown').text(pad(d) + ' Ngày : ' + pad(h) + ' Giờ : ' + pad(m) + ' Phút : ' + pad(s) + ' Giây');
+        }, 1000);
+    }
+
+    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // 2. MH 18: LỌC CHUYÊN MỤC, TÌM KIẾM, PHÂN TRANG 6 BÀI/TRANG, THẢ TIM & BOOKMARK (blog-feeds.php)
+    // ------------------------------------------------------------------------
+    window.fkOnlyBookmarkedMode = false;
+    const FK_BLOG_PER_PAGE = 6;
+
+    window.fkSelectBlogCategory = function (catKey, btnEl) {
+        window.fkOnlyBookmarkedMode = false;
+        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+        $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn').removeClass('active');
+        $(btnEl).addClass('active');
+        $('#fk_activeBlogCategory').val(catKey);
+        window.fkApplyBlogFilters(1);
+    };
+
+    window.fkFilterSavedBookmarks = function () {
+        window.fkOnlyBookmarkedMode = !window.fkOnlyBookmarkedMode;
+        if (window.fkOnlyBookmarkedMode) {
+            $('#fk_btnShowBookmarks').removeClass('btn-light').addClass('btn-pastel-primary');
+        } else {
+            $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+        }
+        window.fkApplyBlogFilters(1);
+    };
+
+    window.fkGoToBlogPage = function (pageNum) {
+        window.fkApplyBlogFilters(pageNum, true);
+    };
+
+    window.fkApplyBlogFilters = function (targetPage, shouldScroll) {
+        let activeCat = $('#fk_activeBlogCategory').val() || 'all';
+        let keyword = ($('#fk_blogSearchInput').val() || '').toLowerCase().trim();
+        let sortBy = $('#fk_blogSortSelect').val() || 'newest';
+
+        let $grid = $('#fk_blogFeedGrid');
+        if (!$grid.length) return;
+
+        let cols = $grid.children('.fk-blog-col').get();
+
+        // Sắp xếp toàn bộ bài viết trước khi lọc & chia trang
+        cols.sort(function (a, b) {
+            let idA = parseInt($(a).attr('data-id'), 10) || 0;
+            let idB = parseInt($(b).attr('data-id'), 10) || 0;
+            let viewsA = parseInt($(a).attr('data-views'), 10) || 0;
+            let viewsB = parseInt($(b).attr('data-views'), 10) || 0;
+            let likesA = parseInt($(a).attr('data-likes'), 10) || 0;
+            let likesB = parseInt($(b).attr('data-likes'), 10) || 0;
+
+            if (sortBy === 'views') return viewsB - viewsA;
+            if (sortBy === 'likes') return likesB - likesA;
+
+            let isCustomA = (idA > 14) ? 1 : 0;
+            let isCustomB = (idB > 14) ? 1 : 0;
+            if (isCustomA !== isCustomB) return isCustomB - isCustomA;
+            if (isCustomA === 1) return idB - idA;
+            return idA - idB;
+        });
+
+        $.each(cols, function (i, el) {
+            $grid.append(el);
+        });
+
+        // Lọc danh sách bài viết khớp điều kiện
+        let matchedCols = [];
+        cols.forEach(function (col) {
+            let $col = $(col);
+            let itemCat = $col.attr('data-category') || 'meo_phoi_do';
+            let itemSearch = ($col.attr('data-search') || '').toLowerCase();
+            let itemSaved = $col.attr('data-bookmarked') === '1';
+
+            let matchCat = (activeCat === 'all' || itemCat === activeCat);
+            let matchKw = (!keyword || itemSearch.indexOf(keyword) !== -1);
+            let matchSaved = (!window.fkOnlyBookmarkedMode || itemSaved);
+
+            if (matchCat && matchKw && matchSaved) {
+                matchedCols.push($col);
+            } else {
+                $col.addClass('d-none');
+            }
+        });
+
+        let totalMatched = matchedCols.length;
+        let totalPages = Math.max(1, Math.ceil(totalMatched / FK_BLOG_PER_PAGE));
+        let curPage = parseInt(targetPage, 10);
+        if (isNaN(curPage) || curPage < 1) {
+            curPage = parseInt($('#fk_currentBlogPage').val(), 10) || 1;
+        }
+        if (curPage > totalPages) curPage = totalPages;
+        if (curPage < 1) curPage = 1;
+        $('#fk_currentBlogPage').val(curPage);
+
+        let startIdx = (curPage - 1) * FK_BLOG_PER_PAGE;
+        let endIdx = Math.min(totalMatched, startIdx + FK_BLOG_PER_PAGE);
+
+        // Chỉ hiển thị tối đa 6 bài viết của trang hiện tại
+        matchedCols.forEach(function ($col, idx) {
+            if (idx >= startIdx && idx < endIdx) {
+                $col.removeClass('d-none');
+            } else {
+                $col.addClass('d-none');
+            }
+        });
+
+        // Cập nhật bộ đếm & chỉ báo trang
+        $('#fk_blogVisibleCount').text(totalMatched);
+        if (totalMatched === 0) {
+            $('#fk_blogPageRangeText').text('0');
+            $('#fk_blogPageIndicator').text('Trang 0 / 0');
+            $('#fk_emptyBlogAlert').removeClass('d-none');
+            $('#fk_blogPaginationWrapper').addClass('d-none');
+        } else {
+            $('#fk_blogPageRangeText').text((startIdx + 1) + '–' + endIdx);
+            $('#fk_blogPageIndicator').text('Trang ' + curPage + ' / ' + totalPages + ' • 6 bài/trang');
+            $('#fk_blogPaginationSummaryText').text('Trang ' + curPage + ' / ' + totalPages + ' (Hiển thị bài ' + (startIdx + 1) + '–' + endIdx + ' trên tổng ' + totalMatched + ' bài)');
+            $('#fk_emptyBlogAlert').addClass('d-none');
+
+            // Render lại các nút Trang 1, 2, 3...
+            let $pageList = $('#fk_blogPaginationList');
+            if ($pageList.length) {
+                let prevDisabled = (curPage <= 1) ? 'disabled' : '';
+                let nextDisabled = (curPage >= totalPages) ? 'disabled' : '';
+                let html =
+                    '<li class="page-item ' + prevDisabled + '">' +
+                        '<button type="button" class="page-link fk-blog-page-btn" onclick="fkGoToBlogPage(' + Math.max(1, curPage - 1) + ')">' +
+                            '<i class="fa-solid fa-chevron-left mr-1"></i>Trước' +
+                        '</button>' +
+                    '</li>';
+
+                for (let p = 1; p <= totalPages; p++) {
+                    let activeCls = (p === curPage) ? 'active' : '';
+                    html +=
+                        '<li class="page-item ' + activeCls + '">' +
+                            '<button type="button" class="page-link fk-blog-page-btn" onclick="fkGoToBlogPage(' + p + ')">' +
+                                'Trang ' + p +
+                            '</button>' +
+                        '</li>';
+                }
+
+                html +=
+                    '<li class="page-item ' + nextDisabled + '">' +
+                        '<button type="button" class="page-link fk-blog-page-btn" onclick="fkGoToBlogPage(' + Math.min(totalPages, curPage + 1) + ')">' +
+                            'Tiếp<i class="fa-solid fa-chevron-right ml-1"></i>' +
+                        '</button>' +
+                    '</li>';
+
+                $pageList.html(html);
+            }
+
+            if (totalPages > 1) {
+                $('#fk_blogPaginationWrapper').removeClass('d-none');
+            } else {
+                $('#fk_blogPaginationWrapper').addClass('d-none');
+            }
+        }
+
+        // Cập nhật URL query ?page=... mà không reload trang
+        if (window.history && window.history.replaceState) {
+            let url = new URL(window.location.href);
+            if (curPage > 1) {
+                url.searchParams.set('page', String(curPage));
+            } else {
+                url.searchParams.delete('page');
+            }
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        if (shouldScroll && $('#fk_blogCategoryFilterGroup').length) {
+            $('html, body').animate({
+                scrollTop: $('#fk_blogCategoryFilterGroup').offset().top - 110
+            }, 250);
+        }
+    };
+
+    window.fkResetBlogFilters = function () {
+        window.fkOnlyBookmarkedMode = false;
+        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+        $('#fk_activeBlogCategory').val('all');
+        $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn').removeClass('active');
+        $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn[data-cat="all"]').addClass('active');
+        $('#fk_blogSearchInput').val('');
+        $('#fk_blogSortSelect').val('newest');
+        window.fkApplyBlogFilters(1);
+    };
+
+    // Thả tim bài viết tạp chí Realtime (cập nhật CSDL tgb_bai_viet_tin_tuc)
+    window.fkToggleLikeArticle = function (articleId, btnEl) {
+        let $btn = $(btnEl);
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxLikeBlog',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: articleId },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('.fk-like-count-' + articleId).text(Number(res.likes).toLocaleString('vi-VN'));
+                    $('.fk-blog-col[data-id="' + articleId + '"]').attr('data-likes', res.likes);
+                    if (res.is_liked) {
+                        $('.fk-btn-like-blog[data-article-id="' + articleId + '"]').addClass('liked');
+                        $btn.addClass('liked');
+                    } else {
+                        $('.fk-btn-like-blog[data-article-id="' + articleId + '"]').removeClass('liked');
+                        $btn.removeClass('liked');
+                    }
+                }
+            },
+            error: function () {
+                let $counters = $('.fk-like-count-' + articleId);
+                let cur = parseInt(($counters.first().text() || '0').replace(/\D/g, ''), 10) || 0;
+                let liked = $btn.hasClass('liked');
+                let next = liked ? Math.max(0, cur - 1) : cur + 1;
+                $counters.text(next.toLocaleString('vi-VN'));
+                $btn.toggleClass('liked');
+            }
+        });
+    };
+
+    // Lưu bài viết đọc sau (Bookmark)
+    window.fkToggleBookmarkArticle = function (articleId, btnEl) {
+        let $btn = $(btnEl);
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxBookmarkBlog',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: articleId },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('#fk_savedCountBadge').text(res.total_saved);
+                    let $col = $('.fk-blog-col[data-id="' + articleId + '"]');
+                    if (res.is_bookmarked) {
+                        $btn.addClass('bookmarked');
+                        $col.attr('data-bookmarked', '1');
+                    } else {
+                        $btn.removeClass('bookmarked');
+                        $col.attr('data-bookmarked', '0');
+                    }
+                }
+            }
+        });
+    };
+
+    // Chia sẻ liên kết bài viết
+    window.fkShareBlogLink = function (articleId, title) {
+        let shareUrl = window.location.origin + '/FashionKids/views/pages/blog-detail.php?id=' + articleId;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareUrl);
+        }
+        alert('Đã sao chép liên kết bài viết "' + title + '" vào bộ nhớ tạm:\n' + shareUrl);
+    };
+
+    // Mở Modal đọc nhanh bài viết tại chỗ
+    window.fkOpenQuickReadModal = function (articleId) {
+        let $dataBox = $('#fk_quickReadData_' + articleId);
+        if (!$dataBox.length) {
+            window.location.href = '/FashionKids/views/pages/blog-detail.php?id=' + articleId;
+            return;
+        }
+        $('#fk_qrCategoryBadge').text($dataBox.attr('data-cat') || 'Tạp chí FashionKids');
+        $('#fk_qrTitle').text($dataBox.attr('data-title') || '');
+        $('#fk_qrMeta').text($dataBox.attr('data-author') || '');
+        $('#fk_qrImage').attr('src', $dataBox.attr('data-img') || '/FashionKids/images/vay-cong-chua-no-pastel.jpg');
+        $('#fk_qrFullLink').attr('href', $dataBox.attr('data-url') || ('/FashionKids/views/pages/blog-detail.php?id=' + articleId));
+        $('#fk_qrBodyContent').html($dataBox.html());
+        $('#fk_modalQuickReadBlog').modal('show');
+    };
+
+    // ------------------------------------------------------------------------
+    // 3. MH 19: BÌNH LUẬN ĐA CẤP REALTIME TRONG BÀI VIẾT (blog-detail.php)
+    // ------------------------------------------------------------------------
+    window.fkQuickInsertComment = function (sampleText) {
+        $('#fk_commentContent').val(sampleText).focus();
+    };
+
+    window.fkToggleReplyForm = function (commentId) {
+        let $box = $('#fk_replyFormBox_' + commentId);
+        $box.toggleClass('d-none');
+        if (!$box.hasClass('d-none')) {
+            $('#fk_replyInput_' + commentId).focus();
+        }
+    };
+
+    $('#fk_formBlogComment').on('submit', function (e) {
+        e.preventDefault();
+        let articleId  = parseInt($('#fk_commentArticleId').val(), 10) || 1;
+        let authorName = ($('#fk_commentAuthorName').val() || 'Phụ Huynh Thành Viên').trim();
+        let content    = ($('#fk_commentContent').val() || '').trim();
+        if (!content) return;
+
+        $('#fk_btnSubmitComment').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang gửi...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxPostBlogComment',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                article_id:  articleId,
+                author_name: authorName,
+                content:     content
+            },
+            complete: function () {
+                $('#fk_btnSubmitComment').prop('disabled', false).html('<i class="fa-solid fa-paper-plane mr-1"></i>Gửi Bình Luận');
+            },
+            success: function (res) {
+                let c = (res && res.comment) ? res.comment : {
+                    id: Date.now(),
+                    author_name: authorName,
+                    vip_badge: 'Thành Viên VIP',
+                    content: content,
+                    created_at: 'Vừa xong'
+                };
+                let html =
+                    '<div class="fk-comment-item mb-3" id="fk_commentThread_' + c.id + '">' +
+                        '<div class="fk-comment-box p-3">' +
+                            '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                                '<div class="d-flex align-items-center">' +
+                                    '<span class="rounded-circle bg-peach text-white d-inline-flex align-items-center justify-content-center avatar-40 mr-2 font-weight-bold"><i class="fa-solid fa-user"></i></span>' +
+                                    '<div><strong class="text-slate mr-2">' + fkEsc(c.author_name) + '</strong>' +
+                                    '<span class="badge badge-pill badge-gold small">' + fkEsc(c.vip_badge || 'Thành Viên') + '</span></div>' +
+                                '</div>' +
+                                '<small class="text-muted-custom">' + fkEsc(c.created_at) + '</small>' +
+                            '</div>' +
+                            '<p class="mb-2 text-slate small pl-5">' + fkEsc(c.content) + '</p>' +
+                            '<div class="pl-5">' +
+                                '<button type="button" onclick="fkToggleReplyForm(' + c.id + ')" class="btn btn-link btn-sm p-0 text-peach font-weight-bold text-decoration-none mr-3"><i class="fa-solid fa-reply mr-1"></i>Phản hồi</button>' +
+                            '</div>' +
+                            '<div id="fk_replyFormBox_' + c.id + '" class="mt-3 pl-4 d-none">' +
+                                '<div class="input-group input-group-sm">' +
+                                    '<input type="text" id="fk_replyInput_' + c.id + '" class="form-control rounded-pill mr-2" placeholder="Viết phản hồi...">' +
+                                    '<div class="input-group-append">' +
+                                        '<button type="button" onclick="fkSubmitReplyComment(' + articleId + ', ' + c.id + ')" class="btn btn-pastel-primary btn-sm rounded-pill px-3 font-weight-bold">Gửi phản hồi</button>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="ml-4 ml-md-5 mt-2" id="fk_repliesContainer_' + c.id + '"></div>' +
+                    '</div>';
+                $('#fk_blogCommentsList').prepend(html);
+                $('#fk_commentContent').val('');
+                let curCnt = parseInt($('#fk_totalCommentsCounter').text(), 10) || 0;
+                $('#fk_totalCommentsCounter').text(curCnt + 1);
+            }
+        });
+    });
+
+    window.fkSubmitReplyComment = function (articleId, parentId) {
+        let $input = $('#fk_replyInput_' + parentId);
+        let content = ($input.val() || '').trim();
+        if (!content) return;
+
+        let authorName = ($('#fk_commentAuthorName').val() || 'Phụ Huynh Thành Viên').trim();
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxPostBlogComment',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                article_id:  articleId,
+                parent_id:   parentId,
+                author_name: authorName,
+                content:     content
+            },
+            success: function (res) {
+                let c = (res && res.comment) ? res.comment : {
+                    author_name: authorName,
+                    vip_badge: 'Phản Hồi Trực Tiếp',
+                    content: content,
+                    created_at: 'Vừa xong'
+                };
+                let replyHtml =
+                    '<div class="fk-comment-reply-box p-3 mb-2 shadow-sm">' +
+                        '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                            '<div><strong class="text-slate small mr-1"><i class="fa-solid fa-circle-check text-success mr-1"></i>' + fkEsc(c.author_name) + '</strong>' +
+                            '<span class="badge badge-pill badge-mint small">' + fkEsc(c.vip_badge || 'Thành Viên') + '</span></div>' +
+                            '<small class="text-muted-custom">' + fkEsc(c.created_at) + '</small>' +
+                        '</div>' +
+                        '<p class="mb-0 text-slate small">' + fkEsc(c.content) + '</p>' +
+                    '</div>';
+                $('#fk_repliesContainer_' + parentId).append(replyHtml);
+                $input.val('');
+                $('#fk_replyFormBox_' + parentId).addClass('d-none');
+            }
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 4. MH 21: QUẢN TRỊ NỘI DUNG TẠP CHÍ CMS REALTIME (admin-cms-blog.php)
+    // ------------------------------------------------------------------------
+    $('#fk_formCmsBlog').on('submit', function (e) {
+        e.preventDefault();
+        let payload = {
+            title:        ($('#fk_cmsTitle').val() || '').trim(),
+            category_key: $('#fk_cmsCategory').val() || 'meo_phoi_do',
+            status:       $('#fk_cmsStatus').val() || 'xuat_ban',
+            image:        $('#fk_cmsImageSelect').val() || '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
+            summary:      ($('#fk_cmsSummary').val() || '').trim(),
+            content:      ($('#fk_cmsContent').val() || '').trim()
+        };
+        if (!payload.title) return;
+
+        $('#fk_btnSaveCmsBlog').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang xuất bản...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxSaveBlogArticle',
+            type: 'POST',
+            dataType: 'json',
+            data: payload,
+            complete: function () {
+                $('#fk_btnSaveCmsBlog').prop('disabled', false).html('<i class="fa-solid fa-paper-plane mr-1"></i>Xuất Bản Bài Viết Lên Tạp Chí Ngay');
+            },
+            success: function (res) {
+                if (res && res.status === 'success' && res.article) {
+                    let a = res.article;
+                    let statusBadge = (a.status === 'xuat_ban')
+                        ? '<span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>'
+                        : '<span class="badge badge-gold px-2 py-1 rounded-pill">Bản nháp</span>';
+                    let rowHtml =
+                        '<tr id="fk_cmsArticleRow_' + a.id + '">' +
+                            '<td><div class="d-flex align-items-center">' +
+                                '<span class="lbn-inv-thumb mr-3 flex-shrink-0"><img src="' + fkEsc(a.image) + '" alt="Thumb" class="lbn-thumb-img"></span>' +
+                                '<div><a href="/FashionKids/views/pages/blog-detail.php?id=' + a.id + '" class="font-weight-bold text-slate d-block text-decoration-none">' + fkEsc(a.title) + '</a>' +
+                                '<span class="badge ' + fkEsc(a.badge_class) + ' mr-1">' + fkEsc(a.category_name) + '</span>' +
+                                '<small class="text-muted-custom">' + fkEsc(a.published_at) + '</small></div>' +
+                            '</div></td>' +
+                            '<td class="text-center text-nowrap small font-weight-bold">' +
+                                '<span class="text-info mr-2"><i class="fa-regular fa-eye mr-1"></i>' + a.views + '</span>' +
+                                '<span class="text-danger"><i class="fa-solid fa-heart mr-1"></i>' + a.likes + '</span>' +
+                            '</td>' +
+                            '<td class="text-center">' + statusBadge + '</td>' +
+                            '<td class="text-center text-nowrap">' +
+                                '<a href="/FashionKids/views/pages/blog-detail.php?id=' + a.id + '" class="btn btn-outline-info btn-sm rounded-pill px-2 mr-1"><i class="fa-regular fa-eye"></i></a>' +
+                                '<button type="button" onclick="fkDeleteCmsArticleRow(' + a.id + ')" class="btn btn-outline-danger btn-sm rounded-circle"><i class="fa-solid fa-trash-can"></i></button>' +
+                            '</td>' +
+                        '</tr>';
+                    $('#fk_cmsArticlesTableBody').prepend(rowHtml);
+                    let total = parseInt($('#fk_cmsTotalArticles').text(), 10) || 0;
+                    $('#fk_cmsTotalArticles').text(total + 1);
+                    alert('Đã xuất bản bài viết "' + a.title + '" vào bảng tgb_bai_viet_tin_tuc! Bạn có thể xem ngay tại trang Tạp Chí (MH 18).');
+                }
+            }
+        });
+    });
+
+    window.fkDeleteCmsArticleRow = function (id) {
+        $('#fk_cmsArticleRow_' + id).fadeOut(250, function () {
+            $(this).remove();
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 5. MH 08 & MH 11: TIN NHẮN TƯ VẤN TRỰC TUYẾN REALTIME (tgb_tin_nhan_tu_van)
+    // ------------------------------------------------------------------------
+    function fkRenderClientChatList(messages) {
+        let $area = $('#fk_clientChatMessagesArea');
+        if (!$area.length || !Array.isArray(messages)) return;
+        let html = '';
+        messages.forEach(function (m) {
+            if (m.sender === 'khach_hang') {
+                html +=
+                    '<div class="d-flex justify-content-end mb-3">' +
+                        '<div class="p-3 small shadow-sm chat-bubble-sent">' + fkEsc(m.content) + '</div>' +
+                    '</div>';
+            } else {
+                html +=
+                    '<div class="d-flex mb-3">' +
+                        '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' + fkEsc(m.content) + '</div>' +
+                    '</div>';
+            }
+        });
+        $area.html(html);
+        $area.scrollTop($area[0].scrollHeight);
+    }
+
+    function fkRenderStaffChatList(messages) {
+        let $box = $('#fk_staffChatMessagesBox');
+        if (!$box.length || !Array.isArray(messages)) return;
+        let html = '';
+        messages.forEach(function (m) {
+            if (m.sender === 'khach_hang') {
+                html +=
+                    '<div class="d-flex mb-3">' +
+                        '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
+                            '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
+                            '<div>' + fkEsc(m.content) + '</div>' +
+                        '</div>' +
+                    '</div>';
+            } else {
+                html +=
+                    '<div class="d-flex justify-content-end mb-3">' +
+                        '<div class="p-3 shadow-sm chat-bubble-sent">' +
+                            '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
+                            '<div>' + fkEsc(m.content) + '</div>' +
+                        '</div>' +
+                    '</div>';
+            }
+        });
+        $box.html(html);
+        $box.scrollTop($box[0].scrollHeight);
+    }
+
+    window.fkSendQuickClientChat = function (questionText) {
+        $('#fk_clientChatInput').val(questionText);
+        $('#clientChatForm').trigger('submit');
+    };
+
+    $('#clientChatForm').on('submit', function (e) {
+        e.preventDefault();
+        let $input = $('#fk_clientChatInput');
+        let msg = ($input.val() || '').trim();
+        if (!msg) return;
+
+        let sessionId = $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+        $input.val('');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                session_id: sessionId,
+                sender:     'khach_hang',
+                message:    msg
+            },
+            success: function (res) {
+                if (res && res.status === 'success' && Array.isArray(res.messages)) {
+                    fkRenderClientChatList(res.messages);
+                }
+            }
+        });
+    });
+
+    // Nhân viên CSKH gửi tin nhắn từ trang staff-chat.php (MH 11)
+    window.fkStaffQuickReply = function (replyText) {
+        $('#fk_staffChatInput').val(replyText);
+        $('#fk_formStaffChat').trigger('submit');
+    };
+
+    $('#fk_formStaffChat').on('submit', function (e) {
+        e.preventDefault();
+        let $input = $('#fk_staffChatInput');
+        let msg = ($input.val() || '').trim();
+        if (!msg) return;
+
+        let sessionId = $('#fk_staffCurrentSessionId').val() || 'sess_guest_123456';
+        $input.val('');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                session_id: sessionId,
+                sender:     'nhan_vien',
+                message:    msg
+            },
+            success: function (res) {
+                if (res && res.status === 'success' && Array.isArray(res.messages)) {
+                    fkRenderStaffChatList(res.messages);
+                }
+            }
+        });
+    });
+
+    window.fkSwitchStaffChatSession = function (sessionId, customerName, vipLabel, el) {
+        $('.fk-staff-session-item').removeClass('bg-milk-cream');
+        $(el).addClass('bg-milk-cream');
+        $(el).find('.fk-session-unread').remove();
+
+        $('#fk_staffCurrentSessionId').val(sessionId);
+        $('#fk_activeChatSessionCode').text(sessionId);
+        $('#fk_activeChatCustomerName').text(customerName);
+        $('#fk_activeChatVipBadge').text(vipLabel);
+        window.fkPollStaffChatNow();
+    };
+
+    window.fkPollStaffChatNow = function () {
+        let sessionId = $('#fk_staffCurrentSessionId').val() || $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxPollChat',
+            type: 'GET',
+            dataType: 'json',
+            data: { session_id: sessionId },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    if ($('#fk_staffPollClock').length && res.timestamp) {
+                        $('#fk_staffPollClock').text(res.timestamp);
+                    }
+                    if ($('#fk_staffChatMessagesBox').length && Array.isArray(res.messages)) {
+                        fkRenderStaffChatList(res.messages);
+                    }
+                    if ($('#customerChatWidget').hasClass('show') && Array.isArray(res.messages)) {
+                        fkRenderClientChatList(res.messages);
+                    }
+                }
+            }
+        });
+    };
+
+    // Tự động đồng bộ tin nhắn Realtime mỗi 3.5 giây khi đang ở trang CSKH hoặc mở hộp thoại Chat
+    if ($('#fk_staff_chat_section').length || $('#customerChatWidget').length) {
+        setInterval(function () {
+            if ($('#fk_staff_chat_section').length || $('#customerChatWidget').hasClass('show')) {
+                window.fkPollStaffChatNow();
+            }
+        }, 3500);
+    }
+
+    // Lọc nhanh tồn kho sản phẩm ở cột phải màn hình staff-chat.php
+    window.fkFilterStaffQuickStock = function (kw) {
+        let q = String(kw || '').toLowerCase().trim();
+        $('.fk-staff-stock-card').each(function () {
+            let hay = ($(this).attr('data-search') || '').toLowerCase();
+            if (!q || hay.indexOf(q) !== -1) {
+                $(this).removeClass('d-none');
+            } else {
+                $(this).addClass('d-none');
+            }
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 6. MH 16 & MH 17: XÉT DUYỆT HỒ SƠ KOL NHÍ REALTIME (sp_lnkt_xet_duyet_kol_nhi)
+    // ------------------------------------------------------------------------
+    window.fkFilterKolByAge = function (ageKey, btnEl) {
+        $('#fk_staff_casting_review_section .fk-blog-filter-btn').removeClass('active');
+        $(btnEl).addClass('active');
+        $('#fk_activeKolAgeGroup').val(ageKey);
+        window.fkApplyKolFilters();
+    };
+
+    window.fkApplyKolFilters = function () {
+        let ageGroup = $('#fk_activeKolAgeGroup').val() || 'all';
+        let stFilter = $('#fk_kolStatusFilterSelect').val() || 'all';
+
+        $('.fk-kol-card-col').each(function () {
+            let $c = $(this);
+            let itemAge = $c.attr('data-age') || '3_4';
+            let itemSt = $c.attr('data-status') || 'cho_duyet';
+
+            let matchAge = (ageGroup === 'all' || itemAge === ageGroup);
+            let matchSt = (stFilter === 'all' || itemSt === stFilter);
+
+            if (matchAge && matchSt) {
+                $c.removeClass('d-none');
+            } else {
+                $c.addClass('d-none');
+            }
+        });
+    };
+
+    window.fkReviewKolApplication = function (id, newStatus, babyName) {
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxReviewKolCasting',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: id, status: newStatus },
+            success: function (res) {
+                let badgeHtml = '';
+                if (newStatus === 'moi_phong_van') {
+                    badgeHtml = '<span class="badge badge-sky px-3 py-1 rounded-pill"><i class="fa-solid fa-camera-retro mr-1"></i>Hẹn thử đồ Studio</span>';
+                } else if (newStatus === 'trung_tuyen') {
+                    badgeHtml = '<span class="badge badge-mint px-3 py-1 rounded-pill"><i class="fa-solid fa-trophy mr-1"></i>Đã trúng tuyển KOL</span>';
+                } else if (newStatus === 'tu_choi') {
+                    badgeHtml = '<span class="badge badge-danger px-3 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Từ chối</span>';
+                } else {
+                    badgeHtml = '<span class="badge badge-gold px-3 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ xét duyệt</span>';
+                }
+                $('#fk_kolStatusBadge_' + id).html(badgeHtml);
+                $('#fk_kolCard_' + id).attr('data-status', newStatus);
+
+                if (res && res.counts) {
+                    $('#fk_kolCount_cho_duyet').text(res.counts.cho_duyet || 0);
+                    $('#fk_kolCount_moi_phong_van').text(res.counts.moi_phong_van || 0);
+                    $('#fk_kolCount_trung_tuyen').text(res.counts.trung_tuyen || 0);
+                    $('#fk_kolCount_tu_choi').text(res.counts.tu_choi || 0);
+                }
+                alert('Đã thực thi Stored Procedure sp_lnkt_xet_duyet_kol_nhi cho hồ sơ "' + babyName + '" -> Trạng thái mới: ' + newStatus);
+            }
+        });
+    };
+
+    // Đồng bộ nộp hồ sơ KOL Nhí từ trang kol-casting.php về CSDL lnkt_dang_ky_kol_nhi
+    $('#lnkt_formKolCasting').on('submit', function () {
+        let photoCount = parseInt($('#lnkt_kolPhotoCount').val(), 10) || 0;
+        let isGuardianChecked = $('#lnkt_guardianConsentCheck').is(':checked');
+        if (photoCount < 2 || photoCount > 5 || !isGuardianChecked) {
+            return;
+        }
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxSubmitKolCasting',
+            type: 'POST',
+            dataType: 'json',
+            data: $(this).serialize()
+        });
+    });
+});
+
+
+/**
+ * ============================================================================
+ * KIỂM SOÁT PHÂN LUỒNG RBAC 4 VAI TRÒ & TÀI KHOẢN MẪU (Guest / Customer / Staff / Admin)
+ * ============================================================================
+ */
+$(document).ready(function () {
+    // 1. Điền nhanh thông tin Tài khoản mẫu vào Form Đăng nhập (login-register.php)
+    window.fkFillDemoLogin = function (username, password) {
+        if ($('#tab-login').length) {
+            $('#tab-login').tab('show');
+        }
+        $('#hgb_login_username').val(username).removeClass('is-invalid').addClass('is-valid');
+        $('#hgb_login_password').val(password || '123456').removeClass('is-invalid').addClass('is-valid');
+        $('#hgb_login_alert')
+            .removeClass('d-none alert-danger')
+            .addClass('alert-info')
+            .html('<i class="fa-solid fa-circle-check mr-1"></i>Đã điền tài khoản mẫu <strong>' + username + '</strong> (Mật khẩu: <code>123456</code>). Bấm <strong>Đăng Nhập Ngay</strong> để vào hệ thống!');
+        $('#hgb_btn_login').focus();
+    };
+
+    // 2. Chốt chặn Guest khi bấm Thả tim bài viết tạp chí
+    let origToggleLike = window.fkToggleLikeArticle;
+    window.fkToggleLikeArticle = function (articleId, btnEl) {
+        let role = $('body').attr('data-user-role') || 'guest';
+        if (role === 'guest') {
+            if (confirm('Theo phân quyền RBAC, Khách vãng lai (Guest) chỉ được đọc bài viết. Bạn có muốn chuyển sang trang Đăng nhập tài khoản Thành viên để thả tim & bình luận không?')) {
+                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            }
+            return;
+        }
+        if (typeof origToggleLike === 'function') {
+            origToggleLike(articleId, btnEl);
+        }
+    };
+
+    // 3. Chốt chặn Guest khi bấm Nộp hồ sơ KOL Nhí (kol-casting.php)
+    $('#lnkt_formKolCasting').off('submit').on('submit', function (e) {
+        let role = $('body').attr('data-user-role') || 'guest';
+        if (role === 'guest') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (confirm('Theo phân quyền RBAC, Khách vãng lai (Guest) chỉ xem thể lệ. Vui lòng đăng nhập tài khoản Khách hàng (Customer) để nộp hồ sơ xét tuyển KOL Nhí!')) {
+                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/kol-casting.php');
+            }
+            return false;
+        }
+    });
+
+    // 4. Chốt chặn Guest (Checkout Gate) khi bấm Đặt hàng cuối cùng tại checkout.php
+    $('#lnkt_formCheckoutOrder').on('submit', function (e) {
+        let role = $('body').attr('data-user-role') || 'guest';
+        if (role === 'guest') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (confirm('Chốt chặn Checkout Gate (RBAC): Giỏ hàng tạm của bạn đã được lưu an toàn trong Session. Vui lòng đăng nhập tài khoản Khách hàng để hoàn tất đặt hàng và tích điểm nâng hạng VIP!')) {
+                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/checkout.php');
+            }
+            return false;
+        }
     });
 });

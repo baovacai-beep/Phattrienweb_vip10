@@ -51,7 +51,12 @@ $lnkt_kol_stars = [
                 </p>
             </div>
             <div class="col-12 col-lg-4 text-lg-right">
-                <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm">
+                <?php if (Rbac::isStaffOrAdmin()): ?>
+                    <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-pastel-primary rounded-pill px-4 py-2 font-weight-bold shadow-sm mr-2 mb-2">
+                        <i class="fa-solid fa-clipboard-check mr-1"></i> Bàn Duyệt KOL (MH 17)
+                    </a>
+                <?php endif; ?>
+                <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mb-2">
                     <i class="fa-solid fa-arrow-left mr-1 text-peach"></i> Về Trang Chủ (MH 01)
                 </a>
             </div>
@@ -69,12 +74,35 @@ $lnkt_kol_stars = [
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-id-card-clip text-peach mr-2"></i>Biểu Mẫu Đăng Ký Hồ Sơ KOL Nhí
                         </h5>
-                        <small class="text-muted-custom">Vui lòng điền đầy đủ thông số của bé và đính kèm từ 2 đến 5 ảnh</small>
+                        <small class="text-muted-custom">Bảng CSDL: <code>lnkt_dang_ky_kol_nhi</code> • Liên kết <code>ma_nguoi_dung</code></small>
                     </div>
                     <span class="badge badge-pill badge-mint px-3 py-1">Đang mở nhận hồ sơ</span>
                 </div>
 
                 <div class="card-body p-4 pt-2">
+                    <?php if (Rbac::isGuest()): ?>
+                        <div class="alert alert-warning border mb-4">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                                <div class="mb-2 mb-md-0">
+                                    <strong class="text-slate d-block">
+                                        <i class="fa-solid fa-user-lock text-peach mr-1"></i>Yêu cầu Đăng nhập Thành viên để Nộp hồ sơ KOL
+                                    </strong>
+                                    <span class="small text-muted-custom">
+                                        Theo Ma trận Phân quyền RBAC: Khách vãng lai (<code>guest</code>) được xem thể lệ &amp; gương mặt mẫu nhí. Để nộp hồ sơ lưu vào <code>lnkt_dang_ky_kol_nhi</code>, ba mẹ vui lòng đăng nhập tài khoản Khách hàng (<code>khach_hang</code>).
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-wrap">
+                                    <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/kol-casting.php') ?>" class="btn btn-pastel-primary btn-sm rounded-pill px-3 mr-1 font-weight-bold">
+                                        Đăng nhập ngay
+                                    </a>
+                                    <a href="<?= htmlspecialchars(APP_ENDPOINT) ?>?c=auth&amp;a=quickSwitchRole&amp;user=me_be_sam" class="btn btn-success btn-sm rounded-pill px-3 font-weight-bold">
+                                        Dùng TK Mẫu (me_be_sam)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <form id="lnkt_formKolCasting" enctype="multipart/form-data">
                         <!-- 1. Họ tên bé & Ngày sinh (Tự động tính tuổi) -->
                         <div class="form-row">
@@ -170,14 +198,14 @@ $lnkt_kol_stars = [
                                     Họ tên Phụ huynh / Người giám hộ (<span class="text-danger">*</span>):
                                 </label>
                                 <input type="text" id="lnkt_kolParentName" name="guardian_name" class="form-control"
-                                       value="Võ Thị Thanh Thảo" required>
+                                       value="<?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Võ Thị Thanh Thảo') ?>" required>
                             </div>
                             <div class="form-group col-12 col-md-6">
                                 <label class="small font-weight-bold text-slate" for="lnkt_kolParentPhone">
                                     Số điện thoại liên hệ (<span class="text-danger">*</span>):
                                 </label>
                                 <input type="tel" id="lnkt_kolParentPhone" name="guardian_phone" class="form-control"
-                                       value="0918889999" required>
+                                       value="<?= htmlspecialchars($_SESSION['user']['so_dien_thoai'] ?? '0918889999') ?>" required>
                             </div>
                         </div>
 
@@ -241,7 +269,7 @@ $lnkt_kol_stars = [
                         </div>
 
                         <button type="submit" id="lnkt_btnSubmitKolCasting" class="btn btn-pastel-primary btn-block font-weight-bold py-3 shadow">
-                            <i class="fa-solid fa-paper-plane mr-2"></i>Nộp Hồ Sơ Ứng Tuyển KOL Nhí Ngay
+                            <i class="fa-solid fa-paper-plane mr-2"></i><?= Rbac::isGuest() ? 'Đăng Nhập Tài Khoản Để Nộp Hồ Sơ KOL Nhí' : 'Nộp Hồ Sơ Ứng Tuyển KOL Nhí Ngay' ?>
                         </button>
                     </form>
                 </div>
@@ -308,4 +336,3 @@ $lnkt_kol_stars = [
 </div>
 
 <?php require_once __DIR__ . "/../layouts/footer.php"; ?>
-

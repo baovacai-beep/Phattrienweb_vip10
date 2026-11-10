@@ -1,4 +1,6 @@
-
+<?php
+require_once __DIR__ . '/../../core/Rbac.php';
+?>
 <footer class="mt-5 border-top pt-5 pb-4 bg-white">
     <div class="container">
         <div class="row">
@@ -11,9 +13,9 @@
                     Nền tảng thương mại điện tử D2C độc quyền phân phối các sản phẩm thời trang trẻ em sản xuất từ 100% sợi tre tự nhiên và cotton hữu cơ. Chứng nhận an toàn tuyệt đối cho làn da bé.
                 </p>
                 <div class="d-flex mt-3">
-                    <a href="#" class="btn btn-sm btn-light rounded-circle mr-2 text-primary shadow-sm border"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="btn btn-sm btn-light rounded-circle mr-2 text-danger shadow-sm border"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="btn btn-sm btn-light rounded-circle text-dark shadow-sm border"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-sm btn-light rounded-circle mr-2 text-primary shadow-sm border" title="Cộng đồng Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-sm btn-light rounded-circle mr-2 text-danger shadow-sm border" title="Lookbook Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-sm btn-light rounded-circle text-dark shadow-sm border" title="Kênh TikTok Mẫu Nhí"><i class="fa-brands fa-tiktok"></i></a>
                 </div>
             </div>
 
@@ -32,19 +34,32 @@
             <div class="col-6 col-md-2 mb-4">
                 <h6 class="font-weight-bold mb-3 text-slate">Khách Hàng</h6>
                 <ul class="list-unstyled small">
-                    <li class="mb-2"><a href="javascript:void(0)" class="text-muted-custom" data-toggle="modal" data-target="#modalSuggestSize">Bảng Quy Đổi Size</a></li>
+                    <li class="mb-2"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Bảng Quy Đổi Size</a></li>
                     <li class="mb-2"><a href="/FashionKids/views/pages/order-tracking.php" class="text-muted-custom">Tra Cứu Vận Đơn</a></li>
                     <li class="mb-2"><a href="/FashionKids/views/pages/kol-casting.php" class="text-muted-custom">Tuyển Đại Sứ Nhí</a></li>
-                    <li class="mb-2"><a href="#" class="text-muted-custom">Chính Sách Đổi Trả</a></li>
+                    <li class="mb-2"><a href="/FashionKids/views/pages/blog-feeds.php" class="text-muted-custom">Tạp Chí &amp; Báo Chí</a></li>
                 </ul>
             </div>
 
             <!-- Cot 4: Tong Dai CSKH -->
             <div class="col-12 col-md-4 mb-4">
-                <h6 class="font-weight-bold mb-3 text-slate">Tổng Đài Hỗ Trợ</h6>
+                <h6 class="font-weight-bold mb-3 text-slate">Tổng Đài Hỗ Trợ &amp; CSKH Realtime</h6>
                 <div class="p-3 footer-support-box mb-3">
-                    <div class="font-weight-bold text-slate h5 mb-0">1900 6868</div>
-                    <small class="text-muted-custom">Hỗ trợ phụ huynh từ 8:00 - 21:00 (Cả T7 & CN)</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="font-weight-bold text-slate h5 mb-0">1900 6868</div>
+                            <small class="text-muted-custom">Hỗ trợ phụ huynh từ 8:00 - 21:00 (Cả T7 &amp; CN)</small>
+                        </div>
+                        <?php if (Rbac::isStaffOrAdmin()): ?>
+                            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach">
+                                <i class="fa-solid fa-headset mr-1"></i>Bàn CSKH
+                            </a>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach" data-toggle="collapse" data-target="#customerChatWidget">
+                                <i class="fa-solid fa-comments mr-1"></i>Chat Ngay
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <small class="text-muted-custom d-block">
                     <i class="fa-solid fa-shield-halved text-success mr-1"></i> Cam kết 100% sợi tre kháng khuẩn thiên nhiên
@@ -58,8 +73,10 @@
     </div>
 </footer>
 
-<!-- Tai Tron Bo JavaScript Libraries -->
 <?php
+// Nhung Widget Chat Realtime toan trang (MH 08)
+require_once __DIR__ . "/chat-widget.php";
+
 $appBase = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

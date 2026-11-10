@@ -57,7 +57,7 @@ class UserModel extends Model {
             'ma_nguoi_dung'      => 3,
             'ma_hang_thanh_vien' => 3,
             'ten_dang_nhap'      => 'me_be_sam',
-            'ho_va_ten'          => 'Võ Thị Thanh Thảo',
+            'ho_va_ten'          => 'Võ Thị Thanh Thảo (Mẹ Bé Sam)',
             'thu_dien_tu'        => 'thanhthao@gmail.com',
             'so_dien_thoai'      => '0918889999',
             'dia_chi_nha'        => 'Số 120 Điện Biên Phủ, Bình Thạnh',
@@ -66,8 +66,80 @@ class UserModel extends Model {
             'da_xac_thuc_otp'    => 1,
             'ten_hang'           => 'Vàng (Gold)',
             'phan_tram_giam_gia' => 10
+        ],
+        [
+            'ma_nguoi_dung'      => 4,
+            'ma_hang_thanh_vien' => 4,
+            'ten_dang_nhap'      => 'vip_kim_cuong',
+            'ho_va_ten'          => 'Chị Lan Anh (VIP Kim Cương)',
+            'thu_dien_tu'        => 'kimcuong@fashionkids.vn',
+            'so_dien_thoai'      => '0909888777',
+            'dia_chi_nha'        => 'Khu biệt thự Thảo Điền, TP. Thủ Đức',
+            'diem_tich_luy'      => 3500,
+            'vai_tro'            => 'khach_hang',
+            'da_xac_thuc_otp'    => 1,
+            'ten_hang'           => 'Kim Cương (Diamond)',
+            'phan_tram_giam_gia' => 15
+        ],
+        [
+            'ma_nguoi_dung'      => 5,
+            'ma_hang_thanh_vien' => 1,
+            'ten_dang_nhap'      => 'khach_dong',
+            'ho_va_ten'          => 'Nguyễn Minh Khôi (Khách Hạng Đồng)',
+            'thu_dien_tu'        => 'khachmoi@fashionkids.vn',
+            'so_dien_thoai'      => '0912333444',
+            'dia_chi_nha'        => 'Số 85 Nguyễn Huệ, Quận 1, TP.HCM',
+            'diem_tich_luy'      => 120,
+            'vai_tro'            => 'khach_hang',
+            'da_xac_thuc_otp'    => 1,
+            'ten_hang'           => 'Đồng (Bronze)',
+            'phan_tram_giam_gia' => 0
         ]
     ];
+
+    public function __construct() {
+        parent::__construct();
+        $this->ensureDemoAccountsInDb();
+    }
+
+    /**
+     * Đảm bảo 5 tài khoản mẫu cho 4 vai trò/hạng thẻ luôn sẵn sàng trong bảng hgb_nguoi_dung (Mật khẩu chuẩn: 123456)
+     */
+    public function ensureDemoAccountsInDb(): void {
+        if (!$this->hasConnection()) {
+            return;
+        }
+        try {
+            $defaultHash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'; // BCRYPT chuẩn
+            $stmt = $this->db->prepare("
+                INSERT INTO `hgb_nguoi_dung`
+                    (`ma_nguoi_dung`, `ma_hang_thanh_vien`, `ten_dang_nhap`, `mat_khau`, `ho_va_ten`, `thu_dien_tu`, `so_dien_thoai`, `dia_chi_nha`, `diem_tich_luy`, `vai_tro`, `da_xac_thuc_otp`)
+                VALUES
+                    (:id, :tier, :user, :pass, :name, :email, :phone, :addr, :pts, :role, 1)
+                ON DUPLICATE KEY UPDATE
+                    `vai_tro` = VALUES(`vai_tro`),
+                    `ma_hang_thanh_vien` = VALUES(`ma_hang_thanh_vien`),
+                    `diem_tich_luy` = VALUES(`diem_tich_luy`),
+                    `da_xac_thuc_otp` = 1
+            ");
+            foreach ($this->seedUsers as $su) {
+                $stmt->execute([
+                    ':id'    => $su['ma_nguoi_dung'],
+                    ':tier'  => $su['ma_hang_thanh_vien'],
+                    ':user'  => $su['ten_dang_nhap'],
+                    ':pass'  => $defaultHash,
+                    ':name'  => $su['ho_va_ten'],
+                    ':email' => $su['thu_dien_tu'],
+                    ':phone' => $su['so_dien_thoai'],
+                    ':addr'  => $su['dia_chi_nha'],
+                    ':pts'   => $su['diem_tich_luy'],
+                    ':role'  => $su['vai_tro'],
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Bỏ qua nếu chưa khởi tạo bảng
+        }
+    }
 
     // ========================================================================
     // 1. KIỂM TRA TRÙNG LẶP (hgb_)
@@ -171,7 +243,7 @@ class UserModel extends Model {
         }
 
         // Xác thực thành công: Ghi nhận cờ verified và giải phóng mã OTP
-        $_SESSION[self::SESSION_VERIFIED] = $emailClean;
+        $_SESSION[self::SESSION_VERIFIED] = trim($email);
         $_SESSION['hgb_otp_verified_email'] = $emailClean;
         unset($_SESSION[self::SESSION_OTP]);
 
@@ -203,6 +275,69 @@ class UserModel extends Model {
     // ========================================================================
     // 3. ĐĂNG KÝ / ĐĂNG NHẬP VỚI STORED PROCEDURES (hgb_)
     // ========================================================================
+
+    /**
+     * Gọi Stored Procedure sp_hgb_dang_ky_thanh_vien tạo người dùng mới (Bước 5 - Gửi OTP & Đăng ký hoàn tất)
+     */
+    public function dangKyNguoiDung(
+        string $username,
+        string $hashedPassword,
+        string $fullname,
+        string $email,
+        string $phone,
+        string $address
+    ): int {
+        if ($this->hasConnection()) {
+            try {
+                $sql = "CALL sp_hgb_dang_ky_thanh_vien(:username, :password, :fullname, :email, :phone, :address, @new_id)";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    ':username' => $username,
+                    ':password' => $hashedPassword,
+                    ':fullname' => $fullname,
+                    ':email'    => $email,
+                    ':phone'    => $phone,
+                    ':address'  => $address
+                ]);
+                $stmt->closeCursor();
+
+                // Lấy OUT parameter @new_id
+                $result = $this->db->query("SELECT @new_id AS new_id")->fetch();
+                $newId = (int)($result['new_id'] ?? 0);
+                if ($newId > 0) {
+                    $this->danhDauDaXacThuc($newId);
+                }
+                return $newId;
+            } catch (PDOException $e) {
+                if (($e->errorInfo[0] ?? '') === '45000') {
+                    throw new DomainException($this->lamSachThongDiepSp((string)($e->errorInfo[2] ?? $e->getMessage())), 0, $e);
+                }
+                throw $e;
+            }
+        }
+
+        // Lưu dự phòng trong Session nếu chạy chế độ demo offline
+        if (!isset($_SESSION['hgb_registered_users']) || !is_array($_SESSION['hgb_registered_users'])) {
+            $_SESSION['hgb_registered_users'] = [];
+        }
+        $newId = 10 + count($_SESSION['hgb_registered_users']);
+        $_SESSION['hgb_registered_users'][$newId] = [
+            'ma_nguoi_dung'      => $newId,
+            'ma_hang_thanh_vien' => 1,
+            'ten_dang_nhap'      => $username,
+            'mat_khau'           => $hashedPassword,
+            'ho_va_ten'          => $fullname,
+            'thu_dien_tu'        => $email,
+            'so_dien_thoai'      => $phone,
+            'dia_chi_nha'        => $address,
+            'diem_tich_luy'      => 0,
+            'vai_tro'            => 'khach_hang',
+            'da_xac_thuc_otp'    => 1,
+            'ten_hang'           => 'Đồng (Bronze)',
+            'phan_tram_giam_gia' => 0
+        ];
+        return $newId;
+    }
 
     /**
      * Đăng ký thành viên qua Stored Procedure sp_hgb_dang_ky_thanh_vien.
@@ -311,10 +446,13 @@ class UserModel extends Model {
                             COALESCE(h.phan_tram_giam_gia, 0)      AS phan_tram_giam_gia
                        FROM hgb_nguoi_dung u
                        LEFT JOIN hgb_hang_thanh_vien h ON u.ma_hang_thanh_vien = h.ma_hang
-                      WHERE u.ten_dang_nhap = :ten OR u.thu_dien_tu = :ten
+                      WHERE u.ten_dang_nhap = :ten_dn OR u.thu_dien_tu = :email
                       LIMIT 1"
                 );
-                $stmt->execute([':ten' => $tenClean]);
+                $stmt->execute([
+                    ':ten_dn' => $tenClean,
+                    ':email'  => $tenClean,
+                ]);
                 $user = $stmt->fetch();
             } catch (PDOException $e) {
                 try {
@@ -324,10 +462,13 @@ class UserModel extends Model {
                                 COALESCE(h.phan_tram_giam_gia, 0)      AS phan_tram_giam_gia
                            FROM hgb_nguoi_dung u
                            LEFT JOIN hgb_hang_thanh_vien h ON u.ma_hang_thanh_vien = h.ma_hang_thanh_vien
-                          WHERE u.ten_dang_nhap = :ten OR u.thu_dien_tu = :ten
+                          WHERE u.ten_dang_nhap = :ten_dn OR u.thu_dien_tu = :email
                           LIMIT 1"
                     );
-                    $stmt->execute([':ten' => $tenClean]);
+                    $stmt->execute([
+                        ':ten_dn' => $tenClean,
+                        ':email'  => $tenClean,
+                    ]);
                     $user = $stmt->fetch();
                 } catch (PDOException $e2) {
                     error_log('[hgb] dangNhap: ' . $e2->getMessage());
