@@ -609,43 +609,81 @@ $(document).ready(function () {
         window.lbnFilterAdminInventory();
     });
 
-    // Cập nhật nhanh tồn kho (Stored Procedure lbn_update_stock) & Cảnh báo đỏ khi tồn kho <= 5
+    // Cập nhật nhanh tồn kho (Stored Procedure sp_lbn_nhap_them_kho_hang) & Cảnh báo đỏ khi tồn kho <= 5
     window.lbnQuickUpdateStock = function (productId, skuCode) {
         let inputEl = $('#lbn_stockInput_' + productId);
         let newStock = parseInt(inputEl.val(), 10);
 
         if (isNaN(newStock) || newStock < 0) {
-            alert('Số lượng tồn kho không hợp lệ (phải >= 0)!');
+            alert('Lỗi ngoại lệ: Số lượng tồn kho không được nhỏ hơn 0 (phải >= 0)!');
             return;
         }
 
-        let $row = $('#lbn_invRow_' + productId);
-        $row.attr('data-stock', newStock);
-        let statusCell = $('#lbn_stockBadgeCell_' + productId);
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                product_id: productId,
+                new_stock:  newStock,
+                mode:       'set'
+            },
+            success: function (res) {
+                let finalStock = (res && res.new_stock !== undefined) ? parseInt(res.new_stock, 10) : newStock;
+                inputEl.val(finalStock);
 
-        if (newStock <= 5) {
-            statusCell.html(
-                '<span class="badge badge-danger lbn-badge-low-stock px-2 py-1">' +
-                '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (' + newStock + ')' +
-                '</span>'
-            );
-        } else {
-            statusCell.html(
-                '<span class="badge badge-mint px-2 py-1 rounded-pill">' +
-                '<i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (' + newStock + ')' +
-                '</span>'
-            );
-        }
+                let $row = $('#lbn_invRow_' + productId);
+                $row.attr('data-stock', finalStock);
+                let statusCell = $('#lbn_stockBadgeCell_' + productId);
 
-        // Cập nhật lại bộ đếm tổng sản phẩm sắp hết hàng (<= 5)
-        let lowStockTotal = 0;
-        $('.lbn-inv-row').each(function () {
-            let st = parseInt($(this).attr('data-stock'), 10) || 0;
-            if (st <= 5) lowStockTotal++;
+                if (finalStock <= 5) {
+                    statusCell.html(
+                        '<span class="badge badge-danger lbn-badge-low-stock px-2 py-1">' +
+                        '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (' + finalStock + ')' +
+                        '</span>'
+                    );
+                } else {
+                    statusCell.html(
+                        '<span class="badge badge-mint px-2 py-1 rounded-pill">' +
+                        '<i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (' + finalStock + ')' +
+                        '</span>'
+                    );
+                }
+
+                let lowStockTotal = 0;
+                $('.lbn-inv-row').each(function () {
+                    let st = parseInt($(this).attr('data-stock'), 10) || 0;
+                    if (st <= 5) lowStockTotal++;
+                });
+                $('#lbn_lowStockCounter').text(lowStockTotal);
+
+                alert((res && res.message) ? res.message : ('Đã cập nhật tồn kho cho mã sản phẩm ' + skuCode + ': ' + finalStock + ' sản phẩm.'));
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể cập nhật tồn kho lúc này!';
+                alert(errMsg);
+            }
         });
-        $('#lbn_lowStockCounter').text(lowStockTotal);
+    };
 
-        alert('Đã cập nhật tồn kho cho mã sản phẩm ' + skuCode + ': ' + newStock + ' sản phẩm.');
+    // Xử lý Form Nhập thêm kho nhanh dành riêng cho Nhân viên (MH 13)
+    window.lbnSubmitStaffQuickRestock = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        let productId = parseInt($('#lbn_staffRestockProductId').val(), 10) || 0;
+        let skuCode   = $('#lbn_staffRestockProductId option:selected').attr('data-sku') || ('FK-LBN-' + productId);
+        let newQty    = parseInt($('#lbn_staffRestockQty').val(), 10);
+
+        if (isNaN(newQty) || newQty < 0) {
+            alert('Số lượng tồn kho mới không được nhỏ hơn 0!');
+            return false;
+        }
+        if ($('#lbn_stockInput_' + productId).length) {
+            $('#lbn_stockInput_' + productId).val(newQty);
+        }
+        window.lbnQuickUpdateStock(productId, skuCode);
+        return false;
     };
 
     // Chuyển đổi hướng dẫn loại kích cỡ (Quần áo vs Giày dép) trong Form MH 13
@@ -712,17 +750,58 @@ $(document).ready(function () {
         window.lbnToggleSizeTypeGuide('quan_ao');
     };
 
+    // MH 13 (Admin Only): Tích hợp AJAX gọi ProductController / AdminController (sp_lbn_them_san_pham_moi)
+    // Bắt lỗi ngoại lệ chặt chẽ nếu giá bán <= 0 hoặc tồn kho < 0
     $('#lbn_formAdminProduct').on('submit', function (e) {
         e.preventDefault();
-        let prodName = $('#lbn_formProductName').val().trim();
-        let prodStock = parseInt($('#lbn_formProductStock').val(), 10) || 0;
-        let isEdit = $('#lbn_formProductId').val() !== '';
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 
-        if (isEdit) {
-            alert('Đã cập nhật thông tin sản phẩm "' + prodName + '" (Tồn kho: ' + prodStock + ') thành công!');
-        } else {
-            alert('Đã thêm mới sản phẩm "' + prodName + '" vào kho thành công!');
+        let prodName  = ($('#lbn_formProductName').val() || '').trim();
+        let rawPrice  = parseFloat($('#lbn_formProductPrice').val());
+        let rawStock  = parseInt($('#lbn_formProductStock').val(), 10);
+        let formEl    = this;
+        let $btn      = $('#lbn_btnSubmitProduct');
+
+        if (isNaN(rawPrice) || rawPrice <= 0) {
+            alert('Lỗi ngoại lệ: Đơn giá bán sản phẩm phải lớn hơn 0 VNĐ (gia_ban > 0)!');
+            $('#lbn_formProductPrice').focus();
+            return false;
         }
+        if (isNaN(rawStock) || rawStock < 0) {
+            alert('Lỗi ngoại lệ: Số lượng tồn kho không được nhỏ hơn 0 (so_luong_ton_kho >= 0)!');
+            $('#lbn_formProductStock').focus();
+            return false;
+        }
+
+        let formData = new FormData(formEl);
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu kho...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=product&a=ajaxSaveProduct',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    alert(res.message || ('Đã lưu sản phẩm "' + prodName + '" thành công!'));
+                    window.lbnResetProductForm();
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể lưu sản phẩm!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Lỗi ngoại lệ khi lưu sản phẩm vào kho!';
+                alert(errMsg);
+            }
+        });
     });
 });
 
@@ -1416,43 +1495,74 @@ $(document).ready(function () {
         });
     };
 
+    // MH 10 (Orders): AJAX tiếp nhận đơn và cập nhật tiến trình giao hàng qua OrderController (sp_lnkt_cap_nhat_trang_thai_don_hang)
     window.lnktUpdateStaffOrderStatus = function (orderId, orderCode) {
-        let newStatus = $('#lnkt_statusSelect_' + orderId).val();
+        let uiStatus = $('#lnkt_statusSelect_' + orderId).val();
         let $row = $('#lnkt_orderRow_' + orderId);
-        $row.attr('data-status', newStatus);
+        let prevUiStatus = $row.attr('data-status') || 'cho_duyet';
 
-        let badgeHtml = '';
-        if (newStatus === 'cho_duyet') {
-            badgeHtml = '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
-        } else if (newStatus === 'da_xac_nhan') {
-            badgeHtml = '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
-        } else if (newStatus === 'dang_giao') {
-            badgeHtml = '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
-        } else if (newStatus === 'hoan_tat') {
-            badgeHtml = '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
-        } else if (newStatus === 'da_huy') {
-            badgeHtml = '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
-        }
-        $('#lnkt_orderBadgeCell_' + orderId).html(badgeHtml);
-
-        // Cập nhật lại bộ đếm 5 trạng thái
-        const counts = { cho_duyet: 0, da_xac_nhan: 0, dang_giao: 0, hoan_tat: 0, da_huy: 0 };
-        $('.lnkt-staff-order-row').each(function () {
-            let st = $(this).attr('data-status');
-            if (counts[st] !== undefined) counts[st]++;
-        });
-        Object.keys(counts).forEach(function (k) {
-            $('#lnkt_count_' + k).text(counts[k]);
-        });
-
-        const statusTextMap = {
-            cho_duyet: 'Chờ duyệt',
-            da_xac_nhan: 'Đã xác nhận',
-            dang_giao: 'Đang giao',
-            hoan_tat: 'Hoàn tất',
-            da_huy: 'Đã hủy'
+        const uiToDbMap = {
+            cho_duyet:     'cho_xac_nhan',
+            cho_xac_nhan:  'cho_xac_nhan',
+            da_xac_nhan:   'dang_dong_goi',
+            dang_dong_goi: 'dang_dong_goi',
+            dang_giao:     'dang_giao_hang',
+            dang_giao_hang:'dang_giao_hang',
+            hoan_tat:      'hoan_tat',
+            da_huy:        'da_huy'
         };
-        alert('Đã cập nhật trạng thái đơn #' + orderCode + ' -> ' + (statusTextMap[newStatus] || newStatus));
+        let dbStatus = uiToDbMap[uiStatus] || 'dang_dong_goi';
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxUpdateOrderStatus',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                order_id:   orderId,
+                new_status: dbStatus
+            },
+            success: function (res) {
+                if (!res || res.status !== 'success') {
+                    $('#lnkt_statusSelect_' + orderId).val(prevUiStatus);
+                    alert((res && res.message) ? res.message : 'Không thể cập nhật trạng thái đơn hàng!');
+                    return;
+                }
+
+                $row.attr('data-status', uiStatus);
+
+                let badgeHtml = '';
+                if (uiStatus === 'cho_duyet' || uiStatus === 'cho_xac_nhan') {
+                    badgeHtml = '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
+                } else if (uiStatus === 'da_xac_nhan' || uiStatus === 'dang_dong_goi') {
+                    badgeHtml = '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
+                } else if (uiStatus === 'dang_giao' || uiStatus === 'dang_giao_hang') {
+                    badgeHtml = '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
+                } else if (uiStatus === 'hoan_tat') {
+                    badgeHtml = '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
+                } else if (uiStatus === 'da_huy') {
+                    badgeHtml = '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
+                }
+                $('#lnkt_orderBadgeCell_' + orderId).html(badgeHtml);
+
+                const counts = { cho_duyet: 0, da_xac_nhan: 0, dang_giao: 0, hoan_tat: 0, da_huy: 0 };
+                $('.lnkt-staff-order-row').each(function () {
+                    let st = $(this).attr('data-status');
+                    if (counts[st] !== undefined) counts[st]++;
+                });
+                Object.keys(counts).forEach(function (k) {
+                    $('#lnkt_count_' + k).text(counts[k]);
+                });
+
+                alert(res.message || ('Đã cập nhật trạng thái đơn #' + orderCode + ' thành công!'));
+            },
+            error: function (xhr) {
+                $('#lnkt_statusSelect_' + orderId).val(prevUiStatus);
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Lỗi ngoại lệ khi cập nhật tiến trình đơn hàng!';
+                alert(errMsg);
+            }
+        });
     };
 
     window.lnktInspectStaffOrder = function (el) {
@@ -1532,10 +1642,56 @@ $(document).ready(function () {
         $('#lnkt_btnCancelSizeEdit').addClass('d-none');
     };
 
+    // MH 14 (Admin Only): AJAX lưu cấu hình Bảng kích cỡ chuẩn (lnkt_bang_kich_co)
     $('#lnkt_formAdminSizeChart').on('submit', function (e) {
         e.preventDefault();
-        let sizeName = $('#lnkt_scSizeName').val().trim();
-        alert('Đã lưu cấu hình thông số kích cỡ "' + sizeName + '" thành công!');
+        let scId     = $('#lnkt_scId').val() || '';
+        let catId    = parseInt($('#lnkt_scCategoryId').val(), 10) || 1;
+        let typeVal  = $('#lnkt_scType').val() || (catId === 4 ? 'giay_dep' : 'quan_ao');
+        let sizeName = ($('#lnkt_scSizeName').val() || '').trim();
+        let minVal   = (typeVal === 'giay_dep')
+            ? parseFloat($('#lnkt_scFootMin').val() || 12)
+            : parseFloat($('#lnkt_scHeightMin').val() || 75);
+        let maxVal   = (typeVal === 'giay_dep')
+            ? parseFloat($('#lnkt_scFootMax').val() || 13.5)
+            : parseFloat($('#lnkt_scHeightMax').val() || 89);
+        let chestMax = $('#lnkt_scChestMax').val() || '';
+        let waistMax = $('#lnkt_scWaistMax').val() || '';
+
+        if (!sizeName) {
+            alert('Vui lòng nhập tên kích cỡ (VD: Size 2 (2-3T))!');
+            return;
+        }
+        if (isNaN(minVal) || isNaN(maxVal) || minVal <= 0 || minVal >= maxVal) {
+            alert('Khoảng số đo tối thiểu và tối đa không hợp lệ!');
+            return;
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxSaveSizeChart',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                size_id:     scId,
+                category_id: catId,
+                size_type:   typeVal,
+                size_label:  sizeName,
+                min_val:     minVal,
+                max_val:     maxVal,
+                chest_max:   chestMax,
+                waist_max:   waistMax
+            },
+            success: function (res) {
+                alert((res && res.message) ? res.message : ('Đã lưu cấu hình thông số kích cỡ "' + sizeName + '" thành công!'));
+                window.lnktResetSizeChartForm();
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể lưu cấu hình bảng kích cỡ!';
+                alert(errMsg);
+            }
+        });
     });
 
     // ------------------------------------------------------------------------
@@ -2227,9 +2383,58 @@ $(document).ready(function () {
         });
     });
 
+    // MH 21/22: Xuất bản bài viết từ Bản nháp (Chỉ Admin) & Xóa bài viết Tạp chí (Chỉ Admin)
+    window.fkPublishCmsArticleRow = function (id) {
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxPublishBlogArticle',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: id },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('#fk_cmsStatusCell_' + id).html('<span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>');
+                    $('#fk_btnPublishArticle_' + id).remove();
+                    alert(res.message || ('Đã xuất bản chính thức bài viết #' + id + ' thành công!'));
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể xuất bản bài viết!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Chỉ Quản trị viên mới được xuất bản bài viết!';
+                alert(errMsg);
+            }
+        });
+    };
+
     window.fkDeleteCmsArticleRow = function (id) {
-        $('#fk_cmsArticleRow_' + id).fadeOut(250, function () {
-            $(this).remove();
+        if (!confirm('Bạn có chắc chắn muốn xóa bài viết #' + id + ' khỏi hệ thống Tạp chí?')) {
+            return;
+        }
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxDeleteBlogArticle',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: id },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('#fk_cmsArticleRow_' + id).fadeOut(250, function () {
+                        $(this).remove();
+                    });
+                    let total = Math.max(0, (parseInt($('#fk_cmsTotalArticles').text(), 10) || 1) - 1);
+                    $('#fk_cmsTotalArticles').text(total);
+                    alert(res.message || ('Đã xóa bài viết #' + id + ' thành công!'));
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể xóa bài viết!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Chỉ Quản trị viên mới được xóa bài viết!';
+                alert(errMsg);
+            }
         });
     };
 
@@ -2356,16 +2561,34 @@ $(document).ready(function () {
         $('#fk_activeChatSessionCode').text(sessionId);
         $('#fk_activeChatCustomerName').text(customerName);
         $('#fk_activeChatVipBadge').text(vipLabel);
-        window.fkPollStaffChatNow();
+
+        // Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc) qua StaffController
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxMarkChatRead',
+            type: 'POST',
+            dataType: 'json',
+            data: { session_id: sessionId },
+            success: function (res) {
+                if (res && res.status === 'success' && Array.isArray(res.messages)) {
+                    fkRenderStaffChatList(res.messages);
+                } else {
+                    window.fkPollStaffChatNow();
+                }
+            },
+            error: function () {
+                window.fkPollStaffChatNow();
+            }
+        });
     };
 
     window.fkPollStaffChatNow = function () {
         let sessionId = $('#fk_staffCurrentSessionId').val() || $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+        let isStaffDesk = $('#fk_staff_chat_section').length > 0 ? 1 : 0;
         $.ajax({
             url: '/FashionKids/index.php?c=home&a=ajaxPollChat',
             type: 'GET',
             dataType: 'json',
-            data: { session_id: sessionId },
+            data: { session_id: sessionId, mark_read: isStaffDesk },
             success: function (res) {
                 if (res && res.status === 'success') {
                     if ($('#fk_staffPollClock').length && res.timestamp) {
@@ -2435,12 +2658,21 @@ $(document).ready(function () {
     };
 
     window.fkReviewKolApplication = function (id, newStatus, babyName) {
+        let isFinalDecision = (newStatus === 'trung_tuyen' || newStatus === 'tu_choi');
+        let targetEndpoint = isFinalDecision
+            ? '/FashionKids/index.php?c=admin&a=ajaxReviewKolCasting'
+            : '/FashionKids/index.php?c=staff&a=ajaxPreliminaryKolReview';
+
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxReviewKolCasting',
+            url: targetEndpoint,
             type: 'POST',
             dataType: 'json',
             data: { id: id, status: newStatus },
             success: function (res) {
+                if (!res || res.status !== 'success') {
+                    alert((res && res.message) ? res.message : 'Không thể cập nhật trạng thái hồ sơ KOL!');
+                    return;
+                }
                 let badgeHtml = '';
                 if (newStatus === 'moi_phong_van') {
                     badgeHtml = '<span class="badge badge-sky px-3 py-1 rounded-pill"><i class="fa-solid fa-camera-retro mr-1"></i>Hẹn thử đồ Studio</span>';
@@ -2466,7 +2698,13 @@ $(document).ready(function () {
                     trung_tuyen: 'Đã trúng tuyển KOL',
                     tu_choi: 'Từ chối'
                 };
-                alert('Đã cập nhật trạng thái hồ sơ "' + babyName + '": ' + (kolLabelMap[newStatus] || newStatus));
+                alert(res.message || ('Đã cập nhật trạng thái hồ sơ "' + babyName + '": ' + (kolLabelMap[newStatus] || newStatus)));
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Bạn không có quyền thực hiện thao tác này!';
+                alert(errMsg);
             }
         });
     };

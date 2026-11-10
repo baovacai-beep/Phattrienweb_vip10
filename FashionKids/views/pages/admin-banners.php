@@ -2,6 +2,7 @@
 $page_title = "Quản Trị Banner Slider & Lịch Chiến Dịch";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 
 // Danh sách các chiến dịch Banner Carousel toàn trang (đồng bộ trực tiếp với MH 01 home.php)
 $lnkt_banners_list = [

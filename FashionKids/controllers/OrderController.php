@@ -226,4 +226,51 @@ class OrderController extends Controller {
             'review'  => $newReview,
         ], 200);
     }
+
+    /**
+     * API AJAX Tiếp nhận đơn & Cập nhật tiến trình giao hàng (MH 10 - sp_lnkt_cap_nhat_trang_thai_don_hang)
+     * URL: index.php?c=order&a=ajaxUpdateOrderStatus
+     * RBAC: Chỉ Nhân viên vận hành (nhan_vien) và Quản trị viên (quan_tri)
+     */
+    public function ajaxUpdateOrderStatus(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép cập nhật tiến trình đơn hàng!'
+        );
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (Chỉ chấp nhận POST)!'], 405);
+        }
+
+        $orderId   = (int)($_POST['order_id'] ?? $_POST['ma_don_hang'] ?? 0);
+        $newStatus = trim((string)($_POST['new_status'] ?? $_POST['trang_thai_moi'] ?? $_POST['status'] ?? ''));
+        $staffId   = (int)(Rbac::currentUserId() ?? ($_SESSION['user']['ma_nguoi_dung'] ?? 2));
+
+        if ($orderId <= 0 || $newStatus === '') {
+            $this->jsonResponse([
+                'status'  => 'error',
+                'message' => 'Mã đơn hàng hoặc trạng thái vận chuyển mới không hợp lệ!'
+            ], 400);
+        }
+
+        try {
+            $result = $this->orderModel->capNhatTrangThaiDonHangChiTiet($orderId, $staffId, $newStatus);
+            $this->jsonResponse(array_merge($result, [
+                'status'  => 'success',
+                'message' => 'Đã cập nhật tiến trình đơn hàng #' . $orderId . ' sang trạng thái "' . $result['status_label'] . '" thành công!'
+            ]), 200);
+        } catch (Throwable $e) {
+            $this->jsonResponse([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function ajaxUpdateStatus(): void {
+        $this->ajaxUpdateOrderStatus();
+    }
 }
