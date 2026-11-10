@@ -9,6 +9,10 @@
  *  4. Tương thích ngược toàn diện với các khóa phẳng (exists, demo_debug, demo_otp, v.v.).
  */
 
+require_once __DIR__ . '/Rbac.php';
+require_once __DIR__ . '/Csrf.php';
+require_once __DIR__ . '/Model.php';
+
 abstract class Controller {
     /**
      * Nạp và khởi tạo một đối tượng Model
@@ -117,5 +121,57 @@ abstract class Controller {
     protected function redirect(string $url): void {
         header("Location: {$url}");
         exit;
+    }
+
+    /**
+     * Cổng bảo vệ chung cho action AJAX ghi dữ liệu:
+     *  1. RBAC  : kiểm tra quyền (401/403 JSON)
+     *  2. Method: chỉ chấp nhận POST (405)
+     *  3. CSRF  : kiểm tra header X-CSRF-Token / trường csrf_token (419)
+     * Dọn sạch bộ đệm bằng ob_clean() trước khi bất kỳ phản hồi JSON nào được xuất.
+     */
+    protected function guardAjax(string $permission): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requirePermission($permission);
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (chỉ chấp nhận POST)!'], 405);
+        }
+        if (!Csrf::validate()) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Mã bảo mật CSRF không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang!'], 419);
+        }
+    }
+
+    /** Cổng bảo vệ cho action AJAX chỉ đọc (GET/POST): chỉ kiểm tra RBAC. */
+    protected function guardAjaxRead(string $permission): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requirePermission($permission);
+    }
+
+    /**
+     * Chạy một khối nghiệp vụ và chuẩn hóa mọi ngoại lệ về JSON {status, message}.
+     *  - InvalidArgumentException / lỗi SIGNAL 45000 của Stored Procedure -> 422
+     *  - Lỗi hệ thống khác                                                  -> 500
+     *
+     * @param callable $work Trả về mảng dữ liệu; cần có khóa 'message'.
+     */
+    protected function runJson(callable $work): void {
+        try {
+            $result = $work();
+            $this->jsonResponse(array_merge(['status' => 'success'], $result), 200);
+        } catch (InvalidArgumentException $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 422);
+        } catch (PDOException $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => Model::spMessage($e)], $e->getCode() === '45000' ? 422 : 500);
+        } catch (RuntimeException $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 409);
+        } catch (Throwable $e) {
+            error_log('[FashionKids] ' . $e->getMessage());
+            $this->jsonResponse(['status' => 'error', 'message' => 'Lỗi hệ thống, vui lòng thử lại sau.'], 500);
+        }
     }
 }

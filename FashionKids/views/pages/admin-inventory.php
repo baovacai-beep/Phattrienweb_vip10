@@ -1,5 +1,7 @@
 <?php
 $page_title = "Quản Lý Sản Phẩm & Tồn Kho (MH 13)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: chặn trước khi xuất bất kỳ nội dung nào
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -250,9 +252,9 @@ foreach ($lbn_inventory_list as $inv) {
                                 Tự động gắn huy hiệu đỏ <strong>"Sắp hết hàng"</strong> khi số lượng tồn kho &le; 5
                             </small>
                         </div>
-                        <button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
+                        <?php if (Rbac::can('product.manage')): ?><button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
                             <i class="fa-solid fa-plus mr-1"></i> Thêm SP Mới
-                        </button>
+                        </button><?php endif; ?>
                     </div>
 
                     <!-- Thanh lọc nhanh trong Kho -->
@@ -290,7 +292,7 @@ foreach ($lbn_inventory_list as $inv) {
                                     <th>Danh Mục</th>
                                     <th class="text-right">Đơn Giá</th>
                                     <th class="text-center">Tồn Kho &amp; Cảnh Báo</th>
-                                    <th class="text-center">Thao Tác</th>
+                                    <?php if (Rbac::can('product.manage')): ?><th class="text-center">Thao Tác</th><?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
@@ -349,7 +351,8 @@ foreach ($lbn_inventory_list as $inv) {
                                                 <?php endif; ?>
                                             </div>
 
-                                            <!-- Ô cập nhật nhanh tồn kho (lbn_update_stock) -->
+                                            <?php if (Rbac::can('product.manage')): ?>
+                                            <!-- Admin: ghi đè tồn kho (lbn_update_stock) -->
                                             <div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">
                                                 <input type="number" id="lbn_stockInput_<?= $prod['id'] ?>"
                                                        class="form-control text-center font-weight-bold"
@@ -362,9 +365,21 @@ foreach ($lbn_inventory_list as $inv) {
                                                     </button>
                                                 </div>
                                             </div>
+<?php else: ?>
+                                            <!-- Nhân viên: CHỈ nhập thêm kho (sp_lbn_nhap_them_kho_hang) -->
+                                            <div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">
+                                                <input type="number" id="fk_restockQty_<?= $prod['id'] ?>" class="form-control text-center font-weight-bold" min="1" placeholder="SL nhập">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-pastel-primary" title="Nhập thêm kho"
+                                                            onclick="fkRestock(<?= $prod['id'] ?>, '<?= htmlspecialchars($prod['sku'], ENT_QUOTES) ?>')">
+                                                        <i class="fa-solid fa-boxes-packing"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
                                         </td>
 
-                                        <!-- 7. Thao tác Sửa -->
+                                        <?php if (Rbac::can('product.manage')): ?><!-- 7. Thao tác Sửa -->
                                         <td class="text-center text-nowrap">
                                             <button type="button"
                                                     class="btn btn-outline-primary btn-sm rounded-pill px-2"
@@ -381,7 +396,7 @@ foreach ($lbn_inventory_list as $inv) {
                                                     onclick="lbnEditInventoryProduct(this)">
                                                 <i class="fa-solid fa-pen-to-square"></i> Sửa
                                             </button>
-                                        </td>
+                                        </td><?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -395,6 +410,7 @@ foreach ($lbn_inventory_list as $inv) {
              CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM (MH 13)
              Khung chọn ảnh tải lên, Loại kích cỡ (quần áo/giày dép), Mô tả chất liệu an toàn
              ================================================================ -->
+        <?php if (Rbac::can('product.manage')): ?>
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm" id="lbn_adminProductFormCard">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
@@ -540,6 +556,16 @@ foreach ($lbn_inventory_list as $inv) {
                 </div>
             </div>
         </div>
+        <?php else: ?>
+        <div class="col-12 col-xl-4 mb-4">
+            <div class="card card-pastel shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="font-weight-bold text-slate mb-2"><i class="fa-solid fa-boxes-packing text-peach mr-1"></i> Quyền Nhân Viên Kho</h6>
+                    <p class="small text-muted-custom mb-0">Bạn chỉ được <strong>nhập thêm kho</strong> (cộng dồn vào tồn kho hiện tại). Việc thêm mới, chỉnh sửa giá/thông tin và ghi đè tồn kho thuộc quyền Quản trị viên.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 

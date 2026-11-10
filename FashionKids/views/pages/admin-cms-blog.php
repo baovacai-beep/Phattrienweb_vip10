@@ -1,118 +1,128 @@
-<!-- views/pages/admin-cms-blog.php -->
-<section class="admin-cms-section py-4 bg-light">
-  <div class="container-fluid">
-    <div class="row mb-4">
-      <div class="col-12">
-        <h3 class="font-weight-bold text-dark mb-1">Quản Trị CMS & Kiểm Duyệt Nội Dung</h3>
-        <p class="text-muted small">Soạn thảo bài viết Tạp chí mới và kiểm duyệt bình luận/đánh giá từ cộng đồng</p>
-      </div>
+<?php
+$page_title = "Quản Trị Tạp Chí & Bài Viết (MH 21/22)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: Admin + Nhân viên
+require_once __DIR__ . "/../../models/StaffModel.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
+
+$fk_posts    = [];
+$fk_db_error = '';
+try {
+    $fk_posts = (new StaffModel())->layDanhSachBaiViet();
+} catch (Throwable $e) {
+    $fk_db_error = 'Không tải được danh sách bài viết từ cơ sở dữ liệu. Vui lòng kiểm tra MySQL.';
+}
+$fk_post_status = [
+    'ban_nhap' => ['Bản nháp', 'badge-secondary'],
+    'xuat_ban' => ['Đã xuất bản', 'badge-mint'],
+    'luu_tru'  => ['Lưu trữ', 'badge-sky'],
+];
+?>
+
+<div class="container-fluid my-4 px-lg-5" id="fk_cms_section">
+    <div class="mb-4">
+        <h4 class="font-weight-bold text-slate mb-1">Quản Trị Tạp Chí (MH 21/22)</h4>
+        <small class="text-muted-custom">
+            <?php if (Rbac::can('blog.publish')): ?>
+                Quản trị viên: soạn, <strong>xuất bản</strong> và <strong>xóa</strong> bài viết.
+            <?php else: ?>
+                Nhân viên: soạn thảo và lưu <strong>Bản nháp</strong>; việc xuất bản/xóa thuộc Quản trị viên.
+            <?php endif; ?>
+        </small>
     </div>
 
-    <!-- Hàng chuyển Tab chức năng -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <ul class="nav nav-pills" id="cmsTab" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active font-weight-bold rounded-pill px-4" id="write-tab" data-toggle="pill" href="#tabWriteArticle" role="tab">
-              <i class="fas fa-feather-alt mr-2"></i>Soạn Thảo Bài Viết Mới
-            </a>
-          </li>
-          <li class="nav-item ml-2">
-            <a class="nav-link font-weight-bold rounded-pill px-4" id="moderation-tab" data-toggle="pill" href="#tabModeration" role="tab">
-              <i class="fas fa-shield-alt mr-2"></i>Kiểm Duyệt Bình Luận & Đánh Giá
-              <span class="badge badge-danger ml-2">3 Vi phạm</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
+    <div id="fk_postAlert" class="d-none"></div>
+    <?php if ($fk_db_error): ?><div class="alert alert-danger"><?= htmlspecialchars($fk_db_error) ?></div><?php endif; ?>
 
-    <div class="tab-content" id="cmsTabContent">
-      <!-- Tab 1: Soạn thảo bài viết mới -->
-      <div class="tab-pane fade show active" id="tabWriteArticle" role="tabpanel">
-        <div class="card border-0 shadow-sm rounded-lg p-4 bg-white">
-          <form action="/controllers/BlogController.php?action=create" method="POST" enctype="multipart/form-data">
-            <div class="row">
-              <div class="col-12 col-md-8">
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Tiêu đề bài viết</label>
-                  <input type="text" class="form-control rounded-lg" name="post_title" placeholder="Nhập tiêu đề hấp dẫn...">
+    <div class="row">
+        <!-- Form soạn thảo -->
+        <div class="col-12 col-xl-5 mb-4">
+            <div class="card card-pastel shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="font-weight-bold mb-0 text-slate"><i class="fa-solid fa-pen-nib text-peach mr-1"></i> Soạn Bài Viết Mới</h6>
                 </div>
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Tóm tắt ngắn (Excerpt)</label>
-                  <textarea class="form-control rounded-lg" name="post_excerpt" rows="2" placeholder="Hiển thị ở lưới thẻ bài viết ngoài trang chủ..."></textarea>
+                <div class="card-body p-4 pt-0">
+                    <form id="fk_postForm" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="ma_bai_viet" value="">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="fk_postTitle">Tiêu đề</label>
+                            <input type="text" id="fk_postTitle" name="tieu_de" class="form-control form-control-sm" maxlength="255" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="fk_postExcerpt">Tóm tắt ngắn</label>
+                            <textarea id="fk_postExcerpt" name="tom_tat" rows="2" class="form-control form-control-sm" maxlength="500" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="fk_postContent">Nội dung chi tiết</label>
+                            <textarea id="fk_postContent" name="noi_dung" rows="8" class="form-control form-control-sm" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="fk_postThumb">Ảnh bìa (JPG/PNG/WEBP ≤ 2MB)</label>
+                            <input type="file" id="fk_postThumb" name="thumbnail" class="form-control-file small" accept=".jpg,.jpeg,.png,.webp">
+                        </div>
+                        <button type="button" class="btn btn-pastel-outline btn-block font-weight-bold py-2" onclick="fkSavePost(false)">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Bản Nháp
+                        </button>
+                        <?php if (Rbac::can('blog.publish')): ?>
+                            <button type="button" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm" onclick="fkSavePost(true)">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Lưu &amp; Xuất Bản
+                            </button>
+                        <?php endif; ?>
+                    </form>
                 </div>
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Nội dung chi tiết (Rich-Text)</label>
-                  <textarea class="form-control rounded-lg" name="post_content" rows="10" placeholder="Viết nội dung bài viết tại đây..."></textarea>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Chuyên mục</label>
-                  <select class="form-control rounded-pill" name="post_category">
-                    <option value="tips">Mẹo phối đồ</option>
-                    <option value="backstage">Hậu trường mẫu nhí</option>
-                    <option value="fabric">Chất liệu an toàn</option>
-                  </select>
-                </div>
-                <div class="form-group mb-4">
-                  <label class="font-weight-bold small text-secondary">Ảnh bìa bài viết</label>
-                  <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="blogThumbnailFile" name="post_thumbnail">
-                    <label class="custom-file-label rounded-pill" for="blogThumbnailFile">Chọn ảnh bìa...</label>
-                  </div>
-                </div>
-                <button type="submit" class="btn btn-warning btn-block rounded-pill font-weight-bold py-2 shadow-sm">
-                  <i class="fas fa-paper-plane mr-2"></i>Đăng Bài Viết
-                </button>
-              </div>
             </div>
-          </form>
         </div>
-      </div>
 
-      <!-- Tab 2: Kiểm duyệt bình luận & Đánh giá vi phạm -->
-      <div class="tab-pane fade" id="tabModeration" role="tabpanel">
-        <div class="card border-0 shadow-sm rounded-lg p-3 bg-white">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th>Thời gian</th>
-                  <th>Người dùng</th>
-                  <th>Loại nội dung</th>
-                  <th>Nội dung bị báo cáo</th>
-                  <th class="text-center">Hành động</th>
-                </tr>
-              </thead>
-              <tbody class="small">
-                <tr>
-                  <td>06/11 08:30</td>
-                  <td><strong>user_spam_99</strong></td>
-                  <td><span class="badge badge-pill badge-secondary">Bình luận Blog</span></td>
-                  <td>Vào ngay trang web abc-link-lua-dao.com để nhận voucher 500k...</td>
-                  <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-success rounded-pill mr-1 font-weight-bold">Giữ lại</button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill font-weight-bold">Xóa vi phạm</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>06/11 09:15</td>
-                  <td><strong>Khách hàng ẩn danh</strong></td>
-                  <td><span class="badge badge-pill badge-warning">Đánh giá 1 Sao</span></td>
-                  <td>Giao hàng quá lâu, dịch vụ tệ bạc không chấp nhận được...</td>
-                  <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-success rounded-pill mr-1 font-weight-bold">Giữ lại</button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill font-weight-bold">Xóa vi phạm</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- Danh sách bài viết -->
+        <div class="col-12 col-xl-7 mb-4">
+            <div class="card card-pastel shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="font-weight-bold mb-0 text-slate"><i class="fa-solid fa-newspaper text-peach mr-1"></i> Danh Sách Bài Viết</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Bài viết</th>
+                                <th>Tác giả</th>
+                                <th class="text-center">Trạng thái</th>
+                                <?php if (Rbac::can('blog.publish') || Rbac::can('blog.delete')): ?><th class="text-center">Thao tác</th><?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody id="fk_postTableBody">
+                            <?php foreach ($fk_posts as $post): ?>
+                                <?php [$pl, $pc] = $fk_post_status[$post['trang_thai_bai_viet']] ?? [$post['trang_thai_bai_viet'], 'badge-secondary']; ?>
+                                <tr id="fk_postRow_<?= (int)$post['ma_bai_viet'] ?>">
+                                    <td>
+                                        <div class="font-weight-bold text-slate"><?= htmlspecialchars($post['tieu_de']) ?></div>
+                                        <small class="text-muted-custom"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($post['ngay_dang']))) ?></small>
+                                    </td>
+                                    <td class="small"><?= htmlspecialchars($post['tac_gia']) ?></td>
+                                    <td class="text-center"><span class="badge <?= $pc ?> px-2 py-1 rounded-pill fk-post-badge"><?= htmlspecialchars($pl) ?></span></td>
+                                    <?php if (Rbac::can('blog.publish') || Rbac::can('blog.delete')): ?>
+                                        <td class="text-center text-nowrap">
+                                            <?php if (Rbac::can('blog.publish') && $post['trang_thai_bai_viet'] !== 'xuat_ban'): ?>
+                                                <button type="button" class="btn btn-success btn-sm rounded-pill font-weight-bold fk-btn-publish"
+                                                        onclick="fkPublishPost(<?= (int)$post['ma_bai_viet'] ?>, this)">Xuất bản</button>
+                                            <?php endif; ?>
+                                            <?php if (Rbac::can('blog.delete')): ?>
+                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill font-weight-bold"
+                                                        onclick="fkDeletePost(<?= (int)$post['ma_bai_viet'] ?>, this)">Xóa</button>
+                                            <?php endif; ?>
+                                        </td>
+                                    <?php endif; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if (empty($fk_posts)): ?>
+                                <tr><td colspan="4" class="text-center text-muted-custom small py-4">Chưa có bài viết nào.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</section>
+</div>
+
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

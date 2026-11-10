@@ -1,5 +1,7 @@
 <?php
 $page_title = "Quản Trị Banner Slider & Lịch Chiến Dịch (MH 23)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: chặn trước khi xuất bất kỳ nội dung nào
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 

@@ -90,6 +90,10 @@ class OrderModel extends Model {
                 ]);
                 $stmt->closeCursor();
             } catch (PDOException $e) {
+                // Lỗi nghiệp vụ SIGNAL 45000 (đơn đã hoàn tất/hủy, sai thẩm quyền...) phải báo ngược lên Controller
+                if ($e->getCode() === '45000') {
+                    throw new InvalidArgumentException(self::spMessage($e));
+                }
                 error_log("Lỗi cập nhật trạng thái đơn: " . $e->getMessage());
             }
         }

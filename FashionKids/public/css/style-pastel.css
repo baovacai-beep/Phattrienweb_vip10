@@ -995,3 +995,13 @@ body {
     border-radius: 14px !important;
     color: #9B2C2C !important;
 }
+
+/* ==========================================================================
+   RBAC Admin/Staff - Live Chat (MH 11), Casting KOL (MH 17), tiện ích dùng chung
+   ========================================================================== */
+.fk-chat-scroll { height: 440px; overflow-y: auto; }
+.fk-chat-bubble { max-width: 80%; border-radius: var(--card-radius); word-break: break-word; }
+.fk-chat-bubble-in  { background-color: #FFFFFF; color: var(--text-slate); border: 1px solid #E2E8F0; }
+.fk-chat-bubble-out { background-color: var(--secondary-sky); color: var(--text-slate); }
+.fk-chat-session.active { background-color: var(--accent-buttercup); border-color: var(--accent-buttercup); color: var(--text-slate); }
+.fk-casting-img { height: 220px; object-fit: cover; }

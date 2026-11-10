@@ -1013,37 +1013,7 @@ $(document).ready(function () {
         });
     };
 
-    window.lnktUpdateStaffOrderStatus = function (orderId, orderCode) {
-        let newStatus = $('#lnkt_statusSelect_' + orderId).val();
-        let $row = $('#lnkt_orderRow_' + orderId);
-        $row.attr('data-status', newStatus);
-
-        let badgeHtml = '';
-        if (newStatus === 'cho_duyet') {
-            badgeHtml = '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
-        } else if (newStatus === 'da_xac_nhan') {
-            badgeHtml = '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
-        } else if (newStatus === 'dang_giao') {
-            badgeHtml = '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
-        } else if (newStatus === 'hoan_tat') {
-            badgeHtml = '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
-        } else if (newStatus === 'da_huy') {
-            badgeHtml = '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
-        }
-        $('#lnkt_orderBadgeCell_' + orderId).html(badgeHtml);
-
-        // Cập nhật lại bộ đếm 5 trạng thái
-        const counts = { cho_duyet: 0, da_xac_nhan: 0, dang_giao: 0, hoan_tat: 0, da_huy: 0 };
-        $('.lnkt-staff-order-row').each(function () {
-            let st = $(this).attr('data-status');
-            if (counts[st] !== undefined) counts[st]++;
-        });
-        Object.keys(counts).forEach(function (k) {
-            $('#lnkt_count_' + k).text(counts[k]);
-        });
-
-        alert('Đã thực thi Stored Procedure lnkt_update_order_status cho đơn #' + orderCode + ' -> Trạng thái mới: ' + newStatus);
-    };
+    // lnktUpdateStaffOrderStatus: đã chuyển sang AJAX ở khối RBAC cuối file (gọi StaffController::ajaxUpdateOrderStatus)
 
     window.lnktInspectStaffOrder = function (el) {
         let $el = $(el);
@@ -1122,12 +1092,7 @@ $(document).ready(function () {
         $('#lnkt_btnCancelSizeEdit').addClass('d-none');
     };
 
-    $('#lnkt_formAdminSizeChart').on('submit', function (e) {
-        e.preventDefault();
-        let catId = $('#lnkt_scCategoryId').val();
-        let sizeName = $('#lnkt_scSizeName').val().trim();
-        alert('Đã lưu cấu hình thông số trần/sàn cho "' + sizeName + '" gắn kết với mã danh mục ma_danh_muc = ' + catId + ' vào bảng lnkt_size_charts!');
-    });
+    // Submit form bảng size: đã chuyển sang AJAX ở khối RBAC cuối file (AdminController::ajaxSaveSizeChart)
 
     // ------------------------------------------------------------------------
     // 7. MH 16: Cổng Casting KOL Nhí - Tự động tính tuổi & Kiểm tra 2-5 ảnh
@@ -1290,4 +1255,459 @@ $(document).ready(function () {
             '• Lịch hẹn giờ: ' + startTime + ' -> ' + endTime
         );
     });
+});
+
+// ============================================================================
+// RBAC ADMIN / STAFF - AJAX (main-interactive.js)
+// Tất cả endpoint trả JSON { status: "success|error", message: "..." }.
+// Quyền được ép lại ở server (Rbac::requirePermission) – JS chỉ lo trải nghiệm.
+// ============================================================================
+$(document).ready(function () {
+
+    // ------------------------------------------------------------------------
+    // 0. Tiện ích dùng chung
+    // ------------------------------------------------------------------------
+    function fkEndpoint() {
+        return $('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php';
+    }
+
+    /** Gọi Controller qua AJAX (tự đính kèm CSRF). data có thể là object, chuỗi hoặc FormData. */
+    window.fkAjax = function (controller, action, data, method) {
+        var cfg = {
+            url: fkEndpoint() + '?c=' + controller + '&a=' + action,
+            type: method || 'POST',
+            dataType: 'json',
+            data: data || {},
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') || '',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        };
+        if (typeof FormData !== 'undefined' && data instanceof FormData) {
+            cfg.processData = false;
+            cfg.contentType = false;
+        }
+        return $.ajax(cfg);
+    };
+
+    window.fkErrMsg = function (xhr) {
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+        if (xhr && xhr.status === 403) return 'Bạn không có quyền thực hiện thao tác này (403).';
+        if (xhr && xhr.status === 401) return 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
+        return 'Không kết nối được máy chủ, vui lòng thử lại.';
+    };
+
+    /** Hiện thông báo Bootstrap alert ở đầu trang (hoặc vào phần tử boxSel nếu có). */
+    window.fkShowAlert = function (type, msg, boxSel) {
+        var $box = boxSel ? $(boxSel) : $();
+        if (!$box.length) {
+            $box = $('#fk_globalAlert');
+            if (!$box.length) {
+                $box = $('<div id="fk_globalAlert"></div>').prependTo($('.container-fluid').first());
+            }
+        }
+        $box.attr('class', 'alert alert-' + type + ' font-weight-bold').attr('role', 'alert').text(msg);
+        clearTimeout($box.data('fkTimer'));
+        if (type === 'success') {
+            $box.data('fkTimer', setTimeout(function () { $box.addClass('d-none'); }, 6000));
+        }
+    };
+
+    function fkBusy($btn, busy) {
+        $btn.prop('disabled', busy);
+    }
+
+    // ------------------------------------------------------------------------
+    // 1. MH 10 – Nhân viên tiếp nhận đơn & cập nhật tiến trình giao hàng
+    // ------------------------------------------------------------------------
+    var FK_ORDER_BADGES = {
+        cho_duyet:   '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>',
+        da_xac_nhan: '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>',
+        dang_giao:   '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>',
+        hoan_tat:    '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>',
+        da_huy:      '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>'
+    };
+    var FK_ORDER_NEXT = {
+        cho_duyet:   [['da_xac_nhan', 'Tiếp nhận đơn', 'btn-pastel-primary']],
+        da_xac_nhan: [['dang_giao', 'Giao hàng', 'btn-pastel-primary']],
+        dang_giao:   [['hoan_tat', 'Hoàn tất', 'btn-success']]
+    };
+
+    function fkRenderOrderActions(orderId, orderCode, status) {
+        var $wrap = $('<span></span>');
+        if (!FK_ORDER_NEXT[status]) {
+            return $wrap.append($('<span class="small text-muted-custom">Đã đóng đơn</span>'));
+        }
+        FK_ORDER_NEXT[status].forEach(function (s) {
+            $('<button type="button" class="btn btn-sm font-weight-bold rounded-pill px-3 mr-1"></button>')
+                .addClass(s[2]).text(s[1])
+                .on('click', function () { window.lnktUpdateStaffOrderStatus(orderId, orderCode, s[0]); })
+                .appendTo($wrap);
+        });
+        $('<button type="button" class="btn btn-sm btn-outline-danger font-weight-bold rounded-pill px-3">Hủy</button>')
+            .on('click', function () { window.lnktUpdateStaffOrderStatus(orderId, orderCode, 'da_huy'); })
+            .appendTo($wrap);
+        return $wrap;
+    }
+
+    window.lnktUpdateStaffOrderStatus = function (orderId, orderCode, newStatus) {
+        if (newStatus === 'da_huy' && !window.confirm('Hủy đơn #' + orderCode + '? Hàng trong đơn sẽ được hoàn lại kho.')) {
+            return;
+        }
+        var $cell = $('#lnkt_orderActionCell_' + orderId);
+        var $btns = $cell.find('button');
+        fkBusy($btns, true);
+
+        fkAjax('staff', 'ajaxUpdateOrderStatus', { ma_don_hang: orderId, trang_thai: newStatus })
+            .done(function (res) {
+                $('#lnkt_orderRow_' + orderId).attr('data-status', res.trang_thai);
+                $('#lnkt_orderBadgeCell_' + orderId).html(FK_ORDER_BADGES[res.trang_thai] || '');
+                $cell.empty().append(fkRenderOrderActions(orderId, orderCode, res.trang_thai).contents());
+                if (res.counts) {
+                    Object.keys(res.counts).forEach(function (k) { $('#lnkt_count_' + k).text(res.counts[k]); });
+                }
+                fkShowAlert('success', res.message);
+            })
+            .fail(function (xhr) {
+                fkBusy($btns, false);
+                fkShowAlert('danger', fkErrMsg(xhr));
+            });
+    };
+
+    // ------------------------------------------------------------------------
+    // 2. MH 13 – Nhân viên "Nhập thêm kho" (sp_lbn_nhap_them_kho_hang)
+    // ------------------------------------------------------------------------
+    window.fkRestock = function (productId, sku) {
+        var $input = $('#fk_restockQty_' + productId);
+        var raw = String($input.val() || '').trim();
+        if (!/^\d+$/.test(raw) || parseInt(raw, 10) <= 0) {
+            $input.addClass('is-invalid');
+            fkShowAlert('danger', 'Số lượng nhập thêm cho ' + sku + ' phải là số nguyên lớn hơn 0.');
+            return;
+        }
+        $input.removeClass('is-invalid');
+        var $btn = $input.closest('.input-group').find('button');
+        fkBusy($btn, true);
+
+        fkAjax('staff', 'ajaxRestock', { product_id: productId, qty: parseInt(raw, 10) })
+            .done(function (res) {
+                var st = parseInt(res.new_stock, 10);
+                var badge = st <= 5
+                    ? '<span class="badge badge-danger lbn-badge-low-stock px-2 py-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (' + st + ')</span>'
+                    : '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (' + st + ')</span>';
+                $('#lbn_stockBadgeCell_' + productId).html(badge);
+                $('#lbn_invRow_' + productId).attr('data-stock', st);
+                $input.val('');
+                fkShowAlert('success', sku + ': ' + res.message);
+            })
+            .fail(function (xhr) { fkShowAlert('danger', fkErrMsg(xhr)); })
+            .always(function () { fkBusy($btn, false); });
+    };
+
+    // ------------------------------------------------------------------------
+    // 3. MH 15 – Admin cấu hình điểm sàn & % chiết khấu hạng VIP
+    // ------------------------------------------------------------------------
+    $('#fk_vipForm').on('submit', function (e) {
+        e.preventDefault();
+        var $btn = $('#fk_btnSaveVip');
+        fkBusy($btn, true);
+        fkAjax('admin', 'ajaxSaveVipTiers', $(this).serialize())
+            .done(function (res) { fkShowAlert('success', res.message, '#fk_vipAlert'); })
+            .fail(function (xhr) { fkShowAlert('danger', fkErrMsg(xhr), '#fk_vipAlert'); })
+            .always(function () { fkBusy($btn, false); });
+    });
+
+    // ------------------------------------------------------------------------
+    // 4. MH 14 – Admin cấu hình bảng kích cỡ (lnkt_bang_kich_co)
+    // ------------------------------------------------------------------------
+    $('#lnkt_formAdminSizeChart').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var $btn = $('#lnkt_btnSaveSizeChart');
+        fkBusy($btn, true);
+        fkAjax('admin', 'ajaxSaveSizeChart', {
+            ma_kich_co:               $('#lnkt_scId').val() || 0,
+            ma_danh_muc:              $('#lnkt_scCategoryId').val(),
+            gioi_tinh:                $('#lnkt_scGender').val(),
+            ten_kich_co:              $('#lnkt_scSizeName').val().trim(),
+            chieu_cao_toi_thieu:      $('#lnkt_scHeightMin').val(),
+            chieu_cao_toi_da:         $('#lnkt_scHeightMax').val(),
+            vong_nguc_toi_thieu:      $('#lnkt_scChestMin').val(),
+            vong_nguc_toi_da:         $('#lnkt_scChestMax').val(),
+            vong_eo_toi_thieu:        $('#lnkt_scWaistMin').val(),
+            vong_eo_toi_da:           $('#lnkt_scWaistMax').val(),
+            chieu_dai_chan_toi_thieu: $('#lnkt_scFootMin').val(),
+            chieu_dai_chan_toi_da:    $('#lnkt_scFootMax').val()
+        })
+            .done(function (res) {
+                fkShowAlert('success', res.message, '#fk_sizeAlert');
+                setTimeout(function () { window.location.reload(); }, 900);
+            })
+            .fail(function (xhr) {
+                fkBusy($btn, false);
+                fkShowAlert('danger', fkErrMsg(xhr), '#fk_sizeAlert');
+            });
+    });
+
+    window.fkDeleteSizeChart = function (id, btnEl) {
+        if (!window.confirm('Xóa cấu hình size #' + id + '?')) return;
+        var $btn = $(btnEl);
+        fkBusy($btn, true);
+        fkAjax('admin', 'ajaxDeleteSizeChart', { ma_kich_co: id })
+            .done(function (res) {
+                $btn.closest('tr').remove();
+                fkShowAlert('success', res.message, '#fk_sizeAlert');
+            })
+            .fail(function (xhr) {
+                fkBusy($btn, false);
+                fkShowAlert('danger', fkErrMsg(xhr), '#fk_sizeAlert');
+            });
+    };
+
+    // ------------------------------------------------------------------------
+    // 5. MH 17 – KOL nhí: Staff "Mời phỏng vấn", Admin "Trúng tuyển / Từ chối"
+    // ------------------------------------------------------------------------
+    var FK_KOL_BADGES = {
+        moi_phong_van: ['Đã mời phỏng vấn', 'badge-sky'],
+        trung_tuyen:   ['Trúng tuyển', 'badge-mint'],
+        tu_choi:       ['Từ chối', 'badge-danger']
+    };
+
+    function fkApplyKolState(id, status) {
+        var $card = $('#fk_kolCard_' + id);
+        var meta = FK_KOL_BADGES[status];
+        $card.attr('data-status', status);
+        $card.find('.fk-kol-badge')
+            .attr('class', 'badge ' + meta[1] + ' px-2 py-1 rounded-pill fk-kol-badge').text(meta[0]);
+        var $actions = $card.find('.fk-kol-actions');
+        if (status === 'moi_phong_van') {
+            $actions.find('button').filter(function () { return $(this).text().indexOf('Mời phỏng vấn') !== -1; }).remove();
+        } else {
+            $actions.empty();
+        }
+    }
+
+    window.fkInviteKol = function (id, btnEl) {
+        var $btn = $(btnEl);
+        fkBusy($btn, true);
+        fkAjax('staff', 'ajaxInviteKol', { ma_ho_so: id })
+            .done(function (res) { fkApplyKolState(id, res.trang_thai); fkShowAlert('success', res.message, '#fk_kolAlert'); })
+            .fail(function (xhr) { fkBusy($btn, false); fkShowAlert('danger', fkErrMsg(xhr), '#fk_kolAlert'); });
+    };
+
+    window.fkDecideKol = function (id, decision, btnEl) {
+        var label = decision === 'trung_tuyen' ? 'TRÚNG TUYỂN' : 'TỪ CHỐI';
+        if (!window.confirm('Xác nhận quyết định ' + label + ' hồ sơ #' + id + '? Quyết định này là cuối cùng.')) return;
+        var $btns = $(btnEl).closest('.fk-kol-actions').find('button');
+        fkBusy($btns, true);
+        fkAjax('admin', 'ajaxDecideKol', { ma_ho_so: id, decision: decision })
+            .done(function (res) { fkApplyKolState(id, res.trang_thai); fkShowAlert('success', res.message, '#fk_kolAlert'); })
+            .fail(function (xhr) { fkBusy($btns, false); fkShowAlert('danger', fkErrMsg(xhr), '#fk_kolAlert'); });
+    };
+
+    window.fkFilterKol = function (status, btnEl) {
+        $('#fk_kolFilter .btn').removeClass('active');
+        $(btnEl).addClass('active');
+        $('.fk-kol-card').each(function () {
+            $(this).toggleClass('d-none', status !== 'all' && $(this).attr('data-status') !== status);
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 6. MH 21/22 – Tạp chí: Staff lưu "Bản nháp"; Admin "Xuất bản / Xóa"
+    // ------------------------------------------------------------------------
+    window.fkSavePost = function (publish) {
+        var form = document.getElementById('fk_postForm');
+        if (!form) return;
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        var $btns = $(form).find('button');
+        fkBusy($btns, true);
+
+        fkAjax('staff', 'ajaxSaveDraft', new FormData(form))
+            .then(function (res) {
+                if (!publish) return res;
+                return fkAjax('admin', 'ajaxPublishPost', { ma_bai_viet: res.ma_bai_viet });
+            })
+            .done(function (res) {
+                fkShowAlert('success', res.message, '#fk_postAlert');
+                setTimeout(function () { window.location.reload(); }, 900);
+            })
+            .fail(function (xhr) {
+                fkBusy($btns, false);
+                fkShowAlert('danger', fkErrMsg(xhr), '#fk_postAlert');
+            });
+    };
+
+    window.fkPublishPost = function (id, btnEl) {
+        var $btn = $(btnEl);
+        fkBusy($btn, true);
+        fkAjax('admin', 'ajaxPublishPost', { ma_bai_viet: id })
+            .done(function (res) {
+                $('#fk_postRow_' + id).find('.fk-post-badge').attr('class', 'badge badge-mint px-2 py-1 rounded-pill fk-post-badge').text('Đã xuất bản');
+                $btn.remove();
+                fkShowAlert('success', res.message, '#fk_postAlert');
+            })
+            .fail(function (xhr) { fkBusy($btn, false); fkShowAlert('danger', fkErrMsg(xhr), '#fk_postAlert'); });
+    };
+
+    window.fkDeletePost = function (id, btnEl) {
+        if (!window.confirm('Xóa vĩnh viễn bài viết #' + id + '?')) return;
+        var $btn = $(btnEl);
+        fkBusy($btn, true);
+        fkAjax('admin', 'ajaxDeletePost', { ma_bai_viet: id })
+            .done(function (res) { $('#fk_postRow_' + id).remove(); fkShowAlert('success', res.message, '#fk_postAlert'); })
+            .fail(function (xhr) { fkBusy($btn, false); fkShowAlert('danger', fkErrMsg(xhr), '#fk_postAlert'); });
+    };
+
+    // ------------------------------------------------------------------------
+    // 7. MH 11 – Live Chat 3 cột (polling 3s) + đồng bộ "đã đọc" + tra cứu tồn kho
+    // ------------------------------------------------------------------------
+    if ($('#fk_staff_chat_section').length) {
+        var chat = { session: null, lastId: 0, pollTimer: null, sessionTimer: null, busy: false };
+
+        function fmtTime(s) {
+            var d = new Date(String(s).replace(' ', 'T'));
+            return isNaN(d) ? '' : ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+        }
+
+        function appendMessage(m) {
+            if ($('#fk_msg_' + m.ma_tin_nhan).length) return;
+            var mine = m.nguoi_gui !== 'khach_hang';
+            var $row = $('<div class="d-flex mb-2"></div>').attr('id', 'fk_msg_' + m.ma_tin_nhan)
+                .addClass(mine ? 'justify-content-end' : 'justify-content-start');
+            var $bubble = $('<div class="p-2 px-3 small fk-chat-bubble"></div>')
+                .addClass(mine ? 'fk-chat-bubble-out' : 'fk-chat-bubble-in');
+            $('<div></div>').text(m.noi_dung_tin_nhan).appendTo($bubble);
+            var $meta = $('<small class="d-block text-muted-custom text-right"></small>').text(fmtTime(m.ngay_gui));
+            if (mine) {
+                $('<span class="fk-seen-mark ml-1"></span>').text(parseInt(m.da_xem, 10) ? '· Đã xem' : '').appendTo($meta);
+            }
+            $meta.appendTo($bubble);
+            $row.append($bubble).appendTo('#fk_chatMessages');
+        }
+
+        function scrollBottom() {
+            var el = document.getElementById('fk_chatMessages');
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function renderSessions(list) {
+            var $box = $('#fk_chatSessions').empty();
+            $('#fk_chatSessionCount').text(list.length);
+            if (!list.length) {
+                $box.append('<div class="list-group-item small text-muted-custom">Chưa có phiên hội thoại nào.</div>');
+                return;
+            }
+            list.forEach(function (s) {
+                var $a = $('<a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 p-3 fk-chat-session"></a>')
+                    .attr('data-session', s.ma_phien_khach)
+                    .toggleClass('active', s.ma_phien_khach === chat.session);
+                var $top = $('<div class="d-flex justify-content-between align-items-center mb-1"></div>');
+                $('<span class="font-weight-bold"></span>').text(s.ho_va_ten || ('Khách vãng lai #' + String(s.ma_phien_khach).slice(-6))).appendTo($top);
+                $('<small class="text-muted-custom"></small>').text(fmtTime(s.gio_cuoi)).appendTo($top);
+                $a.append($top);
+                $('<p class="small mb-1 text-truncate"></p>').text(s.tin_cuoi).appendTo($a);
+                if (parseInt(s.tin_chua_doc, 10) > 0) {
+                    $('<span class="badge badge-pill badge-danger"></span>').text(s.tin_chua_doc + ' tin mới').appendTo($a);
+                } else {
+                    $('<span class="badge badge-pill badge-mint"></span>').text(s.ho_va_ten ? 'Đã đăng nhập' : 'Khách vãng lai').appendTo($a);
+                }
+                $a.data('title', s.ho_va_ten ? (s.ho_va_ten + ' (' + (s.thu_dien_tu || '') + ')') : ('Khách vãng lai ' + s.ma_phien_khach));
+                $box.append($a);
+            });
+        }
+
+        function loadSessions() {
+            fkAjax('staff', 'ajaxChatSessions', {}, 'GET')
+                .done(function (res) { renderSessions(res.sessions || []); })
+                .fail(function (xhr) { fkShowAlert('danger', fkErrMsg(xhr), '#fk_chatAlert'); });
+        }
+
+        function markRead() {
+            if (!chat.session) return;
+            fkAjax('staff', 'ajaxChatMarkRead', { session: chat.session }).done(function (res) {
+                if (res.marked > 0) loadSessions();
+            });
+        }
+
+        function poll() {
+            if (!chat.session || chat.busy) return;
+            chat.busy = true;
+            var sid = chat.session;
+            fkAjax('staff', 'ajaxChatPoll', { session: sid, after: chat.lastId }, 'GET')
+                .done(function (res) {
+                    if (sid !== chat.session) return;
+                    var fromCustomer = false;
+                    (res.messages || []).forEach(function (m) {
+                        appendMessage(m);
+                        chat.lastId = Math.max(chat.lastId, parseInt(m.ma_tin_nhan, 10));
+                        if (m.nguoi_gui === 'khach_hang') fromCustomer = true;
+                    });
+                    (res.seen_ids || []).forEach(function (id) {
+                        $('#fk_msg_' + id + ' .fk-seen-mark').text('· Đã xem');
+                    });
+                    if (res.messages && res.messages.length) scrollBottom();
+                    if (fromCustomer) markRead();
+                })
+                .always(function () { chat.busy = false; });
+        }
+
+        function openSession(sid, title) {
+            chat.session = sid;
+            chat.lastId = 0;
+            $('#fk_chatMessages').empty();
+            $('#fk_chatTitle').text(title);
+            $('#fk_chatInput, #fk_chatSend').prop('disabled', false);
+            $('.fk-chat-session').removeClass('active').filter(function () { return $(this).attr('data-session') === sid; }).addClass('active');
+            clearInterval(chat.pollTimer);
+            poll();
+            chat.pollTimer = setInterval(poll, 3000);
+        }
+
+        $('#fk_chatSessions').on('click', '.fk-chat-session', function () {
+            openSession($(this).attr('data-session'), $(this).data('title'));
+        });
+
+        $('#fk_chatForm').on('submit', function (e) {
+            e.preventDefault();
+            var content = $('#fk_chatInput').val().trim();
+            if (!chat.session || !content) return;
+            var $btn = $('#fk_chatSend');
+            fkBusy($btn, true);
+            fkAjax('staff', 'ajaxChatSend', { session: chat.session, content: content })
+                .done(function () { $('#fk_chatInput').val(''); poll(); loadSessions(); })
+                .fail(function (xhr) { fkShowAlert('danger', fkErrMsg(xhr), '#fk_chatAlert'); })
+                .always(function () { fkBusy($btn, false); $('#fk_chatInput').trigger('focus'); });
+        });
+
+        $('#fk_stockLookupForm').on('submit', function (e) {
+            e.preventDefault();
+            var $list = $('#fk_stockResults').empty();
+            fkAjax('staff', 'ajaxLookupStock', {
+                keyword: $('#fk_stockKeyword').val().trim(),
+                qty: $('#fk_stockQty').val() || 0
+            }, 'GET')
+                .done(function (res) {
+                    if (!res.items || !res.items.length) {
+                        $list.append('<li class="text-muted-custom">Không tìm thấy sản phẩm phù hợp.</li>');
+                        return;
+                    }
+                    res.items.forEach(function (p) {
+                        var stock = parseInt(p.so_luong_ton_kho, 10);
+                        var cls = stock <= 0 ? 'badge-danger' : (stock <= 5 ? 'badge-warning text-dark' : 'badge-mint');
+                        var $li = $('<li class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom"></li>');
+                        $('<span></span>').text('#' + p.ma_san_pham + ' ' + p.ten_san_pham).appendTo($li);
+                        var text = 'Còn ' + stock;
+                        if (p.du_hang !== undefined) text += p.du_hang ? ' (đủ)' : ' (thiếu)';
+                        $('<span class="badge ml-2"></span>').addClass(cls).text(text).appendTo($li);
+                        $list.append($li);
+                    });
+                })
+                .fail(function (xhr) { fkShowAlert('danger', fkErrMsg(xhr), '#fk_chatAlert'); });
+        });
+
+        loadSessions();
+        chat.sessionTimer = setInterval(loadSessions, 8000);
+    }
 });

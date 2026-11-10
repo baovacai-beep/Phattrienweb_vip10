@@ -1,5 +1,7 @@
 <?php
 $page_title = "Quản Trị Bảng Quy Chuẩn Size & Ràng Buộc Danh Mục (MH 14)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: chặn trước khi xuất bất kỳ nội dung nào
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -11,179 +13,34 @@ $lnkt_categories_ref = [
     4 => ['id' => 4, 'code' => 'DM04', 'name' => 'Giày sandal',   'type' => 'giay_dep', 'gender' => 'unisex']
 ];
 
-// Dữ liệu bảng quy chuẩn kích cỡ lnkt_size_charts (đầy đủ trần/sàn chiều cao, vòng ngực, vòng eo, dài bàn chân)
-$lnkt_size_charts = [
-    [
-        'id'              => 1,
-        'ma_danh_muc'     => 1,
-        'category_code'   => 'DM01',
-        'category_name'   => 'Váy công chúa',
-        'type'            => 'quan_ao',
-        'gender'          => 'girl',
-        'size_name'       => 'Size 1 (0-1T)',
-        'height_min'      => 55.0,
-        'height_max'      => 72.0,
-        'chest_min'       => 44.0,
-        'chest_max'       => 47.0,
-        'waist_min'       => 42.0,
-        'waist_max'       => 45.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 2,
-        'ma_danh_muc'     => 1,
-        'category_code'   => 'DM01',
-        'category_name'   => 'Váy công chúa',
-        'type'            => 'quan_ao',
-        'gender'          => 'girl',
-        'size_name'       => 'Size 2 (1-2T)',
-        'height_min'      => 73.0,
-        'height_max'      => 83.0,
-        'chest_min'       => 48.0,
-        'chest_max'       => 51.0,
-        'waist_min'       => 46.0,
-        'waist_max'       => 48.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 3,
-        'ma_danh_muc'     => 1,
-        'category_code'   => 'DM01',
-        'category_name'   => 'Váy công chúa',
-        'type'            => 'quan_ao',
-        'gender'          => 'girl',
-        'size_name'       => 'Size 2 (2-3T)',
-        'height_min'      => 84.0,
-        'height_max'      => 94.0,
-        'chest_min'       => 52.0,
-        'chest_max'       => 55.0,
-        'waist_min'       => 49.0,
-        'waist_max'       => 51.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 4,
-        'ma_danh_muc'     => 2,
-        'category_code'   => 'DM02',
-        'category_name'   => 'Bộ thun',
-        'type'            => 'quan_ao',
-        'gender'          => 'boy',
-        'size_name'       => 'Size 3 (2-3T)',
-        'height_min'      => 84.0,
-        'height_max'      => 95.0,
-        'chest_min'       => 53.0,
-        'chest_max'       => 56.0,
-        'waist_min'       => 50.0,
-        'waist_max'       => 53.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 5,
-        'ma_danh_muc'     => 2,
-        'category_code'   => 'DM02',
-        'category_name'   => 'Bộ thun',
-        'type'            => 'quan_ao',
-        'gender'          => 'boy',
-        'size_name'       => 'Size 4 (3-4T)',
-        'height_min'      => 96.0,
-        'height_max'      => 106.0,
-        'chest_min'       => 57.0,
-        'chest_max'       => 60.0,
-        'waist_min'       => 53.0,
-        'waist_max'       => 56.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 6,
-        'ma_danh_muc'     => 3,
-        'category_code'   => 'DM03',
-        'category_name'   => 'Áo khoác',
-        'type'            => 'quan_ao',
-        'gender'          => 'unisex',
-        'size_name'       => 'Size 5 (5-6T)',
-        'height_min'      => 107.0,
-        'height_max'      => 122.0,
-        'chest_min'       => 61.0,
-        'chest_max'       => 66.0,
-        'waist_min'       => 56.0,
-        'waist_max'       => 60.0,
-        'foot_length_min' => 0.0,
-        'foot_length_max' => 0.0
-    ],
-    [
-        'id'              => 7,
-        'ma_danh_muc'     => 4,
-        'category_code'   => 'DM04',
-        'category_name'   => 'Giày sandal',
-        'type'            => 'giay_dep',
-        'gender'          => 'unisex',
-        'size_name'       => 'Size 21 (12cm)',
-        'height_min'      => 0.0,
-        'height_max'      => 0.0,
-        'chest_min'       => 0.0,
-        'chest_max'       => 0.0,
-        'waist_min'       => 0.0,
-        'waist_max'       => 0.0,
-        'foot_length_min' => 11.5,
-        'foot_length_max' => 12.5
-    ],
-    [
-        'id'              => 8,
-        'ma_danh_muc'     => 4,
-        'category_code'   => 'DM04',
-        'category_name'   => 'Giày sandal',
-        'type'            => 'giay_dep',
-        'gender'          => 'unisex',
-        'size_name'       => 'Size 22 (13cm)',
-        'height_min'      => 0.0,
-        'height_max'      => 0.0,
-        'chest_min'       => 0.0,
-        'chest_max'       => 0.0,
-        'waist_min'       => 0.0,
-        'waist_max'       => 0.0,
-        'foot_length_min' => 12.6,
-        'foot_length_max' => 13.4
-    ],
-    [
-        'id'              => 9,
-        'ma_danh_muc'     => 4,
-        'category_code'   => 'DM04',
-        'category_name'   => 'Giày sandal',
-        'type'            => 'giay_dep',
-        'gender'          => 'unisex',
-        'size_name'       => 'Size 24 (14cm)',
-        'height_min'      => 0.0,
-        'height_max'      => 0.0,
-        'chest_min'       => 0.0,
-        'chest_max'       => 0.0,
-        'waist_min'       => 0.0,
-        'waist_max'       => 0.0,
-        'foot_length_min' => 13.5,
-        'foot_length_max' => 14.4
-    ],
-    [
-        'id'              => 10,
-        'ma_danh_muc'     => 4,
-        'category_code'   => 'DM04',
-        'category_name'   => 'Giày sandal',
-        'type'            => 'giay_dep',
-        'gender'          => 'unisex',
-        'size_name'       => 'Size 26 (15cm)',
-        'height_min'      => 0.0,
-        'height_max'      => 0.0,
-        'chest_min'       => 0.0,
-        'chest_max'       => 0.0,
-        'waist_min'       => 0.0,
-        'waist_max'       => 0.0,
-        'foot_length_min' => 14.5,
-        'foot_length_max' => 15.5
-    ]
-];
+// Bảng quy chuẩn kích cỡ thật từ CSDL (lnkt_bang_kich_co JOIN lbn_danh_muc)
+require_once __DIR__ . "/../../models/SizeChartModel.php";
+$lnkt_size_charts = [];
+$fk_sc_error      = '';
+$fk_gender_view   = ['be_gai' => 'girl', 'be_trai' => 'boy', 'chung' => 'unisex'];
+try {
+    foreach ((new SizeChartModel())->getAllCharts() as $r) {
+        $lnkt_size_charts[] = [
+            'id'              => (int)$r['ma_kich_co'],
+            'ma_danh_muc'     => (int)$r['ma_danh_muc'],
+            'category_code'   => 'DM' . str_pad((string)$r['ma_danh_muc'], 2, '0', STR_PAD_LEFT),
+            'category_name'   => $r['ten_danh_muc'],
+            'type'            => $r['loai_hang'],
+            'gender'          => $fk_gender_view[$r['gioi_tinh']] ?? 'unisex',
+            'size_name'       => $r['ten_kich_co'],
+            'height_min'      => (float)$r['chieu_cao_toi_thieu'],
+            'height_max'      => (float)$r['chieu_cao_toi_da'],
+            'chest_min'       => (float)$r['vong_nguc_toi_thieu'],
+            'chest_max'       => (float)$r['vong_nguc_toi_da'],
+            'waist_min'       => (float)$r['vong_eo_toi_thieu'],
+            'waist_max'       => (float)$r['vong_eo_toi_da'],
+            'foot_length_min' => (float)$r['chieu_dai_chan_toi_thieu'],
+            'foot_length_max' => (float)$r['chieu_dai_chan_toi_da'],
+        ];
+    }
+} catch (Throwable $e) {
+    $fk_sc_error = 'Không tải được bảng kích cỡ từ cơ sở dữ liệu.';
+}
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_admin_size_charts_section">
@@ -347,6 +204,7 @@ $lnkt_size_charts = [
                                                     onclick="lnktEditSizeChartRow(this)">
                                                 <i class="fa-solid fa-pen-to-square"></i> Sửa
                                             </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Xóa cấu hình size" onclick="fkDeleteSizeChart(<?= (int)$sc['id'] ?>, this)"><i class="fa-solid fa-trash"></i></button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -373,7 +231,8 @@ $lnkt_size_charts = [
                 </div>
 
                 <div class="card-body p-4 pt-2">
-                    <form id="lnkt_formAdminSizeChart">
+                    <div id="fk_sizeAlert" class="d-none"></div>
+                    <form id="lnkt_formAdminSizeChart" autocomplete="off">
                         <input type="hidden" id="lnkt_scId" value="">
 
                         <!-- Ràng buộc trực tiếp với ma_danh_muc -->

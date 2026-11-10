@@ -620,6 +620,9 @@ class ProductModel extends Model {
                     $stmt->execute([':stock' => $finalStock, ':pid' => $maSanPham]);
                 }
             } catch (PDOException $e) {
+                if ($e->getCode() === '45000') {
+                    throw new InvalidArgumentException(self::spMessage($e));
+                }
                 error_log("Lỗi cập nhật tồn kho sp_lbn_nhap_them_kho_hang: " . $e->getMessage());
             }
         }
@@ -710,6 +713,10 @@ class ProductModel extends Model {
                     $outRow = $this->db->query("SELECT @ma_sp_moi AS ma_san_pham_moi")->fetch();
                     $newId  = (int)($outRow['ma_san_pham_moi'] ?? 0);
                 } catch (PDOException $e) {
+                    // Lỗi nghiệp vụ SIGNAL 45000 (giá bán <= 0, tồn kho < 0, danh mục sai...) phải báo ngược lên người dùng
+                    if ($e->getCode() === '45000') {
+                        throw new InvalidArgumentException(self::spMessage($e));
+                    }
                     error_log("Lỗi gọi sp_lbn_them_san_pham_moi: " . $e->getMessage());
                 }
             }

@@ -66,7 +66,7 @@
                                 </a>
                                 <?php if (isset($_SESSION['user']['vai_tro']) && in_array($_SESSION['user']['vai_tro'], ['quan_tri', 'nhan_vien'])): ?>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item py-2 text-primary font-weight-bold" href="/FashionKids/views/pages/admin-dashboard.php">
+                                    <a class="dropdown-item py-2 text-primary font-weight-bold" href="/FashionKids/views/pages/<?= $_SESSION['user']['vai_tro'] === 'quan_tri' ? 'admin-dashboard.php' : 'staff-orders.php' ?>">
                                         <i class="fa-solid fa-gauge-high mr-2"></i>Bàn Làm Việc Admin
                                     </a>
                                 <?php endif; ?>

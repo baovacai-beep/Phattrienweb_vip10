@@ -1,105 +1,109 @@
-<!-- views/pages/staff-casting-review.php -->
-<section class="casting-review-section py-4 bg-light">
-  <div class="container-fluid">
-    <!-- Tiêu đề & Bộ lọc độ tuổi -->
-    <div class="row mb-4">
-      <div class="col-12 col-md-6">
-        <h3 class="font-weight-bold text-dark mb-1">Duyệt Hồ Sơ KOL Nhí / Casting</h3>
-        <p class="text-muted small">Kiểm duyệt thông tin, chiều cao, cân nặng và hình ảnh đăng ký người mẫu nhí</p>
-      </div>
-      <div class="col-12 col-md-6 d-flex justify-content-md-end align-items-center">
-        <span class="font-weight-bold small mr-2">Nhóm tuổi:</span>
-        <div class="btn-group" role="group">
-          <button type="button" class="btn btn-outline-primary btn-sm active font-weight-bold">Tất cả</button>
-          <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold">1 - 2 Tuổi</button>
-          <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold">3 - 4 Tuổi</button>
-          <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold">5 - 6 Tuổi</button>
+<?php
+$page_title = "Duyệt Hồ Sơ KOL Nhí (MH 17)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: Admin + Nhân viên
+require_once __DIR__ . "/../../models/StaffModel.php";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
+
+$fk_kol_profiles = [];
+$fk_db_error     = '';
+try {
+    $fk_kol_profiles = (new StaffModel())->layHoSoKol();
+} catch (Throwable $e) {
+    $fk_db_error = 'Không tải được hồ sơ KOL nhí từ cơ sở dữ liệu. Vui lòng kiểm tra MySQL.';
+}
+
+$fk_status_map = [
+    'cho_duyet'     => ['Chờ duyệt',      'badge-warning text-dark'],
+    'moi_phong_van' => ['Đã mời phỏng vấn', 'badge-sky'],
+    'trung_tuyen'   => ['Trúng tuyển',    'badge-mint'],
+    'tu_choi'       => ['Từ chối',        'badge-danger'],
+];
+
+function fkKolAge($birth) {
+    $diff = (new DateTime($birth))->diff(new DateTime());
+    return $diff->y > 0 ? $diff->y . ' tuổi' : $diff->m . ' tháng';
+}
+function fkKolFirstPhoto($raw) {
+    $list = json_decode((string)$raw, true);
+    if (!is_array($list)) {
+        $list = preg_split('/[,\n;]+/', (string)$raw);
+    }
+    $first = trim((string)($list[0] ?? ''));
+    return $first !== '' ? $first : '/FashionKids/images/banner-kol-nhi-2026.jpg';
+}
+?>
+
+<div class="container-fluid my-4 px-lg-5" id="fk_kol_review_section">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="font-weight-bold text-slate mb-1">Duyệt Hồ Sơ KOL Nhí / Casting (MH 17)</h4>
+            <small class="text-muted-custom">
+                <?php if (Rbac::can('kol.decide')): ?>
+                    Quản trị viên: có quyền quyết định cuối cùng <strong>Trúng tuyển / Từ chối</strong>.
+                <?php else: ?>
+                    Nhân viên: sơ tuyển và <strong>Mời phỏng vấn</strong>; quyết định cuối cùng thuộc Quản trị viên.
+                <?php endif; ?>
+            </small>
         </div>
-      </div>
+        <div class="btn-group mt-2 mt-md-0" role="group" id="fk_kolFilter">
+            <button type="button" class="btn btn-outline-primary btn-sm active font-weight-bold" onclick="fkFilterKol('all', this)">Tất cả</button>
+            <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold" onclick="fkFilterKol('cho_duyet', this)">Chờ duyệt</button>
+            <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold" onclick="fkFilterKol('moi_phong_van', this)">Đã mời PV</button>
+            <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold" onclick="fkFilterKol('trung_tuyen', this)">Trúng tuyển</button>
+        </div>
     </div>
 
-    <!-- Lưới hồ sơ đăng ký -->
+    <div id="fk_kolAlert" class="d-none"></div>
+    <?php if ($fk_db_error): ?><div class="alert alert-danger"><?= htmlspecialchars($fk_db_error) ?></div><?php endif; ?>
+
     <div class="row">
-      <!-- Thẻ hồ sơ bé 1 -->
-      <div class="col-12 col-md-6 col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100">
-          <img src="/FashionKids/images/banner-mua-he-2026.jpg" class="card-img-top casting-card-img" alt="Bé Cherry">
-          <div class="card-body p-3 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="font-weight-bold text-dark mb-0">Bé Cherry (Bảo Hân)</h5>
-              <span class="badge badge-pill bg-pastel-butter text-pastel-butter">3 Tuổi</span>
-            </div>
-            <div class="text-muted small mb-3">
-              <div><i class="fas fa-ruler-vertical mr-2"></i>Chiều cao: 96 cm</div>
-              <div><i class="fas fa-weight mr-2"></i>Cân nặng: 14.5 kg</div>
-              <div><i class="fas fa-phone mr-2"></i>Phụ huynh: Chị Lan (0912.xxx.789)</div>
-            </div>
-            <p class="small text-secondary flex-grow-1">
-              "Bé rất dạn dĩ trước ống kính, từng có kinh nghiệm chụp mẫu đồ Tết và biểu cảm tự nhiên."
-            </p>
-            <!-- 3 Nút xử lý nghiệp vụ -->
-            <div class="pt-3 border-top">
-              <div class="row no-gutters">
-                <div class="col-4 pr-1">
-                  <button class="btn btn-success btn-sm btn-block rounded-pill font-weight-bold" title="Duyệt vào vòng Phỏng vấn">
-                    <i class="fas fa-check mr-1"></i>Duyệt
-                  </button>
+        <?php foreach ($fk_kol_profiles as $kol): ?>
+            <?php [$stLabel, $stClass] = $fk_status_map[$kol['trang_thai_duyet']] ?? [$kol['trang_thai_duyet'], 'badge-secondary']; ?>
+            <div class="col-12 col-md-6 col-lg-4 mb-4 fk-kol-card" data-status="<?= htmlspecialchars($kol['trang_thai_duyet']) ?>" id="fk_kolCard_<?= (int)$kol['ma_ho_so'] ?>">
+                <div class="card card-pastel shadow-sm h-100 overflow-hidden">
+                    <img src="<?= htmlspecialchars(fkKolFirstPhoto($kol['danh_sach_anh'])) ?>" class="card-img-top fk-casting-img" alt="<?= htmlspecialchars($kol['ho_ten_be']) ?>">
+                    <div class="card-body p-3 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="font-weight-bold text-slate mb-0"><?= htmlspecialchars($kol['ho_ten_be']) ?> <small class="text-muted-custom">#<?= (int)$kol['ma_ho_so'] ?></small></h6>
+                            <span class="badge badge-pill badge-sky"><?= htmlspecialchars(fkKolAge($kol['ngay_sinh_be'])) ?></span>
+                        </div>
+                        <div class="small text-muted-custom mb-2">
+                            <div><i class="fa-solid fa-ruler-vertical mr-2"></i>Chiều cao: <?= (float)$kol['chieu_cao_be'] ?> cm</div>
+                            <div><i class="fa-solid fa-weight-scale mr-2"></i>Cân nặng: <?= (float)$kol['can_nang_be'] ?> kg</div>
+                            <div><i class="fa-solid fa-phone mr-2"></i><?= htmlspecialchars($kol['ho_ten_phu_huynh']) ?> (<?= htmlspecialchars($kol['so_dien_thoai']) ?>)</div>
+                        </div>
+                        <p class="small text-slate flex-grow-1"><?= htmlspecialchars((string)$kol['nang_khieu_kinh_nghiem']) ?></p>
+                        <div class="mb-2">
+                            <span class="badge <?= $stClass ?> px-2 py-1 rounded-pill fk-kol-badge"><?= htmlspecialchars($stLabel) ?></span>
+                        </div>
+                        <div class="pt-3 border-top fk-kol-actions">
+                            <?php if ($kol['trang_thai_duyet'] === 'cho_duyet' && Rbac::can('kol.invite')): ?>
+                                <button type="button" class="btn btn-pastel-sky btn-sm rounded-pill font-weight-bold mr-1 mb-1"
+                                        onclick="fkInviteKol(<?= (int)$kol['ma_ho_so'] ?>, this)">
+                                    <i class="fa-solid fa-user-clock mr-1"></i>Mời phỏng vấn
+                                </button>
+                            <?php endif; ?>
+                            <?php if (in_array($kol['trang_thai_duyet'], ['cho_duyet', 'moi_phong_van'], true) && Rbac::can('kol.decide')): ?>
+                                <button type="button" class="btn btn-success btn-sm rounded-pill font-weight-bold mr-1 mb-1"
+                                        onclick="fkDecideKol(<?= (int)$kol['ma_ho_so'] ?>, 'trung_tuyen', this)">
+                                    <i class="fa-solid fa-trophy mr-1"></i>Trúng tuyển
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill font-weight-bold mb-1"
+                                        onclick="fkDecideKol(<?= (int)$kol['ma_ho_so'] ?>, 'tu_choi', this)">
+                                    <i class="fa-solid fa-ban mr-1"></i>Từ chối
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-4 px-1">
-                  <button class="btn btn-info btn-sm btn-block rounded-pill font-weight-bold" title="Mời ghi hình Studio">
-                    <i class="fas fa-camera mr-1"></i>Studio
-                  </button>
-                </div>
-                <div class="col-4 pl-1">
-                  <button class="btn btn-outline-danger btn-sm btn-block rounded-pill font-weight-bold" title="Từ chối hồ sơ">
-                    <i class="fas fa-times mr-1"></i>Loại
-                  </button>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Thẻ hồ sơ bé 2 -->
-      <div class="col-12 col-md-6 col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100">
-          <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" class="card-img-top casting-card-img" alt="Bé Ken">
-          <div class="card-body p-3 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="font-weight-bold text-dark mb-0">Bé Ken (Gia Khiêm)</h5>
-              <span class="badge badge-pill bg-pastel-mint text-pastel-mint">5 Tuổi</span>
-            </div>
-            <div class="text-muted small mb-3">
-              <div><i class="fas fa-ruler-vertical mr-2"></i>Chiều cao: 110 cm</div>
-              <div><i class="fas fa-weight mr-2"></i>Cân nặng: 18.0 kg</div>
-              <div><i class="fas fa-phone mr-2"></i>Phụ huynh: Anh Hùng (0988.xxx.123)</div>
-            </div>
-            <p class="small text-secondary flex-grow-1">
-              "Bé năng động, yêu thích trang phục thể thao đường phố, tự tin tạo dáng theo nhạc."
-            </p>
-            <div class="pt-3 border-top">
-              <div class="row no-gutters">
-                <div class="col-4 pr-1">
-                  <button class="btn btn-success btn-sm btn-block rounded-pill font-weight-bold">
-                    <i class="fas fa-check mr-1"></i>Duyệt
-                  </button>
-                </div>
-                <div class="col-4 px-1">
-                  <button class="btn btn-info btn-sm btn-block rounded-pill font-weight-bold">
-                    <i class="fas fa-camera mr-1"></i>Studio
-                  </button>
-                </div>
-                <div class="col-4 pl-1">
-                  <button class="btn btn-outline-danger btn-sm btn-block rounded-pill font-weight-bold">
-                    <i class="fas fa-times mr-1"></i>Loại
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <?php endforeach; ?>
+        <?php if (empty($fk_kol_profiles) && !$fk_db_error): ?>
+            <div class="col-12"><div class="alert alert-light border">Chưa có hồ sơ ứng tuyển nào.</div></div>
+        <?php endif; ?>
     </div>
-  </div>
-</section>
+</div>
+
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

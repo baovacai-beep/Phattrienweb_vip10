@@ -340,12 +340,18 @@ class ProductController extends Controller {
      * URL: index.php?c=product&a=ajaxUpdateInventoryStock
      */
     public function ajaxUpdateInventoryStock(): void {
-        if (ob_get_level() > 0) {
-            ob_clean();
-        }
-
-        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (Chỉ chấp nhận POST)!'], 405);
+        // RBAC: Admin + Staff được vào; Staff bị ép chỉ "nhập thêm" (mode=add), không được ghi đè/giảm kho
+        $this->guardAjax('stock.restock');
+        if (Rbac::isStaff()) {
+            $_POST['mode'] = 'add';
+            $qtyCheck = (int)($_POST['new_stock'] ?? $_POST['stock_quantity'] ?? $_POST['qty_change'] ?? 0);
+            if ($qtyCheck <= 0) {
+                $this->jsonResponse([
+                    'status'  => 'error',
+                    'code'    => 422,
+                    'message' => 'Lỗi [LBN_ERR_05]: Nhân viên chỉ được nhập thêm kho với số lượng lớn hơn 0!'
+                ], 422);
+            }
         }
 
         try {
@@ -391,13 +397,8 @@ class ProductController extends Controller {
      * URL: index.php?c=product&a=ajaxSaveProduct
      */
     public function ajaxSaveProduct(): void {
-        if (ob_get_level() > 0) {
-            ob_clean();
-        }
-
-        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (Chỉ chấp nhận POST)!'], 405);
-        }
+        // RBAC: thêm/sửa sản phẩm là quyền Admin (RBAC + POST + CSRF + ob_clean)
+        $this->guardAjax('product.manage');
 
         $productId   = trim((string)($_POST['product_id'] ?? ''));
         $sku         = trim((string)($_POST['sku'] ?? ''));

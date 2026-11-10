@@ -1,101 +1,61 @@
 <?php
 $page_title = "Bàn Làm Việc Quản Trị & Duyệt Đơn Hàng (MH 10)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: chặn trước khi xuất bất kỳ nội dung nào
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
-// Danh sách đơn hàng mẫu chuẩn bảng lnkt_orders
-$lnkt_staff_orders = [
-    [
-        'id'               => 202608,
-        'order_code'       => 'FK-ORD-202608',
-        'user_id'          => 3,
-        'vip_tier'         => 'Vàng (-10%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
-        'receiver_name'    => 'Võ Thị Thanh Thảo',
-        'receiver_phone'   => '0918889999',
-        'shipping_address' => 'Số 120 Điện Biên Phủ, Phường 17',
-        'district'         => 'Quận Bình Thạnh',
-        'province'         => 'TP. Hồ Chí Minh',
-        'subtotal'         => 945000,
-        'discount_amount'  => 94500,
-        'total_amount'     => 850500,
-        'status'           => 'cho_duyet',
-        'created_at'       => '08/11/2026 08:15',
-        'items_summary'    => '1x Váy Công Chúa Sợi Tre (Size 2), 2x Bộ Thun Khủng Long (Size 3), 1x Sandal Tập Đi (Size 22)'
-    ],
-    [
-        'id'               => 202607,
-        'order_code'       => 'FK-ORD-202607',
-        'user_id'          => 4,
-        'vip_tier'         => 'Đồng (0%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
-        'receiver_name'    => 'Trần Thị Bông',
-        'receiver_phone'   => '0903112233',
-        'shipping_address' => 'Số 45 Nguyễn Thị Minh Khai, Phường Bến Nghé',
-        'district'         => 'Quận 1',
-        'province'         => 'TP. Hồ Chí Minh',
-        'subtotal'         => 565000,
-        'discount_amount'  => 0,
-        'total_amount'     => 565000,
-        'status'           => 'da_xac_nhan',
-        'created_at'       => '08/11/2026 07:40',
-        'items_summary'    => '1x Áo Khoác Cardigan UV (Size 3), 1x Giày Sandal Bé Trai (Size 24)'
-    ],
-    [
-        'id'               => 202606,
-        'order_code'       => 'FK-ORD-202606',
-        'user_id'          => 6,
-        'vip_tier'         => 'Bạc (-5%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
-        'receiver_name'    => 'Nguyễn Hoàng Minh Anh',
-        'receiver_phone'   => '0987654321',
-        'shipping_address' => 'Số 88 Cầu Giấy, Phường Quan Hoa',
-        'district'         => 'Quận Cầu Giấy',
-        'province'         => 'Thành phố Hà Nội',
-        'subtotal'         => 730000,
-        'discount_amount'  => 36500,
-        'total_amount'     => 693500,
-        'status'           => 'dang_giao',
-        'created_at'       => '07/11/2026 19:20',
-        'items_summary'    => '2x Váy Công Chúa Tùng Xòe Pastel (Size 4)'
-    ],
-    [
-        'id'               => 202605,
-        'order_code'       => 'FK-ORD-202605',
-        'user_id'          => 7,
-        'vip_tier'         => 'Kim Cương (-15%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
-        'receiver_name'    => 'Phạm Ngọc Lan Khuê',
-        'receiver_phone'   => '0939556677',
-        'shipping_address' => 'Số 210 Bạch Đằng, Phường Phước Ninh',
-        'district'         => 'Quận Hải Châu',
-        'province'         => 'Thành phố Đà Nẵng',
-        'subtotal'         => 1120000,
-        'discount_amount'  => 168000,
-        'total_amount'     => 952000,
-        'status'           => 'hoan_tat',
-        'created_at'       => '06/11/2026 14:10',
-        'items_summary'    => '2x Áo Khoác Hoodie Tai Thỏ (Size 3), 2x Bộ Thun Gấu Nhí (Size 2)'
-    ],
-    [
-        'id'               => 202604,
-        'order_code'       => 'FK-ORD-202604',
-        'user_id'          => 8,
-        'vip_tier'         => 'Đồng (0%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
-        'receiver_name'    => 'Lê Quang Hải',
-        'receiver_phone'   => '0977123123',
-        'shipping_address' => 'Số 15 Đại lộ Hòa Bình',
-        'district'         => 'Quận Ninh Kiều',
-        'province'         => 'Thành phố Cần Thơ',
-        'subtotal'         => 210000,
-        'discount_amount'  => 0,
-        'total_amount'     => 210000,
-        'status'           => 'da_huy',
-        'created_at'       => '05/11/2026 10:05',
-        'items_summary'    => '1x Giày Sandal Tập Đi Đế Cao Su Non (Size 21) - Khách đổi sang mẫu khác'
-    ]
-];
+require_once __DIR__ . "/../../models/StaffModel.php";
+
+// Danh sách đơn hàng thật từ CSDL (lnkt_don_hang) – không dùng dữ liệu giả để tránh lệch mã đơn khi gọi AJAX
+$lnkt_staff_orders = [];
+$lnkt_db_error     = '';
+try {
+    $lnkt_staff_model = new StaffModel();
+    foreach ($lnkt_staff_model->layDanhSachDonHang() as $r) {
+        $lnkt_staff_orders[] = [
+            'id'               => (int)$r['ma_don_hang'],
+            'order_code'       => 'FK-ORD-' . $r['ma_don_hang'],
+            'vip_tier'         => ($r['ten_hang'] ?? 'Khách lẻ') . ' (-' . (float)($r['phan_tram_giam_gia'] ?? 0) . '%)',
+            'handled_by'       => $r['ten_nhan_vien'] ?: 'Chưa có nhân viên tiếp nhận',
+            'receiver_name'    => $r['ten_nguoi_nhan'],
+            'receiver_phone'   => $r['so_dien_thoai_nhan'],
+            'shipping_address' => $r['dia_chi_giao_hang'],
+            'district'         => $r['quan_huyen'],
+            'province'         => $r['tinh_thanh_pho'],
+            'subtotal'         => (float)$r['tien_hang_tam_tinh'],
+            'discount_amount'  => (float)$r['tien_giam_gia'],
+            'total_amount'     => (float)$r['tong_tien_thanh_toan'],
+            'status'           => $r['trang_thai_don_hang'],
+            'created_at'       => date('d/m/Y H:i', strtotime($r['ngay_dat_hang'])),
+            'items_summary'    => $r['tom_tat_san_pham'] ?: '(Không có chi tiết)',
+        ];
+    }
+} catch (Throwable $e) {
+    $lnkt_db_error = 'Không tải được danh sách đơn hàng từ cơ sở dữ liệu. Vui lòng kiểm tra MySQL.';
+}
+$lnkt_counts = ['cho_duyet' => 0, 'da_xac_nhan' => 0, 'dang_giao' => 0, 'hoan_tat' => 0, 'da_huy' => 0];
+foreach ($lnkt_staff_orders as $o) { $lnkt_counts[$o['status']]++; }
+
+// Nút thao tác theo tiến trình: [trạng thái mới, nhãn, class]
+function lnktRenderOrderActions($id, $code, $status) {
+    $flow = [
+        'cho_duyet'   => [['da_xac_nhan', 'Tiếp nhận đơn', 'btn-pastel-primary']],
+        'da_xac_nhan' => [['dang_giao', 'Giao hàng', 'btn-pastel-primary']],
+        'dang_giao'   => [['hoan_tat', 'Hoàn tất', 'btn-success']],
+    ];
+    if (!isset($flow[$status])) {
+        return '<span class="small text-muted-custom">Đã đóng đơn</span>';
+    }
+    $html = '';
+    foreach ($flow[$status] as [$next, $label, $cls]) {
+        $html .= '<button type="button" class="btn btn-sm ' . $cls . ' font-weight-bold rounded-pill px-3 mr-1" '
+               . 'onclick="lnktUpdateStaffOrderStatus(' . (int)$id . ', \'' . htmlspecialchars($code, ENT_QUOTES) . '\', \'' . $next . '\')">' . $label . '</button>';
+    }
+    $html .= '<button type="button" class="btn btn-sm btn-outline-danger font-weight-bold rounded-pill px-3" '
+           . 'onclick="lnktUpdateStaffOrderStatus(' . (int)$id . ', \'' . htmlspecialchars($code, ENT_QUOTES) . '\', \'da_huy\')">Hủy</button>';
+    return $html;
+}
 
 // Hàm trả về nhãn & màu sắc badge theo trạng thái đơn
 function lnktRenderOrderStatusBadge($status) {
@@ -117,6 +77,7 @@ function lnktRenderOrderStatusBadge($status) {
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_staff_orders_section">
+    <?php if ($lnkt_db_error): ?><div class="alert alert-danger"><?= htmlspecialchars($lnkt_db_error) ?></div><?php endif; ?>
     <!-- Header Bàn Làm Việc Nhân Viên Vận Hành (MH 10) -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -144,7 +105,7 @@ function lnktRenderOrderStatusBadge($status) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">1. Chờ Duyệt</small>
-                        <h3 class="font-weight-bold text-warning mb-0" id="lnkt_count_cho_duyet">1</h3>
+                        <h3 class="font-weight-bold text-warning mb-0" id="lnkt_count_cho_duyet"><?= $lnkt_counts['cho_duyet'] ?></h3>
                         <small class="text-slate">Cần xác nhận ngay</small>
                     </div>
                     <span class="lbn-inv-thumb"><i class="fa-solid fa-clock text-warning h4 mb-0"></i></span>
@@ -157,7 +118,7 @@ function lnktRenderOrderStatusBadge($status) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">2. Đã Xác Nhận</small>
-                        <h3 class="font-weight-bold text-info mb-0" id="lnkt_count_da_xac_nhan">1</h3>
+                        <h3 class="font-weight-bold text-info mb-0" id="lnkt_count_da_xac_nhan"><?= $lnkt_counts['da_xac_nhan'] ?></h3>
                         <small class="text-slate">Đang đóng gói</small>
                     </div>
                     <span class="lbn-inv-thumb"><i class="fa-solid fa-box-open text-info h4 mb-0"></i></span>
@@ -170,7 +131,7 @@ function lnktRenderOrderStatusBadge($status) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">3. Đang Giao</small>
-                        <h3 class="font-weight-bold text-primary mb-0" id="lnkt_count_dang_giao">1</h3>
+                        <h3 class="font-weight-bold text-primary mb-0" id="lnkt_count_dang_giao"><?= $lnkt_counts['dang_giao'] ?></h3>
                         <small class="text-slate">Đã bàn giao bưu cục</small>
                     </div>
                     <span class="lbn-inv-thumb"><i class="fa-solid fa-truck-fast text-primary h4 mb-0"></i></span>
@@ -183,7 +144,7 @@ function lnktRenderOrderStatusBadge($status) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">4. Hoàn Tất</small>
-                        <h3 class="font-weight-bold text-success mb-0" id="lnkt_count_hoan_tat">1</h3>
+                        <h3 class="font-weight-bold text-success mb-0" id="lnkt_count_hoan_tat"><?= $lnkt_counts['hoan_tat'] ?></h3>
                         <small class="text-mint-dark font-weight-bold">Đã đối soát &amp; cộng điểm</small>
                     </div>
                     <span class="lbn-inv-thumb"><i class="fa-solid fa-circle-check text-success h4 mb-0"></i></span>
@@ -196,7 +157,7 @@ function lnktRenderOrderStatusBadge($status) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">5. Đã Hủy</small>
-                        <h3 class="font-weight-bold text-danger mb-0" id="lnkt_count_da_huy">1</h3>
+                        <h3 class="font-weight-bold text-danger mb-0" id="lnkt_count_da_huy"><?= $lnkt_counts['da_huy'] ?></h3>
                         <small class="text-slate">Hoàn kho tự động</small>
                     </div>
                     <span class="lbn-inv-thumb"><i class="fa-solid fa-ban text-danger h4 mb-0"></i></span>
@@ -306,23 +267,8 @@ function lnktRenderOrderStatusBadge($status) {
                                             <?= lnktRenderOrderStatusBadge($ord['status']) ?>
                                         </td>
 
-                                        <td class="text-center">
-                                            <div class="input-group input-group-sm">
-                                                <select id="lnkt_statusSelect_<?= $ord['id'] ?>" class="custom-select font-weight-bold">
-                                                    <option value="cho_duyet" <?= $ord['status'] === 'cho_duyet' ? 'selected' : '' ?>>Chờ duyệt</option>
-                                                    <option value="da_xac_nhan" <?= $ord['status'] === 'da_xac_nhan' ? 'selected' : '' ?>>Đã xác nhận</option>
-                                                    <option value="dang_giao" <?= $ord['status'] === 'dang_giao' ? 'selected' : '' ?>>Đang giao</option>
-                                                    <option value="hoan_tat" <?= $ord['status'] === 'hoan_tat' ? 'selected' : '' ?>>Hoàn tất</option>
-                                                    <option value="da_huy" <?= $ord['status'] === 'da_huy' ? 'selected' : '' ?>>Đã hủy</option>
-                                                </select>
-                                                <div class="input-group-append">
-                                                    <button type="button" class="btn btn-pastel-primary px-2"
-                                                            title="Thực thi lnkt_update_order_status"
-                                                            onclick="lnktUpdateStaffOrderStatus(<?= $ord['id'] ?>, '<?= $ord['order_code'] ?>')">
-                                                        <i class="fa-solid fa-check"></i> Lưu
-                                                    </button>
-                                                </div>
-                                            </div>
+                                        <td class="text-center text-nowrap" id="lnkt_orderActionCell_<?= $ord['id'] ?>">
+                                            <?= lnktRenderOrderActions($ord['id'], $ord['order_code'], $ord['status']) ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

@@ -1,6 +1,7 @@
-
 <?php
 $page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP (MH 15)";
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess(__FILE__); // RBAC: chặn trước khi xuất bất kỳ nội dung nào
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -13,13 +14,24 @@ $users_list = [
     ['id' => 5, 'username' => 'spammer_99', 'name' => 'Nguyễn Văn Spam', 'email' => 'spam@gmail.com', 'role' => 'khach_hang', 'tier' => 'Đồng (Bronze)', 'points' => 0, 'status' => 0]
 ];
 
-// 4 Cap do Hang The VIP
-$tiers = [
-    ['id' => 1, 'name' => 'Đồng (Bronze)', 'min' => 0, 'discount' => 0, 'badge' => 'badge-secondary'],
-    ['id' => 2, 'name' => 'Bạc (Silver)', 'min' => 500, 'discount' => 5, 'badge' => 'badge-sky'],
-    ['id' => 3, 'name' => 'Vàng (Gold)', 'min' => 1500, 'discount' => 10, 'badge' => 'badge-gold'],
-    ['id' => 4, 'name' => 'Kim Cương (Diamond)', 'min' => 3000, 'discount' => 15, 'badge' => 'badge-primary']
-];
+// Các hạng thẻ VIP thật từ CSDL (hgb_hang_thanh_vien)
+require_once __DIR__ . "/../../models/AdminModel.php";
+$fk_badges = ['badge-secondary', 'badge-sky', 'badge-gold', 'badge-primary'];
+$tiers     = [];
+$fk_vip_error = '';
+try {
+    foreach ((new AdminModel())->layHangThanhVien() as $i => $row) {
+        $tiers[] = [
+            'id'       => (int)$row['ma_hang'],
+            'name'     => $row['ten_hang'],
+            'min'      => (int)$row['diem_toi_thieu'],
+            'discount' => (float)$row['phan_tram_giam_gia'],
+            'badge'    => $fk_badges[$i % count($fk_badges)],
+        ];
+    }
+} catch (Throwable $e) {
+    $fk_vip_error = 'Không tải được cấu hình hạng thành viên từ cơ sở dữ liệu.';
+}
 ?>
 
 <div class="container-fluid my-4 px-lg-5">
@@ -117,7 +129,9 @@ $tiers = [
                     <h6 class="font-weight-bold mb-0 text-slate">Cấu Hình Điểm Sàn & % Giảm Giá VIP</h6>
                 </div>
                 <div class="card-body p-4 pt-0">
-                    <form>
+                    <?php if ($fk_vip_error): ?><div class="alert alert-danger"><?= htmlspecialchars($fk_vip_error) ?></div><?php endif; ?>
+                    <div id="fk_vipAlert" class="d-none"></div>
+                    <form id="fk_vipForm" autocomplete="off">
                         <?php foreach ($tiers as $t): ?>
                             <div class="p-3 mb-3 rounded bg-milk-cream border">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -129,12 +143,13 @@ $tiers = [
                                 <div class="form-row">
                                     <div class="col-6">
                                         <label class="small text-muted-custom mb-1 font-weight-bold">Điểm sàn (pts):</label>
-                                        <input type="number" class="form-control form-control-sm" value="<?= $t['min'] ?>" required>
+                                        <input type="hidden" name="tiers[<?= $t['id'] ?>][ma_hang]" value="<?= $t['id'] ?>">
+                                        <input type="number" name="tiers[<?= $t['id'] ?>][diem_toi_thieu]" class="form-control form-control-sm" value="<?= $t['min'] ?>" min="0" step="1" required>
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-muted-custom mb-1 font-weight-bold">Giảm giá (%):</label>
                                         <div class="input-group input-group-sm">
-                                            <input type="number" class="form-control" value="<?= $t['discount'] ?>" required>
+                                            <input type="number" name="tiers[<?= $t['id'] ?>][phan_tram_giam_gia]" class="form-control" value="<?= $t['discount'] ?>" min="0" max="100" step="0.5" required>
                                             <div class="input-group-append">
                                                 <span class="input-group-text">%</span>
                                             </div>
@@ -144,7 +159,7 @@ $tiers = [
                             </div>
                         <?php endforeach; ?>
 
-                        <button type="button" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
+                        <button type="submit" id="fk_btnSaveVip" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
                             <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Cấu Hình Hạng Thẻ
                         </button>
                     </form>

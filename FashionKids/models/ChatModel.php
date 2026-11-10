@@ -2,19 +2,23 @@
 /**
  * Lớp Model Chat CSKH Trực Tuyến (models/ChatModel.php)
  * Đảm nhiệm: Gửi nhận tin nhắn tư vấn và đánh dấu đã đọc (Trần Gia Bảo - tgb_)
- * Tích hợp Stored Procedures: tgb_send_chat_message, tgb_mark_chat_as_read
+ * Đồng bộ "đã đọc" qua Stored Procedure tgb_danh_dau_tin_da_doc (có biến OUT, đóng con trỏ chống lỗi PDO 2014).
+ * Cài SP bằng database/patch_rbac_admin_staff.sql.
  */
 
 require_once __DIR__ . '/BaseModel.php';
 
 class ChatModel extends BaseModel {
     /**
-     * Gửi tin nhắn qua SP tgb_send_chat_message
+     * Gửi tin nhắn (khách hoặc nhân viên) bằng INSERT trực tiếp vào tgb_tin_nhan_tu_van
      */
     public function sendMessage(string $sessionId, ?int $userId, string $sender, string $message): bool {
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("CALL `tgb_send_chat_message`(:sid, :uid, :sender, :msg)");
+                $stmt = $this->db->prepare(
+                    "INSERT INTO `tgb_tin_nhan_tu_van` (`ma_phien_khach`, `ma_nguoi_dung`, `nguoi_gui`, `noi_dung_tin_nhan`, `da_xem`)
+                     VALUES (:sid, :uid, :sender, :msg, 0)"
+                );
                 return $stmt->execute([
                     ':sid'    => $sessionId,
                     ':uid'    => $userId,
@@ -29,18 +33,16 @@ class ChatModel extends BaseModel {
     }
 
     /**
-     * Đánh dấu đã đọc qua SP tgb_mark_chat_as_read
+     * Đánh dấu toàn bộ tin của khách trong phiên là đã đọc (tgb_danh_dau_tin_da_doc).
+     * @return int số tin vừa được đánh dấu
      */
-    public function markAsRead(string $sessionId): bool {
-        if ($this->hasConnection()) {
-            try {
-                $stmt = $this->db->prepare("CALL `tgb_mark_chat_as_read`(:sid)");
-                return $stmt->execute([':sid' => $sessionId]);
-            } catch (PDOException $e) {
-                return false;
-            }
-        }
-        return true;
+    public function markAsRead(string $sessionId, int $staffId): int {
+        $out = $this->callProcedure(
+            'CALL tgb_danh_dau_tin_da_doc(:sid, :nv, @so_tin)',
+            [':sid' => $sessionId, ':nv' => $staffId],
+            ['@so_tin']
+        );
+        return (int)($out['so_tin'] ?? 0);
     }
 
     /**
