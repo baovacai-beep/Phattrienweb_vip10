@@ -2,11 +2,14 @@
 $page_title = "Bàn Làm Việc CSKH Trực Tuyến";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 
 $rtModel  = new RealtimeContentModel();
 $sessions = $rtModel->getChatSessions();
 $activeSessionId = $_GET['session_id'] ?? ($sessions[0]['session_id'] ?? 'sess_guest_123456');
+$rtModel->markChatSessionAsRead($activeSessionId);
+$sessions = $rtModel->getChatSessions();
 $messages = $rtModel->getChatMessages($activeSessionId);
 $activeSessionMeta = $sessions[0] ?? [
     'session_id'    => $activeSessionId,

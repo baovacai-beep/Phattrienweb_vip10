@@ -2,6 +2,7 @@
 $page_title = "Quản Trị Nội Dung Tạp Chí & Báo Chí";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 
 $rtModel  = new RealtimeContentModel();
@@ -198,7 +199,7 @@ $isAdminUser = Rbac::isAdmin();
                                             <span class="text-info mr-2"><i class="fa-regular fa-eye mr-1"></i><?= number_format($art['views']) ?></span>
                                             <span class="text-danger"><i class="fa-solid fa-heart mr-1"></i><?= number_format($art['likes']) ?></span>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center" id="fk_cmsStatusCell_<?= $art['id'] ?>">
                                             <?php if (($art['status'] ?? 'xuat_ban') === 'xuat_ban'): ?>
                                                 <span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>
                                             <?php else: ?>
@@ -210,6 +211,11 @@ $isAdminUser = Rbac::isAdmin();
                                                 <i class="fa-regular fa-eye"></i>
                                             </a>
                                             <?php if ($isAdminUser): ?>
+                                                <?php if (($art['status'] ?? 'xuat_ban') !== 'xuat_ban'): ?>
+                                                    <button type="button" id="fk_btnPublishArticle_<?= $art['id'] ?>" onclick="fkPublishCmsArticleRow(<?= $art['id'] ?>)" class="btn btn-pastel-primary btn-sm rounded-pill px-2 mr-1" title="Xuất bản chính thức bài viết">
+                                                        <i class="fa-solid fa-check-double mr-1"></i>Xuất bản
+                                                    </button>
+                                                <?php endif; ?>
                                                 <button type="button" onclick="fkDeleteCmsArticleRow(<?= $art['id'] ?>)" class="btn btn-outline-danger btn-sm rounded-circle" title="Xóa/Ẩn bài viết">
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>

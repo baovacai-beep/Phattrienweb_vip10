@@ -2,8 +2,12 @@
 $page_title = "Cửa Hàng Thời Trang Sợi Tre - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/ProductModel.php";
 
-// Danh mục chuẩn của Lê Bảo Ngọc (lbn_categories)
+$catProductModel = new ProductModel();
+$lbn_products    = $catProductModel->layTatCaSanPhamChuanHoa();
+$catCounts       = $catProductModel->demSanPhamTheoDanhMuc();
+
 $lbn_categories = [
     ['id' => 1, 'slug' => 'vay_cong_chua', 'name' => 'Váy công chúa', 'type' => 'quan_ao',  'icon' => 'fa-wand-magic-sparkles text-peach'],
     ['id' => 2, 'slug' => 'bo_thun',       'name' => 'Bộ thun',       'type' => 'quan_ao',  'icon' => 'fa-shirt text-info'],
@@ -11,217 +15,11 @@ $lbn_categories = [
     ['id' => 4, 'slug' => 'giay_sandal',   'name' => 'Giày sandal',   'type' => 'giay_dep', 'icon' => 'fa-shoe-prints text-warning']
 ];
 
-// Danh sách sản phẩm mẫu chuẩn bảng lbn_products (đầy đủ 4 danh mục & 3 giới tính)
-$lbn_products = [
-    [
-        'id'             => 101,
-        'sku'            => 'FK-LBN-01',
-        'image'          => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
-        'category_id'    => 1,
-        'category_slug'  => 'vay_cong_chua',
-        'category_name'  => 'Váy công chúa',
-        'name'           => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
-        'gender'         => 'girl',
-        'gender_label'   => 'Bé gái',
-        'gender_badge'   => 'badge-peach',
-        'price'          => 285000,
-        'stock_quantity' => 18,
-        'rating'         => 4.9,
-        'reviews'        => 42,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 1 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-person-dress text-peach'
-    ],
-    [
-        'id'             => 102,
-        'sku'            => 'FK-LBN-02',
-        'image'          => '/FashionKids/images/bo-thun-khung-long.jpg',
-        'category_id'    => 2,
-        'category_slug'  => 'bo_thun',
-        'category_name'  => 'Bộ thun',
-        'name'           => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
-        'gender'         => 'boy',
-        'gender_label'   => 'Bé trai',
-        'gender_badge'   => 'badge-sky',
-        'price'          => 225000,
-        'stock_quantity' => 24,
-        'rating'         => 4.8,
-        'reviews'        => 36,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 1 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-shirt text-info'
-    ],
-    [
-        'id'             => 103,
-        'sku'            => 'FK-LBN-03',
-        'image'          => '/FashionKids/images/giay-sandal-tap-di.jpg',
-        'category_id'    => 4,
-        'category_slug'  => 'giay_sandal',
-        'category_name'  => 'Giày sandal',
-        'name'           => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
-        'gender'         => 'unisex',
-        'gender_label'   => 'Unisex',
-        'gender_badge'   => 'badge-gold',
-        'price'          => 210000,
-        'stock_quantity' => 14,
-        'rating'         => 5.0,
-        'reviews'        => 58,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 21 - Size 28',
-        'type'           => 'giay_dep',
-        'icon'           => 'fa-shoe-prints text-warning'
-    ],
-    [
-        'id'             => 104,
-        'sku'            => 'FK-LBN-04',
-        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg',
-        'category_id'    => 3,
-        'category_slug'  => 'ao_khoac',
-        'category_name'  => 'Áo khoác',
-        'name'           => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
-        'gender'         => 'unisex',
-        'gender_label'   => 'Unisex',
-        'gender_badge'   => 'badge-gold',
-        'price'          => 320000,
-        'stock_quantity' => 5,
-        'rating'         => 4.9,
-        'reviews'        => 29,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 2 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-vest-patches text-success'
-    ],
-    [
-        'id'             => 105,
-        'sku'            => 'FK-LBN-05',
-        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
-        'category_id'    => 1,
-        'category_slug'  => 'vay_cong_chua',
-        'category_name'  => 'Váy công chúa',
-        'name'           => 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc',
-        'gender'         => 'girl',
-        'gender_label'   => 'Bé gái',
-        'gender_badge'   => 'badge-peach',
-        'price'          => 365000,
-        'stock_quantity' => 11,
-        'rating'         => 5.0,
-        'reviews'        => 64,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 2 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-crown text-peach'
-    ],
-    [
-        'id'             => 106,
-        'sku'            => 'FK-LBN-06',
-        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
-        'category_id'    => 2,
-        'category_slug'  => 'bo_thun',
-        'category_name'  => 'Bộ thun',
-        'name'           => 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè',
-        'gender'         => 'unisex',
-        'gender_label'   => 'Unisex',
-        'gender_badge'   => 'badge-gold',
-        'price'          => 195000,
-        'stock_quantity' => 32,
-        'rating'         => 4.8,
-        'reviews'        => 51,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 1 - Size 4',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-baby text-success'
-    ],
-    [
-        'id'             => 107,
-        'sku'            => 'FK-LBN-07',
-        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
-        'category_id'    => 3,
-        'category_slug'  => 'ao_khoac',
-        'category_name'  => 'Áo khoác',
-        'name'           => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
-        'gender'         => 'girl',
-        'gender_label'   => 'Bé gái',
-        'gender_badge'   => 'badge-peach',
-        'price'          => 340000,
-        'stock_quantity' => 4,
-        'rating'         => 4.9,
-        'reviews'        => 19,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 2 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-shirt text-peach'
-    ],
-    [
-        'id'             => 108,
-        'sku'            => 'FK-LBN-08',
-        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
-        'category_id'    => 4,
-        'category_slug'  => 'giay_sandal',
-        'category_name'  => 'Giày sandal',
-        'name'           => 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ',
-        'gender'         => 'boy',
-        'gender_label'   => 'Bé trai',
-        'gender_badge'   => 'badge-sky',
-        'price'          => 245000,
-        'stock_quantity' => 16,
-        'rating'         => 4.7,
-        'reviews'        => 23,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 22 - Size 30',
-        'type'           => 'giay_dep',
-        'icon'           => 'fa-shoe-prints text-info'
-    ],
-    [
-        'id'             => 109,
-        'sku'            => 'FK-LBN-09',
-        'image'          => '/FashionKids/images/ao-khoac-bomber.jpg',
-        'category_id'    => 3,
-        'category_slug'  => 'ao_khoac',
-        'category_name'  => 'Áo khoác',
-        'name'           => 'Áo Khoác Bomber Sợi Tre Phi Hành Gia Nhí Bé Trai',
-        'gender'         => 'boy',
-        'gender_label'   => 'Bé trai',
-        'gender_badge'   => 'badge-sky',
-        'price'          => 350000,
-        'stock_quantity' => 9,
-        'rating'         => 4.9,
-        'reviews'        => 31,
-        'is_bamboo'      => 1,
-        'bamboo_label'   => 'Vải Sợi Tre Kháng Khuẩn',
-        'size_range'     => 'Size 2 - Size 5',
-        'type'           => 'quan_ao',
-        'icon'           => 'fa-user-astronaut text-primary'
-    ]
-];
-
-// Hàm mô phỏng Stored Function lbn_count_products_by_category
-function lbnCountByCatSlug($products, $slug) {
-    if ($slug === 'all') return count($products);
-    $count = 0;
-    foreach ($products as $p) {
-        if ($p['category_slug'] === $slug) {
-            $count++;
-        }
-    }
-    return $count;
-}
-
-// Nhận tham số lọc từ URL (nếu điều hướng từ Navbar / Footer / Trang chủ)
 $init_cat = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : 'all';
 if (isset($_GET['type']) && $_GET['type'] === 'giay_dep') {
     $init_cat = 'giay_sandal';
 }
-$init_gender = isset($_GET['gender']) ? htmlspecialchars($_GET['gender']) : 'all';
+$init_gender  = isset($_GET['gender']) ? htmlspecialchars($_GET['gender']) : 'all';
 $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '';
 ?>
 
@@ -247,9 +45,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
     </div>
 
     <div class="row">
-        <!-- ================================================================
-             CỘT TRÁI (SIDEBAR FILTER): DANH MỤC, GIỚI TÍNH, KHOẢNG GIÁ
-             ================================================================ -->
+        <!-- CỘT TRÁI (SIDEBAR FILTER): DANH MỤC, GIỚI TÍNH, KHOẢNG GIÁ -->
         <div class="col-12 col-lg-3 mb-4">
             <div class="lbn-filter-sidebar p-4 shadow-sm sticky-top fk-sticky-85">
                 <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
@@ -270,7 +66,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     </div>
                 </div>
 
-                <!-- 1. BỘ LỌC DANH MỤC (Váy công chúa, Bộ thun, Áo khoác, Giày sandal) -->
+                <!-- 1. BỘ LỌC DANH MỤC -->
                 <div class="mb-4 pb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="lbn-filter-group-title mb-0">Danh Mục Sản Phẩm</label>
@@ -281,11 +77,11 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     <div class="lbn-cat-filter-item d-flex justify-content-between align-items-center mb-1 <?= $init_cat === 'all' ? 'active' : '' ?>"
                          data-cat="all" onclick="lbnSelectCategoryFilter('all', this)">
                         <span class="small"><i class="fa-solid fa-border-all mr-2 text-muted"></i>Tất cả danh mục</span>
-                        <span class="badge badge-pill badge-light border" id="lbn_catCount_all"><?= lbnCountByCatSlug($lbn_products, 'all') ?></span>
+                        <span class="badge badge-pill badge-light border" id="lbn_catCount_all"><?= (int)($catCounts['all'] ?? count($lbn_products)) ?></span>
                     </div>
 
                     <?php foreach ($lbn_categories as $cat): ?>
-                        <?php $catCount = lbnCountByCatSlug($lbn_products, $cat['slug']); ?>
+                        <?php $catCount = (int)($catCounts[$cat['slug']] ?? 0); ?>
                         <div class="lbn-cat-filter-item d-flex justify-content-between align-items-center mb-1 <?= $init_cat === $cat['slug'] ? 'active' : '' ?>"
                              data-cat="<?= $cat['slug'] ?>" onclick="lbnSelectCategoryFilter('<?= $cat['slug'] ?>', this)">
                             <span class="small">
@@ -296,7 +92,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     <?php endforeach; ?>
                 </div>
 
-                <!-- 2. BỘ LỌC GIỚI TÍNH (Bé trai, Bé gái, Unisex) -->
+                <!-- 2. BỘ LỌC GIỚI TÍNH -->
                 <div class="mb-4 pb-3 border-bottom">
                     <label class="lbn-filter-group-title mb-2 d-block">Giới Tính Của Bé</label>
 
@@ -326,7 +122,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     </div>
                 </div>
 
-                <!-- 3. THANH TRƯỢT CHỌN KHOẢNG GIÁ (PRICE RANGE SLIDER) -->
+                <!-- 3. KHOẢNG GIÁ -->
                 <div class="mb-4 pb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="lbn-filter-group-title mb-0" for="lbn_priceRangeSlider">Khoảng Giá Tối Đa</label>
@@ -343,7 +139,6 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                     </div>
                 </div>
 
-                <!-- Chứng nhận chất liệu vải sợi tre kháng khuẩn -->
                 <div class="custom-control custom-checkbox mb-3">
                     <input type="checkbox" class="custom-control-input" id="lbn_onlyBambooCheck" checked>
                     <label class="custom-control-label small font-weight-bold text-mint-dark" for="lbn_onlyBambooCheck">
@@ -357,11 +152,8 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
             </div>
         </div>
 
-        <!-- ================================================================
-             CỘT PHẢI (LƯỚI SẢN PHẨM): GRID 3 CỘT DESKTOP, CARD BO TRÒN 16PX
-             ================================================================ -->
+        <!-- CỘT PHẢI: LƯỚI SẢN PHẨM -->
         <div class="col-12 col-lg-9">
-            <!-- Thanh công cụ phía trên Lưới sản phẩm -->
             <div class="card card-pastel p-3 mb-4 shadow-sm bg-white">
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <div class="small text-slate mb-2 mb-sm-0">
@@ -378,20 +170,20 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                 </div>
             </div>
 
-            <!-- Lưới sản phẩm 3 cột trên Desktop (col-lg-4) -->
             <div class="row product-grid" id="lbn_catalogGrid">
-                <?php foreach ($lbn_products as $prod): ?>
+                <?php foreach ($lbn_products as $prod):
+                    $stockQty = (int)$prod['stock_quantity'];
+                    $defaultSize = ($prod['type'] === 'giay_dep') ? 'Size 22 (13cm)' : 'Size 2 (2-3T)';
+                ?>
                     <div class="col-12 col-sm-6 col-lg-4 mb-4 lbn-catalog-col"
                          data-id="<?= $prod['id'] ?>"
-                         data-category="<?= $prod['category_slug'] ?>"
-                         data-gender="<?= $prod['gender'] ?>"
+                         data-category="<?= htmlspecialchars($prod['category_slug']) ?>"
+                         data-gender="<?= htmlspecialchars($prod['gender']) ?>"
                          data-price="<?= $prod['price'] ?>"
                          data-name="<?= htmlspecialchars($prod['name'] . ' ' . $prod['category_name'] . ' ' . $prod['sku']) ?>"
-                         data-bamboo="<?= $prod['is_bamboo'] ?>">
+                         data-bamboo="<?= (int)$prod['is_bamboo'] ?>">
 
-                        <!-- Card sản phẩm bo tròn 16px + Hover translateY(-5px) -->
                         <div class="lbn-product-card h-100 d-flex flex-column shadow-sm">
-                            <!-- Khung hình ảnh + Huy hiệu vải sợi tre kháng khuẩn -->
                             <div class="lbn-product-img-wrap">
                                 <span class="lbn-badge-bamboo lbn-badge-bamboo-overlay">
                                     <i class="fa-solid fa-leaf mr-1"></i><?= htmlspecialchars($prod['bamboo_label']) ?>
@@ -416,15 +208,14 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                 </a>
                             </div>
 
-                            <!-- Thân Card Sản Phẩm -->
                             <div class="card-body d-flex flex-column p-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="small font-weight-bold text-muted-custom">
                                         <?= htmlspecialchars($prod['category_name']) ?>
                                     </span>
                                     <span class="small text-warning font-weight-bold">
-                                        <i class="fa-solid fa-star"></i> <?= number_format($prod['rating'], 1) ?>
-                                        <span class="text-muted-custom font-weight-normal">(<?= $prod['reviews'] ?>)</span>
+                                        <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?>
+                                        <span class="text-muted-custom font-weight-normal">(<?= (int)$prod['reviews'] ?>)</span>
                                     </span>
                                 </div>
 
@@ -435,22 +226,26 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                 </h6>
 
                                 <div class="d-flex justify-content-between align-items-center small text-muted-custom mb-3">
-                                    <span><i class="fa-solid fa-barcode mr-1"></i><?= $prod['sku'] ?></span>
-                                    <span><i class="fa-solid fa-ruler-combined mr-1"></i><?= $prod['size_range'] ?></span>
+                                    <span><i class="fa-solid fa-barcode mr-1"></i><?= htmlspecialchars($prod['sku']) ?></span>
+                                    <span><i class="fa-solid fa-ruler-combined mr-1"></i><?= htmlspecialchars($prod['size_range']) ?></span>
                                 </div>
 
                                 <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="h5 font-weight-bold text-peach mb-0">
-                                            <?= number_format($prod['price'], 0, ',', '.') ?> đ
+                                            <?= number_format((float)$prod['price'], 0, ',', '.') ?> đ
                                         </div>
-                                        <?php if ($prod['stock_quantity'] <= 5): ?>
+                                        <?php if ($stockQty <= 0): ?>
                                             <small class="text-danger font-weight-bold">
-                                                <i class="fa-solid fa-fire mr-1"></i>Chỉ còn <?= $prod['stock_quantity'] ?> SP
+                                                <i class="fa-solid fa-circle-xmark mr-1"></i>Tạm hết hàng
+                                            </small>
+                                        <?php elseif ($stockQty <= 5): ?>
+                                            <small class="text-danger font-weight-bold">
+                                                <i class="fa-solid fa-fire mr-1"></i>Chỉ còn <?= $stockQty ?> SP
                                             </small>
                                         <?php else: ?>
                                             <small class="text-success font-weight-bold">
-                                                <i class="fa-solid fa-check mr-1"></i>Còn hàng (<?= $prod['stock_quantity'] ?>)
+                                                <i class="fa-solid fa-check mr-1"></i>Còn hàng (<?= $stockQty ?>)
                                             </small>
                                         <?php endif; ?>
                                     </div>
@@ -460,11 +255,17 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                            class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
-                                        <button type="button"
-                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>, <?= (int)$prod['id'] ?>)"
-                                                class="btn btn-pastel-primary btn-sm px-3 py-1">
-                                            <i class="fa-solid fa-cart-plus mr-1"></i> Thêm
-                                        </button>
+                                        <?php if ($stockQty > 0): ?>
+                                            <button type="button"
+                                                    onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= (float)$prod['price'] ?>, <?= (int)$prod['id'] ?>, '<?= htmlspecialchars($defaultSize, ENT_QUOTES) ?>')"
+                                                    class="btn btn-pastel-primary btn-sm px-3 py-1">
+                                                <i class="fa-solid fa-cart-plus mr-1"></i> Thêm
+                                            </button>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-secondary btn-sm px-3 py-1" disabled>
+                                                Hết hàng
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -473,7 +274,6 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                 <?php endforeach; ?>
             </div>
 
-            <!-- Thông báo khi không có sản phẩm khớp bộ lọc -->
             <div id="lbn_emptyCatalogAlert" class="card card-pastel p-5 text-center shadow-sm d-none">
                 <div class="mb-3">
                     <i class="fa-solid fa-box-open display-4 text-muted"></i>
@@ -503,4 +303,3 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
 <?php endif; ?>
 
 <?php require_once __DIR__ . "/../layouts/footer.php"; ?>
-

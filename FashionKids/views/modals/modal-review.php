@@ -13,7 +13,9 @@
 
       <form id="tgb_formReview" method="POST" enctype="multipart/form-data" novalidate>
         <input type="hidden" name="product_id" id="tgb_review_product_id" value="101">
+        <input type="hidden" name="order_id" id="tgb_review_order_id" value="0">
         <div class="modal-body p-4">
+          <div id="tgb_reviewProductContext" class="small font-weight-bold text-slate mb-2 d-none"></div>
           <div id="tgb_reviewAlert" class="alert d-none small py-2 mb-3"></div>
           <!-- Chọn số sao tương tác -->
           <div class="text-center mb-4">

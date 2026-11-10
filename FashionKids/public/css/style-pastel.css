@@ -1435,3 +1435,198 @@ body {
     cursor: not-allowed;
     transform: none;
 }
+
+/* ==========================================================================
+   TRẠNG THÁI ĐƠN HÀNG, VIETQR, CẢNH BÁO MINT & REALTIME NHÂN VIÊN
+   ========================================================================== */
+.bg-sky {
+    background-color: var(--secondary-sky);
+}
+
+.text-sky {
+    color: var(--secondary-sky) !important;
+}
+
+.alert-mint {
+    background-color: #E8F5E9;
+    border: 1.5px solid #A5D6A7;
+    border-radius: 14px;
+    color: #234E52;
+}
+
+.lnkt-vietqr-card {
+    background: linear-gradient(135deg, #F0F9FF 0%, #FFFDF7 60%, #F0FFF4 100%);
+    border: 1.5px solid #BEE3F8;
+}
+
+.lnkt-vietqr-img {
+    max-width: 220px;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    display: block;
+}
+
+.lnkt-order-history-pill {
+    transition: all 0.2s ease;
+}
+
+.lnkt-order-history-pill.active {
+    box-shadow: 0 4px 12px rgba(255, 158, 147, 0.35);
+}
+
+#new_order_badge,
+.lnkt-new-order-pulse {
+    cursor: pointer;
+    animation: lnktOrderPulse 1.6s infinite;
+}
+
+@keyframes lnktOrderPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.45); }
+    70%  { box-shadow: 0 0 0 8px rgba(229, 62, 62, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+}
+
+.lnkt-order-highlight-row {
+    background-color: #FFFDF0 !important;
+    transition: background-color 0.4s ease;
+}
+
+/* ==========================================================================
+   CASSO VIETQR 24H, CHUYỂN ĐỔI PTTT & PHIẾU IN GIAO HÀNG / THU HỘ COD
+   ========================================================================== */
+.badge-butter {
+    background-color: var(--accent-buttercup);
+    color: var(--accent-gold-dark);
+    font-weight: 700;
+}
+
+.fk-btn-copy {
+    font-size: 0.72rem;
+    line-height: 1.3;
+    padding: 2px 8px;
+}
+
+.fk-paid-receipt-box {
+    background: linear-gradient(135deg, #F0FFF4 0%, #FFFFFF 60%, #E6FFFA 100%);
+    border: 1.5px solid #9AE6B4;
+}
+
+.fk-cod-panel {
+    background: linear-gradient(135deg, #FFFDF5 0%, #FFFFFF 65%, #FFF5F4 100%);
+    border: 1.5px solid #F6E05E;
+}
+
+.fk-expired-banner {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFFFFF 65%, #FED7D7 100%);
+    border: 1.5px solid #FC8181;
+}
+
+.fk-label-modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.fk-label-sheet {
+    border: 2px dashed #CBD5E0 !important;
+    border-radius: 14px;
+    color: #1A202C;
+}
+
+.fk-label-divider {
+    border-bottom: 2px dashed #CBD5E0;
+}
+
+.fk-label-brand {
+    font-size: 1.15rem;
+    letter-spacing: 0.5px;
+}
+
+.fk-barcode-svg {
+    width: 100%;
+    max-width: 230px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 2px auto;
+}
+
+.fk-barcode-text {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+.fk-label-qr-img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+
+.fk-label-qr-cap {
+    font-size: 0.68rem;
+    margin-top: 2px;
+}
+
+.fk-label-party-box {
+    background-color: #FAF8F5;
+}
+
+.fk-label-cod-box.fk-cod-zero {
+    background-color: #F0FFF4;
+    border-color: #68D391 !important;
+    color: #22543D;
+}
+
+.fk-label-cod-box.fk-cod-cash {
+    background-color: #FFFBEB;
+    border-color: #F6AD55 !important;
+    color: #7B341E;
+}
+
+.fk-label-cod-box.fk-cod-cancelled {
+    background-color: #FFF5F5;
+    border-color: #FC8181 !important;
+    color: #9B2C2C;
+}
+
+.fk-label-cod-amount {
+    font-size: 1.85rem;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+}
+
+.fk-label-sign-space {
+    min-height: 44px;
+    padding-top: 24px;
+    font-size: 0.72rem;
+}
+
+@media screen {
+    #fk_printStageContainer {
+        display: none !important;
+    }
+}
+
+@media print {
+    body.fk-printing-label > *:not(#fk_printStageContainer) {
+        display: none !important;
+    }
+
+    body.fk-printing-label .fk-no-print,
+    body.fk-printing-label .modal-backdrop {
+        display: none !important;
+    }
+
+    body.fk-printing-label #fk_printStageContainer {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 8mm !important;
+        background: #FFFFFF !important;
+    }
+
+    body.fk-printing-label #fk_printStageContainer .fk-label-sheet {
+        border: 2px solid #1A202C !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+}

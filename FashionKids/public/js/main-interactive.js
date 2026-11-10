@@ -12,46 +12,9 @@ $(document).ready(function () {
         $(this).css('width', progressVal + '%');
     });
 
-    // 7. Chuyển đổi trực quan 4 hạng thẻ VIP phục vụ demo & chụp ảnh báo cáo
-    window.hgbSwitchVipCard = function (tier) {
-        let cardBox = $('#hgb_vipCardPreview');
-        let badge = $('#hgb_vipBadgeTitle');
-        let discount = $('#hgb_vipDiscount');
-        let cardPts = $('#hgb_vipCardPts');
-        let progressBar = $('#hgb_vipProgressBar');
-        let ptsInfo = $('#hgb_vipPtsInfo');
-
-        cardBox.removeClass('vip-card-bronze vip-card-silver vip-card-gold vip-card-diamond');
-
-        if (tier === 'bronze') {
-            cardBox.addClass('vip-card-bronze');
-            badge.text('HẠNG ĐỒNG (BRONZE)');
-            discount.text('GIẢM 0% MỌI ĐƠN');
-            cardPts.text('120 PTS');
-            progressBar.css('width', '25%');
-            ptsInfo.text('120 / 500 PTS');
-        } else if (tier === 'silver') {
-            cardBox.addClass('vip-card-silver');
-            badge.text('HẠNG BẠC (SILVER)');
-            discount.text('GIẢM 5% MỌI ĐƠN');
-            cardPts.text('850 PTS');
-            progressBar.css('width', '55%');
-            ptsInfo.text('850 / 1.500 PTS');
-        } else if (tier === 'gold') {
-            cardBox.addClass('vip-card-gold');
-            badge.text('HẠNG VÀNG (GOLD)');
-            discount.text('GIẢM 10% MỌI ĐƠN');
-            cardPts.text('1.650 PTS');
-            progressBar.css('width', '55%');
-            ptsInfo.text('1.650 / 3.000 PTS');
-        } else if (tier === 'diamond') {
-            cardBox.addClass('vip-card-diamond');
-            badge.text('HẠNG KIM CƯƠNG (DIAMOND)');
-            discount.text('GIẢM 15% CAO CẤP');
-            cardPts.text('3.500 PTS');
-            progressBar.css('width', '100%');
-            ptsInfo.text('3.500 PTS (TỐI ĐA)');
-        }
+    // 7. Hạng thẻ VIP được đồng bộ tự động từ CSDL (chỉ đọc, không cho phép chuyển đổi thủ công)
+    window.hgbSwitchVipCard = function () {
+        return false;
     };
 });
 
@@ -310,8 +273,9 @@ $(document).ready(function () {
     };
 
     // Thêm nhanh vào giỏ hàng từ thẻ sản phẩm (kiểm tra tồn kho qua ProductController@ajaxCheckStock)
-    window.lbnQuickAddToCart = function (productName, price, productId) {
+    window.lbnQuickAddToCart = function (productName, price, productId, defaultSize) {
         let pid = parseInt(productId, 10) || 101;
+        let chosenSize = defaultSize || 'Size 2 (2-3T)';
         $.ajax({
             url: '/FashionKids/index.php?c=product&a=ajaxCheckStock',
             type: 'POST',
@@ -321,16 +285,16 @@ $(document).ready(function () {
                 product_id:  pid,
                 so_luong:    1,
                 quantity:    1,
-                size:        'Size 2 (2-3T)',
+                size:        chosenSize,
                 action_type: 'quick_add'
             },
             timeout: 3000,
             success: function (res) {
                 if (res && res.status === 'success') {
-                    let badge = $('.cart-badge-custom').first();
-                    let nextCount = res.cart_count || ((parseInt(badge.text(), 10) || 0) + 1);
-                    badge.text(nextCount);
-                    alert('Đã kiểm tra tồn kho & thêm "' + productName + '" (' + lbnFormatVnd(price) + ') vào giỏ hàng!');
+                    let $badges = $('.cart-badge-custom');
+                    let nextCount = (res.cart_count !== undefined) ? res.cart_count : ((parseInt($badges.first().text(), 10) || 0) + 1);
+                    $badges.text(nextCount);
+                    alert('Đã thêm "' + productName + '" (' + lbnFormatVnd(price) + ') vào giỏ hàng!');
                 } else {
                     alert((res && res.message) ? res.message : 'Sản phẩm hiện đã hết hàng!');
                 }
@@ -340,10 +304,7 @@ $(document).ready(function () {
                     alert(xhr.responseJSON.message);
                     return;
                 }
-                let badge = $('.cart-badge-custom').first();
-                let currentCount = parseInt(badge.text(), 10) || 0;
-                badge.text(currentCount + 1);
-                alert('Đã thêm "' + productName + '" (' + lbnFormatVnd(price) + ') vào giỏ hàng!');
+                alert('Không thể thêm sản phẩm vào giỏ hàng lúc này. Vui lòng thử lại!');
             }
         });
     };
@@ -507,20 +468,9 @@ $(document).ready(function () {
         window.lbnCheckPdpStockAjax('check');
     }
 
-    // Tự động cập nhật nhãn giảm giá & giá ưu đãi theo cấp bậc VIP (hgb_get_discount_percent)
-    window.lbnSwitchVipTierDiscount = function (tierKey, discountPercent, tierLabel) {
-        let basePrice = parseInt($('#lbn_pdpBasePrice').attr('data-base-price'), 10) || 285000;
-        let discountAmount = Math.round((basePrice * discountPercent) / 100);
-        let finalPrice = basePrice - discountAmount;
-
-        $('.lbn-vip-tier-btn').removeClass('active btn-pastel-primary').addClass('btn-outline-secondary');
-        $('#lbn_vipBtn_' + tierKey).removeClass('btn-outline-secondary').addClass('active btn-pastel-primary');
-
-        $('#lbn_pdpVipBadgeLabel').html(
-            '<i class="fa-solid fa-crown mr-1"></i> Đặc quyền VIP ' + tierLabel + ': Giảm tự động ' + discountPercent + '%'
-        );
-        $('#lbn_pdpFinalVipPrice').text(lbnFormatVnd(finalPrice));
-        $('#lbn_pdpSavedAmount').text('Tiết kiệm ngay ' + lbnFormatVnd(discountAmount));
+    // Chiết khấu VIP được tính tự động theo tài khoản từ CSDL (không cho đổi thủ công)
+    window.lbnSwitchVipTierDiscount = function () {
+        return false;
     };
 
     // Nút Thêm vào giỏ & Mua ngay trên PDP (Chặn đặt hàng nếu vượt tồn kho thực tế qua fn_lbn_kiem_tra_ton_kho)
@@ -609,43 +559,81 @@ $(document).ready(function () {
         window.lbnFilterAdminInventory();
     });
 
-    // Cập nhật nhanh tồn kho (Stored Procedure lbn_update_stock) & Cảnh báo đỏ khi tồn kho <= 5
+    // Cập nhật nhanh tồn kho (Stored Procedure sp_lbn_nhap_them_kho_hang) & Cảnh báo đỏ khi tồn kho <= 5
     window.lbnQuickUpdateStock = function (productId, skuCode) {
         let inputEl = $('#lbn_stockInput_' + productId);
         let newStock = parseInt(inputEl.val(), 10);
 
         if (isNaN(newStock) || newStock < 0) {
-            alert('Số lượng tồn kho không hợp lệ (phải >= 0)!');
+            alert('Lỗi ngoại lệ: Số lượng tồn kho không được nhỏ hơn 0 (phải >= 0)!');
             return;
         }
 
-        let $row = $('#lbn_invRow_' + productId);
-        $row.attr('data-stock', newStock);
-        let statusCell = $('#lbn_stockBadgeCell_' + productId);
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                product_id: productId,
+                new_stock:  newStock,
+                mode:       'set'
+            },
+            success: function (res) {
+                let finalStock = (res && res.new_stock !== undefined) ? parseInt(res.new_stock, 10) : newStock;
+                inputEl.val(finalStock);
 
-        if (newStock <= 5) {
-            statusCell.html(
-                '<span class="badge badge-danger lbn-badge-low-stock px-2 py-1">' +
-                '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (' + newStock + ')' +
-                '</span>'
-            );
-        } else {
-            statusCell.html(
-                '<span class="badge badge-mint px-2 py-1 rounded-pill">' +
-                '<i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (' + newStock + ')' +
-                '</span>'
-            );
-        }
+                let $row = $('#lbn_invRow_' + productId);
+                $row.attr('data-stock', finalStock);
+                let statusCell = $('#lbn_stockBadgeCell_' + productId);
 
-        // Cập nhật lại bộ đếm tổng sản phẩm sắp hết hàng (<= 5)
-        let lowStockTotal = 0;
-        $('.lbn-inv-row').each(function () {
-            let st = parseInt($(this).attr('data-stock'), 10) || 0;
-            if (st <= 5) lowStockTotal++;
+                if (finalStock <= 5) {
+                    statusCell.html(
+                        '<span class="badge badge-danger lbn-badge-low-stock px-2 py-1">' +
+                        '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (' + finalStock + ')' +
+                        '</span>'
+                    );
+                } else {
+                    statusCell.html(
+                        '<span class="badge badge-mint px-2 py-1 rounded-pill">' +
+                        '<i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (' + finalStock + ')' +
+                        '</span>'
+                    );
+                }
+
+                let lowStockTotal = 0;
+                $('.lbn-inv-row').each(function () {
+                    let st = parseInt($(this).attr('data-stock'), 10) || 0;
+                    if (st <= 5) lowStockTotal++;
+                });
+                $('#lbn_lowStockCounter').text(lowStockTotal);
+
+                alert((res && res.message) ? res.message : ('Đã cập nhật tồn kho cho mã sản phẩm ' + skuCode + ': ' + finalStock + ' sản phẩm.'));
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể cập nhật tồn kho lúc này!';
+                alert(errMsg);
+            }
         });
-        $('#lbn_lowStockCounter').text(lowStockTotal);
+    };
 
-        alert('Đã cập nhật tồn kho cho mã sản phẩm ' + skuCode + ': ' + newStock + ' sản phẩm.');
+    // Xử lý Form Nhập thêm kho nhanh dành riêng cho Nhân viên (MH 13)
+    window.lbnSubmitStaffQuickRestock = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        let productId = parseInt($('#lbn_staffRestockProductId').val(), 10) || 0;
+        let skuCode   = $('#lbn_staffRestockProductId option:selected').attr('data-sku') || ('FK-LBN-' + productId);
+        let newQty    = parseInt($('#lbn_staffRestockQty').val(), 10);
+
+        if (isNaN(newQty) || newQty < 0) {
+            alert('Số lượng tồn kho mới không được nhỏ hơn 0!');
+            return false;
+        }
+        if ($('#lbn_stockInput_' + productId).length) {
+            $('#lbn_stockInput_' + productId).val(newQty);
+        }
+        window.lbnQuickUpdateStock(productId, skuCode);
+        return false;
     };
 
     // Chuyển đổi hướng dẫn loại kích cỡ (Quần áo vs Giày dép) trong Form MH 13
@@ -712,17 +700,58 @@ $(document).ready(function () {
         window.lbnToggleSizeTypeGuide('quan_ao');
     };
 
+    // MH 13 (Admin Only): Tích hợp AJAX gọi ProductController / AdminController (sp_lbn_them_san_pham_moi)
+    // Bắt lỗi ngoại lệ chặt chẽ nếu giá bán <= 0 hoặc tồn kho < 0
     $('#lbn_formAdminProduct').on('submit', function (e) {
         e.preventDefault();
-        let prodName = $('#lbn_formProductName').val().trim();
-        let prodStock = parseInt($('#lbn_formProductStock').val(), 10) || 0;
-        let isEdit = $('#lbn_formProductId').val() !== '';
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 
-        if (isEdit) {
-            alert('Đã cập nhật thông tin sản phẩm "' + prodName + '" (Tồn kho: ' + prodStock + ') thành công!');
-        } else {
-            alert('Đã thêm mới sản phẩm "' + prodName + '" vào kho thành công!');
+        let prodName  = ($('#lbn_formProductName').val() || '').trim();
+        let rawPrice  = parseFloat($('#lbn_formProductPrice').val());
+        let rawStock  = parseInt($('#lbn_formProductStock').val(), 10);
+        let formEl    = this;
+        let $btn      = $('#lbn_btnSubmitProduct');
+
+        if (isNaN(rawPrice) || rawPrice <= 0) {
+            alert('Lỗi ngoại lệ: Đơn giá bán sản phẩm phải lớn hơn 0 VNĐ (gia_ban > 0)!');
+            $('#lbn_formProductPrice').focus();
+            return false;
         }
+        if (isNaN(rawStock) || rawStock < 0) {
+            alert('Lỗi ngoại lệ: Số lượng tồn kho không được nhỏ hơn 0 (so_luong_ton_kho >= 0)!');
+            $('#lbn_formProductStock').focus();
+            return false;
+        }
+
+        let formData = new FormData(formEl);
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu kho...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=product&a=ajaxSaveProduct',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    alert(res.message || ('Đã lưu sản phẩm "' + prodName + '" thành công!'));
+                    window.lbnResetProductForm();
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể lưu sản phẩm!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Lỗi ngoại lệ khi lưu sản phẩm vào kho!';
+                alert(errMsg);
+            }
+        });
     });
 });
 
@@ -1250,94 +1279,248 @@ $(document).ready(function () {
         window.tgbComposeFullAddress();
     }
 
+    function lnktEscapeHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function lnktFormatMysqlDt(dtStr) {
+        if (!dtStr) return '--:--';
+        let parsed = new Date(String(dtStr).replace(' ', 'T'));
+        if (isNaN(parsed.getTime())) return String(dtStr);
+        let dd = String(parsed.getDate()).padStart(2, '0');
+        let mm = String(parsed.getMonth() + 1).padStart(2, '0');
+        let yyyy = parsed.getFullYear();
+        let hh = String(parsed.getHours()).padStart(2, '0');
+        let mi = String(parsed.getMinutes()).padStart(2, '0');
+        return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + mi;
+    }
+
+    function lnktParseMysqlTs(dtStr) {
+        if (!dtStr) return Math.floor(Date.now() / 1000);
+        let parsed = new Date(String(dtStr).replace(' ', 'T'));
+        if (isNaN(parsed.getTime())) return Math.floor(Date.now() / 1000);
+        return Math.floor(parsed.getTime() / 1000);
+    }
+
+    window.lnktShowCheckoutAlert = function (type, msg) {
+        let $box = $('#lnkt_checkoutAlert');
+        if (!$box.length) return;
+        $box.removeClass('d-none alert-danger alert-mint lnkt-alert-mint-pastel text-slate');
+        if (type === 'success') {
+            $box.addClass('lnkt-alert-mint-pastel alert-mint text-slate d-block')
+                .html('<i class="fa-solid fa-circle-check text-success mr-1"></i>' + lnktEscapeHtml(msg));
+        } else {
+            $box.addClass('alert-danger d-block')
+                .html('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + lnktEscapeHtml(msg));
+        }
+    };
+
+    window.lnktApplyServerCartSummary = function (summary) {
+        if (!summary) return;
+        let items = Array.isArray(summary.items) ? summary.items : [];
+        let byKey = {};
+        items.forEach(function (it) {
+            byKey[String(it.cart_key)] = it;
+        });
+
+        $('.lnkt-cart-row').each(function () {
+            let $row = $(this);
+            let rowKey = String($row.attr('data-cart-key') || '');
+            let itemId = $row.attr('data-item-id');
+            if (!rowKey || !byKey[rowKey]) {
+                $row.remove();
+                return;
+            }
+            let srv = byKey[rowKey];
+            $row.attr('data-price', srv.price).attr('data-stock', srv.stock);
+            $('#lnkt_cartQty_' + itemId).val(srv.quantity).attr('max', Math.max(1, srv.stock || 1));
+            $('#lnkt_lineTotal_' + itemId).text(lnktFormatVnd(srv.line_total));
+        });
+
+        let lineCount = (summary.line_count !== undefined) ? summary.line_count : $('.lnkt-cart-row').length;
+        let totalQty = (summary.total_qty !== undefined) ? summary.total_qty : 0;
+        $('#lnkt_cartItemCountBadge').text(lineCount);
+        $('.cart-badge-custom').text(totalQty);
+
+        if (lineCount === 0) {
+            $('#lnkt_emptyCartNotice').removeClass('d-none');
+            $('#lnkt_btnSubmitCheckout').prop('disabled', true).addClass('disabled');
+        } else {
+            $('#lnkt_emptyCartNotice').addClass('d-none');
+            $('#lnkt_btnSubmitCheckout').prop('disabled', false).removeClass('disabled');
+            if (items[0]) {
+                $('#tgb_checkout_product_id').val(items[0].product_id);
+                $('#tgb_checkout_size').val(items[0].size);
+                $('#tgb_checkout_qty').val(items[0].quantity);
+            }
+        }
+
+        let discountAmt = Number(summary.discount_amount || 0);
+        let totalAmt = Number(summary.total_amount || 0);
+        let rewardPts = Number(summary.reward_points || 0);
+
+        $('#lnkt_summarySubtotal').text(lnktFormatVnd(summary.subtotal || 0));
+        $('#lnkt_summaryDiscount').text(discountAmt > 0 ? ('-' + lnktFormatVnd(discountAmt)) : '0 đ');
+        $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
+        $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmt));
+        if ($('#tgb_checkout_total').length) { $('#tgb_checkout_total').val(totalAmt); }
+        $('#lnkt_summaryRewardPoints').text('+' + rewardPts.toLocaleString('vi-VN') + ' điểm VIP');
+    };
+
+    function lnktSyncCartQtyWithServer(itemId, targetQty) {
+        let $inputEl = $('#lnkt_cartQty_' + itemId);
+        let $row = $('#lnkt_cartRow_' + itemId);
+        let cartKey = $row.attr('data-cart-key') || $inputEl.attr('data-cart-key') || '';
+        let qty = Math.max(1, parseInt(targetQty, 10) || 1);
+        $inputEl.val(qty);
+
+        if (!cartKey) {
+            window.lnktRecalculateCheckout();
+            return;
+        }
+
+        $('#lnkt_checkoutAlert').addClass('d-none').text('');
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxUpdateCartItem',
+            type: 'POST',
+            dataType: 'json',
+            data: { cart_key: cartKey, quantity: qty },
+            timeout: 4000,
+            success: function (res) {
+                if (res && res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                }
+            },
+            error: function (xhr) {
+                let res = xhr.responseJSON || {};
+                let msg = res.message || 'Số lượng đặt mua vượt quá tồn kho thực tế!';
+                window.lnktShowCheckoutAlert('error', msg);
+                if (res.max_for_line) {
+                    $inputEl.val(res.max_for_line);
+                }
+                if (res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                } else {
+                    window.lnktRecalculateCheckout();
+                }
+            }
+        });
+    }
+
     window.lnktChangeCartQty = function (itemId, delta) {
-        let inputEl = $('#lnkt_cartQty_' + itemId);
-        let cur = parseInt(inputEl.val(), 10) || 1;
-        let next = cur + delta;
-        if (next < 1) next = 1;
-        if (next > 20) next = 20;
-        inputEl.val(next);
-        window.lnktRecalculateCheckout();
+        let $inputEl = $('#lnkt_cartQty_' + itemId);
+        let cur = parseInt($inputEl.val(), 10) || 1;
+        let next = Math.max(1, cur + delta);
+        lnktSyncCartQtyWithServer(itemId, next);
+    };
+
+    window.lnktOnCartQtyInputChange = function (itemId) {
+        let $inputEl = $('#lnkt_cartQty_' + itemId);
+        let rawVal = parseInt($inputEl.val(), 10);
+        if (isNaN(rawVal) || rawVal < 1) {
+            rawVal = 1;
+        }
+        lnktSyncCartQtyWithServer(itemId, rawVal);
     };
 
     window.lnktRemoveCartItem = function (itemId) {
-        $('#lnkt_cartRow_' + itemId).remove();
-        window.lnktRecalculateCheckout();
+        let $row = $('#lnkt_cartRow_' + itemId);
+        let cartKey = $row.attr('data-cart-key') || '';
+        if (!cartKey) {
+            $row.remove();
+            window.lnktRecalculateCheckout();
+            return;
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxRemoveCartItem',
+            type: 'POST',
+            dataType: 'json',
+            data: { cart_key: cartKey },
+            timeout: 4000,
+            success: function (res) {
+                $row.remove();
+                if (res && res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                } else {
+                    window.lnktRecalculateCheckout();
+                }
+            },
+            error: function () {
+                window.lnktShowCheckoutAlert('error', 'Không thể xóa sản phẩm khỏi giỏ hàng lúc này. Vui lòng thử lại!');
+            }
+        });
     };
 
-    window.lnktSetCheckoutVipDiscount = function (percent, badgeLabel, btnEl) {
-        $('.lnkt-vip-tier-btn').removeClass('active btn-pastel-primary').addClass('btn-outline-secondary');
-        $(btnEl).removeClass('btn-outline-secondary').addClass('active btn-pastel-primary');
-        $('#lnkt_checkoutDiscountPercent').val(percent);
-        $('#lnkt_checkoutVipBadge').text(badgeLabel);
-        window.lnktRecalculateCheckout();
+    // Chiết khấu VIP ở trang Checkout do Server tự tính theo tài khoản (không cho đổi thủ công)
+    window.lnktSetCheckoutVipDiscount = function () {
+        return false;
     };
 
     window.lnktRecalculateCheckout = function () {
         let subtotal = 0;
         let itemCount = 0;
+        let totalQty = 0;
 
         $('.lnkt-cart-row').each(function () {
             let $row = $(this);
             let itemId = $row.attr('data-item-id');
             let price = parseInt($row.attr('data-price'), 10) || 0;
-            let qty = parseInt($('#lnkt_cartQty_' + itemId).val(), 10) || 1;
+            let qty = Math.max(1, parseInt($('#lnkt_cartQty_' + itemId).val(), 10) || 1);
             let lineTotal = price * qty;
 
             subtotal += lineTotal;
+            totalQty += qty;
             itemCount++;
             $('#lnkt_lineTotal_' + itemId).text(lnktFormatVnd(lineTotal));
         });
 
         $('#lnkt_cartItemCountBadge').text(itemCount);
-        if (itemCount === 0) {
+        if ($('.lnkt-cart-row').length === 0) {
+            $('.cart-badge-custom').text(0);
             $('#lnkt_emptyCartNotice').removeClass('d-none');
         } else {
+            $('.cart-badge-custom').text(totalQty);
             $('#lnkt_emptyCartNotice').addClass('d-none');
         }
 
         let discountPercent = parseFloat($('#lnkt_checkoutDiscountPercent').val()) || 0;
         let discountAmount = Math.round((subtotal * discountPercent) / 100);
-        let shippingFee = (subtotal > 0 && subtotal < 300000) ? 25000 : 0;
-        let totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
+        let totalAmount = Math.max(0, subtotal - discountAmount);
         let rewardPts = Math.floor(totalAmount / 10000);
 
         $('#lnkt_summarySubtotal').text(lnktFormatVnd(subtotal));
         $('#lnkt_summaryDiscount').text(discountAmount > 0 ? ('-' + lnktFormatVnd(discountAmount)) : '0 đ');
-        if (shippingFee === 0) {
-            $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
-        } else {
-            $('#lnkt_summaryShipping').text(lnktFormatVnd(shippingFee)).removeClass('badge-mint').addClass('badge-warning');
-        }
+        $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
         $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmount));
         if ($('#tgb_checkout_total').length) { $('#tgb_checkout_total').val(totalAmount); }
-        $('#lnkt_summaryRewardPoints').text('+' + rewardPts + ' điểm VIP');
+        $('#lnkt_summaryRewardPoints').text('+' + rewardPts.toLocaleString('vi-VN') + ' điểm VIP');
     };
 
     // ------------------------------------------------------------------------
     // 4. MH 06: Theo dõi Tiến trình Đơn hàng Stepper 5 Bước (order-tracking.php)
     // ------------------------------------------------------------------------
-    window.lnktSetTrackingStatus = function (statusKey) {
+    window.lnktSetTrackingStatus = function (statusKey, isOwner) {
         const orderFlow = ['cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat'];
         const statusMeta = {
             'cho_duyet':   { label: 'Chờ duyệt',     badgeClass: 'badge-warning text-dark', icon: 'fa-clock' },
-            'da_xac_nhan': { label: 'Đã xác nhận', badgeClass: 'badge-sky',               icon: 'fa-box-open' },
+            'da_xac_nhan': { label: 'Đã xác nhận',   badgeClass: 'badge-sky',               icon: 'fa-box-open' },
             'dang_giao':   { label: 'Đang giao',     badgeClass: 'badge-primary',           icon: 'fa-truck-fast' },
-            'hoan_tat':    { label: 'Hoàn tất',       badgeClass: 'badge-mint',              icon: 'fa-circle-check' },
-            'da_huy':      { label: 'Đã hủy',           badgeClass: 'badge-danger',            icon: 'fa-ban' }
+            'hoan_tat':    { label: 'Hoàn tất',      badgeClass: 'badge-mint',              icon: 'fa-circle-check' },
+            'da_huy':      { label: 'Đã hủy',        badgeClass: 'badge-danger',            icon: 'fa-ban' }
         };
 
-        // Cập nhật nút mô phỏng trạng thái
-        $('.lnkt-status-sim-btn').removeClass('active btn-success btn-danger btn-primary btn-info btn-secondary');
-        $('.lnkt-status-sim-btn[data-status="' + statusKey + '"]').addClass('active');
-
-        // Cập nhật Badge trạng thái chính
-        let meta = statusMeta[statusKey] || statusMeta['hoan_tat'];
+        let meta = statusMeta[statusKey] || statusMeta['cho_duyet'];
         $('#lnkt_currentStatusBadge')
-            .attr('class', 'badge px-3 py-2 rounded-pill h6 mb-0 ' + meta.badgeClass)
+            .attr('class', 'badge px-3 py-2 rounded-pill h6 mb-1 ' + meta.badgeClass)
             .html('<i class="fa-solid ' + meta.icon + ' mr-1"></i> Trạng thái: ' + meta.label);
 
-        // Cập nhật Stepper 5 bước
+        $('#lnkt_stepperTimeline').attr('data-current-status', statusKey);
         $('.lnkt-stepper-item').removeClass('completed active cancelled');
         if (statusKey === 'da_huy') {
             $('#lnkt_step_cho_duyet').addClass('completed');
@@ -1354,35 +1537,543 @@ $(document).ready(function () {
             });
         }
 
-        // Kích hoạt hiển thị nút vàng bơ (#FDE2B8) "★ Viết đánh giá sản phẩm" khi đạt trạng thái hoan_tat
         if (statusKey === 'hoan_tat') {
             $('#lnkt_completedReviewBanner').removeClass('d-none');
-            $('.lnkt-item-review-btn').removeClass('d-none');
-            $('.lnkt-item-pending-review').addClass('d-none');
+            if (isOwner === false) {
+                $('#lnkt_bannerReviewBtnWrap').empty();
+            }
         } else {
             $('#lnkt_completedReviewBanner').addClass('d-none');
-            $('.lnkt-item-review-btn').addClass('d-none');
-            $('.lnkt-item-pending-review').removeClass('d-none');
+        }
+    };
+
+    window.lnktCopyBankText = function (text, btnEl) {
+        let val = String(text || '').trim();
+        if (!val) return;
+        let finishUi = function () {
+            if (!btnEl) return;
+            let $b = $(btnEl);
+            let orig = $b.data('orig-html') || $b.html();
+            $b.data('orig-html', orig);
+            $b.html('<i class="fa-solid fa-check text-success mr-1"></i>Đã chép');
+            setTimeout(function () {
+                $b.html(orig);
+            }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val).then(finishUi).catch(function () {
+                let $tmp = $('<textarea>').val(val).appendTo('body').select();
+                try { document.execCommand('copy'); } catch (e) {}
+                $tmp.remove();
+                finishUi();
+            });
+        } else {
+            let $tmp = $('<textarea>').val(val).appendTo('body').select();
+            try { document.execCommand('copy'); } catch (e) {}
+            $tmp.remove();
+            finishUi();
+        }
+    };
+
+    window.lnktRenderTrackedOrder = function (payload) {
+        if (!payload || !payload.order) return;
+        let ord = payload.order;
+        let oid = parseInt(ord.ma_don_hang, 10) || 0;
+        let ocode = ord.ma_van_don || ('FK-ORD-' + String(oid).padStart(6, '0'));
+        let statusKey = ord.trang_thai_don_hang || 'cho_duyet';
+        let isOwner = !!payload.is_owner;
+        let canCancel = !!payload.can_cancel;
+        let canConfirmQr = !!payload.can_confirm_qr;
+        let canSwitch = !!payload.can_switch_payment;
+        let payMethod = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+        let payStatus = (ord.trang_thai_thanh_toan || 'chua_thanh_toan').toLowerCase();
+        let isPaid = (!!ord.is_paid || payStatus === 'da_thanh_toan');
+        let isExpired = !!ord.is_payment_expired;
+        let createdLabel = lnktFormatMysqlDt(ord.ngay_dat_hang);
+        let updatedLabel = ord.ngay_cap_nhat ? lnktFormatMysqlDt(ord.ngay_cap_nhat) : createdLabel;
+        let deadlineLabel = ord.han_thanh_toan ? lnktFormatMysqlDt(ord.han_thanh_toan) : '--:--';
+        let createdTs = parseInt(ord.created_ts, 10) || lnktParseMysqlTs(ord.ngay_dat_hang);
+        let deadlineTs = parseInt(ord.han_thanh_toan_ts, 10) || (createdTs + 86400);
+        let fullAddress = [ord.dia_chi_giao_hang, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
+        let totalAmt = Number(ord.tong_tien_thanh_toan || 0);
+        let subtotalAmt = Number(ord.tien_hang_tam_tinh || 0);
+        let discountAmt = Number(ord.tien_giam_gia || 0);
+        let codCollectAmt = (ord.cod_collect_amount !== undefined)
+            ? Number(ord.cod_collect_amount)
+            : ((isPaid || statusKey === 'da_huy') ? 0 : totalAmt);
+        let rewardPts = Math.floor(totalAmt / 10000);
+        let transferMemo = ord.noi_dung_chuyen_khoan || ('FK' + oid);
+
+        $('#lnkt_order_tracking_section')
+            .attr('data-order-id', oid)
+            .attr('data-order-created-ts', createdTs)
+            .attr('data-deadline-ts', deadlineTs)
+            .attr('data-payment-method', payMethod)
+            .attr('data-payment-status', payStatus)
+            .attr('data-is-expired', isExpired ? '1' : '0');
+        $('#lnkt_trackingEmptyCard').addClass('d-none');
+        $('#lnkt_trackingContentWrap').removeClass('d-none');
+
+        $('#lnkt_displayOrderCode').text('#' + ocode);
+        $('#lnkt_receiverMeta').html(
+            'Người nhận: <strong>' + lnktEscapeHtml(ord.ten_nguoi_nhan) + '</strong> (' +
+            lnktEscapeHtml(ord.so_dien_thoai_nhan) + ') • ' + lnktEscapeHtml(fullAddress)
+        );
+        $('#lnkt_createdTimeMeta').html('Ngày đặt: <strong>' + lnktEscapeHtml(createdLabel) + '</strong>');
+        $('#lnkt_staffMeta').html('Nhân viên phụ trách: <strong>' + lnktEscapeHtml(ord.nhan_vien_phu_trach || 'Đang chờ tiếp nhận') + '</strong>');
+
+        if (canCancel) {
+            $('#lnkt_ownerCancelBar').removeClass('d-none');
+            $('#lnkt_btnCancelMyOrder').attr('onclick', 'lnktCancelMyOrder(' + oid + ')').prop('disabled', false);
+        } else {
+            $('#lnkt_ownerCancelBar').addClass('d-none');
+        }
+
+        $('.lnkt-stepper-time').text('--:--');
+        $('#lnkt_stepTime_cho_duyet').text(createdLabel);
+        $('#lnkt_stepTime_' + statusKey).text(updatedLabel);
+        window.lnktSetTrackingStatus(statusKey, isOwner);
+
+        // 1. Panel VietQR (chỉ hiện khi chọn VietQR và CHƯA thanh toán, CHƯA hủy)
+        if (payMethod === 'vietqr' && !isPaid && statusKey !== 'da_huy') {
+            $('#lnkt_vietQrPanel').removeClass('d-none');
+            if (ord.qr_url) {
+                $('#lnkt_vietQrImg').attr('src', ord.qr_url);
+            }
+            $('#lnkt_qrDeadlineLabel').text(deadlineLabel);
+            $('#lnkt_vietQrAmount').text(lnktFormatVnd(totalAmt));
+            $('#lnkt_vietQrContent').text(transferMemo);
+            $('#lnkt_btnCopyAmount').attr('onclick', "lnktCopyBankText('" + Math.round(totalAmt) + "', this)");
+            $('#lnkt_btnCopyMemo').attr('onclick', "lnktCopyBankText('" + lnktEscapeHtml(transferMemo) + "', this)");
+
+            if (canConfirmQr || canSwitch) {
+                $('#lnkt_vietQrActionRow').removeClass('d-none');
+            } else {
+                $('#lnkt_vietQrActionRow').addClass('d-none');
+            }
+            $('#lnkt_btnConfirmVietQr')
+                .toggleClass('d-none', !canConfirmQr)
+                .attr('onclick', 'lnktCheckVietQrPayment(' + oid + ', true)')
+                .prop('disabled', false);
+            $('#lnkt_btnSwitchToCod')
+                .toggleClass('d-none', !canSwitch)
+                .attr('onclick', "lnktSwitchOrderPaymentMethod(" + oid + ", 'cod')")
+                .prop('disabled', false);
+
+            if (payload.check_result && payload.check_result.status === 'underpaid' && payload.check_result.message) {
+                $('#lnkt_vietQrAlert')
+                    .removeClass('d-none alert-mint text-slate')
+                    .addClass('alert-danger d-block')
+                    .html('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + lnktEscapeHtml(payload.check_result.message));
+            }
+        } else {
+            $('#lnkt_vietQrPanel').addClass('d-none');
+        }
+
+        // 2. Banner Đã thanh toán hoàn tất (Thu hộ bưu tá: 0 đồng)
+        if (isPaid) {
+            $('#lnkt_paidReceiptBanner').removeClass('d-none');
+            if (ord.ma_giao_dich_ngan_hang) {
+                let paidTimeStr = ord.thoi_gian_thanh_toan ? (' • Lúc ' + lnktFormatMysqlDt(ord.thoi_gian_thanh_toan)) : '';
+                $('#lnkt_paidTxMeta').text('MB Bank • Mã GD: ' + ord.ma_giao_dich_ngan_hang + paidTimeStr);
+            } else {
+                $('#lnkt_paidTxMeta').text('Đã ghi nhận thanh toán thành công trên hệ thống FashionKids');
+            }
+            let paidMethodText = (payMethod === 'vietqr') ? 'chuyển khoản MB Bank' : 'tiền mặt hoàn tất';
+            $('#lnkt_paidHeadline').text('Shop đã nhận đủ ' + Math.round(totalAmt).toLocaleString('vi-VN') + ' đồng qua ' + paidMethodText);
+        } else {
+            $('#lnkt_paidReceiptBanner').addClass('d-none');
+        }
+
+        // 3. Panel Tiền mặt COD (khi chọn COD & chưa hoàn tất/hủy)
+        if (payMethod === 'cod' && !isPaid && statusKey !== 'da_huy') {
+            $('#lnkt_codPaymentPanel').removeClass('d-none');
+            $('#lnkt_codPanelAmount').text(Math.round(totalAmt).toLocaleString('vi-VN') + ' đồng');
+            $('#lnkt_btnSwitchToVietQr')
+                .toggleClass('d-none', !canSwitch)
+                .attr('onclick', "lnktSwitchOrderPaymentMethod(" + oid + ", 'vietqr')")
+                .prop('disabled', false);
+        } else {
+            $('#lnkt_codPaymentPanel').addClass('d-none');
+        }
+
+        // 4. Banner Quá hạn 24h tự hủy
+        if (statusKey === 'da_huy' && isExpired) {
+            $('#lnkt_expiredPaymentBanner').removeClass('d-none');
+        } else {
+            $('#lnkt_expiredPaymentBanner').addClass('d-none');
+        }
+
+        $('#lnkt_completedPointsText').text(
+            'Đã tích lũy +' + rewardPts.toLocaleString('vi-VN') + ' điểm thưởng vào thẻ VIP ' + (ord.khach_hang_hang || 'thành viên')
+        );
+
+        let items = Array.isArray(ord.items) ? ord.items : [];
+        $('#lnkt_trackedItemsCountLabel').text(items.length + ' sản phẩm');
+
+        let firstPending = null;
+        let rowsHtml = '';
+        items.forEach(function (it) {
+            let pid = parseInt(it.ma_san_pham, 10) || 0;
+            let qty = parseInt(it.so_luong, 10) || 1;
+            let unitP = Number(it.don_gia_mua || 0);
+            let lineSum = qty * unitP;
+            let reviewed = !!it.da_danh_gia;
+            if (!reviewed && !firstPending) {
+                firstPending = it;
+            }
+
+            let safeName = lnktEscapeHtml(it.ten_san_pham);
+            let safeJsName = String(it.ten_san_pham || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            let reviewCell = '';
+            if (statusKey === 'hoan_tat' && isOwner) {
+                if (reviewed) {
+                    reviewCell = '<span class="badge badge-mint px-2 py-1 rounded-pill font-weight-bold"><i class="fa-solid fa-star text-warning mr-1"></i>Đã đánh giá (' + (parseInt(it.so_sao_danh_gia, 10) || 5) + '/5)</span>';
+                } else {
+                    reviewCell = '<button type="button" class="btn btn-sm lnkt-btn-buttercup lnkt-item-review-btn px-3 py-1 font-weight-bold shadow-sm" data-toggle="modal" data-target="#modalReview" onclick="lnktOpenProductReviewModal(\'' + lnktEscapeHtml(safeJsName) + '\', ' + pid + ', ' + oid + ')">&#9733; Viết đánh giá sản phẩm</button>';
+                }
+            } else if (statusKey === 'da_huy') {
+                reviewCell = '<span class="small text-muted-custom">Đơn đã hủy</span>';
+            } else if (statusKey === 'hoan_tat' && !isOwner) {
+                reviewCell = '<span class="small text-muted-custom">Chỉ chủ đơn mới đánh giá</span>';
+            } else {
+                reviewCell = '<span class="small text-muted-custom lnkt-item-pending-review">Chờ hoàn tất đơn</span>';
+            }
+
+            rowsHtml +=
+                '<tr>' +
+                    '<td>' +
+                        '<div class="d-flex align-items-center">' +
+                            '<span class="lbn-inv-thumb mr-3 flex-shrink-0"><img src="' + lnktEscapeHtml(it.image || '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg') + '" alt="' + safeName + '" class="lbn-thumb-img"></span>' +
+                            '<div>' +
+                                '<a href="/FashionKids/views/pages/product-detail.php?id=' + pid + '" class="font-weight-bold text-slate text-decoration-none d-block">' + safeName + '</a>' +
+                                '<small class="text-muted-custom">Đơn giá: <strong class="text-slate">' + lnktFormatVnd(unitP) + '</strong></small>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="text-center"><span class="badge badge-pill badge-sky px-2 py-1">' + lnktEscapeHtml(it.kich_co_chon) + '</span></td>' +
+                    '<td class="text-center font-weight-bold">x' + qty + '</td>' +
+                    '<td class="text-right font-weight-bold text-peach text-nowrap">' + lnktFormatVnd(lineSum) + '</td>' +
+                    '<td class="text-center text-nowrap" data-review-cell-pid="' + pid + '">' + reviewCell + '</td>' +
+                '</tr>';
+        });
+        $('#lnkt_trackedItemsBody').html(rowsHtml);
+
+        if (statusKey === 'hoan_tat' && isOwner && firstPending) {
+            let safeFirstJs = String(firstPending.ten_san_pham || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            $('#lnkt_bannerReviewBtnWrap').html(
+                '<button type="button" class="btn lnkt-btn-buttercup px-4 py-2 shadow-sm font-weight-bold" data-toggle="modal" data-target="#modalReview" onclick="lnktOpenProductReviewModal(\'' + lnktEscapeHtml(safeFirstJs) + '\', ' + (parseInt(firstPending.ma_san_pham, 10) || 0) + ', ' + oid + ')">&#9733; Viết đánh giá sản phẩm</button>'
+            );
+        } else {
+            $('#lnkt_bannerReviewBtnWrap').empty();
+        }
+
+        $('#lnkt_sumSubtotal').text(lnktFormatVnd(subtotalAmt));
+        $('#lnkt_sumVipLabel').text('Ưu đãi VIP (' + (ord.khach_hang_hang || 'Thành viên') + '):');
+        $('#lnkt_sumDiscount').text(discountAmt > 0 ? ('-' + lnktFormatVnd(discountAmt)) : '0 đ');
+        $('#lnkt_sumPaymentMethod').text(payMethod === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thanh toán khi nhận hàng (COD)');
+        $('#lnkt_sumPaymentStatus')
+            .removeClass('text-success text-danger text-warning')
+            .addClass(isPaid ? 'text-success' : (isExpired ? 'text-danger' : 'text-warning'))
+            .text(isPaid ? 'Đã thanh toán' : (isExpired ? 'Quá hạn 24h (Đã hủy)' : (payMethod === 'vietqr' ? 'Chờ chuyển khoản' : 'Thanh toán khi giao')));
+        $('#lnkt_sumCodCollect')
+            .removeClass('text-success text-peach')
+            .addClass(codCollectAmt <= 0 ? 'text-success' : 'text-peach')
+            .text(Math.round(codCollectAmt).toLocaleString('vi-VN') + ' đồng');
+        $('#lnkt_sumTotal').text(lnktFormatVnd(totalAmt));
+        $('#lnkt_sumAddress').text(fullAddress);
+
+        if (ord.ghi_chu) {
+            $('#lnkt_sumNoteWrap').removeClass('d-none');
+            $('#lnkt_sumNote').text(ord.ghi_chu);
+        } else {
+            $('#lnkt_sumNoteWrap').addClass('d-none');
+            $('#lnkt_sumNote').text('');
+        }
+
+        // Đồng bộ danh sách pill đơn hàng gần đây
+        $('.lnkt-order-history-pill').removeClass('btn-pastel-primary active').addClass('btn-light border text-slate');
+        let $activePill = $('.lnkt-order-history-pill[data-order-id="' + oid + '"]');
+        if ($activePill.length) {
+            $activePill.removeClass('btn-light border text-slate').addClass('btn-pastel-primary active');
+            if (ord.status_meta && ord.status_meta.label) {
+                $activePill.find('.badge').text(ord.status_meta.label);
+            }
         }
     };
 
     if ($('#lnkt_stepperTimeline').length) {
-        let initSt = $('#lnkt_stepperTimeline').attr('data-current-status') || 'hoan_tat';
-        window.lnktSetTrackingStatus(initSt);
+        let initSt = $('#lnkt_stepperTimeline').attr('data-current-status') || 'cho_duyet';
+        let initHasOwnerCancel = !$('#lnkt_ownerCancelBar').hasClass('d-none') || $('.lnkt-item-review-btn').length > 0;
+        window.lnktSetTrackingStatus(initSt, initHasOwnerCancel || $('body').attr('data-user-role') !== 'guest');
+    }
+
+    function lnktShowTrackingAlert(type, msg) {
+        let $box = $('#lnkt_trackingAlert');
+        if (!$box.length) return;
+        $box.removeClass('d-none alert-danger alert-mint lnkt-alert-mint-pastel text-slate');
+        if (type === 'success') {
+            $box.addClass('lnkt-alert-mint-pastel alert-mint text-slate d-block')
+                .html('<i class="fa-solid fa-circle-check text-success mr-1"></i>' + lnktEscapeHtml(msg));
+        } else {
+            $box.addClass('alert-danger d-block')
+                .html('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + lnktEscapeHtml(msg));
+        }
     }
 
     window.lnktSearchOrderTracking = function () {
-        let code = ($('#lnkt_trackingCodeInput').val() || 'FK-ORD-202608').trim();
-        $('#lnkt_displayOrderCode').text('#' + code.replace(/^#/, ''));
-        alert('Đã tải dữ liệu hành trình thời gian thực cho mã vận đơn #' + code.replace(/^#/, '') + '!');
+        let query = ($('#lnkt_trackingCodeInput').val() || '').trim();
+        if (!query) {
+            lnktShowTrackingAlert('error', 'Vui lòng nhập Mã vận đơn (VD: FK-ORD-000001) hoặc Số điện thoại đặt hàng.');
+            return;
+        }
+        $('#lnkt_trackingAlert').addClass('d-none').text('');
+        let $btn = $('#lnkt_btnTrackSearch');
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tìm...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxTrackOrder',
+            type: 'GET',
+            dataType: 'json',
+            data: { q: query },
+            timeout: 15000,
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                if (res && res.status === 'success' && res.data) {
+                    window.lnktRenderTrackedOrder(res.data);
+                } else {
+                    lnktShowTrackingAlert('error', (res && res.message) ? res.message : 'Không tìm thấy đơn hàng phù hợp!');
+                }
+            },
+            error: function (xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không tìm thấy đơn hàng khớp với mã vận đơn hoặc số điện thoại vừa nhập!';
+                lnktShowTrackingAlert('error', msg);
+            }
+        });
     };
 
-    window.lnktOpenProductReviewModal = function (productName, productId) {
+    window.lnktLoadTrackedOrderById = function (orderId) {
+        $('#lnkt_trackingAlert').addClass('d-none').text('');
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxTrackOrder',
+            type: 'GET',
+            dataType: 'json',
+            data: { order_id: orderId },
+            timeout: 15000,
+            success: function (res) {
+                if (res && res.status === 'success' && res.data && res.data.order) {
+                    $('#lnkt_trackingCodeInput').val(res.data.order.ma_van_don || orderId);
+                    window.lnktRenderTrackedOrder(res.data);
+                }
+            },
+            error: function () {
+                lnktShowTrackingAlert('error', 'Không thể tải chi tiết đơn hàng #' + orderId);
+            }
+        });
+    };
+
+    $('#lnkt_trackingCodeInput').on('keypress', function (e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            window.lnktSearchOrderTracking();
+        }
+    });
+
+    window.lnktCheckVietQrPayment = function (orderId, isManual) {
+        let $btn = $('#lnkt_btnConfirmVietQr');
+        let $alert = $('#lnkt_vietQrAlert');
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang kiểm tra MB Bank...');
+        $alert.addClass('d-none').removeClass('alert-danger alert-mint alert-warning text-slate');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxCheckVietQrPayment',
+            type: 'POST',
+            dataType: 'json',
+            data: { order_id: orderId, manual: (isManual !== false ? 1 : 0) },
+            timeout: 15000,
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                if (res && res.data) {
+                    window.lnktRenderTrackedOrder(res.data);
+                }
+                if (res && res.paid) {
+                    lnktShowTrackingAlert('success', res.message || 'Thanh toán thành công! Số tiền cần thanh toán khi nhận hàng: 0 đồng.');
+                    return;
+                }
+                let st = res ? res.check_status : 'pending';
+                let msg = (res && res.message) ? res.message : 'Chưa phát hiện giao dịch chuyển khoản mới.';
+                if (st === 'expired') {
+                    lnktShowTrackingAlert('error', msg);
+                    return;
+                }
+                $alert
+                    .removeClass('d-none')
+                    .addClass((st === 'underpaid' ? 'alert-danger' : 'alert-warning text-slate') + ' d-block')
+                    .html('<i class="fa-solid ' + (st === 'underpaid' ? 'fa-triangle-exclamation' : 'fa-circle-info') + ' mr-1"></i>' + lnktEscapeHtml(msg));
+            },
+            error: function (xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể kết nối máy chủ đối soát MB Bank lúc này.';
+                $alert.removeClass('d-none').addClass('alert-danger d-block').text(msg);
+            }
+        });
+    };
+
+    window.lnktConfirmVietQr = function (orderId) {
+        return window.lnktCheckVietQrPayment(orderId, true);
+    };
+
+    window.lnktSwitchOrderPaymentMethod = function (orderId, targetMethod) {
+        let confirmMsg = (targetMethod === 'cod')
+            ? 'Bạn muốn chuyển đơn hàng #' + orderId + ' sang Thanh toán tiền mặt khi nhận hàng (COD)?'
+            : 'Bạn muốn chuyển đơn hàng #' + orderId + ' sang Quét mã VietQR MB Bank (tự động xác nhận khi chuyển đủ tiền)?';
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        let $btn = targetMethod === 'cod' ? $('#lnkt_btnSwitchToCod') : $('#lnkt_btnSwitchToVietQr');
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang chuyển...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxSwitchPaymentMethod',
+            type: 'POST',
+            dataType: 'json',
+            data: { order_id: orderId, payment_method: targetMethod },
+            timeout: 8000,
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                if (res && res.data) {
+                    window.lnktRenderTrackedOrder(res.data);
+                }
+                lnktShowTrackingAlert('success', (res && res.message) ? res.message : 'Đã thay đổi phương thức thanh toán thành công!');
+            },
+            error: function (xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể thay đổi phương thức thanh toán lúc này.';
+                lnktShowTrackingAlert('error', msg);
+            }
+        });
+    };
+
+    window.lnktCancelMyOrder = function (orderId) {
+        if (!confirm('Bạn chắc chắn muốn hủy đơn hàng #' + orderId + '? Sản phẩm sẽ được hoàn trả tự động về kho hàng.')) {
+            return;
+        }
+        let $btn = $('#lnkt_btnCancelMyOrder');
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxCancelMyOrder',
+            type: 'POST',
+            dataType: 'json',
+            data: { order_id: orderId },
+            timeout: 6000,
+            complete: function () {
+                $btn.prop('disabled', false);
+            },
+            success: function (res) {
+                lnktShowTrackingAlert('success', (res && res.message) ? res.message : 'Đã hủy đơn hàng và hoàn kho thành công!');
+                window.lnktLoadTrackedOrderById(orderId);
+            },
+            error: function (xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể hủy đơn hàng này.';
+                lnktShowTrackingAlert('error', msg);
+            }
+        });
+    };
+
+    if ($('#lnkt_order_tracking_section').length) {
+        let lnktExpiredCheckFiredForOrder = 0;
+        let lnktTrackPollInFlight = false;
+
+        function lnktUpdateQrCountdownTick() {
+            if ($('#lnkt_vietQrPanel').hasClass('d-none') || $('#lnkt_vietQrCountdownWrap').hasClass('d-none')) {
+                return;
+            }
+            let $sec = $('#lnkt_order_tracking_section');
+            let oid = parseInt($sec.attr('data-order-id'), 10) || 0;
+            let deadlineTs = parseInt($sec.attr('data-deadline-ts'), 10) || 0;
+            if (!deadlineTs) {
+                let createdTs = parseInt($sec.attr('data-order-created-ts'), 10) || Math.floor(Date.now() / 1000);
+                deadlineTs = createdTs + 86400;
+            }
+            let remaining = Math.max(0, deadlineTs - Math.floor(Date.now() / 1000));
+            let hh = String(Math.floor(remaining / 3600)).padStart(2, '0');
+            let mm = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+            let ss = String(remaining % 60).padStart(2, '0');
+            $('#lnkt_qrCountdown').text(hh + ':' + mm + ':' + ss);
+
+            if (remaining === 0 && oid > 0 && lnktExpiredCheckFiredForOrder !== oid) {
+                lnktExpiredCheckFiredForOrder = oid;
+                window.lnktLoadTrackedOrderById(oid);
+            }
+        }
+        lnktUpdateQrCountdownTick();
+        setInterval(lnktUpdateQrCountdownTick, 1000);
+
+        // Tự động đồng bộ tiến trình & kiểm tra Casso MB Bank mỗi 5 giây khi đơn chưa kết thúc
+        setInterval(function () {
+            if (lnktTrackPollInFlight) return;
+            let oid = parseInt($('#lnkt_order_tracking_section').attr('data-order-id'), 10) || 0;
+            let curSt = $('#lnkt_stepperTimeline').attr('data-current-status') || '';
+            let wasPaid = ($('#lnkt_order_tracking_section').attr('data-payment-status') === 'da_thanh_toan');
+            if (oid > 0 && curSt !== 'hoan_tat' && curSt !== 'da_huy') {
+                lnktTrackPollInFlight = true;
+                $.ajax({
+                    url: '/FashionKids/index.php?c=order&a=ajaxTrackOrder',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { order_id: oid },
+                    timeout: 12000,
+                    complete: function () {
+                        lnktTrackPollInFlight = false;
+                    },
+                    success: function (res) {
+                        if (res && res.status === 'success' && res.data) {
+                            window.lnktRenderTrackedOrder(res.data);
+                            let nowPaid = !!(res.data.order && res.data.order.is_paid);
+                            if (!wasPaid && nowPaid) {
+                                lnktShowTrackingAlert('success', res.message || 'Đã tự động đối soát thanh toán MB Bank thành công! Số tiền cần thu khi nhận hàng: 0 đồng.');
+                            }
+                        }
+                    }
+                });
+            }
+        }, 5000);
+    }
+
+    window.lnktOpenProductReviewModal = function (productName, productId, orderId) {
+        $('#modalReview').attr('data-context-lock', '1');
         $('#lnkt_reviewModalProductName').text(productName);
         if (productId && parseInt(productId, 10) > 0 && $('#tgb_review_product_id').length) {
             $('#tgb_review_product_id').val(parseInt(productId, 10));
         }
-        if ($('#modalReview').length === 0) {
+        if ($('#tgb_review_order_id').length) {
+            $('#tgb_review_order_id').val(parseInt(orderId, 10) || 0);
+        }
+        if ($('#tgb_reviewProductContext').length) {
+            if (productName) {
+                $('#tgb_reviewProductContext')
+                    .removeClass('d-none')
+                    .html('<i class="fa-solid fa-box-open text-peach mr-1"></i>Sản phẩm: <strong>' + lnktEscapeHtml(productName) + '</strong>');
+            } else {
+                $('#tgb_reviewProductContext').addClass('d-none').text('');
+            }
+        }
+        if ($('#modalReview').length === 0 && $('#lnkt_fallbackReviewModal').length) {
             $('#lnkt_fallbackReviewModal').modal('show');
         }
     };
@@ -1396,6 +2087,221 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------
     // 5. MH 10: Bàn làm việc Quản trị Đơn hàng của Nhân viên (staff-orders.php)
     // ------------------------------------------------------------------------
+    let lnktOrderSoundEnabled = true;
+
+    window.lnktPlayNewOrderChime = function () {
+        if (!lnktOrderSoundEnabled) return;
+        try {
+            let AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            let ctx = new AudioCtx();
+            let now = ctx.currentTime;
+            [523.25, 659.25, 783.99].forEach(function (freq, idx) {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+                gain.gain.setValueAtTime(0.08, now + idx * 0.11);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now + idx * 0.11);
+                osc.stop(now + idx * 0.11 + 0.26);
+            });
+        } catch (err) {}
+    };
+
+    window.lnktToggleOrderSound = function () {
+        lnktOrderSoundEnabled = !lnktOrderSoundEnabled;
+        let $btn = $('#lnkt_btnToggleSound');
+        if (lnktOrderSoundEnabled) {
+            $btn.html('<i class="fa-solid fa-volume-high text-peach mr-1"></i>Âm báo: Bật');
+            window.lnktPlayNewOrderChime();
+        } else {
+            $btn.html('<i class="fa-solid fa-volume-xmark text-muted mr-1"></i>Âm báo: Tắt');
+        }
+    };
+
+    window.lnktAcknowledgeNewOrders = function () {
+        $('#new_order_count').text('0');
+        $('#new_order_badge').addClass('d-none');
+    };
+
+    function lnktShowStaffOrderAlert(type, msg) {
+        let $box = $('#lnkt_staffOrderAlert');
+        if (!$box.length) return;
+        $box.removeClass('d-none alert-danger alert-mint lnkt-alert-mint-pastel text-slate');
+        if (type === 'success') {
+            $box.addClass('lnkt-alert-mint-pastel alert-mint text-slate d-block')
+                .html('<i class="fa-solid fa-circle-check text-success mr-1"></i>' + lnktEscapeHtml(msg));
+        } else {
+            $box.addClass('alert-danger d-block')
+                .html('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + lnktEscapeHtml(msg));
+        }
+    }
+
+    function lnktBuildStaffStatusBadgeHtml(uiStatus) {
+        if (uiStatus === 'cho_duyet') {
+            return '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
+        }
+        if (uiStatus === 'da_xac_nhan') {
+            return '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
+        }
+        if (uiStatus === 'dang_giao') {
+            return '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
+        }
+        if (uiStatus === 'hoan_tat') {
+            return '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
+        }
+        if (uiStatus === 'da_huy') {
+            return '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
+        }
+        return '<span class="badge badge-secondary px-2 py-1 rounded-pill">' + lnktEscapeHtml(uiStatus) + '</span>';
+    }
+
+    function lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid) {
+        let safeCode = String(ocode || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        if (st === 'cho_duyet' && pm === 'vietqr' && !isPaid) {
+            return (
+                '<button type="button" class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktStaffVerifyOrderPayment(' + oid + ', this)"><i class="fa-solid fa-rotate mr-1"></i>Kiểm tra Casso MB</button>' +
+                '<button type="button" class="btn btn-outline-secondary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" disabled title="Đơn VietQR chưa nhận đủ tiền qua MB Bank — Shop tự động không xác nhận"><i class="fa-solid fa-lock mr-1"></i>Chờ CK để xác nhận</button>'
+            );
+        }
+        if (st === 'cho_duyet') {
+            return '<button type="button" class="btn btn-outline-info btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'da_xac_nhan\')"><i class="fa-solid fa-box-open mr-1"></i>Tiếp nhận &amp; Xác nhận</button>';
+        }
+        if (st === 'da_xac_nhan') {
+            return '<button type="button" class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'dang_giao\')"><i class="fa-solid fa-truck-fast mr-1"></i>Chuyển Giao Hàng</button>';
+        }
+        if (st === 'dang_giao') {
+            return '<button type="button" class="btn btn-outline-success btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'hoan_tat\')"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn Tất &amp; Tích Điểm</button>';
+        }
+        return '<small class="text-muted-custom d-block mb-1">Đã khóa chỉnh sửa</small>';
+    }
+
+    function lnktRenderStaffPaymentBadgesHtml(ord) {
+        let pm = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+        let st = ord.trang_thai_don_hang || 'cho_duyet';
+        let isPaid = (!!ord.is_paid || (ord.trang_thai_thanh_toan || '') === 'da_thanh_toan');
+        let isExpired = !!ord.is_payment_expired;
+        let remSec = parseInt(ord.remaining_seconds, 10) || 0;
+        let remHrs = remSec > 0 ? Math.ceil(remSec / 3600) : 0;
+        let txCode = ord.ma_giao_dich_ngan_hang || '';
+
+        let html = '<span class="badge ' + (pm === 'vietqr' ? 'badge-sky' : 'badge-light border') + ' small py-0 px-2 rounded-pill">' + (pm === 'vietqr' ? 'VietQR MB' : 'COD') + '</span> ';
+        if (isPaid) {
+            html += '<span class="badge badge-mint small py-0 px-2 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Đã TT • Thu 0 đ</span>';
+            if (txCode) {
+                html += '<small class="d-block text-success font-weight-bold">GD: ' + lnktEscapeHtml(txCode) + '</small>';
+            }
+        } else if (st === 'da_huy' && isExpired) {
+            html += '<span class="badge badge-danger small py-0 px-2 rounded-pill">Quá hạn 24h</span>';
+        } else if (pm === 'vietqr') {
+            html += '<span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">Chờ CK (còn ~' + remHrs + 'h)</span>';
+        } else {
+            html += '<span class="badge badge-butter small py-0 px-2 rounded-pill">Thu tiền mặt</span>';
+        }
+        return html;
+    }
+
+    function lnktRenderStaffCollectHtml(ord) {
+        let pm = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+        let st = ord.trang_thai_don_hang || 'cho_duyet';
+        let isPaid = (!!ord.is_paid || (ord.trang_thai_thanh_toan || '') === 'da_thanh_toan');
+        let totalF = lnktFormatVnd(ord.tong_tien_thanh_toan || 0);
+        if (isPaid) {
+            return '<small class="text-success font-weight-bold">Thu hộ: 0 đ</small>';
+        }
+        if (st === 'da_huy') {
+            return '<small class="text-danger font-weight-bold">Đã hủy (0 đ)</small>';
+        }
+        if (pm === 'vietqr') {
+            return '<small class="text-warning font-weight-bold">Chờ CK: ' + lnktEscapeHtml(totalF) + '</small>';
+        }
+        return '<small class="text-peach font-weight-bold">Thu hộ: ' + lnktEscapeHtml(totalF) + '</small>';
+    }
+
+    function lnktBuildStaffInspectCodText(ord) {
+        let pm = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+        let st = ord.trang_thai_don_hang || 'cho_duyet';
+        let isPaid = (!!ord.is_paid || (ord.trang_thai_thanh_toan || '') === 'da_thanh_toan');
+        let amt = Number((ord.cod_collect_amount !== undefined) ? ord.cod_collect_amount : (ord.tong_tien_thanh_toan || 0));
+        if (isPaid) {
+            return { text: '0 đồng (Đã thanh toán — Không thu tiền)', cls: 'text-success' };
+        }
+        if (st === 'da_huy') {
+            return { text: '0 đồng (Đơn đã hủy)', cls: 'text-danger' };
+        }
+        return {
+            text: Math.round(amt).toLocaleString('vi-VN') + ' đồng' + (pm === 'vietqr' ? ' (Chờ CK)' : ' (Thu hộ tiền mặt COD)'),
+            cls: 'text-peach'
+        };
+    }
+
+    function lnktSyncExistingStaffRow(ord) {
+        if (!ord || !ord.ma_don_hang) return;
+        let oid = parseInt(ord.ma_don_hang, 10) || 0;
+        let $row = $('#lnkt_orderRow_' + oid);
+        if (!$row.length) return;
+
+        let ocode = ord.ma_van_don || ('FK-ORD-' + String(oid).padStart(6, '0'));
+        let st = ord.trang_thai_don_hang || 'cho_duyet';
+        let pm = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+        let ps = (ord.trang_thai_thanh_toan || 'chua_thanh_toan').toLowerCase();
+        let isPaid = (!!ord.is_paid || ps === 'da_thanh_toan');
+        let isLocked = (st === 'hoan_tat' || st === 'da_huy');
+        let lockConfirm = (st === 'cho_duyet' && pm === 'vietqr' && !isPaid);
+
+        $row.attr('data-status', st)
+            .attr('data-payment-method', pm)
+            .attr('data-payment-status', ps);
+
+        $('#lnkt_payBadgeWrap_' + oid).html(lnktRenderStaffPaymentBadgesHtml(ord));
+        $('#lnkt_collectBadge_' + oid).html(lnktRenderStaffCollectHtml(ord));
+        $('#lnkt_orderBadgeCell_' + oid).html(lnktBuildStaffStatusBadgeHtml(st));
+        $('#lnkt_quickActionCell_' + oid).html(lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid));
+
+        let $select = $('#lnkt_statusSelect_' + oid);
+        if ($select.length) {
+            $select.val(st).prop('disabled', isLocked);
+            $select.find('option[value="da_xac_nhan"], option[value="dang_giao"], option[value="hoan_tat"]').prop('disabled', lockConfirm);
+            let $optConfirm = $select.find('option[value="da_xac_nhan"]');
+            $optConfirm.text(lockConfirm ? 'Đã xác nhận (Chờ TT)' : 'Đã xác nhận');
+        }
+        $('#lnkt_saveStatusBtn_' + oid).prop('disabled', isLocked);
+
+        if (ord.nhan_vien_phu_trach) {
+            $('#lnkt_rowStaff_' + oid).html('Phụ trách: <strong>' + lnktEscapeHtml(ord.nhan_vien_phu_trach) + '</strong>');
+        }
+
+        let codMeta = lnktBuildStaffInspectCodText(ord);
+        let payText = ord.payment_display_label || (pm === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thu hộ COD');
+        let $inspLink = $row.find('a[onclick^="lnktInspectStaffOrder"]');
+        if ($inspLink.length) {
+            $inspLink
+                .attr('data-payment', payText)
+                .attr('data-cod-collect', codMeta.text)
+                .attr('data-cod-class', codMeta.cls)
+                .attr('data-staff', ord.nhan_vien_phu_trach || 'Chưa tiếp nhận');
+            if (ord.ghi_chu) {
+                $inspLink.attr('data-note', ord.ghi_chu);
+            }
+        }
+        if ($('#lnkt_inspectCode').text().trim() === '#' + ocode) {
+            $('#lnkt_inspectPayment').text(payText);
+            $('#lnkt_inspectCodCollect')
+                .removeClass('text-success text-danger text-peach')
+                .addClass(codMeta.cls)
+                .text(codMeta.text);
+            if (ord.nhan_vien_phu_trach) {
+                $('#lnkt_inspectStaff').text(ord.nhan_vien_phu_trach);
+            }
+            if (ord.ghi_chu) {
+                $('#lnkt_inspectNote').text(ord.ghi_chu);
+            }
+        }
+    }
+
     window.lnktFilterStaffOrders = function () {
         let kw = ($('#lnkt_staffOrderSearch').val() || '').toLowerCase().trim();
         let stFilter = $('#lnkt_staffOrderStatusFilter').val() || 'all';
@@ -1416,47 +2322,170 @@ $(document).ready(function () {
         });
     };
 
-    window.lnktUpdateStaffOrderStatus = function (orderId, orderCode) {
-        let newStatus = $('#lnkt_statusSelect_' + orderId).val();
-        let $row = $('#lnkt_orderRow_' + orderId);
-        $row.attr('data-status', newStatus);
-
-        let badgeHtml = '';
-        if (newStatus === 'cho_duyet') {
-            badgeHtml = '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
-        } else if (newStatus === 'da_xac_nhan') {
-            badgeHtml = '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
-        } else if (newStatus === 'dang_giao') {
-            badgeHtml = '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
-        } else if (newStatus === 'hoan_tat') {
-            badgeHtml = '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
-        } else if (newStatus === 'da_huy') {
-            badgeHtml = '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
+    // MH 10 (Orders): AJAX tiếp nhận đơn và cập nhật tiến trình giao hàng qua OrderController (sp_lnkt_cap_nhat_trang_thai_don_hang)
+    window.lnktUpdateStaffOrderStatus = function (orderId, orderCode, overrideStatus) {
+        let $select = $('#lnkt_statusSelect_' + orderId);
+        let uiStatus = overrideStatus || $select.val();
+        if (overrideStatus) {
+            $select.val(overrideStatus);
         }
-        $('#lnkt_orderBadgeCell_' + orderId).html(badgeHtml);
+        let $row = $('#lnkt_orderRow_' + orderId);
+        let prevUiStatus = $row.attr('data-status') || 'cho_duyet';
+        let $saveBtn = $('#lnkt_saveStatusBtn_' + orderId);
+        $saveBtn.prop('disabled', true);
 
-        // Cập nhật lại bộ đếm 5 trạng thái
-        const counts = { cho_duyet: 0, da_xac_nhan: 0, dang_giao: 0, hoan_tat: 0, da_huy: 0 };
-        $('.lnkt-staff-order-row').each(function () {
-            let st = $(this).attr('data-status');
-            if (counts[st] !== undefined) counts[st]++;
-        });
-        Object.keys(counts).forEach(function (k) {
-            $('#lnkt_count_' + k).text(counts[k]);
-        });
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxUpdateOrderStatus',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                order_id:   orderId,
+                new_status: uiStatus
+            },
+            success: function (res) {
+                if (!res || res.status !== 'success') {
+                    $select.val(prevUiStatus);
+                    $saveBtn.prop('disabled', false);
+                    lnktShowStaffOrderAlert('error', (res && res.message) ? res.message : 'Không thể cập nhật trạng thái đơn hàng!');
+                    return;
+                }
 
-        const statusTextMap = {
-            cho_duyet: 'Chờ duyệt',
-            da_xac_nhan: 'Đã xác nhận',
-            dang_giao: 'Đang giao',
-            hoan_tat: 'Hoàn tất',
-            da_huy: 'Đã hủy'
-        };
-        alert('Đã cập nhật trạng thái đơn #' + orderCode + ' -> ' + (statusTextMap[newStatus] || newStatus));
+                let finalSt = res.new_status || uiStatus;
+                let finalPm = $row.attr('data-payment-method') || 'cod';
+                let finalIsPaid = (res.trang_thai_thanh_toan === 'da_thanh_toan');
+                if (res.order) {
+                    lnktSyncExistingStaffRow(res.order);
+                } else {
+                    $row.attr('data-status', finalSt);
+                    if (res.trang_thai_thanh_toan) {
+                        $row.attr('data-payment-status', res.trang_thai_thanh_toan);
+                    }
+                    $select.val(finalSt);
+                    $('#lnkt_orderBadgeCell_' + orderId).html(lnktBuildStaffStatusBadgeHtml(finalSt));
+                    $('#lnkt_quickActionCell_' + orderId).html(lnktBuildStaffQuickActionHtml(orderId, orderCode, finalSt, finalPm, finalIsPaid));
+
+                    if (finalIsPaid) {
+                        $('#lnkt_collectBadge_' + orderId).html('<small class="text-success font-weight-bold">Thu hộ: 0 đ</small>');
+                    } else if (finalSt === 'da_huy') {
+                        $('#lnkt_collectBadge_' + orderId).html('<small class="text-danger font-weight-bold">Đã hủy (0 đ)</small>');
+                    }
+
+                    if (res.handled_by_name) {
+                        $('#lnkt_rowStaff_' + orderId).html('Phụ trách: <strong>' + lnktEscapeHtml(res.handled_by_name) + '</strong>');
+                        $row.find('a[data-staff]').attr('data-staff', res.handled_by_name);
+                        if ($('#lnkt_inspectCode').text().trim() === '#' + orderCode) {
+                            $('#lnkt_inspectStaff').text(res.handled_by_name);
+                        }
+                    }
+
+                    let isLocked = (finalSt === 'hoan_tat' || finalSt === 'da_huy');
+                    $select.prop('disabled', isLocked);
+                    $saveBtn.prop('disabled', isLocked);
+                }
+
+                if (res.counts) {
+                    Object.keys(res.counts).forEach(function (k) {
+                        $('#lnkt_count_' + k).text(res.counts[k]);
+                    });
+                }
+
+                lnktShowStaffOrderAlert('success', res.message || ('Đã cập nhật trạng thái đơn #' + orderCode + ' thành công!'));
+                window.lnktFilterStaffOrders();
+            },
+            error: function (xhr) {
+                $select.val(prevUiStatus);
+                $saveBtn.prop('disabled', false);
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Lỗi ngoại lệ khi cập nhật tiến trình đơn hàng!';
+                lnktShowStaffOrderAlert('error', errMsg);
+            }
+        });
+    };
+
+    window.lnktStaffVerifyOrderPayment = function (orderId, btnEl) {
+        let $btn = btnEl ? $(btnEl) : $();
+        let origHtml = $btn.length ? $btn.html() : '';
+        if ($btn.length) {
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang kiểm tra...');
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxVerifyOrderPayment',
+            type: 'POST',
+            dataType: 'json',
+            data: { order_id: orderId },
+            timeout: 15000,
+            complete: function () {
+                if ($btn.length && document.body.contains($btn[0])) {
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+            },
+            success: function (res) {
+                if (res && res.order) {
+                    lnktSyncExistingStaffRow(res.order);
+                }
+                if (res && res.counts) {
+                    Object.keys(res.counts).forEach(function (k) {
+                        $('#lnkt_count_' + k).text(res.counts[k]);
+                    });
+                }
+                window.lnktFilterStaffOrders();
+                lnktShowStaffOrderAlert((res && res.paid) ? 'success' : 'error', (res && res.message) ? res.message : 'Đã kiểm tra giao dịch Casso.');
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể kết nối Casso để đối soát đơn #' + orderId;
+                lnktShowStaffOrderAlert('error', errMsg);
+            }
+        });
+    };
+
+    window.lnktStaffSyncAllPendingCasso = function (btnEl, isSilent) {
+        let $btn = btnEl ? $(btnEl) : $();
+        let origHtml = $btn.length ? $btn.html() : '';
+        if ($btn.length && !isSilent) {
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang đối soát...');
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxSyncPendingPayments',
+            type: 'GET',
+            dataType: 'json',
+            timeout: 15000,
+            complete: function () {
+                if ($btn.length && !isSilent) {
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+            },
+            success: function (res) {
+                if (!res || res.status !== 'success') return;
+                if (res.counts) {
+                    Object.keys(res.counts).forEach(function (k) {
+                        $('#lnkt_count_' + k).text(res.counts[k]);
+                    });
+                }
+                if (Array.isArray(res.pending_sync_rows)) {
+                    res.pending_sync_rows.forEach(function (syncOrd) {
+                        lnktSyncExistingStaffRow(syncOrd);
+                    });
+                }
+                window.lnktFilterStaffOrders();
+                if (!isSilent || (Array.isArray(res.confirmed_ids) && res.confirmed_ids.length > 0)) {
+                    let msg = res.message || 'Đã đồng bộ dữ liệu thanh toán MB Bank.';
+                    if (res.api_error && !isSilent) {
+                        msg = 'Cảnh báo kết nối Casso: ' + res.api_error;
+                    }
+                    lnktShowStaffOrderAlert(res.api_error && !isSilent ? 'error' : 'success', msg);
+                }
+            }
+        });
     };
 
     window.lnktInspectStaffOrder = function (el) {
         let $el = $(el);
+        let oid = parseInt($el.attr('data-order-id'), 10) || 0;
         $('#lnkt_inspectCode').text('#' + $el.attr('data-code'));
         $('#lnkt_inspectReceiver').text($el.attr('data-receiver'));
         $('#lnkt_inspectPhone').text($el.attr('data-phone'));
@@ -1466,7 +2495,339 @@ $(document).ready(function () {
         $('#lnkt_inspectDiscount').text($el.attr('data-discount'));
         $('#lnkt_inspectTotal').text($el.attr('data-total'));
         $('#lnkt_inspectStaff').text($el.attr('data-staff'));
+        if ($('#lnkt_inspectPayment').length && $el.attr('data-payment')) {
+            $('#lnkt_inspectPayment').text($el.attr('data-payment'));
+        }
+        if ($('#lnkt_inspectCodCollect').length) {
+            let codTxt = $el.attr('data-cod-collect') || '0 đồng';
+            let codCls = $el.attr('data-cod-class') || 'text-peach';
+            $('#lnkt_inspectCodCollect')
+                .removeClass('text-success text-danger text-peach')
+                .addClass(codCls)
+                .text(codTxt);
+        }
+        if ($('#lnkt_inspectNote').length && $el.attr('data-note')) {
+            $('#lnkt_inspectNote').text($el.attr('data-note'));
+        }
+        if (oid > 0 && $('#lnkt_btnOpenInspectLabel').length) {
+            $('#lnkt_btnOpenInspectLabel').attr('data-order-id', oid);
+        }
     };
+
+    window.lnktGenerateBarcodeSvg = function (code) {
+        let svgEl = document.getElementById('lnkt_labelBarcodeSvg');
+        if (!svgEl) return;
+        let text = String(code || 'FKORD000001').trim();
+        let bars = [2, 1, 1, 2, 1, 2]; // Start pattern
+        for (let i = 0; i < text.length; i++) {
+            let ch = text.charCodeAt(i);
+            bars.push((ch & 1) ? 2 : 1);
+            bars.push(((ch >> 1) & 1) ? 1 : 2);
+            bars.push(((ch >> 2) & 1) ? 3 : 1);
+            bars.push(((ch >> 3) & 1) ? 1 : 2);
+            bars.push(((ch >> 4) & 1) ? 2 : 1);
+            bars.push(1);
+        }
+        bars.push(2, 1, 2, 1, 1, 2); // Stop pattern
+
+        let totalUnits = bars.reduce(function (a, b) { return a + b; }, 0);
+        let scale = 232 / Math.max(1, totalUnits);
+        let x = 4;
+        let rects = '';
+        for (let idx = 0; idx < bars.length; idx++) {
+            let w = bars[idx] * scale;
+            if (idx % 2 === 0) {
+                rects += '<rect x="' + x.toFixed(2) + '" y="2" width="' + Math.max(0.8, w).toFixed(2) + '" height="48" fill="#1A202C"></rect>';
+            }
+            x += w;
+        }
+        svgEl.innerHTML = rects;
+    };
+
+    window.lnktOpenShippingLabelModal = function (orderId) {
+        let oid = parseInt(orderId, 10) || 0;
+        if (oid <= 0) {
+            alert('Vui lòng chọn một đơn hàng hợp lệ để tạo phiếu giao hàng!');
+            return;
+        }
+        let $modal = $('#modalShippingLabel');
+        if (!$modal.length) return;
+
+        $('#lnkt_labelLoadingState').removeClass('d-none');
+        $('#lnkt_shippingLabelPrintSheet').addClass('d-none');
+        $('#lnkt_labelErrorState').addClass('d-none').text('');
+        $modal.modal('show');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxGetShippingLabel',
+            type: 'GET',
+            dataType: 'json',
+            data: { order_id: oid },
+            timeout: 12000,
+            success: function (res) {
+                $('#lnkt_labelLoadingState').addClass('d-none');
+                if (!res || res.status !== 'success' || !res.label) {
+                    $('#lnkt_labelErrorState').removeClass('d-none').text((res && res.message) ? res.message : 'Không tải được dữ liệu phiếu giao hàng.');
+                    return;
+                }
+                let lbl = res.label;
+                $('#lnkt_shippingLabelPrintSheet').removeClass('d-none');
+                $('#lnkt_labelBarcodeText').text(lbl.barcode_value || ('FKORD' + String(oid).padStart(6, '0')));
+                window.lnktGenerateBarcodeSvg(lbl.barcode_value || ('FKORD' + oid));
+                $('#lnkt_labelWaybillCode').text('#' + (lbl.ma_van_don || ('FK-ORD-' + String(oid).padStart(6, '0'))));
+
+                let $qrImg = $('#lnkt_labelQrImg');
+                $qrImg.attr('src', lbl.qr_tracking_img || '').off('error').on('error', function () {
+                    $(this).addClass('d-none');
+                }).removeClass('d-none');
+
+                $('#lnkt_labelSenderName').text((lbl.sender && lbl.sender.name) ? lbl.sender.name : 'FASHIONKIDS OFFICIAL');
+                $('#lnkt_labelSenderPhone').text((lbl.sender && lbl.sender.hotline) ? lbl.sender.hotline : '1900 6868');
+                $('#lnkt_labelSenderAddr').text((lbl.sender && lbl.sender.address) ? lbl.sender.address : 'TP. Hồ Chí Minh');
+                $('#lnkt_labelCreatedAt').text(lbl.created_at_label || '--');
+                $('#lnkt_labelHandledBy').text(lbl.handled_by_name || 'Nhân viên FashionKids');
+                $('#lnkt_labelPrintTime').text('In lúc: ' + (lbl.printed_at_label || '--'));
+
+                $('#lnkt_labelRecvName').text((lbl.recipient && lbl.recipient.name) ? lbl.recipient.name : '--');
+                $('#lnkt_labelRecvPhone').text((lbl.recipient && lbl.recipient.phone) ? lbl.recipient.phone : '--');
+                $('#lnkt_labelRecvAddr').text((lbl.recipient && lbl.recipient.full_address) ? lbl.recipient.full_address : '--');
+                $('#lnkt_labelRecvNote').text((lbl.recipient && lbl.recipient.note) ? lbl.recipient.note : 'Không có');
+
+                let items = Array.isArray(lbl.items) ? lbl.items : [];
+                let itemsHtml = '';
+                items.forEach(function (it, idx) {
+                    let qty = parseInt(it.so_luong, 10) || 1;
+                    let price = Number(it.don_gia_mua || 0);
+                    itemsHtml +=
+                        '<tr>' +
+                            '<td class="text-center">' + (idx + 1) + '</td>' +
+                            '<td class="font-weight-bold">' + lnktEscapeHtml(it.ten_san_pham) + '</td>' +
+                            '<td class="text-center">' + lnktEscapeHtml(it.kich_co_chon) + '</td>' +
+                            '<td class="text-center font-weight-bold">' + qty + '</td>' +
+                            '<td class="text-right">' + lnktFormatVnd(price) + '</td>' +
+                            '<td class="text-right font-weight-bold">' + lnktFormatVnd(qty * price) + '</td>' +
+                        '</tr>';
+                });
+                $('#lnkt_labelItemsBody').html(itemsHtml || '<tr><td colspan="6" class="text-center text-muted">Không có sản phẩm</td></tr>');
+
+                $('#lnkt_labelSubtotal').text(lnktFormatVnd(lbl.subtotal || 0));
+                $('#lnkt_labelDiscount').text((lbl.discount || 0) > 0 ? ('-' + lnktFormatVnd(lbl.discount)) : '0 đ');
+                $('#lnkt_labelTotal').text(lnktFormatVnd(lbl.total_amount || 0));
+                $('#lnkt_labelPayMethodName').text(lbl.payment_method_name || '--');
+
+                if (lbl.tx_code) {
+                    $('#lnkt_labelTxRow').removeClass('d-none');
+                    $('#lnkt_labelTxCode').text(lbl.tx_code + (lbl.paid_at_label ? (' (' + lbl.paid_at_label + ')') : ''));
+                } else {
+                    $('#lnkt_labelTxRow').addClass('d-none');
+                    $('#lnkt_labelTxCode').text('');
+                }
+
+                let $statusAlert = $('#lnkt_labelStatusAlert');
+                $statusAlert.addClass('d-none').removeClass('alert-danger alert-warning');
+                if (lbl.is_cancelled) {
+                    $statusAlert.removeClass('d-none').addClass('alert-danger').html(
+                        '<i class="fa-solid fa-ban mr-1"></i><strong>CẢNH BÁO:</strong> ' +
+                        (lbl.is_expired ? 'Đơn đã tự động hủy do quá hạn thanh toán 24 giờ!' : 'Đơn hàng này đã ở trạng thái Đã hủy!')
+                    );
+                } else if (lbl.payment_method === 'vietqr' && !lbl.is_paid) {
+                    $statusAlert.removeClass('d-none').addClass('alert-warning text-dark').html(
+                        '<i class="fa-solid fa-triangle-exclamation mr-1"></i><strong>LƯU Ý:</strong> Đơn VietQR chưa nhận đủ chuyển khoản tại MB Bank — Shop chưa được xác nhận xuất kho.'
+                    );
+                }
+
+                let $codBox = $('#lnkt_labelCodBox');
+                $codBox.removeClass('fk-cod-zero fk-cod-cash fk-cod-cancelled');
+                if (lbl.is_cancelled) {
+                    $codBox.addClass('fk-cod-cancelled');
+                    $('#lnkt_labelCodTitle').text('TRẠNG THÁI THU HỘ:');
+                } else if (lbl.is_paid || Number(lbl.cod_collect_amount) <= 0) {
+                    $codBox.addClass('fk-cod-zero');
+                    $('#lnkt_labelCodTitle').text('SỐ TIỀN CẦN THANH TOÁN KHI GIAO (THU HỘ):');
+                } else {
+                    $codBox.addClass('fk-cod-cash');
+                    $('#lnkt_labelCodTitle').text('TỔNG SỐ TIỀN CẦN THU KHI GIAO HÀNG (COD):');
+                }
+                $('#lnkt_labelCodAmount').text(lbl.cod_collect_text || '0 đồng');
+                $('#lnkt_labelCodInstruction').text(lbl.cod_instruction || '');
+            },
+            error: function (xhr) {
+                $('#lnkt_labelLoadingState').addClass('d-none');
+                let msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể tạo phiếu giao hàng lúc này.';
+                $('#lnkt_labelErrorState').removeClass('d-none').text(msg);
+            }
+        });
+    };
+
+    window.lnktPrintShippingLabel = function () {
+        let $sheet = $('#lnkt_shippingLabelPrintSheet');
+        if (!$sheet.length || $sheet.hasClass('d-none')) {
+            return;
+        }
+        let stage = document.getElementById('fk_printStageContainer');
+        if (!stage) {
+            stage = document.createElement('div');
+            stage.id = 'fk_printStageContainer';
+            document.body.appendChild(stage);
+        }
+        stage.innerHTML = '';
+        stage.appendChild($sheet[0].cloneNode(true));
+        document.body.classList.add('fk-printing-label');
+
+        let cleaned = false;
+        let cleanup = function () {
+            if (cleaned) return;
+            cleaned = true;
+            document.body.classList.remove('fk-printing-label');
+            if (stage) stage.innerHTML = '';
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+        setTimeout(function () {
+            window.print();
+            setTimeout(cleanup, 1200);
+        }, 60);
+    };
+
+    // Polling đơn hàng mới mỗi 4 giây tại Cổng Nhân viên (staff-orders.php)
+    if ($('#lnkt_staff_orders_section').length) {
+        function lnktBuildStaffOrderRowHtml(ord) {
+            let oid = parseInt(ord.ma_don_hang, 10) || 0;
+            let ocode = ord.ma_van_don || ('FK-ORD-' + String(oid).padStart(6, '0'));
+            let st = ord.trang_thai_don_hang || 'cho_duyet';
+            let pm = (ord.phuong_thuc_thanh_toan || 'cod').toLowerCase();
+            let ps = (ord.trang_thai_thanh_toan || 'chua_thanh_toan').toLowerCase();
+            let isPaid = (!!ord.is_paid || ps === 'da_thanh_toan');
+            let lockConfirm = (st === 'cho_duyet' && pm === 'vietqr' && !isPaid);
+            let fullAddr = [ord.dia_chi_giao_hang, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
+            let createdStr = lnktFormatMysqlDt(ord.ngay_dat_hang);
+            let handledBy = ord.nhan_vien_phu_trach || 'Chưa tiếp nhận';
+            let noteStr = ord.ghi_chu || '';
+            let payLabel = ord.payment_display_label || ((pm === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thu hộ COD'));
+            let codMeta = lnktBuildStaffInspectCodText(ord);
+            let subtotalF = lnktFormatVnd(ord.tien_hang_tam_tinh || 0);
+            let discVal = Number(ord.tien_giam_gia || 0);
+            let discountF = discVal > 0 ? ('-' + lnktFormatVnd(discVal)) : '0 đ';
+            let totalF = lnktFormatVnd(ord.tong_tien_thanh_toan || 0);
+            let isLocked = (st === 'hoan_tat' || st === 'da_huy');
+            let safeJsCode = String(ocode).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+            return (
+                '<tr class="lnkt-staff-order-row lnkt-order-highlight-row" id="lnkt_orderRow_' + oid + '" data-order-id="' + oid + '" data-status="' + lnktEscapeHtml(st) + '" data-payment-method="' + lnktEscapeHtml(pm) + '" data-payment-status="' + lnktEscapeHtml(ps) + '" data-search="' + lnktEscapeHtml(ocode + ' ' + oid + ' ' + ord.ten_nguoi_nhan + ' ' + ord.so_dien_thoai_nhan + ' ' + (ord.tinh_thanh_pho || '') + ' ' + noteStr) + '">' +
+                    '<td>' +
+                        '<a href="javascript:void(0)" onclick="lnktInspectStaffOrder(this)" ' +
+                           'data-order-id="' + oid + '" ' +
+                           'data-code="' + lnktEscapeHtml(ocode) + '" ' +
+                           'data-receiver="' + lnktEscapeHtml(ord.ten_nguoi_nhan) + '" ' +
+                           'data-phone="' + lnktEscapeHtml(ord.so_dien_thoai_nhan) + '" ' +
+                           'data-address="' + lnktEscapeHtml(fullAddr) + '" ' +
+                           'data-items="' + lnktEscapeHtml(ord.item_summary || 'Sản phẩm FashionKids') + '" ' +
+                           'data-subtotal="' + lnktEscapeHtml(subtotalF) + '" ' +
+                           'data-discount="' + lnktEscapeHtml(discountF) + '" ' +
+                           'data-total="' + lnktEscapeHtml(totalF) + '" ' +
+                           'data-staff="' + lnktEscapeHtml(handledBy) + '" ' +
+                           'data-payment="' + lnktEscapeHtml(payLabel) + '" ' +
+                           'data-cod-collect="' + lnktEscapeHtml(codMeta.text) + '" ' +
+                           'data-cod-class="' + lnktEscapeHtml(codMeta.cls) + '" ' +
+                           'data-note="' + lnktEscapeHtml(noteStr || 'Không có ghi chú thêm.') + '" ' +
+                           'class="font-weight-bold text-peach text-decoration-none d-block">#' + lnktEscapeHtml(ocode) + '</a>' +
+                        '<small class="text-muted-custom d-block">' + lnktEscapeHtml(createdStr) + '</small>' +
+                        '<small class="text-slate" id="lnkt_rowStaff_' + oid + '">Phụ trách: <strong>' + lnktEscapeHtml(handledBy) + '</strong></small>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="font-weight-bold text-slate">' + lnktEscapeHtml(ord.ten_nguoi_nhan) + '</div>' +
+                        '<small class="text-muted-custom d-block"><i class="fa-solid fa-phone mr-1"></i>' + lnktEscapeHtml(ord.so_dien_thoai_nhan) + '</small>' +
+                        '<div id="lnkt_payBadgeWrap_' + oid + '" class="mt-1">' + lnktRenderStaffPaymentBadgesHtml(ord) + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="small font-weight-bold text-slate">' + lnktEscapeHtml(ord.tinh_thanh_pho || '') + '</div>' +
+                        '<small class="text-muted-custom d-block">' + lnktEscapeHtml(ord.quan_huyen || '') + '</small>' +
+                        (noteStr ? '<small class="text-info d-block text-truncate fk-ellipsis-220" title="' + lnktEscapeHtml(noteStr) + '"><i class="fa-regular fa-note-sticky mr-1"></i>' + lnktEscapeHtml(noteStr) + '</small>' : '') +
+                    '</td>' +
+                    '<td class="text-right text-nowrap">' +
+                        '<div class="font-weight-bold text-slate">' + lnktEscapeHtml(totalF) + '</div>' +
+                        '<div id="lnkt_collectBadge_' + oid + '">' + lnktRenderStaffCollectHtml(ord) + '</div>' +
+                    '</td>' +
+                    '<td class="text-center" id="lnkt_orderBadgeCell_' + oid + '">' + lnktBuildStaffStatusBadgeHtml(st) + '</td>' +
+                    '<td class="text-center">' +
+                        '<div class="input-group input-group-sm mb-1">' +
+                            '<select id="lnkt_statusSelect_' + oid + '" class="custom-select font-weight-bold" ' + (isLocked ? 'disabled' : '') + '>' +
+                                '<option value="cho_duyet"' + (st === 'cho_duyet' ? ' selected' : '') + '>Chờ duyệt</option>' +
+                                '<option value="da_xac_nhan"' + (st === 'da_xac_nhan' ? ' selected' : '') + (lockConfirm ? ' disabled' : '') + '>Đã xác nhận' + (lockConfirm ? ' (Chờ TT)' : '') + '</option>' +
+                                '<option value="dang_giao"' + (st === 'dang_giao' ? ' selected' : '') + (lockConfirm ? ' disabled' : '') + '>Đang giao</option>' +
+                                '<option value="hoan_tat"' + (st === 'hoan_tat' ? ' selected' : '') + (lockConfirm ? ' disabled' : '') + '>Hoàn tất</option>' +
+                                '<option value="da_huy"' + (st === 'da_huy' ? ' selected' : '') + '>Đã hủy</option>' +
+                            '</select>' +
+                            '<div class="input-group-append">' +
+                                '<button type="button" id="lnkt_saveStatusBtn_' + oid + '" class="btn btn-pastel-primary px-2" ' + (isLocked ? 'disabled' : '') + ' onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeJsCode) + '\')"><i class="fa-solid fa-check"></i> Lưu</button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div id="lnkt_quickActionCell_' + oid + '">' + lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid) + '</div>' +
+                        '<button type="button" class="btn btn-light btn-sm btn-block border rounded-pill py-0 small font-weight-bold text-slate" onclick="lnktOpenShippingLabelModal(' + oid + ')"><i class="fa-solid fa-barcode text-peach mr-1"></i>In tem giao hàng</button>' +
+                    '</td>' +
+                '</tr>'
+            );
+        }
+
+        setInterval(function () {
+            let lastId = parseInt($('#lnkt_staff_orders_section').attr('data-max-order-id'), 10) || 0;
+            $.ajax({
+                url: '/FashionKids/index.php?c=order&a=ajaxCheckNewOrders',
+                type: 'GET',
+                dataType: 'json',
+                data: { last_id: lastId },
+                timeout: 4500,
+                success: function (res) {
+                    if (!res || res.status !== 'success') return;
+                    if (res.counts) {
+                        Object.keys(res.counts).forEach(function (k) {
+                            $('#lnkt_count_' + k).text(res.counts[k]);
+                        });
+                    }
+                    if (res.max_order_id && res.max_order_id > lastId) {
+                        $('#lnkt_staff_orders_section').attr('data-max-order-id', res.max_order_id);
+                    }
+                    let syncRows = res.pending_sync_rows || (res.data && res.data.pending_sync_rows) || [];
+                    if (Array.isArray(syncRows) && syncRows.length > 0) {
+                        syncRows.forEach(function (syncOrd) {
+                            lnktSyncExistingStaffRow(syncOrd);
+                        });
+                    }
+                    if (Array.isArray(res.new_orders) && res.new_orders.length > 0) {
+                        $('#lnkt_staffEmptyRow').remove();
+                        let addedCount = 0;
+                        res.new_orders.slice().reverse().forEach(function (ord) {
+                            let oid = parseInt(ord.ma_don_hang, 10) || 0;
+                            if (oid > 0 && $('#lnkt_orderRow_' + oid).length === 0) {
+                                $('#lnkt_staffOrdersBody').prepend(lnktBuildStaffOrderRowHtml(ord));
+                                addedCount++;
+                            }
+                        });
+                        if (addedCount > 0) {
+                            let curBadge = parseInt($('#new_order_count').text(), 10) || 0;
+                            $('#new_order_count').text(curBadge + addedCount);
+                            $('#new_order_badge').removeClass('d-none');
+                            lnktShowStaffOrderAlert('success', 'Có ' + addedCount + ' đơn hàng mới vừa được phụ huynh đặt!');
+                            window.lnktPlayNewOrderChime();
+                        }
+                    }
+                    window.lnktFilterStaffOrders();
+                }
+            });
+        }, 4000);
+
+        // Đồng bộ ngầm Casso mỗi 10 giây nếu còn đơn VietQR chờ thanh toán trên bảng Nhân viên
+        setInterval(function () {
+            let hasPendingVietQr = $('.lnkt-staff-order-row[data-payment-method="vietqr"][data-status="cho_duyet"]').filter(function () {
+                return $(this).attr('data-payment-status') !== 'da_thanh_toan';
+            }).length > 0;
+            if (hasPendingVietQr) {
+                window.lnktStaffSyncAllPendingCasso(null, true);
+            }
+        }, 10000);
+    }
 
     // ------------------------------------------------------------------------
     // 6. MH 14: Quản trị Bảng Size & Thông số trần/sàn (admin-size-charts.php)
@@ -1532,10 +2893,56 @@ $(document).ready(function () {
         $('#lnkt_btnCancelSizeEdit').addClass('d-none');
     };
 
+    // MH 14 (Admin Only): AJAX lưu cấu hình Bảng kích cỡ chuẩn (lnkt_bang_kich_co)
     $('#lnkt_formAdminSizeChart').on('submit', function (e) {
         e.preventDefault();
-        let sizeName = $('#lnkt_scSizeName').val().trim();
-        alert('Đã lưu cấu hình thông số kích cỡ "' + sizeName + '" thành công!');
+        let scId     = $('#lnkt_scId').val() || '';
+        let catId    = parseInt($('#lnkt_scCategoryId').val(), 10) || 1;
+        let typeVal  = $('#lnkt_scType').val() || (catId === 4 ? 'giay_dep' : 'quan_ao');
+        let sizeName = ($('#lnkt_scSizeName').val() || '').trim();
+        let minVal   = (typeVal === 'giay_dep')
+            ? parseFloat($('#lnkt_scFootMin').val() || 12)
+            : parseFloat($('#lnkt_scHeightMin').val() || 75);
+        let maxVal   = (typeVal === 'giay_dep')
+            ? parseFloat($('#lnkt_scFootMax').val() || 13.5)
+            : parseFloat($('#lnkt_scHeightMax').val() || 89);
+        let chestMax = $('#lnkt_scChestMax').val() || '';
+        let waistMax = $('#lnkt_scWaistMax').val() || '';
+
+        if (!sizeName) {
+            alert('Vui lòng nhập tên kích cỡ (VD: Size 2 (2-3T))!');
+            return;
+        }
+        if (isNaN(minVal) || isNaN(maxVal) || minVal <= 0 || minVal >= maxVal) {
+            alert('Khoảng số đo tối thiểu và tối đa không hợp lệ!');
+            return;
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxSaveSizeChart',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                size_id:     scId,
+                category_id: catId,
+                size_type:   typeVal,
+                size_label:  sizeName,
+                min_val:     minVal,
+                max_val:     maxVal,
+                chest_max:   chestMax,
+                waist_max:   waistMax
+            },
+            success: function (res) {
+                alert((res && res.message) ? res.message : ('Đã lưu cấu hình thông số kích cỡ "' + sizeName + '" thành công!'));
+                window.lnktResetSizeChartForm();
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể lưu cấu hình bảng kích cỡ!';
+                alert(errMsg);
+            }
+        });
     });
 
     // ------------------------------------------------------------------------
@@ -2227,9 +3634,58 @@ $(document).ready(function () {
         });
     });
 
+    // MH 21/22: Xuất bản bài viết từ Bản nháp (Chỉ Admin) & Xóa bài viết Tạp chí (Chỉ Admin)
+    window.fkPublishCmsArticleRow = function (id) {
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxPublishBlogArticle',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: id },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('#fk_cmsStatusCell_' + id).html('<span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>');
+                    $('#fk_btnPublishArticle_' + id).remove();
+                    alert(res.message || ('Đã xuất bản chính thức bài viết #' + id + ' thành công!'));
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể xuất bản bài viết!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Chỉ Quản trị viên mới được xuất bản bài viết!';
+                alert(errMsg);
+            }
+        });
+    };
+
     window.fkDeleteCmsArticleRow = function (id) {
-        $('#fk_cmsArticleRow_' + id).fadeOut(250, function () {
-            $(this).remove();
+        if (!confirm('Bạn có chắc chắn muốn xóa bài viết #' + id + ' khỏi hệ thống Tạp chí?')) {
+            return;
+        }
+        $.ajax({
+            url: '/FashionKids/index.php?c=admin&a=ajaxDeleteBlogArticle',
+            type: 'POST',
+            dataType: 'json',
+            data: { article_id: id },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    $('#fk_cmsArticleRow_' + id).fadeOut(250, function () {
+                        $(this).remove();
+                    });
+                    let total = Math.max(0, (parseInt($('#fk_cmsTotalArticles').text(), 10) || 1) - 1);
+                    $('#fk_cmsTotalArticles').text(total);
+                    alert(res.message || ('Đã xóa bài viết #' + id + ' thành công!'));
+                } else {
+                    alert((res && res.message) ? res.message : 'Không thể xóa bài viết!');
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Chỉ Quản trị viên mới được xóa bài viết!';
+                alert(errMsg);
+            }
         });
     };
 
@@ -2356,16 +3812,34 @@ $(document).ready(function () {
         $('#fk_activeChatSessionCode').text(sessionId);
         $('#fk_activeChatCustomerName').text(customerName);
         $('#fk_activeChatVipBadge').text(vipLabel);
-        window.fkPollStaffChatNow();
+
+        // Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc) qua StaffController
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxMarkChatRead',
+            type: 'POST',
+            dataType: 'json',
+            data: { session_id: sessionId },
+            success: function (res) {
+                if (res && res.status === 'success' && Array.isArray(res.messages)) {
+                    fkRenderStaffChatList(res.messages);
+                } else {
+                    window.fkPollStaffChatNow();
+                }
+            },
+            error: function () {
+                window.fkPollStaffChatNow();
+            }
+        });
     };
 
     window.fkPollStaffChatNow = function () {
         let sessionId = $('#fk_staffCurrentSessionId').val() || $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+        let isStaffDesk = $('#fk_staff_chat_section').length > 0 ? 1 : 0;
         $.ajax({
             url: '/FashionKids/index.php?c=home&a=ajaxPollChat',
             type: 'GET',
             dataType: 'json',
-            data: { session_id: sessionId },
+            data: { session_id: sessionId, mark_read: isStaffDesk },
             success: function (res) {
                 if (res && res.status === 'success') {
                     if ($('#fk_staffPollClock').length && res.timestamp) {
@@ -2435,12 +3909,21 @@ $(document).ready(function () {
     };
 
     window.fkReviewKolApplication = function (id, newStatus, babyName) {
+        let isFinalDecision = (newStatus === 'trung_tuyen' || newStatus === 'tu_choi');
+        let targetEndpoint = isFinalDecision
+            ? '/FashionKids/index.php?c=admin&a=ajaxReviewKolCasting'
+            : '/FashionKids/index.php?c=staff&a=ajaxPreliminaryKolReview';
+
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxReviewKolCasting',
+            url: targetEndpoint,
             type: 'POST',
             dataType: 'json',
             data: { id: id, status: newStatus },
             success: function (res) {
+                if (!res || res.status !== 'success') {
+                    alert((res && res.message) ? res.message : 'Không thể cập nhật trạng thái hồ sơ KOL!');
+                    return;
+                }
                 let badgeHtml = '';
                 if (newStatus === 'moi_phong_van') {
                     badgeHtml = '<span class="badge badge-sky px-3 py-1 rounded-pill"><i class="fa-solid fa-camera-retro mr-1"></i>Hẹn thử đồ Studio</span>';
@@ -2466,7 +3949,13 @@ $(document).ready(function () {
                     trung_tuyen: 'Đã trúng tuyển KOL',
                     tu_choi: 'Từ chối'
                 };
-                alert('Đã cập nhật trạng thái hồ sơ "' + babyName + '": ' + (kolLabelMap[newStatus] || newStatus));
+                alert(res.message || ('Đã cập nhật trạng thái hồ sơ "' + babyName + '": ' + (kolLabelMap[newStatus] || newStatus)));
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Truy cập bị từ chối (403 Forbidden): Bạn không có quyền thực hiện thao tác này!';
+                alert(errMsg);
             }
         });
     };
@@ -2494,18 +3983,125 @@ $(document).ready(function () {
         }
     };
 
-    // 2. Chốt chặn đăng nhập khi bấm Đặt hàng cuối cùng tại checkout.php
-    $('#lnkt_formCheckoutOrder').on('submit', function (e) {
-        let role = $('body').attr('data-user-role') || 'guest';
-        if (role === 'guest') {
+    // 2. Xử lý Đặt hàng AJAX hoàn chỉnh & Checkout Gate (checkout.php)
+    if ($('#lnkt_formCheckoutOrder').length) {
+        $('#lnkt_formCheckoutOrder').attr('novalidate', 'novalidate');
+
+        function fkShowCheckoutFormError(msg, $focusEl) {
+            if (typeof window.lnktShowCheckoutAlert === 'function') {
+                window.lnktShowCheckoutAlert('error', msg);
+            } else {
+                $('#lnkt_checkoutAlert').removeClass('d-none').addClass('alert-danger d-block').text(msg);
+            }
+            if ($focusEl && $focusEl.length && !$focusEl.prop('disabled')) {
+                $focusEl.focus();
+            }
+            if ($('#lnkt_checkoutAlert').length) {
+                $('html, body').animate({
+                    scrollTop: Math.max(0, $('#lnkt_checkoutAlert').offset().top - 110)
+                }, 220);
+            }
+        }
+
+        $('#lnkt_formCheckoutOrder').off('submit').on('submit', function (e) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            if (confirm('Giỏ hàng của bạn vẫn được lưu an toàn. Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng và tích điểm VIP!')) {
-                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/checkout.php');
+
+            let role = $('body').attr('data-user-role') || 'guest';
+            if (role === 'guest') {
+                if (confirm('Giỏ hàng của bạn vẫn được lưu an toàn. Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng và tích điểm VIP!')) {
+                    window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/checkout.php');
+                }
+                return false;
             }
+
+            if ($('.lnkt-cart-row').length === 0) {
+                fkShowCheckoutFormError('Giỏ hàng của bạn đang trống, vui lòng chọn sản phẩm trước khi đặt hàng!');
+                return false;
+            }
+
+            if (typeof window.tgbComposeFullAddress === 'function') {
+                window.tgbComposeFullAddress();
+            }
+
+            let receiverName = ($('#lnkt_receiverName').val() || '').trim();
+            let receiverPhone = ($('#lnkt_receiverPhone').val() || '').trim();
+            let receiverEmail = ($('#tgb_receiver_email').val() || '').trim();
+            let province = ($('#tgb_select_province').val() || '').trim();
+            let district = ($('#tgb_select_district').val() || '').trim();
+            let shippingAddress = ($('#lnkt_shippingAddress').val() || '').trim();
+            let paymentMethod = ($('input[name="phuong_thuc_thanh_toan"]:checked').val() || 'cod').trim();
+            let orderNote = ($('#lnkt_orderNote').val() || '').trim();
+            let csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+
+            if (!receiverName) {
+                fkShowCheckoutFormError('Vui lòng nhập họ và tên phụ huynh nhận hàng!', $('#lnkt_receiverName'));
+                return false;
+            }
+            if (!/^[0-9]{9,11}$/.test(receiverPhone.replace(/\s+/g, ''))) {
+                fkShowCheckoutFormError('Vui lòng nhập số điện thoại liên hệ hợp lệ (9-11 chữ số)!', $('#lnkt_receiverPhone'));
+                return false;
+            }
+            if (!province) {
+                fkShowCheckoutFormError('Vui lòng chọn Tỉnh / Thành phố giao hàng!', $('#tgb_select_province'));
+                return false;
+            }
+            if (!district) {
+                fkShowCheckoutFormError('Vui lòng chọn Quận / Huyện giao hàng!', $('#tgb_select_district'));
+                return false;
+            }
+            if (!shippingAddress) {
+                fkShowCheckoutFormError('Vui lòng nhập địa chỉ giao hàng chi tiết (Số nhà, Tên đường, Phường/Xã)!', $('#lnkt_shippingAddress'));
+                return false;
+            }
+
+            $('#lnkt_checkoutAlert').addClass('d-none').text('');
+            let $submitBtn = $('#lnkt_btnSubmitCheckout');
+            let origBtnHtml = $submitBtn.html();
+            $submitBtn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý đặt hàng...');
+
+            $.ajax({
+                url: '/FashionKids/index.php?c=order&a=ajaxCreateOrder',
+                type: 'POST',
+                dataType: 'json',
+                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                data: {
+                    ten_nguoi_nhan:         receiverName,
+                    so_dien_thoai_nhan:     receiverPhone.replace(/\s+/g, ''),
+                    thu_dien_tu_nhan:       receiverEmail,
+                    tinh_thanh_pho:         province,
+                    quan_huyen:             district,
+                    dia_chi_giao_hang:      shippingAddress,
+                    phuong_thuc_thanh_toan: paymentMethod,
+                    ghi_chu:                orderNote,
+                    csrf_token:             csrfToken
+                },
+                timeout: 8000,
+                success: function (res) {
+                    if (res && res.status === 'success') {
+                        $('.cart-badge-custom').text('0');
+                        window.location.href = res.redirect || ('/FashionKids/index.php?c=order&a=success&order_id=' + (res.order_id || 0));
+                        return;
+                    }
+                    $submitBtn.prop('disabled', false).html(origBtnHtml);
+                    fkShowCheckoutFormError((res && res.message) ? res.message : 'Không thể hoàn tất đặt hàng lúc này.');
+                },
+                error: function (xhr) {
+                    $submitBtn.prop('disabled', false).html(origBtnHtml);
+                    let res = xhr.responseJSON || {};
+                    if (xhr.status === 401 || res.code === 401) {
+                        if (confirm(res.message || 'Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng!')) {
+                            window.location.href = res.redirect || ('/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/checkout.php'));
+                        }
+                        return;
+                    }
+                    fkShowCheckoutFormError(res.message || 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng kiểm tra lại tồn kho hoặc thông tin nhận hàng!');
+                }
+            });
+
             return false;
-        }
-    });
+        });
+    }
 
     // 3. Tương tác chọn sao & gửi Đánh giá sản phẩm AJAX trong #modalReview
     const starLabels = {
@@ -2531,12 +4127,24 @@ $(document).ready(function () {
     });
 
     $(document).on('show.bs.modal', '#modalReview', function () {
-        if ($('#lbn_pdpProductId').length && $('#tgb_review_product_id').length) {
-            let pdpId = $('#lbn_pdpProductId').val() || 101;
-            $('#tgb_review_product_id').val(pdpId);
+        if ($(this).attr('data-context-lock') !== '1') {
+            if ($('#tgb_review_order_id').length) {
+                $('#tgb_review_order_id').val('0');
+            }
+            if ($('#tgb_reviewProductContext').length) {
+                $('#tgb_reviewProductContext').addClass('d-none').text('');
+            }
+            if ($('#lbn_pdpProductId').length && $('#tgb_review_product_id').length) {
+                let pdpId = $('#lbn_pdpProductId').val() || 101;
+                $('#tgb_review_product_id').val(pdpId);
+            }
         }
         $('#tgb_reviewAlert').addClass('d-none').removeClass('alert-danger alert-success').text('');
         renderStarPicker($('#ratingScoreInput').val() || 5);
+    });
+
+    $(document).on('hidden.bs.modal', '#modalReview', function () {
+        $(this).removeAttr('data-context-lock');
     });
 
     $('#tgb_formReview').on('submit', function (e) {
@@ -2550,6 +4158,7 @@ $(document).ready(function () {
         }
 
         let productId = parseInt($('#tgb_review_product_id').val() || $('#lbn_pdpProductId').val() || 101, 10);
+        let orderId = parseInt($('#tgb_review_order_id').val() || 0, 10);
         let ratingScore = parseInt($('#ratingScoreInput').val() || 5, 10);
         let content = ($('#tgb_review_content').val() || '').trim();
         let $alert = $('#tgb_reviewAlert');
@@ -2571,6 +4180,7 @@ $(document).ready(function () {
             dataType: 'json',
             data: {
                 product_id: productId,
+                order_id: orderId,
                 rating_score: ratingScore,
                 review_content: content
             },
@@ -2583,28 +4193,66 @@ $(document).ready(function () {
                     author_name: 'Phụ huynh thành viên',
                     rating: ratingScore,
                     content: content,
+                    order_id: orderId,
                     date: 'Hôm nay'
                 };
+                let finalStars = parseInt(r.rating || ratingScore, 10) || 5;
+
+                // Cập nhật trực tiếp bảng theo dõi đơn hàng nếu đang ở order-tracking.php
+                let $trackCell = $('[data-review-cell-pid="' + productId + '"]');
+                if ($trackCell.length) {
+                    $trackCell.html(
+                        '<span class="badge badge-mint px-2 py-1 rounded-pill font-weight-bold">' +
+                        '<i class="fa-solid fa-star text-warning mr-1"></i>Đã đánh giá (' + finalStars + '/5)</span>'
+                    );
+                    if ($('.lnkt-item-review-btn').length === 0 && $('#lnkt_bannerReviewBtnWrap').length) {
+                        $('#lnkt_bannerReviewBtnWrap').html(
+                            '<span class="badge badge-mint px-3 py-2 rounded-pill font-weight-bold"><i class="fa-solid fa-circle-check mr-1"></i>Đã đánh giá đủ sản phẩm</span>'
+                        );
+                    }
+                }
+
+                // Cập nhật trực tiếp danh sách đánh giá trên PDP nếu đang ở product-detail.php
                 if ($('#pdp_review_list').length) {
+                    $('#pdp_empty_review_notice').remove();
                     let starsHtml = '';
                     for (let i = 1; i <= 5; i++) {
-                        starsHtml += '<i class="fa-' + (i <= r.rating ? 'solid' : 'regular') + ' fa-star"></i>';
+                        starsHtml += '<i class="fa-' + (i <= finalStars ? 'solid' : 'regular') + ' fa-star"></i>';
                     }
                     let esc = function (s) {
                         return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
                     };
+                    let initials = String(r.author_name || 'FK').trim().slice(0, 2).toUpperCase();
                     let newCard =
-                        '<div class="col-md-6 mb-3">' +
-                            '<div class="card card-pastel border-0 p-3 h-100">' +
-                                '<div class="d-flex justify-content-between align-items-center mb-2">' +
-                                    '<strong class="text-slate">' + esc(r.author_name) + '</strong>' +
-                                    '<span class="text-warning small">' + starsHtml + '</span>' +
+                        '<div class="col-12 mb-3">' +
+                            '<div class="card border-0 rounded-lg shadow-sm p-3 bg-white">' +
+                                '<div class="d-flex justify-content-between align-items-start mb-2">' +
+                                    '<div class="d-flex align-items-center">' +
+                                        '<div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">' + esc(initials) + '</div>' +
+                                        '<div>' +
+                                            '<div class="font-weight-bold text-slate">' + esc(r.author_name) +
+                                                '<span class="badge badge-pill badge-mint ml-2"><i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids</span>' +
+                                            '</div>' +
+                                            '<div class="small"><span class="text-warning mr-2">' + starsHtml + '</span>' +
+                                                (r.order_id ? ('<span class="text-muted-custom">Đơn hàng #' + r.order_id + '</span>') : '') +
+                                            '</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<span class="text-muted-custom small">' + esc(r.date) + '</span>' +
                                 '</div>' +
-                                '<p class="small text-muted-custom mb-2">"' + esc(r.content) + '"</p>' +
-                                '<small class="text-success font-weight-bold"><i class="fa-solid fa-circle-check mr-1"></i>Đã xác nhận • ' + esc(r.date) + '</small>' +
+                                '<p class="text-slate small mb-2">' + esc(r.content) + '</p>' +
                             '</div>' +
                         '</div>';
                     $('#pdp_review_list').prepend(newCard);
+
+                    let curCount = parseInt($('#pdp_review_count_top').text(), 10) || 0;
+                    $('#pdp_review_count_top').text(curCount + 1);
+                    $('#pdp_review_count_card').text(curCount + 1);
+                    if (res && res.avg_rating !== undefined) {
+                        let avgStr = Number(res.avg_rating).toFixed(1);
+                        $('#pdp_avg_rating_top').text(avgStr);
+                        $('#pdp_avg_rating_card').text(avgStr);
+                    }
                 }
                 $('#tgb_review_content').val('');
                 setTimeout(function () {
@@ -2619,4 +4267,61 @@ $(document).ready(function () {
             }
         });
     });
+
+    // 4. Nhập kho nhanh trực tiếp trên Bảng điều khiển Quản trị (admin-dashboard.php)
+    window.lbnDashboardQuickRestock = function (productId, addQty, btnEl) {
+        let $btn = $(btnEl);
+        let $alert = $('#admin_dashRestockAlert');
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+        $alert.addClass('d-none').removeClass('alert-danger alert-mint text-slate');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                product_id: productId,
+                new_stock: addQty,
+                mode: 'add'
+            },
+            timeout: 4000,
+            success: function (res) {
+                let updatedStock = (res && res.new_stock !== undefined) ? parseInt(res.new_stock, 10) : 0;
+                if (updatedStock > 5) {
+                    $('#dash_lowStockRow_' + productId).fadeOut(220, function () {
+                        $(this).remove();
+                        if ($('#admin_lowStockList li').length === 0) {
+                            $('#admin_lowStockList').html(
+                                '<li class="list-group-item p-4 text-center text-success font-weight-bold small">' +
+                                '<i class="fa-solid fa-circle-check mr-1"></i>Tất cả sản phẩm hiện đều còn đủ tồn kho (&gt; 5 sản phẩm).</li>'
+                            );
+                        }
+                    });
+                } else {
+                    $('#dash_stockBadge_' + productId).text('Còn ' + updatedStock + ' cái');
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+
+                if (res && res.stats && res.stats.low_stock_count !== undefined) {
+                    $('#admin_lowStockCount').text(res.stats.low_stock_count);
+                } else {
+                    let curCnt = parseInt($('#admin_lowStockCount').text(), 10) || 0;
+                    if (updatedStock > 5 && curCnt > 0) {
+                        $('#admin_lowStockCount').text(curCnt - 1);
+                    }
+                }
+
+                $alert.removeClass('d-none alert-danger').addClass('alert-mint text-slate d-block')
+                    .html('<i class="fa-solid fa-circle-check text-success mr-1"></i>' + ((res && res.message) ? res.message : ('Đã nhập thêm +' + addQty + ' sản phẩm vào kho!')));
+            },
+            error: function (xhr) {
+                $btn.prop('disabled', false).html(origHtml);
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể nhập thêm kho hàng lúc này!';
+                $alert.removeClass('d-none alert-mint').addClass('alert-danger d-block').text(errMsg);
+            }
+        });
+    };
 });

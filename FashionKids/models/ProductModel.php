@@ -122,6 +122,51 @@ class ProductModel extends Model {
         ]
     ];
 
+    private static bool $catalogSeeded = false;
+
+    public function __construct() {
+        parent::__construct();
+        $this->ensureCatalogProductsInDb();
+    }
+
+    /**
+     * Đảm bảo 9 sản phẩm catalog chuẩn (101..109) luôn tồn tại trong bảng lbn_san_pham.
+     * Chỉ chèn INSERT IGNORE các mã còn thiếu, không ghi đè tồn kho/giá thực tế đang vận hành.
+     */
+    public function ensureCatalogProductsInDb(): void {
+        if (self::$catalogSeeded || !$this->hasConnection()) {
+            return;
+        }
+        self::$catalogSeeded = true;
+        try {
+            $cntStmt = $this->db->query("SELECT COUNT(*) AS cnt FROM lbn_san_pham WHERE ma_san_pham BETWEEN 101 AND 109");
+            $cnt = (int)($cntStmt->fetch()['cnt'] ?? 0);
+            if ($cnt >= count($this->mockProducts)) {
+                return;
+            }
+            $ins = $this->db->prepare("
+                INSERT IGNORE INTO lbn_san_pham
+                    (ma_san_pham, ma_danh_muc, ten_san_pham, gia_ban, so_luong_ton_kho, duong_dan_anh, mo_ta_chat_lieu, loai_kich_co)
+                VALUES
+                    (:id, :cat, :name, :price, :stock, :img, :desc, :type)
+            ");
+            foreach ($this->mockProducts as $p) {
+                $ins->execute([
+                    ':id'    => (int)$p['ma_san_pham'],
+                    ':cat'   => (int)$p['ma_danh_muc'],
+                    ':name'  => (string)$p['ten_san_pham'],
+                    ':price' => (float)$p['gia_ban'],
+                    ':stock' => (int)$p['so_luong_ton_kho'],
+                    ':img'   => (string)$p['duong_dan_anh'],
+                    ':desc'  => (string)$p['mo_ta_chat_lieu'],
+                    ':type'  => (string)$p['loai_kich_co'],
+                ]);
+            }
+        } catch (PDOException $e) {
+            error_log('[lbn] ensureCatalogProductsInDb: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Lấy danh sách sản phẩm theo danh mục và lọc giá
      */
@@ -131,7 +176,7 @@ class ProductModel extends Model {
                 $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
                         FROM lbn_san_pham sp 
                         JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
-                        WHERE sp.gia_ban BETWEEN :minPrice AND :maxPrice";
+                        WHERE sp.ma_san_pham >= 101 AND sp.gia_ban BETWEEN :minPrice AND :maxPrice";
                 $params = [':minPrice' => $minPrice, ':maxPrice' => $maxPrice];
 
                 if ($maDanhMuc !== null && $maDanhMuc > 0) {
@@ -142,7 +187,10 @@ class ProductModel extends Model {
 
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute($params);
-                return $stmt->fetchAll();
+                $rows = $stmt->fetchAll();
+                if (!empty($rows)) {
+                    return $rows;
+                }
             } catch (PDOException $e) {
                 error_log("Lỗi lấy danh sách sản phẩm: " . $e->getMessage());
             }
@@ -161,12 +209,15 @@ class ProductModel extends Model {
                 $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
                                             FROM lbn_san_pham sp 
                                             JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
-                                            WHERE sp.so_luong_ton_kho > 0 
-                                            ORDER BY sp.ma_san_pham DESC 
+                                            WHERE sp.ma_san_pham >= 101 AND sp.so_luong_ton_kho > 0 
+                                            ORDER BY sp.ma_san_pham ASC 
                                             LIMIT :limit");
                 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
                 $stmt->execute();
-                return $stmt->fetchAll();
+                $rows = $stmt->fetchAll();
+                if (!empty($rows)) {
+                    return $rows;
+                }
             } catch (PDOException $e) {}
         }
         return array_slice($this->mockProducts, 0, $limit);
@@ -324,8 +375,8 @@ class ProductModel extends Model {
         }
         $catMeta = $catMap[$catId];
 
-        // Kiểm tra tồn kho đã cập nhật trong phiên (nếu có)
-        $stockOverrides = $_SESSION['lbn_stock_overrides'] ?? [];
+        // Khi có CSDL thật, luôn ưu tiên tồn kho thực trong bảng lbn_san_pham (tránh override phiên che khuất DB)
+        $stockOverrides = $this->hasConnection() ? [] : ($_SESSION['lbn_stock_overrides'] ?? []);
         $stock = isset($stockOverrides[$id])
             ? (int)$stockOverrides[$id]
             : (int)($row['so_luong_ton_kho'] ?? $row['stock_quantity'] ?? 10);
@@ -407,35 +458,40 @@ class ProductModel extends Model {
      */
     public function layTatCaSanPhamChuanHoa(): array {
         $byId = [];
+        $loadedFromDb = false;
 
-        // 1. Nạp danh sách 9 sản phẩm chuẩn từ mockProducts
-        foreach ($this->mockProducts as $idx => $item) {
-            $norm = $this->normalizeProductRow($item, $idx);
-            $byId[$norm['id']] = $norm;
-        }
-
-        // 2. Nếu có kết nối CSDL, đồng bộ dữ liệu thực từ bảng lbn_san_pham & lbn_danh_muc
+        // 1. Khi có kết nối CSDL, đồng bộ trực tiếp toàn bộ sản phẩm catalog (>= 101) từ bảng lbn_san_pham & lbn_danh_muc
         if ($this->hasConnection()) {
             try {
                 $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
                         FROM lbn_san_pham sp 
                         JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
-                        ORDER BY sp.ma_san_pham DESC";
+                        WHERE sp.ma_san_pham >= 101
+                        ORDER BY sp.ma_san_pham ASC";
                 $rows = $this->db->query($sql)->fetchAll();
-                foreach ($rows as $idx => $dbRow) {
-                    $norm = $this->normalizeProductRow($dbRow, $idx);
-                    $byId[$norm['id']] = $norm;
+                if (!empty($rows)) {
+                    $loadedFromDb = true;
+                    foreach ($rows as $idx => $dbRow) {
+                        $norm = $this->normalizeProductRow($dbRow, $idx);
+                        $byId[$norm['id']] = $norm;
+                    }
                 }
             } catch (PDOException $e) {
                 error_log("Lỗi đồng bộ lbn_san_pham: " . $e->getMessage());
             }
         }
 
-        // 3. Hợp nhất sản phẩm vừa thêm/cập nhật trong phiên làm việc
-        if (!empty($_SESSION['lbn_custom_products']) && is_array($_SESSION['lbn_custom_products'])) {
-            foreach ($_SESSION['lbn_custom_products'] as $customId => $customRow) {
-                $norm = $this->normalizeProductRow($customRow);
+        // 2. Dự phòng khi chạy offline không có CSDL
+        if (!$loadedFromDb) {
+            foreach ($this->mockProducts as $idx => $item) {
+                $norm = $this->normalizeProductRow($item, $idx);
                 $byId[$norm['id']] = $norm;
+            }
+            if (!empty($_SESSION['lbn_custom_products']) && is_array($_SESSION['lbn_custom_products'])) {
+                foreach ($_SESSION['lbn_custom_products'] as $customRow) {
+                    $norm = $this->normalizeProductRow($customRow);
+                    $byId[$norm['id']] = $norm;
+                }
             }
         }
 
@@ -534,41 +590,55 @@ class ProductModel extends Model {
      * Kiểm tra tồn kho chi tiết qua Stored Function fn_lbn_kiem_tra_ton_kho phục vụ AJAX MH 03 & MH 02
      */
     public function kiemTraTonKhoChiTiet(int $maSanPham, int $soLuongCanMua): array {
-        $allProducts = $this->layTatCaSanPhamChuanHoa();
         $foundProduct = null;
-        foreach ($allProducts as $p) {
-            if ((int)$p['id'] === $maSanPham) {
-                $foundProduct = $p;
-                break;
-            }
-        }
-
-        $tonKhoHienTai = $foundProduct ? (int)$foundProduct['stock_quantity'] : 18;
-        $duHang = ($tonKhoHienTai >= $soLuongCanMua);
+        $tonKhoHienTai = 0;
+        $duHang = false;
         $usedRoutine = false;
 
         if ($this->hasConnection()) {
             try {
-                $checkStmt = $this->db->prepare("SELECT so_luong_ton_kho FROM lbn_san_pham WHERE ma_san_pham = :id LIMIT 1");
+                $checkStmt = $this->db->prepare("
+                    SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh
+                    FROM lbn_san_pham sp
+                    LEFT JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                    WHERE sp.ma_san_pham = :id
+                    LIMIT 1
+                ");
                 $checkStmt->execute([':id' => $maSanPham]);
                 $dbRow = $checkStmt->fetch();
+                $checkStmt->closeCursor();
 
                 if ($dbRow) {
-                    $tonKhoHienTai = isset($_SESSION['lbn_stock_overrides'][$maSanPham])
-                        ? (int)$_SESSION['lbn_stock_overrides'][$maSanPham]
-                        : (int)$dbRow['so_luong_ton_kho'];
+                    $foundProduct = $this->normalizeProductRow($dbRow);
+                    $tonKhoHienTai = (int)$dbRow['so_luong_ton_kho'];
 
                     $fnStmt = $this->db->prepare("SELECT fn_lbn_kiem_tra_ton_kho(:id, :sl) AS du_hang");
                     $fnStmt->execute([':id' => $maSanPham, ':sl' => $soLuongCanMua]);
                     $fnRes = $fnStmt->fetch();
+                    $fnStmt->closeCursor();
                     if ($fnRes !== false && isset($fnRes['du_hang'])) {
                         $duHang = (bool)$fnRes['du_hang'] && ($tonKhoHienTai >= $soLuongCanMua);
                         $usedRoutine = true;
+                    } else {
+                        $duHang = ($tonKhoHienTai >= $soLuongCanMua);
                     }
+                } else {
+                    $tonKhoHienTai = 0;
+                    $duHang = false;
                 }
             } catch (PDOException $e) {
                 error_log("Lỗi gọi fn_lbn_kiem_tra_ton_kho: " . $e->getMessage());
             }
+        } else {
+            $allProducts = $this->layTatCaSanPhamChuanHoa();
+            foreach ($allProducts as $p) {
+                if ((int)$p['id'] === $maSanPham) {
+                    $foundProduct = $p;
+                    break;
+                }
+            }
+            $tonKhoHienTai = $foundProduct ? (int)$foundProduct['stock_quantity'] : 0;
+            $duHang = ($foundProduct !== null && $tonKhoHienTai >= $soLuongCanMua);
         }
 
         return [
@@ -594,12 +664,19 @@ class ProductModel extends Model {
             throw new InvalidArgumentException('Số lượng hàng tồn kho không được là số âm!');
         }
 
-        $allProducts = $this->layTatCaSanPhamChuanHoa();
-        $targetProd  = null;
-        foreach ($allProducts as $p) {
-            if ((int)$p['id'] === $maSanPham) {
-                $targetProd = $p;
-                break;
+        $targetProd = null;
+        if ($this->hasConnection()) {
+            $rawRow = $this->layChiTietSanPham($maSanPham);
+            if ($rawRow) {
+                $targetProd = $this->normalizeProductRow($rawRow);
+            }
+        }
+        if (!$targetProd) {
+            foreach ($this->layTatCaSanPhamChuanHoa() as $p) {
+                if ((int)$p['id'] === $maSanPham) {
+                    $targetProd = $p;
+                    break;
+                }
             }
         }
 
@@ -610,6 +687,7 @@ class ProductModel extends Model {
         }
         $delta = $finalStock - $oldStock;
 
+        $dbUpdated = false;
         if ($this->hasConnection()) {
             try {
                 if ($delta > 0) {
@@ -620,15 +698,19 @@ class ProductModel extends Model {
                     $stmt = $this->db->prepare("UPDATE lbn_san_pham SET so_luong_ton_kho = :stock WHERE ma_san_pham = :pid");
                     $stmt->execute([':stock' => $finalStock, ':pid' => $maSanPham]);
                 }
+                $dbUpdated = true;
+                unset($_SESSION['lbn_stock_overrides'][$maSanPham]);
             } catch (PDOException $e) {
                 error_log("Lỗi cập nhật tồn kho sp_lbn_nhap_them_kho_hang: " . $e->getMessage());
             }
         }
 
-        if (!isset($_SESSION['lbn_stock_overrides']) || !is_array($_SESSION['lbn_stock_overrides'])) {
-            $_SESSION['lbn_stock_overrides'] = [];
+        if (!$dbUpdated) {
+            if (!isset($_SESSION['lbn_stock_overrides']) || !is_array($_SESSION['lbn_stock_overrides'])) {
+                $_SESSION['lbn_stock_overrides'] = [];
+            }
+            $_SESSION['lbn_stock_overrides'][$maSanPham] = $finalStock;
         }
-        $_SESSION['lbn_stock_overrides'][$maSanPham] = $finalStock;
 
         if (isset($_SESSION['lbn_custom_products'][$maSanPham])) {
             $_SESSION['lbn_custom_products'][$maSanPham]['so_luong_ton_kho'] = $finalStock;
@@ -770,15 +852,19 @@ class ProductModel extends Model {
             'gender'           => $gender
         ]);
 
-        if (!isset($_SESSION['lbn_custom_products']) || !is_array($_SESSION['lbn_custom_products'])) {
-            $_SESSION['lbn_custom_products'] = [];
-        }
-        $_SESSION['lbn_custom_products'][$productId] = $savedRecord;
+        if ($this->hasConnection()) {
+            unset($_SESSION['lbn_custom_products'][$productId], $_SESSION['lbn_stock_overrides'][$productId]);
+        } else {
+            if (!isset($_SESSION['lbn_custom_products']) || !is_array($_SESSION['lbn_custom_products'])) {
+                $_SESSION['lbn_custom_products'] = [];
+            }
+            $_SESSION['lbn_custom_products'][$productId] = $savedRecord;
 
-        if (!isset($_SESSION['lbn_stock_overrides']) || !is_array($_SESSION['lbn_stock_overrides'])) {
-            $_SESSION['lbn_stock_overrides'] = [];
+            if (!isset($_SESSION['lbn_stock_overrides']) || !is_array($_SESSION['lbn_stock_overrides'])) {
+                $_SESSION['lbn_stock_overrides'] = [];
+            }
+            $_SESSION['lbn_stock_overrides'][$productId] = $stock;
         }
-        $_SESSION['lbn_stock_overrides'][$productId] = $stock;
 
         return [
             'is_edit' => $isEdit,

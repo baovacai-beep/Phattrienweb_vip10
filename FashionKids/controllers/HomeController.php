@@ -208,7 +208,7 @@ class HomeController extends Controller {
     }
 
     /**
-     * API AJAX Đồng bộ Tin nhắn Tư vấn Realtime (Polling)
+     * API AJAX Đồng bộ Tin nhắn Tư vấn Realtime (Polling) & Đánh dấu đã đọc (tgb_danh_dau_tin_da_doc)
      * URL: index.php?c=home&a=ajaxPollChat
      */
     public function ajaxPollChat(): void {
@@ -216,12 +216,92 @@ class HomeController extends Controller {
             ob_clean();
         }
         $sessionId = trim($_GET['session_id'] ?? $_POST['session_id'] ?? Rbac::chatSessionId());
+        $markRead  = isset($_GET['mark_read']) ? (int)$_GET['mark_read'] : (isset($_POST['mark_read']) ? (int)$_POST['mark_read'] : (Rbac::isStaffOrAdmin() ? 1 : 0));
+        if ($markRead === 1 && Rbac::isStaffOrAdmin()) {
+            $this->realtimeModel->markChatSessionAsRead($sessionId);
+        }
         $this->json([
             'status'     => 'success',
             'session_id' => $sessionId,
             'messages'   => $this->realtimeModel->getChatMessages($sessionId),
             'sessions'   => Rbac::isStaffOrAdmin() ? $this->realtimeModel->getChatSessions() : [],
+            'routine'    => 'tgb_danh_dau_tin_da_doc',
             'timestamp'  => date('H:i:s')
+        ]);
+    }
+
+    /**
+     * API AJAX Đánh dấu đã đọc tin nhắn CSKH (tgb_danh_dau_tin_da_doc) - MH 11
+     * URL: index.php?c=home&a=ajaxMarkChatRead
+     */
+    public function ajaxMarkChatRead(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên CSKH và Quản trị viên mới được phép đồng bộ trạng thái đã đọc.'
+        );
+        $sessionId = trim($_POST['session_id'] ?? $_GET['session_id'] ?? 'sess_guest_123456');
+        $updated   = $this->realtimeModel->markChatSessionAsRead($sessionId);
+        $this->json([
+            'status'       => 'success',
+            'session_id'   => $sessionId,
+            'updated_rows' => $updated,
+            'sessions'     => $this->realtimeModel->getChatSessions(),
+            'routine'      => 'tgb_danh_dau_tin_da_doc',
+            'message'      => 'Đã đánh dấu đã đọc toàn bộ tin nhắn phiên ' . $sessionId
+        ]);
+    }
+
+    /**
+     * API AJAX Xuất bản bài viết Tạp chí từ Bản nháp - CHỈ ADMIN (MH 21/22)
+     * URL: index.php?c=home&a=ajaxPublishBlogArticle
+     */
+    public function ajaxPublishBlogArticle(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Chỉ Quản trị viên mới có thẩm quyền xuất bản chính thức bài viết Tạp chí!'
+        );
+        $id = (int)($_POST['article_id'] ?? $_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $this->json(['status' => 'error', 'message' => 'Mã bài viết không hợp lệ!'], 400);
+            return;
+        }
+        $res = $this->realtimeModel->publishArticle($id);
+        $this->json([
+            'status'     => 'success',
+            'article_id' => $id,
+            'article'    => $res,
+            'message'    => 'Đã xuất bản chính thức bài viết #' . $id . ' lên Tạp chí FashionKids!'
+        ]);
+    }
+
+    /**
+     * API AJAX Xóa bài viết Tạp chí - CHỈ ADMIN (MH 21/22)
+     * URL: index.php?c=home&a=ajaxDeleteBlogArticle
+     */
+    public function ajaxDeleteBlogArticle(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Chỉ Quản trị viên mới có thẩm quyền xóa bài viết khỏi hệ thống Tạp chí!'
+        );
+        $id = (int)($_POST['article_id'] ?? $_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $this->json(['status' => 'error', 'message' => 'Mã bài viết cần xóa không hợp lệ!'], 400);
+            return;
+        }
+        $this->realtimeModel->deleteArticle($id);
+        $this->json([
+            'status'     => 'success',
+            'article_id' => $id,
+            'message'    => 'Đã xóa bài viết #' . $id . ' khỏi hệ thống Tạp chí thành công!'
         ]);
     }
 

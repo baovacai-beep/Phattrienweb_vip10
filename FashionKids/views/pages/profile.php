@@ -3,30 +3,29 @@ $page_title = "Hồ Sơ Thành Viên & Thẻ VIP - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
+require_once __DIR__ . '/../../models/UserModel.php';
+$hgbProfileModel = new UserModel();
+$currentProfileUid = Rbac::currentUserId();
+if ($currentProfileUid) {
+    $hgbProfileModel->dongBoSessionNguoiDung($currentProfileUid);
+}
+$vipInfo  = $hgbProfileModel->layThongTinVipHienTai($currentProfileUid);
 $sessUser = $_SESSION['user'] ?? null;
+
 if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
-    $diem = (int)($sessUser['diem_tich_luy'] ?? 0);
-    if ($diem >= 3000) {
-        $tenHang = 'KIM CƯƠNG (DIAMOND)';
-        $hangClass = 'vip-card-diamond';
-        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 15);
-        $diemKeTiep = 3000;
-    } elseif ($diem >= 1500) {
-        $tenHang = 'VÀNG (GOLD)';
-        $hangClass = 'vip-card-gold';
-        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 10);
-        $diemKeTiep = 3000;
-    } elseif ($diem >= 500) {
-        $tenHang = 'BẠC (SILVER)';
-        $hangClass = 'vip-card-silver';
-        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 5);
-        $diemKeTiep = 1500;
-    } else {
-        $tenHang = mb_strtoupper((string)($sessUser['ten_hang'] ?? 'ĐỒNG (BRONZE)'), 'UTF-8');
-        $hangClass = 'vip-card-bronze';
-        $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 0);
-        $diemKeTiep = 500;
-    }
+    $diem         = (int)($vipInfo['points'] ?? ($sessUser['diem_tich_luy'] ?? 0));
+    $phanTramGiam = (float)($vipInfo['discount_percent'] ?? ($sessUser['phan_tram_giam_gia'] ?? 0));
+    $rawTierName  = (string)($vipInfo['tier_name'] ?? ($sessUser['ten_hang'] ?? 'Đồng (Bronze)'));
+    $tierClassMap = [
+        'tier-diamond' => 'vip-card-diamond',
+        'tier-gold'    => 'vip-card-gold',
+        'tier-silver'  => 'vip-card-silver',
+        'tier-bronze'  => 'vip-card-bronze',
+    ];
+    $hangClass    = $tierClassMap[$vipInfo['badge_class'] ?? 'tier-bronze'] ?? 'vip-card-bronze';
+    $tenHang      = mb_strtoupper($rawTierName, 'UTF-8');
+    $diemKeTiep   = (int)($vipInfo['next_tier_min'] ?? 500);
+    $nextTierName = $vipInfo['next_tier_name'] ?? null;
 
     $user = [
         'ma_nguoi_dung'  => (int)($sessUser['ma_nguoi_dung'] ?? 0),
@@ -40,6 +39,7 @@ if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
         'hang_class'     => $hangClass,
         'phan_tram_giam' => $phanTramGiam,
         'diem_ke_tiep'   => $diemKeTiep,
+        'next_tier_name' => $nextTierName,
         'da_xac_thuc'    => (int)($sessUser['da_xac_thuc_otp'] ?? 1),
     ];
 } else {
@@ -55,12 +55,13 @@ if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
         'hang_class'     => 'vip-card-bronze',
         'phan_tram_giam' => 0,
         'diem_ke_tiep'   => 500,
+        'next_tier_name' => 'Bạc (Silver)',
         'da_xac_thuc'    => 0,
     ];
 }
 
-$progress = $user['diem_ke_tiep'] > 0 ? min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 100)) : 100;
-$diemConThieu = max(0, $user['diem_ke_tiep'] - $user['diem_tich_luy']);
+$progress     = (int)($vipInfo['progress_percent'] ?? ($user['diem_ke_tiep'] > 0 ? min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 100)) : 100));
+$diemConThieu = (int)($vipInfo['points_needed'] ?? max(0, $user['diem_ke_tiep'] - $user['diem_tich_luy']));
 $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']) : '#FK-GUEST';
 ?>
 

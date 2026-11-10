@@ -2,47 +2,78 @@
 $page_title = "Giỏ Hàng & Thanh Toán - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/ProductModel.php";
+require_once __DIR__ . "/../../models/UserModel.php";
+
+$checkoutProductModel = new ProductModel();
+$checkoutUserModel    = new UserModel();
+$currentUid           = Rbac::currentUserId();
+if ($currentUid) {
+    $checkoutUserModel->dongBoSessionNguoiDung($currentUid);
+}
 
 $lnkt_cart_items = [];
 $sessCart = (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) ? $_SESSION['cart'] : [];
 $seqId = 1;
-foreach ($sessCart as $cItem) {
-    $qty = max(1, (int)($cItem['quantity'] ?? 1));
-    $price = max(0, (int)($cItem['price'] ?? 0));
+foreach ($sessCart as $cartKey => $cItem) {
+    $pid = (int)($cItem['product_id'] ?? 0);
+    if ($pid <= 0) {
+        continue;
+    }
+    $qty      = max(1, (int)($cItem['quantity'] ?? 1));
+    $liveInfo = $checkoutProductModel->kiemTraTonKhoChiTiet($pid, $qty);
+    $price    = (float)($liveInfo['price'] ?? ($cItem['price'] ?? 0));
+    $stock    = (int)($liveInfo['available_stock'] ?? 0);
+    $prodName = (string)($liveInfo['product_name'] ?? ($cItem['product_name'] ?? $cItem['name'] ?? 'Sản phẩm FashionKids'));
+    $sku      = (string)($liveInfo['sku'] ?? ($cItem['sku'] ?? ('FK-LBN-' . $pid)));
+    $image    = (string)($liveInfo['image'] ?? ($cItem['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'));
+
+    // Đồng bộ lại giá chuẩn DB trong session cart
+    $_SESSION['cart'][$cartKey]['price']        = $price;
+    $_SESSION['cart'][$cartKey]['product_name'] = $prodName;
+    $_SESSION['cart'][$cartKey]['sku']          = $sku;
+    $_SESSION['cart'][$cartKey]['image']        = $image;
+
     $lnkt_cart_items[] = [
         'item_id'    => $seqId++,
-        'product_id' => (int)($cItem['product_id'] ?? 101),
-        'sku'        => (string)($cItem['sku'] ?? 'FK-LBN-01'),
-        'image'      => (string)($cItem['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'),
-        'name'       => (string)($cItem['product_name'] ?? $cItem['name'] ?? 'Sản phẩm FashionKids'),
+        'cart_key'   => (string)$cartKey,
+        'product_id' => $pid,
+        'sku'        => $sku,
+        'image'      => $image,
+        'name'       => $prodName,
         'size'       => (string)($cItem['size'] ?? 'Size 2 (2-3T)'),
         'price'      => $price,
         'quantity'   => $qty,
+        'stock'      => $stock,
     ];
 }
 
-$sessUser = (!empty($_SESSION['user']) && is_array($_SESSION['user'])) ? $_SESSION['user'] : null;
+$sessUser  = (!empty($_SESSION['user']) && is_array($_SESSION['user'])) ? $_SESSION['user'] : null;
 $recvName  = $sessUser ? (string)($sessUser['ho_va_ten'] ?? '') : '';
 $recvPhone = $sessUser ? (string)($sessUser['so_dien_thoai'] ?? '') : '';
 $recvAddr  = $sessUser ? (string)($sessUser['dia_chi_nha'] ?? '') : '';
 $recvEmail = $sessUser ? (string)($sessUser['thu_dien_tu'] ?? '') : '';
 
-$vipDiem = $sessUser ? (int)($sessUser['diem_tich_luy'] ?? 0) : 0;
-if ($vipDiem >= 3000) {
-    $init_vip_percent  = 15;
-    $vipTierTitle      = 'Kim Cương (-15%)';
+// Tự động lấy hạng thẻ VIP & % chiết khấu trực tiếp từ DB (chỉ đọc, không cho chọn thủ công)
+$vipInfo           = $checkoutUserModel->layThongTinVipHienTai($currentUid);
+$init_vip_percent  = (float)($vipInfo['discount_percent'] ?? 0.0);
+$vipPoints         = (int)($vipInfo['points'] ?? 0);
+$vipTierName       = (string)($vipInfo['tier_name'] ?? 'Đồng (Bronze)');
+$vipIsGuest        = !empty($vipInfo['is_guest']);
+$vipNextTierName   = $vipInfo['next_tier_name'] ?? null;
+$vipPointsNeeded   = (int)($vipInfo['points_needed'] ?? 0);
+
+if ($init_vip_percent >= 15) {
+    $vipTierTitle      = 'Kim Cương (-' . (int)$init_vip_percent . '%)';
     $vipTierBadgeClass = 'badge-primary';
-} elseif ($vipDiem >= 1500) {
-    $init_vip_percent  = 10;
-    $vipTierTitle      = 'Hạng Vàng (-10%)';
+} elseif ($init_vip_percent >= 10) {
+    $vipTierTitle      = 'Hạng Vàng (-' . (int)$init_vip_percent . '%)';
     $vipTierBadgeClass = 'badge-gold';
-} elseif ($vipDiem >= 500) {
-    $init_vip_percent  = 5;
-    $vipTierTitle      = 'Hạng Bạc (-5%)';
+} elseif ($init_vip_percent >= 5) {
+    $vipTierTitle      = 'Hạng Bạc (-' . (int)$init_vip_percent . '%)';
     $vipTierBadgeClass = 'badge-sky';
 } else {
-    $init_vip_percent  = 0;
-    $vipTierTitle      = 'Hạng Đồng (0%)';
+    $vipTierTitle      = $vipIsGuest ? 'Khách vãng lai (0%)' : ($vipTierName . ' (0%)');
     $vipTierBadgeClass = 'badge-secondary';
 }
 
@@ -50,15 +81,17 @@ $firstCartProductId = !empty($lnkt_cart_items) ? (int)$lnkt_cart_items[0]['produ
 $firstCartSize      = !empty($lnkt_cart_items) ? (string)$lnkt_cart_items[0]['size'] : 'Size 2 (2-3T)';
 $firstCartQty       = !empty($lnkt_cart_items) ? (int)$lnkt_cart_items[0]['quantity'] : 1;
 
-// Tính toán chi phí khởi tạo từ giỏ hàng & hạng thẻ thực tế
 $init_subtotal = 0;
 foreach ($lnkt_cart_items as $item) {
     $init_subtotal += $item['price'] * $item['quantity'];
 }
 $init_discount_amount = round(($init_subtotal * $init_vip_percent) / 100);
-$init_shipping_fee = ($init_subtotal > 0 && $init_subtotal < 300000) ? 25000 : 0;
-$init_total_amount = max(0, $init_subtotal - $init_discount_amount + $init_shipping_fee);
-$init_reward_points = (int)floor($init_total_amount / 10000);
+$init_shipping_fee    = 0;
+$init_total_amount    = max(0, $init_subtotal - $init_discount_amount);
+$init_reward_points   = (int)floor($init_total_amount / 10000);
+
+$checkoutFlashError = $_SESSION['checkout_flash_error'] ?? '';
+unset($_SESSION['checkout_flash_error']);
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_checkout_section">
@@ -124,6 +157,9 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                                     <tr class="lnkt-cart-row"
                                         id="lnkt_cartRow_<?= $item['item_id'] ?>"
                                         data-item-id="<?= $item['item_id'] ?>"
+                                        data-cart-key="<?= htmlspecialchars($item['cart_key']) ?>"
+                                        data-product-id="<?= (int)$item['product_id'] ?>"
+                                        data-stock="<?= (int)$item['stock'] ?>"
                                         data-price="<?= $item['price'] ?>">
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -137,7 +173,7 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                                                         <span class="badge badge-pill badge-sky px-2 py-1 mr-2">
                                                             <?= htmlspecialchars($item['size']) ?>
                                                         </span>
-                                                        <small class="text-muted-custom">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong></small>
+                                                        <small class="text-muted-custom">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong> • Kho còn <strong class="text-slate"><?= (int)$item['stock'] ?></strong></small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -157,9 +193,10 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                                                 </div>
                                                 <input type="number"
                                                        id="lnkt_cartQty_<?= $item['item_id'] ?>"
+                                                       data-cart-key="<?= htmlspecialchars($item['cart_key']) ?>"
                                                        class="form-control text-center font-weight-bold lnkt-cart-qty-input"
-                                                       value="<?= $item['quantity'] ?>" min="1" max="20"
-                                                       onchange="lnktRecalculateCheckout()">
+                                                       value="<?= $item['quantity'] ?>" min="1" max="<?= max(1, (int)$item['stock']) ?>"
+                                                       onchange="lnktOnCartQtyInputChange(<?= $item['item_id'] ?>)">
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-light border font-weight-bold"
                                                             onclick="lnktChangeCartQty(<?= $item['item_id'] ?>, 1)">
@@ -286,7 +323,7 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                             <label class="small font-weight-bold text-slate" for="lnkt_orderNote">
                                 Ghi chú cho nhân viên đóng gói &amp; bưu tá:
                             </label>
-                            <textarea id="lnkt_orderNote" rows="2" class="form-control"
+                            <textarea id="lnkt_orderNote" name="ghi_chu" rows="2" class="form-control"
                                       placeholder="VD: Giao giờ hành chính, gọi trước cho mẹ bé 15 phút..."></textarea>
                         </div>
                     </form>
@@ -307,27 +344,49 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                 </div>
 
                 <div class="card-body p-4 pt-2">
-                    <!-- Bộ chọn mô phỏng hạng thẻ VIP để kiểm thử chiết khấu tự động -->
+                    <div id="lnkt_checkoutAlert" class="alert alert-danger small py-2 mb-3 <?= $checkoutFlashError !== '' ? '' : 'd-none' ?>" role="alert">
+                        <?= $checkoutFlashError !== '' ? ('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' . htmlspecialchars($checkoutFlashError)) : '' ?>
+                    </div>
+
+                    <?php if ($vipIsGuest): ?>
+                        <div class="alert alert-warning small py-2 mb-3">
+                            <i class="fa-solid fa-user-lock mr-1"></i>Bạn đang mua với tư cách <strong>Khách vãng lai</strong>.
+                            <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/checkout.php') ?>" class="font-weight-bold text-peach">Đăng nhập ngay</a> để hưởng chiết khấu VIP &amp; tích điểm thưởng (giỏ hàng vẫn được giữ nguyên).
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Thông tin Hạng thẻ VIP tự động theo tài khoản (Chỉ đọc - Bảo mật Server-side) -->
                     <div class="p-3 rounded mb-3 lbn-vip-price-box">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small font-weight-bold text-slate">
                                 <i class="fa-solid fa-crown text-warning mr-1"></i>Hạng thẻ VIP áp dụng:
                             </span>
-                            <span id="lnkt_checkoutVipBadge" class="badge <?= htmlspecialchars($vipTierBadgeClass) ?> px-2 py-1 rounded-pill">
+                            <span id="lnkt_checkoutVipBadge" class="badge <?= htmlspecialchars($vipTierBadgeClass) ?> px-3 py-1 rounded-pill font-weight-bold">
                                 <?= htmlspecialchars($vipTierTitle) ?>
                             </span>
                         </div>
-                        <div class="btn-group btn-group-sm btn-block" role="group">
-                            <button type="button" class="btn <?= $init_vip_percent === 0 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
-                                    onclick="lnktSetCheckoutVipDiscount(0, 'Hạng Đồng (0%)', this)">Đồng 0%</button>
-                            <button type="button" class="btn <?= $init_vip_percent === 5 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
-                                    onclick="lnktSetCheckoutVipDiscount(5, 'Hạng Bạc (-5%)', this)">Bạc -5%</button>
-                            <button type="button" class="btn <?= $init_vip_percent === 10 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
-                                    onclick="lnktSetCheckoutVipDiscount(10, 'Hạng Vàng (-10%)', this)">Vàng -10%</button>
-                            <button type="button" class="btn <?= $init_vip_percent === 15 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
-                                    onclick="lnktSetCheckoutVipDiscount(15, 'Kim Cương (-15%)', this)">K.Cương -15%</button>
+                        <div class="d-flex justify-content-between align-items-center small text-muted-custom">
+                            <span>
+                                <?php if ($vipIsGuest): ?>
+                                    Áp dụng mặc định khi chưa đăng nhập
+                                <?php else: ?>
+                                    Điểm tích lũy hiện có: <strong class="text-slate"><?= number_format($vipPoints) ?> điểm</strong>
+                                <?php endif; ?>
+                            </span>
+                            <span class="font-weight-bold text-success">
+                                Giảm tự động <?= (int)$init_vip_percent ?>%
+                            </span>
                         </div>
-                        <input type="hidden" id="lnkt_checkoutDiscountPercent" value="<?= $init_vip_percent ?>">
+                        <?php if (!$vipIsGuest && $vipNextTierName !== null && $vipPointsNeeded > 0): ?>
+                            <div class="mt-2 pt-2 border-top small text-muted-custom">
+                                <i class="fa-solid fa-sparkles text-warning mr-1"></i>Tích lũy thêm <strong><?= number_format($vipPointsNeeded) ?> điểm</strong> để tự động lên <strong><?= htmlspecialchars($vipNextTierName) ?></strong>.
+                            </div>
+                        <?php elseif (!$vipIsGuest && $init_vip_percent >= 15): ?>
+                            <div class="mt-2 pt-2 border-top small text-success font-weight-bold">
+                                <i class="fa-solid fa-gem mr-1"></i>Bạn đang ở hạng thẻ cao cấp nhất hệ thống!
+                            </div>
+                        <?php endif; ?>
+                        <input type="hidden" id="lnkt_checkoutDiscountPercent" value="<?= (float)$init_vip_percent ?>" readonly>
                     </div>
 
                     <!-- Bảng tổng hợp dòng tiền -->
@@ -350,8 +409,8 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
 
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                             <span class="text-muted-custom font-weight-bold">Phí vận chuyển tiêu chuẩn:</span>
-                            <span id="lnkt_summaryShipping" class="badge <?= $init_shipping_fee > 0 ? 'badge-warning' : 'badge-mint' ?> px-2 py-1 rounded-pill">
-                                <?= $init_shipping_fee > 0 ? number_format($init_shipping_fee, 0, ',', '.') . ' đ' : 'Miễn phí (0 đ)' ?>
+                            <span id="lnkt_summaryShipping" class="badge badge-mint px-2 py-1 rounded-pill">
+                                Miễn phí (0 đ)
                             </span>
                         </div>
 
@@ -388,9 +447,13 @@ $init_reward_points = (int)floor($init_total_amount / 10000);
                         <div class="custom-control custom-radio">
                             <input type="radio" id="lnkt_payBank" name="phuong_thuc_thanh_toan" form="lnkt_formCheckoutOrder" class="custom-control-input" value="vietqr">
                             <label class="custom-control-label small font-weight-bold text-slate" for="lnkt_payBank">
-                                <i class="fa-solid fa-qrcode text-info mr-1"></i> Chuyển khoản nhanh VietQR / Ví MoMo
+                                <i class="fa-solid fa-qrcode text-info mr-1"></i> Chuyển khoản nhanh VietQR MB Bank (Tự động đối soát 24/7)
                             </label>
                         </div>
+                        <small class="text-muted-custom d-block mt-2">
+                            <i class="fa-regular fa-clock text-warning mr-1"></i>
+                            Đơn VietQR giữ chỗ trong <strong>24 giờ</strong> (MB Bank <strong><?= htmlspecialchars(defined('VIETQR_ACCOUNT_NO') ? VIETQR_ACCOUNT_NO : '0913672861') ?></strong> - <?= htmlspecialchars(defined('VIETQR_ACCOUNT_NAME') ? VIETQR_ACCOUNT_NAME : 'HO GIA BAO') ?>) và tự động hủy nếu quá hạn. Khi chưa thanh toán, bạn vẫn có thể đổi sang COD bất kỳ lúc nào.
+                        </small>
                     </div>
 
                     <!-- Nút Chốt Đặt Hàng -->
