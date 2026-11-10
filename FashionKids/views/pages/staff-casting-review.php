@@ -203,7 +203,7 @@ foreach ($kolList as $k) {
                             <i class="fa-solid fa-sparkles text-warning mr-1"></i><?= htmlspecialchars($kol['talent']) ?>
                         </p>
 
-                        <!-- Cụm nút xét duyệt gọi Stored Procedure sp_lnkt_xet_duyet_kol_nhi (Theo RBAC: Staff duyệt Vòng 1, Admin Quyết định) -->
+                        <!-- Cụm nút xét duyệt hồ sơ KOL Nhí theo vai trò -->
                         <div class="mt-auto pt-2 border-top d-flex justify-content-between">
                             <?php if (Rbac::isAdmin()): ?>
                                 <button type="button"

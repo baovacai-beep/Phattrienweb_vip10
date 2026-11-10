@@ -115,6 +115,24 @@ class StaffController extends Controller {
     }
 
     /**
+     * MH 10 (Orders): AJAX Polling nhận thông báo đơn hàng mới mỗi 4 giây
+     * URL: index.php?c=staff&a=ajaxCheckNewOrders
+     */
+    public function ajaxCheckNewOrders(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép theo dõi đơn hàng mới!'
+        );
+
+        require_once __DIR__ . '/OrderController.php';
+        $orderCtrl = new OrderController();
+        $orderCtrl->ajaxCheckNewOrders();
+    }
+
+    /**
      * 2. MH 11 (Live Chat): AJAX Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc)
      * Sử dụng PDO Singleton từ core/Database.php và $stmt->closeCursor()
      * URL: index.php?c=staff&a=ajaxMarkChatRead

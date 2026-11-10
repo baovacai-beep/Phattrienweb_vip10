@@ -2,8 +2,20 @@
 $page_title = "Chi Tiết Sản Phẩm & Đánh Giá Thực Tế";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/ProductModel.php";
+require_once __DIR__ . "/../../models/UserModel.php";
+require_once __DIR__ . "/../../models/ReviewModel.php";
 
-// Danh mục chuẩn của Lê Bảo Ngọc (lbn_categories)
+$pdpProductModel = new ProductModel();
+$pdpUserModel    = new UserModel();
+$pdpReviewModel  = new ReviewModel();
+
+$currentUid = Rbac::currentUserId();
+if ($currentUid) {
+    $pdpUserModel->dongBoSessionNguoiDung($currentUid);
+}
+
+// Danh mục chuẩn của hệ thống
 $lbn_categories = [
     1 => ['id' => 1, 'slug' => 'vay_cong_chua', 'name' => 'Váy công chúa', 'type' => 'quan_ao',  'icon' => 'fa-wand-magic-sparkles text-peach'],
     2 => ['id' => 2, 'slug' => 'bo_thun',       'name' => 'Bộ thun',       'type' => 'quan_ao',  'icon' => 'fa-shirt text-info'],
@@ -11,7 +23,7 @@ $lbn_categories = [
     4 => ['id' => 4, 'slug' => 'giay_sandal',   'name' => 'Giày sandal',   'type' => 'giay_dep', 'icon' => 'fa-shoe-prints text-warning']
 ];
 
-// Danh sách sản phẩm mẫu chuẩn lbn_products
+// Danh mục chi tiết mở rộng cho PDP (phối hợp đồng bộ với CSDL)
 $lbn_products = [
     101 => [
         'id'             => 101,
@@ -28,11 +40,11 @@ $lbn_products = [
         'original_price' => 340000,
         'stock_quantity' => 18,
         'rating'         => 4.9,
-        'reviews'        => 128,
+        'reviews'        => 0,
         'sold_count'     => 420,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Tự Nhiên',
-        'size_range'     => ['Size 1 (0-1T)', 'Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
         'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-person-dress text-peach',
@@ -61,12 +73,12 @@ $lbn_products = [
         'original_price' => 280000,
         'stock_quantity' => 24,
         'rating'         => 4.8,
-        'reviews'        => 95,
+        'reviews'        => 0,
         'sold_count'     => 560,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Bamboo Thoáng Khí Làm Mát -3°C',
-        'size_range'     => ['Size 1 (0-1T)', 'Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
-        'default_size'   => 'Size 2 (1-2T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-shirt text-info',
         'colors'         => [
@@ -94,7 +106,7 @@ $lbn_products = [
         'original_price' => 260000,
         'stock_quantity' => 14,
         'rating'         => 5.0,
-        'reviews'        => 74,
+        'reviews'        => 0,
         'sold_count'     => 310,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Khử Mùi & Đế Uốn Gập 360°',
@@ -115,6 +127,7 @@ $lbn_products = [
     104 => [
         'id'             => 104,
         'sku'            => 'FK-LBN-04',
+        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -126,12 +139,12 @@ $lbn_products = [
         'original_price' => 380000,
         'stock_quantity' => 5,
         'rating'         => 4.9,
-        'reviews'        => 29,
+        'reviews'        => 0,
         'sold_count'     => 185,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Dệt Kim UPF 50+ Chống Tia Cực Tím',
-        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
-        'default_size'   => 'Size 2 (1-2T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-vest-patches text-success',
         'colors'         => [
@@ -141,12 +154,12 @@ $lbn_products = [
         'description'    => 'Áo khoác Cardigan sợi tre dệt 2 lớp mềm xốp, trang bị chỉ số chống nắng tự nhiên UPF 50+ cản 98% tia UVA/UVB, cúc gỗ mài nhẵn không xước da bé.',
         'material'       => '100% Sợi tre dệt kim tự nhiên Organic Bamboo.',
         'certifications' => ['Chứng nhận chống tia cực tím UPF 50+', 'OEKO-TEX Standard 100'],
-                'wash_guide'     => 'Giặt tay nhẹ nhàng hoặc dùng túi giặt chế độ đồ len em bé.',
-        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg'
+        'wash_guide'     => 'Giặt tay nhẹ nhàng hoặc dùng túi giặt chế độ đồ len em bé.'
     ],
     105 => [
         'id'             => 105,
         'sku'            => 'FK-LBN-05',
+        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
         'category_id'    => 1,
         'category_slug'  => 'vay_cong_chua',
         'category_name'  => 'Váy công chúa',
@@ -158,15 +171,14 @@ $lbn_products = [
         'original_price' => 420000,
         'stock_quantity' => 11,
         'rating'         => 5.0,
-        'reviews'        => 64,
+        'reviews'        => 0,
         'sold_count'     => 290,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Hữu Cơ & Voan Tùng Xòe Cao Cấp',
-        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
-        'default_size'   => 'Size 2 (1-2T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-crown text-peach',
-        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
         'colors'         => [
             ['name' => 'Cam Đào Pastel', 'code' => '#FF9E93', 'active' => true],
             ['name' => 'Kem Sữa Công Chúa', 'code' => '#FAF8F5', 'active' => false]
@@ -179,6 +191,7 @@ $lbn_products = [
     106 => [
         'id'             => 106,
         'sku'            => 'FK-LBN-06',
+        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
         'category_id'    => 2,
         'category_slug'  => 'bo_thun',
         'category_name'  => 'Bộ thun',
@@ -190,15 +203,14 @@ $lbn_products = [
         'original_price' => 240000,
         'stock_quantity' => 32,
         'rating'         => 4.8,
-        'reviews'        => 51,
+        'reviews'        => 0,
         'sold_count'     => 410,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Thoáng Khí',
-        'size_range'     => ['Size 1 (0-1T)', 'Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)'],
-        'default_size'   => 'Size 2 (1-2T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)'],
+        'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-baby text-success',
-        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
         'colors'         => [
             ['name' => 'Vàng Bơ Kem Sữa', 'code' => '#FDE2B8', 'active' => true],
             ['name' => 'Xanh Mint Nhạt', 'code' => '#B8E0D2', 'active' => false]
@@ -211,6 +223,7 @@ $lbn_products = [
     107 => [
         'id'             => 107,
         'sku'            => 'FK-LBN-07',
+        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -222,15 +235,14 @@ $lbn_products = [
         'original_price' => 395000,
         'stock_quantity' => 4,
         'rating'         => 4.9,
-        'reviews'        => 19,
+        'reviews'        => 0,
         'sold_count'     => 145,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Nỉ Bông Sợi Tre Giữ Ấm & Chống Nắng',
-        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
-        'default_size'   => 'Size 2 (1-2T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 2 (2-3T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-shirt text-peach',
-        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
         'colors'         => [
             ['name' => 'Hồng Đào Pastel', 'code' => '#FFD1DC', 'active' => true],
             ['name' => 'Trắng Kem Sữa', 'code' => '#FAF8F5', 'active' => false]
@@ -243,6 +255,7 @@ $lbn_products = [
     108 => [
         'id'             => 108,
         'sku'            => 'FK-LBN-08',
+        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
         'category_id'    => 4,
         'category_slug'  => 'giay_sandal',
         'category_name'  => 'Giày sandal',
@@ -254,7 +267,7 @@ $lbn_products = [
         'original_price' => 295000,
         'stock_quantity' => 16,
         'rating'         => 4.7,
-        'reviews'        => 23,
+        'reviews'        => 0,
         'sold_count'     => 210,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Êm Chân & Quai Dán Linh Hoạt',
@@ -262,7 +275,6 @@ $lbn_products = [
         'default_size'   => 'Size 24 (14cm)',
         'type'           => 'giay_dep',
         'icon'           => 'fa-shoe-prints text-info',
-        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
         'colors'         => [
             ['name' => 'Xanh Sky Phối Kem', 'code' => '#A8DADC', 'active' => true]
         ],
@@ -274,6 +286,7 @@ $lbn_products = [
     109 => [
         'id'             => 109,
         'sku'            => 'FK-LBN-09',
+        'image'          => '/FashionKids/images/ao-khoac-bomber.jpg',
         'category_id'    => 3,
         'category_slug'  => 'ao_khoac',
         'category_name'  => 'Áo khoác',
@@ -285,15 +298,14 @@ $lbn_products = [
         'original_price' => 410000,
         'stock_quantity' => 9,
         'rating'         => 4.9,
-        'reviews'        => 31,
+        'reviews'        => 0,
         'sold_count'     => 175,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre 2 Lớp Cản Gió & Thoáng Khí',
-        'size_range'     => ['Size 2 (1-2T)', 'Size 3 (2-3T)', 'Size 4 (3-4T)', 'Size 5 (5-6T)'],
-        'default_size'   => 'Size 3 (2-3T)',
+        'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+        'default_size'   => 'Size 3 (3-4T)',
         'type'           => 'quan_ao',
         'icon'           => 'fa-user-astronaut text-primary',
-        'image'          => '/FashionKids/images/ao-khoac-bomber.jpg',
         'colors'         => [
             ['name' => 'Xanh Vũ Trụ Phối Kem', 'code' => '#A8DADC', 'active' => true]
         ],
@@ -304,6 +316,56 @@ $lbn_products = [
     ]
 ];
 
+// Đồng bộ dữ liệu giá, tồn kho, tên, ảnh từ CSDL thực tế
+$liveCatalog = $pdpProductModel->layTatCaSanPhamChuanHoa();
+foreach ($liveCatalog as $liveRow) {
+    $lid = (int)$liveRow['id'];
+    if (isset($lbn_products[$lid])) {
+        $lbn_products[$lid]['name']           = $liveRow['name'];
+        $lbn_products[$lid]['price']          = (float)$liveRow['price'];
+        $lbn_products[$lid]['original_price'] = max((float)$liveRow['price'] + 55000, round($liveRow['price'] * 1.18, -3));
+        $lbn_products[$lid]['stock_quantity'] = (int)$liveRow['stock_quantity'];
+        $lbn_products[$lid]['image']          = $liveRow['image'];
+        $lbn_products[$lid]['material']       = $liveRow['material'];
+        $lbn_products[$lid]['category_id']    = (int)$liveRow['category_id'];
+        $lbn_products[$lid]['category_slug']  = $liveRow['category_slug'];
+        $lbn_products[$lid]['category_name']  = $liveRow['category_name'];
+    } else {
+        $isShoes = ($liveRow['type'] === 'giay_dep');
+        $lbn_products[$lid] = [
+            'id'             => $lid,
+            'sku'            => $liveRow['sku'],
+            'image'          => $liveRow['image'],
+            'category_id'    => (int)$liveRow['category_id'],
+            'category_slug'  => $liveRow['category_slug'],
+            'category_name'  => $liveRow['category_name'],
+            'name'           => $liveRow['name'],
+            'gender'         => $liveRow['gender'],
+            'gender_label'   => $liveRow['gender_label'],
+            'gender_badge'   => $liveRow['gender_badge'],
+            'price'          => (float)$liveRow['price'],
+            'original_price' => round($liveRow['price'] * 1.18, -3),
+            'stock_quantity' => (int)$liveRow['stock_quantity'],
+            'rating'         => (float)$liveRow['rating'],
+            'reviews'        => 0,
+            'sold_count'     => 35,
+            'is_bamboo'      => 1,
+            'bamboo_label'   => '100% Vải Sợi Tre Kháng Khuẩn',
+            'size_range'     => $isShoes
+                ? ['Size 21 (12cm)', 'Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)']
+                : ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
+            'default_size'   => $isShoes ? 'Size 24 (14cm)' : 'Size 2 (2-3T)',
+            'type'           => $liveRow['type'],
+            'icon'           => $liveRow['icon'],
+            'colors'         => [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]],
+            'description'    => $liveRow['material'],
+            'material'       => $liveRow['material'],
+            'certifications' => ['OEKO-TEX® Standard 100', 'An toàn cho làn da nhạy cảm của bé'],
+            'wash_guide'     => 'Giặt nhẹ nước mát dưới 30°C, phơi nơi thoáng gió.'
+        ];
+    }
+}
+
 // Lấy ID sản phẩm từ URL (mặc định ID 101)
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 101;
 if (!isset($lbn_products[$product_id])) {
@@ -311,25 +373,36 @@ if (!isset($lbn_products[$product_id])) {
 }
 $prod = $lbn_products[$product_id];
 
-// Tính toán chiết khấu thẻ VIP theo phiên đăng nhập (Mặc định Hạng Đồng - 0% cho khách vãng lai)
-$sessUser = $_SESSION['user'] ?? null;
-$init_discount_percent = (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) ? (int)($sessUser['phan_tram_giam_gia'] ?? 0) : 0;
-if ($init_discount_percent >= 15) {
-    $vipTierTitle = 'Hạng Kim Cương';
-    $vipTierBtnKey = 'diamond';
-} elseif ($init_discount_percent >= 10) {
-    $vipTierTitle = 'Hạng Vàng';
-    $vipTierBtnKey = 'gold';
-} elseif ($init_discount_percent >= 5) {
-    $vipTierTitle = 'Hạng Bạc';
-    $vipTierBtnKey = 'silver';
-} else {
-    $init_discount_percent = 0;
-    $vipTierTitle = 'Hạng Đồng';
-    $vipTierBtnKey = 'bronze';
-}
+// Lấy hạng thẻ VIP & chiết khấu thực tế từ CSDL (chỉ đọc, tự động theo tài khoản)
+$vipInfo               = $pdpUserModel->layThongTinVipHienTai($currentUid);
+$init_discount_percent = (float)($vipInfo['discount_percent'] ?? 0.0);
+$vipIsGuest            = !empty($vipInfo['is_guest']);
+$vipTierTitle          = (string)($vipInfo['tier_name'] ?? 'Đồng (Bronze)');
+$vipNextTierName       = $vipInfo['next_tier_name'] ?? null;
+$vipPointsNeeded       = (int)($vipInfo['points_needed'] ?? 0);
+
 $init_discount_amount = round(($prod['price'] * $init_discount_percent) / 100);
-$init_vip_price = $prod['price'] - $init_discount_amount;
+$init_vip_price       = max(0, $prod['price'] - $init_discount_amount);
+
+// Lấy đánh giá thực tế từ CSDL (tgb_danh_gia_san_pham)
+$dbReviews   = $pdpReviewModel->layDanhGiaTheoSanPham($product_id);
+$reviewCount = count($dbReviews);
+$starCounts  = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+if ($reviewCount > 0) {
+    foreach ($dbReviews as $rev) {
+        $s = max(1, min(5, (int)($rev['so_sao_danh_gia'] ?? 5)));
+        $starCounts[$s]++;
+    }
+    $avgRating = round($pdpReviewModel->tinhSaoTrungBinh($product_id), 1);
+} else {
+    $avgRating = (float)$prod['rating'];
+}
+
+$reviewEligibility = $currentUid
+    ? $pdpReviewModel->kiemTraQuyenDanhGia($currentUid, $product_id)
+    : ['eligible' => false, 'already_reviewed' => false, 'eligible_order_id' => 0];
+
+$isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
 ?>
 
 <div class="container my-4 my-md-5" id="lbn_pdp_section">
@@ -345,7 +418,6 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 
     <!-- ======================================================================
          KHỐI TRÊN PDP: HÌNH ẢNH, CHI TIẾT SẢN PHẨM & TƯƠNG TÁC
-          (lbn_) - Giai đoạn 2 Bootstrap 4 Responsive
          ====================================================================== -->
     <div class="card card-pastel border-0 shadow-sm mb-5">
         <div class="card-body p-4 p-md-5">
@@ -354,7 +426,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                 <div class="col-12 col-lg-6 mb-4 mb-lg-0">
                     <!-- Khung Carousel Ảnh Chính -->
                     <div id="lbn_pdpImageSlider" class="carousel slide lbn-pdp-slider-main shadow-sm position-relative mb-3" data-ride="carousel" data-interval="false">
-                        <!-- Badges Nổi Bật (Gọn gàng, không che ảnh sản phẩm) -->
+                        <!-- Badges Nổi Bật -->
                         <div class="position-absolute fk-pos-tl-15 d-flex flex-wrap align-items-center">
                             <span class="lbn-badge-bamboo lbn-pdp-bamboo-badge shadow-sm mr-2 mb-1">
                                 <i class="fa-solid fa-leaf mr-1"></i><?= htmlspecialchars($prod['bamboo_label']) ?>
@@ -368,12 +440,12 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <?php if ($prod['stock_quantity'] <= 5): ?>
                             <div class="position-absolute fk-pos-tr-15">
                                 <span class="badge lbn-badge-low-stock shadow-sm">
-                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>Chỉ còn <?= $prod['stock_quantity'] ?> cái
+                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i><?= $prod['stock_quantity'] <= 0 ? 'Tạm hết hàng' : ('Chỉ còn ' . (int)$prod['stock_quantity'] . ' cái') ?>
                                 </span>
                             </div>
                         <?php endif; ?>
 
-                                                <div class="carousel-inner text-center">
+                        <div class="carousel-inner text-center">
                             <div class="carousel-item active">
                                 <div class="lbn-pdp-slide-item">
                                     <img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-pdp-main-img mb-2">
@@ -415,7 +487,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         </a>
                     </div>
 
-                                        <!-- Hàng Thumbnail Bấm Đổi Slide Ảnh -->
+                    <!-- Hàng Thumbnail Bấm Đổi Slide Ảnh -->
                     <div class="row no-gutters">
                         <div class="col-3 p-1">
                             <div class="lbn-pdp-thumb active" onclick="lbnSwitchPdpSlide(0, this)">
@@ -487,57 +559,61 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
-                            <span class="font-weight-bold text-slate ml-1"><?= $prod['rating'] ?></span>
+                            <span class="font-weight-bold text-slate ml-1" id="pdp_avg_rating_top"><?= number_format($avgRating, 1) ?></span>
                         </div>
                         <span class="text-muted-custom small border-left pl-2 mr-2">
-                            <a href="#pdp_review_section" class="text-muted-custom text-decoration-none"><strong><?= $prod['reviews'] ?></strong> đánh giá</a>
+                            <a href="#pdp_review_section" class="text-muted-custom text-decoration-none">
+                                <strong id="pdp_review_count_top"><?= $reviewCount ?></strong> đánh giá thực tế
+                            </a>
                         </span>
                         <span class="text-muted-custom small border-left pl-2">
                             Đã bán <strong><?= $prod['sold_count'] ?></strong> món
                         </span>
                     </div>
 
-                    <!-- Khung Giá & Bảng Khấu Trừ Chiết Khấu VIP Tự Động (hgb_get_discount_percent) -->
+                    <!-- Khung Giá & Chiết Khấu VIP Tự Động Theo Tài Khoản (Chỉ đọc) -->
                     <div class="p-3 rounded mb-3 bg-milk-cream border">
                         <div class="d-flex align-items-baseline mb-2">
-                            <span class="h2 font-weight-bold text-peach mb-0 mr-3" id="lbn_pdpBasePrice" data-base-price="<?= $prod['price'] ?>">
+                            <span class="h2 font-weight-bold text-peach mb-0 mr-3" id="lbn_pdpBasePrice" data-base-price="<?= (int)$prod['price'] ?>">
                                 <?= number_format($prod['price'], 0, ',', '.') ?> đ
                             </span>
                             <span class="text-muted-custom text-decoration-line-through small mr-2">
                                 <?= number_format($prod['original_price'], 0, ',', '.') ?> đ
                             </span>
                             <span class="badge badge-pill badge-danger small font-weight-bold">
-                                -<?= round((($prod['original_price'] - $prod['price']) / $prod['original_price']) * 100) ?>%
+                                -<?= max(5, round((($prod['original_price'] - $prod['price']) / max(1, $prod['original_price'])) * 100)) ?>%
                             </span>
                         </div>
 
-                        <!-- Khung Mô Phỏng Giá VIP -->
                         <div class="p-3 rounded lbn-vip-price-box">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
                                 <span class="small font-weight-bold text-slate" id="lbn_pdpVipBadgeLabel">
-                                    <i class="fa-solid fa-crown text-warning mr-1"></i>Đặc quyền VIP <?= htmlspecialchars($vipTierTitle) ?>: <?= $init_discount_percent > 0 ? ('Giảm tự động ' . $init_discount_percent . '%') : 'Chưa áp dụng chiết khấu (0%)' ?>
+                                    <i class="fa-solid fa-crown text-warning mr-1"></i>
+                                    <?php if ($vipIsGuest): ?>
+                                        Khách vãng lai (Giảm 0%)
+                                    <?php else: ?>
+                                        Hạng thẻ của bạn: <strong><?= htmlspecialchars($vipTierTitle) ?></strong> (Giảm <?= (int)$init_discount_percent ?>%)
+                                    <?php endif; ?>
                                 </span>
                                 <span class="h5 font-weight-bold text-success mb-0" id="lbn_pdpFinalVipPrice">
                                     <?= number_format($init_vip_price, 0, ',', '.') ?> đ
                                 </span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="text-muted-custom" id="lbn_pdpSavedAmount">
-                                    Tiết kiệm ngay <?= number_format($init_discount_amount, 0, ',', '.') ?> đ với thẻ VIP
-                                </small>
-                                <small class="text-slate font-weight-bold">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</small>
-                            </div>
-
-                            <!-- Nút chọn nhanh hạng thẻ để xem mức giảm trực quan -->
-                            <div class="btn-group btn-group-sm btn-block" role="group">
-                                <button type="button" class="btn <?= $vipTierBtnKey === 'bronze' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_bronze"
-                                        onclick="lbnSwitchVipTierDiscount('bronze', 0, 'Đồng')">Đồng 0%</button>
-                                <button type="button" class="btn <?= $vipTierBtnKey === 'silver' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_silver"
-                                        onclick="lbnSwitchVipTierDiscount('silver', 5, 'Bạc')">Bạc -5%</button>
-                                <button type="button" class="btn <?= $vipTierBtnKey === 'gold' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_gold"
-                                        onclick="lbnSwitchVipTierDiscount('gold', 10, 'Vàng')">Vàng -10%</button>
-                                <button type="button" class="btn <?= $vipTierBtnKey === 'diamond' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_diamond"
-                                        onclick="lbnSwitchVipTierDiscount('diamond', 15, 'Kim Cương')">K.Cương -15%</button>
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-muted-custom" id="lbn_pdpSavedAmount">
+                                    <?php if ($init_discount_amount > 0): ?>
+                                        Tiết kiệm ngay <strong class="text-success"><?= number_format($init_discount_amount, 0, ',', '.') ?> đ</strong> với thẻ VIP
+                                    <?php elseif ($vipIsGuest): ?>
+                                        <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/product-detail.php?id=' . $product_id) ?>" class="font-weight-bold text-peach">Đăng nhập</a> để nhận chiết khấu VIP (lên đến 15%)
+                                    <?php else: ?>
+                                        <?php if ($vipNextTierName && $vipPointsNeeded > 0): ?>
+                                            Tích lũy thêm <strong><?= number_format($vipPointsNeeded) ?> điểm</strong> để lên <?= htmlspecialchars($vipNextTierName) ?>
+                                        <?php else: ?>
+                                            Ưu đãi áp dụng tự động theo cấp bậc tài khoản
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="text-slate font-weight-bold">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</span>
                             </div>
                         </div>
                     </div>
@@ -557,25 +633,23 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         </div>
                     </div>
 
-                    <!-- Chọn Kích Cỡ & Nút Gợi Ý Size Thước Dây (lnkt_suggest_size) -->
+                    <!-- Chọn Kích Cỡ & Nút Gợi Ý Size Thước Dây -->
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="small font-weight-bold text-slate mb-0">
                                 Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold"><?= htmlspecialchars($prod['default_size']) ?></span>
                             </label>
-                            <!-- NÚT MỞ MODAL THƯỚC DÂY -->
                             <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm"
                                     data-toggle="modal" data-target="#modalSuggestSize">
                                 <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size
                             </button>
                         </div>
 
-                        <!-- Danh Sách Các Nút Chọn Size -->
                         <div class="d-flex flex-wrap" id="lbn_pdpSizeOptionsGroup">
-                            <?php foreach ($prod['size_range'] as $idx => $s): ?>
+                            <?php foreach ($prod['size_range'] as $s): ?>
                                 <button type="button"
                                         class="lbn-size-option-btn mr-2 mb-2 <?= $s === $prod['default_size'] ? 'active' : '' ?>"
-                                        onclick="lbnSelectPdpSize('<?= htmlspecialchars($s) ?>', this)">
+                                        onclick="lbnSelectPdpSize('<?= htmlspecialchars($s, ENT_QUOTES) ?>', this)">
                                     <?= htmlspecialchars($s) ?>
                                 </button>
                             <?php endforeach; ?>
@@ -584,7 +658,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <input type="hidden" id="lbn_selectedSizeInput" name="size" value="<?= htmlspecialchars($prod['default_size']) ?>">
                     </div>
 
-                    <!-- Chọn Số Lượng & Tồn Kho (lbn_products.stock_quantity - fn_lbn_kiem_tra_ton_kho) -->
+                    <!-- Chọn Số Lượng & Tồn Kho Thực Tế -->
                     <div class="mb-3">
                         <label class="small font-weight-bold text-slate mb-2 d-block">
                             Số lượng đặt mua:
@@ -597,7 +671,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                     </button>
                                 </div>
                                 <input type="number" id="lbn_pdpQuantity" name="quantity" class="form-control text-center font-weight-bold"
-                                       value="1" min="1" max="<?= $prod['stock_quantity'] ?>" data-max="<?= $prod['stock_quantity'] ?>">
+                                       value="1" min="1" max="<?= max(1, (int)$prod['stock_quantity']) ?>" data-max="<?= (int)$prod['stock_quantity'] ?>">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(1)">
                                         <i class="fa-solid fa-plus"></i>
@@ -605,23 +679,27 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                 </div>
                             </div>
                             <span class="small text-muted-custom" id="lbn_pdpStockLabelWrap">
-                                Còn <strong class="text-slate" id="lbn_pdpStockCount"><?= $prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho hàng
+                                Còn <strong class="text-slate" id="lbn_pdpStockCount"><?= (int)$prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho hàng
                             </span>
                         </div>
                     </div>
 
-                    <!-- Thông báo kiểm tra tồn kho Realtime AJAX (fn_lbn_kiem_tra_ton_kho) -->
-                    <div id="lbn_pdpStockAlert" class="alert small py-2 px-3 mb-3 d-none" role="alert"></div>
+                    <!-- Thông báo kiểm tra tồn kho Realtime AJAX -->
+                    <div id="lbn_pdpStockAlert" class="alert small py-2 px-3 mb-3 <?= $isOutOfStock ? 'alert-danger d-block' : 'd-none' ?>" role="alert">
+                        <?php if ($isOutOfStock): ?>
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i><strong>Tạm hết hàng:</strong> Sản phẩm này hiện đã hết hàng trong kho.
+                        <?php endif; ?>
+                    </div>
 
                     <!-- Cụm Nút Hành Động: Thêm Vào Giỏ & Mua Ngay -->
                     <div class="form-row mb-3">
                         <div class="col-12 col-sm-6 mb-2 mb-sm-0">
-                            <button type="button" id="lbn_btnAddToCartPdp" class="btn btn-pastel-outline btn-block py-3 font-weight-bold" onclick="lbnAddToCartPdp()">
-                                <i class="fa-solid fa-cart-plus mr-2"></i><span id="lbn_btnAddToCartText">Thêm Vào Giỏ Hàng</span>
+                            <button type="button" id="lbn_btnAddToCartPdp" class="btn btn-pastel-outline btn-block py-3 font-weight-bold <?= $isOutOfStock ? 'disabled' : '' ?>" <?= $isOutOfStock ? 'disabled' : '' ?> onclick="lbnAddToCartPdp()">
+                                <i class="fa-solid fa-cart-plus mr-2"></i><span id="lbn_btnAddToCartText"><?= $isOutOfStock ? 'Tạm hết hàng' : 'Thêm Vào Giỏ Hàng' ?></span>
                             </button>
                         </div>
                         <div class="col-12 col-sm-6">
-                            <button type="button" id="lbn_btnBuyNowPdp" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow" onclick="lbnBuyNowPdp()">
+                            <button type="button" id="lbn_btnBuyNowPdp" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow <?= $isOutOfStock ? 'disabled' : '' ?>" <?= $isOutOfStock ? 'disabled' : '' ?> onclick="lbnBuyNowPdp()">
                                 <i class="fa-solid fa-bolt mr-2"></i><span id="lbn_btnBuyNowText">Mua Ngay Cho Bé</span>
                             </button>
                         </div>
@@ -693,30 +771,41 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
     </div>
 
     <!-- ======================================================================
-         KHỐI DƯỚI PDP: HỆ THỐNG ĐÁNH GIÁ THỰC TẾ & BÌNH LUẬN
-          (tgb_) - Tích hợp Đánh giá sao, Lọc ảnh, Modal Review
+         KHỐI DƯỚI PDP: HỆ THỐNG ĐÁNH GIÁ THỰC TẾ TỪ ĐƠN HÀNG ĐÃ HOÀN TẤT
          ====================================================================== -->
     <section class="reviews-section bg-milk-cream py-4 rounded-lg border shadow-sm mb-5" id="pdp_review_section">
         <div class="container-fluid px-3 px-md-4">
-            <!-- Hàng tiêu đề phân tích đánh giá -->
             <div class="row mb-4">
                 <div class="col-12 d-flex justify-content-between align-items-center flex-wrap">
                     <div>
                         <h4 class="font-weight-bold text-slate mb-1">
                             <i class="fa-solid fa-comments text-peach mr-2"></i>Đánh Giá Từ Phụ Huynh Đã Mua Hàng
                         </h4>
-                        <p class="text-muted-custom small mb-0">Nhận xét thực tế &amp; đối chiếu kích cỡ từ các phụ huynh đã mua tại FashionKids</p>
+                        <p class="text-muted-custom small mb-0">Nhận xét thực tế được xác thực từ các đơn hàng đã giao thành công tại FashionKids</p>
                     </div>
-                    <button class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm mt-2 mt-md-0" data-toggle="modal" data-target="#modalReview">
-                        <i class="fa-solid fa-pen-to-square mr-2"></i>Viết Đánh Giá
-                    </button>
+                    <?php if (!empty($reviewEligibility['eligible'])): ?>
+                        <button type="button"
+                                class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm mt-2 mt-md-0"
+                                data-toggle="modal" data-target="#modalReview"
+                                onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= (int)$prod['id'] ?>, <?= (int)$reviewEligibility['eligible_order_id'] ?>)">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i>Viết Đánh Giá
+                        </button>
+                    <?php elseif (!empty($reviewEligibility['already_reviewed'])): ?>
+                        <span class="badge badge-pill badge-mint px-3 py-2 mt-2 mt-md-0 font-weight-bold">
+                            <i class="fa-solid fa-circle-check mr-1"></i>Bạn đã gửi đánh giá sản phẩm này
+                        </span>
+                    <?php else: ?>
+                        <span class="badge badge-pill badge-light border text-muted-custom px-3 py-2 mt-2 mt-md-0">
+                            <i class="fa-solid fa-lock mr-1"></i>Đánh giá khả dụng sau khi đơn hàng Hoàn tất
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Hàng thống kê tổng quan và tỷ lệ sao -->
+            <!-- Hàng thống kê tổng quan và tỷ lệ sao thực tế -->
             <div class="row align-items-center mb-4 bg-white p-4 rounded-lg shadow-sm border">
                 <div class="col-12 col-md-4 text-center border-right mb-3 mb-md-0">
-                    <div class="display-4 font-weight-bold text-warning mb-1"><?= $prod['rating'] ?></div>
+                    <div class="display-4 font-weight-bold text-warning mb-1" id="pdp_avg_rating_card"><?= number_format($avgRating, 1) ?></div>
                     <div class="mb-2 text-warning">
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
@@ -724,136 +813,75 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
                     </div>
-                    <span class="text-muted-custom small">Dựa trên <?= $prod['reviews'] ?> nhận xét thực tế đã xác thực</span>
+                    <span class="text-muted-custom small">Dựa trên <strong id="pdp_review_count_card"><?= $reviewCount ?></strong> nhận xét đã xác thực</span>
                 </div>
 
                 <div class="col-12 col-md-8 pl-md-4">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">5 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100" data-fk-width="78"></div>
+                    <?php for ($star = 5; $star >= 1; $star--):
+                        $cnt = $starCounts[$star];
+                        $pct = $reviewCount > 0 ? round(($cnt / $reviewCount) * 100) : 0;
+                    ?>
+                        <div class="d-flex align-items-center <?= $star > 1 ? 'mb-2' : '' ?>">
+                            <span class="small font-weight-bold mr-2 text-nowrap fk-w-50"><?= $star ?> <i class="fa-solid fa-star text-warning"></i></span>
+                            <div class="progress flex-grow-1 rounded-pill fk-h-10">
+                                <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100" data-fk-width="<?= $pct ?>"></div>
+                            </div>
+                            <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35"><?= $cnt ?></span>
                         </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">96</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">4 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="18" aria-valuemin="0" aria-valuemax="100" data-fk-width="18"></div>
-                        </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">22</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">3 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" data-fk-width="5"></div>
-                        </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">6</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">2 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100" data-fk-width="2"></div>
-                        </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">3</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="small font-weight-bold mr-2 text-nowrap fk-w-50">1 <i class="fa-solid fa-star text-warning"></i></span>
-                        <div class="progress flex-grow-1 rounded-pill fk-h-10">
-                            <div class="progress-bar bg-warning rounded-pill" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" data-fk-width="1"></div>
-                        </div>
-                        <span class="small text-muted-custom ml-2 font-weight-bold fk-w-35">1</span>
-                    </div>
+                    <?php endfor; ?>
                 </div>
             </div>
 
-            <!-- Hàng nút lọc đánh giá nhanh -->
-            <div class="d-flex flex-wrap align-items-center mb-4">
-                <span class="font-weight-bold small mr-3 mb-2 text-slate">Lọc đánh giá:</span>
-                <button class="btn btn-pastel-primary btn-sm rounded-pill mr-2 mb-2 font-weight-bold">Tất cả (<?= $prod['reviews'] ?>)</button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill mr-2 mb-2 font-weight-bold"><i class="fa-solid fa-camera mr-1"></i> Có hình ảnh/video (42)</button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill mr-2 mb-2 font-weight-bold">5 Sao (96)</button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill mr-2 mb-2 font-weight-bold">4 Sao (22)</button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill mr-2 mb-2 font-weight-bold">3 Sao (6)</button>
-            </div>
-
-            <!-- Danh Sách Đánh Giá Chi Tiết -->
-            <div class="row">
-                <!-- Đánh giá 1 -->
-                <div class="col-12 mb-3">
-                    <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
-                                    MB
-                                </div>
-                                <div>
-                                    <div class="font-weight-bold text-slate">
-                                        Mẹ Bé Sam (m***8)
-                                        <span class="badge badge-pill badge-mint ml-2">
-                                            <i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids
-                                        </span>
+            <!-- Danh Sách Đánh Giá Chi Tiết (Cập nhật trực tiếp khi phụ huynh gửi) -->
+            <div class="row" id="pdp_review_list">
+                <?php if (!empty($dbReviews)): ?>
+                    <?php foreach ($dbReviews as $rev):
+                        $stars = max(1, min(5, (int)($rev['so_sao_danh_gia'] ?? 5)));
+                        $author = (string)($rev['ho_va_ten'] ?? 'Phụ huynh FashionKids');
+                        $initials = mb_strtoupper(mb_substr($author, 0, 2, 'UTF-8'), 'UTF-8');
+                        $dateFormatted = !empty($rev['ngay_danh_gia']) ? date('d/m/Y H:i', strtotime($rev['ngay_danh_gia'])) : date('d/m/Y');
+                    ?>
+                        <div class="col-12 mb-3">
+                            <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
+                                            <?= htmlspecialchars($initials) ?>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-slate">
+                                                <?= htmlspecialchars($author) ?>
+                                                <span class="badge badge-pill badge-mint ml-2">
+                                                    <i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids
+                                                </span>
+                                            </div>
+                                            <div class="small">
+                                                <span class="text-warning mr-2">
+                                                    <?php for ($sIdx = 1; $sIdx <= 5; $sIdx++): ?>
+                                                        <i class="fa-<?= $sIdx <= $stars ? 'solid' : 'regular' ?> fa-star"></i>
+                                                    <?php endfor; ?>
+                                                </span>
+                                                <span class="text-muted-custom">Đơn hàng #<?= (int)($rev['ma_don_hang'] ?? 0) ?></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="small">
-                                        <span class="text-warning mr-2">
-                                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                        </span>
-                                        <span class="text-muted-custom">Phân loại: <?= htmlspecialchars($prod['default_size']) ?> • Hồng phấn pastel</span>
-                                    </div>
+                                    <span class="text-muted-custom small"><?= htmlspecialchars($dateFormatted) ?></span>
                                 </div>
+                                <p class="text-slate small mb-2">
+                                    <?= nl2br(htmlspecialchars((string)($rev['noi_dung_danh_gia'] ?? ''))) ?>
+                                </p>
                             </div>
-                            <span class="text-muted-custom small">06/11/2026</span>
                         </div>
-
-                        <p class="text-slate small mb-3">
-                            Vải sợi tre sờ vào mát rượi và siêu mịn màng, hoàn toàn không gây ráp hay ngứa ngáy cho bé. Lúc đầu mình đắn đo size nhưng dùng thước dây thông minh của web đo bé cao 88cm gợi ý Size 2 mặc vừa in luôn! Bé mặc tùng váy xòe đi tiệc ai cũng khen xinh xắn.
-                        </p>
-
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-sm btn-light text-muted-custom rounded-pill mr-2 border">
-                                <i class="fa-regular fa-thumbs-up mr-1"></i> Hữu ích (18)
-                            </button>
-                            <span class="small text-muted-custom"><i class="fa-solid fa-store mr-1 text-peach"></i>Đã phản hồi bởi Chăm sóc khách hàng FashionKids</span>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12" id="pdp_empty_review_notice">
+                        <div class="card border-0 rounded-lg shadow-sm p-4 bg-white text-center">
+                            <i class="fa-regular fa-comment-dots text-peach h3 mb-2"></i>
+                            <div class="font-weight-bold text-slate">Chưa có đánh giá nào từ đơn hàng đã hoàn tất</div>
+                            <p class="small text-muted-custom mb-0">Hãy mua sắm và hoàn tất đơn hàng để chia sẻ cảm nhận thực tế về sản phẩm này cùng các phụ huynh khác.</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Đánh giá 2 -->
-                <div class="col-12 mb-3">
-                    <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="rounded-circle badge-gold text-dark font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
-                                    TB
-                                </div>
-                                <div>
-                                    <div class="font-weight-bold text-slate">
-                                        Ba Bo (t***9)
-                                        <span class="badge badge-pill badge-mint ml-2">
-                                            <i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids
-                                        </span>
-                                    </div>
-                                    <div class="small">
-                                        <span class="text-warning mr-2">
-                                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                        </span>
-                                        <span class="text-muted-custom">Đơn hàng giao trong 2h tại TP.HCM</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="text-muted-custom small">04/11/2026</span>
-                        </div>
-
-                        <p class="text-slate small mb-3">
-                            Giao hàng siêu nhanh đóng hộp pastel cứng cáp sang trọng. Đường may phẳng mượt giặt máy không bị bai nhão hay phai màu. Rất đáng đồng tiền, ba mẹ nên ủng hộ thương hiệu Việt Nam!
-                        </p>
-
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-sm btn-light text-muted-custom rounded-pill mr-2 border">
-                                <i class="fa-regular fa-thumbs-up mr-1"></i> Hữu ích (9)
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -872,8 +900,8 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
         </div>
 
         <div class="row">
-            <?php foreach ($lbn_products as $other_id => $other_p): ?>
-                <?php if ($other_id !== $product_id): ?>
+            <?php $relShown = 0; foreach ($lbn_products as $other_id => $other_p): ?>
+                <?php if ($other_id !== $product_id && $relShown < 6): $relShown++; ?>
                     <div class="col-12 col-md-4 mb-3">
                         <div class="card lbn-product-card h-100 shadow-sm border-0">
                             <div class="lbn-product-img-wrap position-relative">
@@ -891,7 +919,8 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                         </a>
                                     </h6>
                                     <div class="small text-warning mb-2">
-                                        <i class="fa-solid fa-star"></i> <?= $other_p['rating'] ?> <span class="text-muted-custom">(<?= $other_p['reviews'] ?>)</span>
+                                        <i class="fa-solid fa-star"></i> <?= number_format($other_p['rating'], 1) ?>
+                                        <span class="text-muted-custom ml-1">(Kho: <?= (int)$other_p['stock_quantity'] ?> SP)</span>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center pt-2 border-top">
@@ -914,4 +943,3 @@ require_once __DIR__ . "/../modals/modal-suggest-size.php";
 require_once __DIR__ . "/../modals/modal-review.php";
 require_once __DIR__ . "/../layouts/footer.php";
 ?>
-

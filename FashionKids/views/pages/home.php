@@ -3,75 +3,17 @@ $page_title = "Trang Chủ - FashionKids Thời Trang Sợi Tre Cho Bé";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+require_once __DIR__ . "/../../models/ProductModel.php";
 
-$rtHomeModel  = new RealtimeContentModel();
-$homeArticles = array_slice($rtHomeModel->getArticles('all', '', 'newest'), 0, 3);
-
-// Danh sách sản phẩm nổi bật BST Mùa Hè 2026 trên Trang chủ (liên kết trực tiếp sang MH 02, MH 03, MH 05)
-$lnkt_featured_products = [
-    [
-        'id'            => 101,
-        'sku'           => 'FK-LBN-01',
-        'image'         => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
-        'name'          => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
-        'category_name' => 'Váy công chúa',
-        'gender_label'  => 'Bé Gái',
-        'gender_badge'  => 'badge-peach',
-        'price'         => 285000,
-        'rating'        => 4.9,
-        'reviews'       => 42,
-        'icon'          => 'fa-person-dress text-peach',
-        'size_hint'     => 'Size 1 - Size 5'
-    ],
-    [
-        'id'            => 102,
-        'sku'           => 'FK-LBN-02',
-        'image'         => '/FashionKids/images/bo-thun-khung-long.jpg',
-        'name'          => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
-        'category_name' => 'Bộ thun',
-        'gender_label'  => 'Bé Trai',
-        'gender_badge'  => 'badge-sky',
-        'price'         => 225000,
-        'rating'        => 4.8,
-        'reviews'       => 36,
-        'icon'          => 'fa-shirt text-info',
-        'size_hint'     => 'Size 1 - Size 5'
-    ],
-    [
-        'id'            => 103,
-        'sku'           => 'FK-LBN-03',
-        'image'         => '/FashionKids/images/giay-sandal-tap-di.jpg',
-        'name'          => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
-        'category_name' => 'Giày dép',
-        'gender_label'  => 'Unisex',
-        'gender_badge'  => 'badge-gold',
-        'price'         => 210000,
-        'rating'        => 5.0,
-        'reviews'       => 58,
-        'icon'          => 'fa-shoe-prints text-warning',
-        'size_hint'     => 'Size 21 - Size 28'
-    ],
-    [
-        'id'            => 104,
-        'sku'           => 'FK-LBN-04',
-        'image'         => '/FashionKids/images/ao-khoac-cardigan.jpg',
-        'name'          => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
-        'category_name' => 'Áo khoác',
-        'gender_label'  => 'Unisex',
-        'gender_badge'  => 'badge-mint',
-        'price'         => 320000,
-        'rating'        => 4.9,
-        'reviews'       => 29,
-        'icon'          => 'fa-vest-patches text-success',
-        'size_hint'     => 'Size 2 - Size 5'
-    ]
-];
+$rtHomeModel       = new RealtimeContentModel();
+$homeArticles      = array_slice($rtHomeModel->getArticles('all', '', 'newest'), 0, 3);
+$homeProductModel  = new ProductModel();
+$allNormalizedProd = $homeProductModel->layTatCaSanPhamChuanHoa();
+$lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_home_section">
-    <!-- ====================================================================
-         0. DẢI LỊCH SỰ KIỆN & ĐẾM NGƯỢC CHIẾN DỊCH REALTIME (lnkt_banner_su_kien)
-         ==================================================================== -->
+    <!-- 0. DẢI LỊCH SỰ KIỆN & ĐẾM NGƯỢC CHIẾN DỊCH -->
     <div class="fk-press-ticker-bar d-flex flex-wrap justify-content-between align-items-center mb-4 shadow-sm">
         <div class="d-flex align-items-center py-1">
             <span class="fk-live-pulse-dot mr-2"></span>
@@ -99,18 +41,14 @@ $lnkt_featured_products = [
         </div>
     </div>
 
-    <!-- ====================================================================
-         1. BANNER CAROUSEL TỰ ĐỘNG CHUYỂN SLIDE MỖI 4 GIÂY
-         ==================================================================== -->
+    <!-- 1. BANNER CAROUSEL -->
     <div id="lnkt_homeBannerCarousel" class="carousel slide lnkt-hero-carousel shadow-sm mb-5" data-ride="carousel" data-interval="4000">
-        <!-- Dấu chấm chỉ báo Slide -->
         <ol class="carousel-indicators">
             <li data-target="#lnkt_homeBannerCarousel" data-slide-to="0" class="active"></li>
             <li data-target="#lnkt_homeBannerCarousel" data-slide-to="1"></li>
         </ol>
 
         <div class="carousel-inner">
-            <!-- SLIDE 1: BST Mùa Hè 2026 – Vải sợi tre làm mát chống nóng dành cho làn da nhạy cảm -->
             <div class="carousel-item active">
                 <div class="lnkt-hero-slide lnkt-slide-summer p-4 p-md-5">
                     <div class="row align-items-center">
@@ -153,7 +91,6 @@ $lnkt_featured_products = [
                 </div>
             </div>
 
-            <!-- SLIDE 2: Sự kiện tuyển chọn Siêu sao nhí KOL -->
             <div class="carousel-item">
                 <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5">
                     <div class="row align-items-center">
@@ -200,7 +137,6 @@ $lnkt_featured_products = [
             </div>
         </div>
 
-        <!-- Nút điều hướng Carousel Trái / Phải -->
         <a class="carousel-control-prev" href="#lnkt_homeBannerCarousel" role="button" data-slide="prev">
             <span class="lnkt-carousel-nav-btn shadow-sm" aria-hidden="true">
                 <i class="fa-solid fa-chevron-left text-slate"></i>
@@ -215,9 +151,7 @@ $lnkt_featured_products = [
         </a>
     </div>
 
-    <!-- ====================================================================
-         2. ĐIỀU HƯỚNG NHANH: CỤM NÚT TRÒN CHỌN DANH MỤC BST (BÉ GÁI, BÉ TRAI, GIÀY DÉP)
-         ==================================================================== -->
+    <!-- 2. ĐIỀU HƯỚNG NHANH DANH MỤC -->
     <div class="text-center mb-5">
         <span class="badge badge-pill badge-sky px-3 py-1 mb-2">Danh Mục Bộ Sưu Tập Chủ Đạo</span>
         <h3 class="font-weight-bold text-slate mb-2">Chọn Nhanh Phân Khu Thời Trang Cho Bé</h3>
@@ -226,7 +160,6 @@ $lnkt_featured_products = [
         </p>
 
         <div class="row justify-content-center">
-            <!-- Nút tròn 1: Bé Gái -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?gender=girl" class="lnkt-category-circle-link text-decoration-none d-block">
                     <div class="lnkt-category-circle lnkt-circle-girl mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/vay-cong-chua-hoa-cuc.jpg" alt="Bé Gái" class="lnkt-cat-circle-img"></div>
@@ -238,7 +171,6 @@ $lnkt_featured_products = [
                 </a>
             </div>
 
-            <!-- Nút tròn 2: Bé Trai -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?gender=boy" class="lnkt-category-circle-link text-decoration-none d-block">
                     <div class="lnkt-category-circle lnkt-circle-boy mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/bo-thun-khung-long.jpg" alt="Bé Trai" class="lnkt-cat-circle-img"></div>
@@ -250,7 +182,6 @@ $lnkt_featured_products = [
                 </a>
             </div>
 
-            <!-- Nút tròn 3: Giày dép -->
             <div class="col-6 col-sm-4 col-md-3 mb-4">
                 <a href="/FashionKids/views/pages/shop-catalog.php?type=giay_dep" class="lnkt-category-circle-link text-decoration-none d-block">
                     <div class="lnkt-category-circle lnkt-circle-shoes mx-auto mb-3 shadow-sm"><img src="/FashionKids/images/giay-sandal-tap-di.jpg" alt="Giày Dép" class="lnkt-cat-circle-img"></div>
@@ -264,9 +195,7 @@ $lnkt_featured_products = [
         </div>
     </div>
 
-    <!-- ====================================================================
-         3. DẢI TIỆN ÍCH THÔNG MINH & GỢI Ý SIZE THƯỚC DÂY
-         ==================================================================== -->
+    <!-- 3. DẢI TIỆN ÍCH GỢI Ý SIZE -->
     <div class="card card-pastel p-4 mb-5 shadow-sm border-0 lnkt-measure-banner">
         <div class="row align-items-center">
             <div class="col-12 col-lg-8 mb-3 mb-lg-0">
@@ -292,9 +221,7 @@ $lnkt_featured_products = [
         </div>
     </div>
 
-    <!-- ====================================================================
-         4. SẢN PHẨM NỔI BẬT TRONG BST MÙA HÈ 2026
-         ==================================================================== -->
+    <!-- 4. SẢN PHẨM NỔI BẬT (ĐỒNG BỘ TỪ CSDL) -->
     <div class="mb-5">
         <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
             <div>
@@ -309,14 +236,17 @@ $lnkt_featured_products = [
         </div>
 
         <div class="row">
-            <?php foreach ($lnkt_featured_products as $prod): ?>
+            <?php foreach ($lnkt_featured_products as $prod):
+                $stockQty    = (int)$prod['stock_quantity'];
+                $defaultSize = ($prod['type'] === 'giay_dep') ? 'Size 22 (13cm)' : 'Size 2 (2-3T)';
+            ?>
                 <div class="col-12 col-sm-6 col-lg-3 mb-4">
                     <div class="lbn-product-card h-100 d-flex flex-column shadow-sm">
                         <div class="lbn-product-img-wrap">
                             <span class="lbn-badge-bamboo lbn-badge-bamboo-overlay">
                                 <i class="fa-solid fa-leaf mr-1"></i>Sợi Tre Làm Mát
                             </span>
-                            <span class="badge badge-pill <?= $prod['gender_badge'] ?> lbn-badge-gender-overlay">
+                            <span class="badge badge-pill <?= htmlspecialchars($prod['gender_badge']) ?> lbn-badge-gender-overlay">
                                 <?= htmlspecialchars($prod['gender_label']) ?>
                             </span>
                             <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="lbn-img-link text-decoration-none">
@@ -328,7 +258,7 @@ $lnkt_featured_products = [
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <small class="text-muted-custom font-weight-bold"><?= htmlspecialchars($prod['category_name']) ?></small>
                                 <span class="small text-warning font-weight-bold">
-                                    <i class="fa-solid fa-star"></i> <?= number_format($prod['rating'], 1) ?> (<?= $prod['reviews'] ?>)
+                                    <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?> (<?= (int)$prod['reviews'] ?>)
                                 </span>
                             </div>
 
@@ -341,20 +271,29 @@ $lnkt_featured_products = [
                             <div class="d-flex justify-content-between align-items-center small text-muted-custom mb-3">
                                 <span>Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong></span>
                                 <a href="javascript:void(0)" data-toggle="modal" data-target="#modalSuggestSize" class="text-peach font-weight-bold text-decoration-none">
-                                    <i class="fa-solid fa-ruler-horizontal mr-1"></i><?= htmlspecialchars($prod['size_hint']) ?>
+                                    <i class="fa-solid fa-ruler-horizontal mr-1"></i><?= htmlspecialchars($prod['size_range']) ?>
                                 </a>
                             </div>
 
                             <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
-                                <span class="h6 font-weight-bold text-peach mb-0">
-                                    <?= number_format($prod['price'], 0, ',', '.') ?> đ
-                                </span>
                                 <div>
-                                    <button type="button"
-                                            onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>, <?= $prod['id'] ?>)"
-                                            class="btn btn-light btn-sm rounded-circle border mr-1" title="Thêm nhanh vào giỏ">
-                                        <i class="fa-solid fa-cart-plus text-peach"></i>
-                                    </button>
+                                    <span class="h6 font-weight-bold text-peach mb-0 d-block">
+                                        <?= number_format((float)$prod['price'], 0, ',', '.') ?> đ
+                                    </span>
+                                    <?php if ($stockQty <= 0): ?>
+                                        <small class="text-danger font-weight-bold">Hết hàng</small>
+                                    <?php elseif ($stockQty <= 5): ?>
+                                        <small class="text-danger font-weight-bold">Còn <?= $stockQty ?> SP</small>
+                                    <?php endif; ?>
+                                </div>
+                                <div>
+                                    <?php if ($stockQty > 0): ?>
+                                        <button type="button"
+                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= (float)$prod['price'] ?>, <?= (int)$prod['id'] ?>, '<?= htmlspecialchars($defaultSize, ENT_QUOTES) ?>')"
+                                                class="btn btn-light btn-sm rounded-circle border mr-1" title="Thêm nhanh vào giỏ">
+                                            <i class="fa-solid fa-cart-plus text-peach"></i>
+                                        </button>
+                                    <?php endif; ?>
                                     <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>"
                                        class="btn btn-pastel-primary btn-sm px-3 py-1">
                                         Chi tiết
@@ -368,9 +307,7 @@ $lnkt_featured_products = [
         </div>
     </div>
 
-    <!-- ====================================================================
-         5. TIÊU ĐIỂM TẠP CHÍ MẪU NHÍ & ĐIỂM TIN BÁO CHÍ REALTIME
-         ==================================================================== -->
+    <!-- 5. TIÊU ĐIỂM TẠP CHÍ MẪU NHÍ & ĐIỂM TIN BÁO CHÍ -->
     <div class="mb-5">
         <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
             <div>
@@ -424,9 +361,7 @@ $lnkt_featured_products = [
         </div>
     </div>
 
-    <!-- ====================================================================
-         6. TIỆN ÍCH MUA SẮM NHANH DÀNH CHO PHỤ HUYNH
-         ==================================================================== -->
+    <!-- 6. TIỆN ÍCH MUA SẮM NHANH DÀNH CHO PHỤ HUYNH -->
     <div class="card card-pastel p-4 shadow-sm bg-white">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div>

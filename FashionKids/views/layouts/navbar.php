@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../../core/Rbac.php';
 Rbac::syncSession();
+if (Rbac::isLoggedIn() && Rbac::currentUserId()) {
+    require_once __DIR__ . '/../../models/UserModel.php';
+    (new UserModel())->dongBoSessionNguoiDung(Rbac::currentUserId());
+}
 $currentRole = Rbac::currentRole();
 $roleBadgeClass = match ($currentRole) {
     'quan_tri'   => 'badge-danger',

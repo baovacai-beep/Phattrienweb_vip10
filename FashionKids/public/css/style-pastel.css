@@ -1435,3 +1435,59 @@ body {
     cursor: not-allowed;
     transform: none;
 }
+
+/* ==========================================================================
+   TRẠNG THÁI ĐƠN HÀNG, VIETQR, CẢNH BÁO MINT & REALTIME NHÂN VIÊN
+   ========================================================================== */
+.bg-sky {
+    background-color: var(--secondary-sky);
+}
+
+.text-sky {
+    color: var(--secondary-sky) !important;
+}
+
+.alert-mint {
+    background-color: #E8F5E9;
+    border: 1.5px solid #A5D6A7;
+    border-radius: 14px;
+    color: #234E52;
+}
+
+.lnkt-vietqr-card {
+    background: linear-gradient(135deg, #F0F9FF 0%, #FFFDF7 60%, #F0FFF4 100%);
+    border: 1.5px solid #BEE3F8;
+}
+
+.lnkt-vietqr-img {
+    max-width: 220px;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    display: block;
+}
+
+.lnkt-order-history-pill {
+    transition: all 0.2s ease;
+}
+
+.lnkt-order-history-pill.active {
+    box-shadow: 0 4px 12px rgba(255, 158, 147, 0.35);
+}
+
+#new_order_badge,
+.lnkt-new-order-pulse {
+    cursor: pointer;
+    animation: lnktOrderPulse 1.6s infinite;
+}
+
+@keyframes lnktOrderPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.45); }
+    70%  { box-shadow: 0 0 0 8px rgba(229, 62, 62, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+}
+
+.lnkt-order-highlight-row {
+    background-color: #FFFDF0 !important;
+    transition: background-color 0.4s ease;
+}

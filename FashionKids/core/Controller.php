@@ -84,11 +84,16 @@ abstract class Controller {
         $code    = (int)($data['code'] ?? $statusCode);
         $message = (string)($data['message'] ?? '');
 
-        // Trích xuất dữ liệu nghiệp vụ vào $envelopeData
-        if (isset($data['data']) && (is_array($data['data']) || is_object($data['data']))) {
+        // Trích xuất dữ liệu nghiệp vụ vào $envelopeData (tôn trọng giá trị explicit 'data' => null)
+        $hasExplicitData = array_key_exists('data', $data);
+        if ($hasExplicitData && $data['data'] === null) {
+            $finalData = null;
+        } elseif ($hasExplicitData && (is_array($data['data']) || is_object($data['data']))) {
             $envelopeData = (array)$data['data'];
+            $finalData = empty($envelopeData) ? new stdClass() : $envelopeData;
         } else {
             $envelopeData = array_diff_key($data, array_flip(['status', 'code', 'data', 'message']));
+            $finalData = empty($envelopeData) ? new stdClass() : $envelopeData;
         }
 
         // Tạo mảng phản hồi chuẩn: vừa có {status, code, data, message},
@@ -96,7 +101,7 @@ abstract class Controller {
         $response = array_merge($data, [
             'status'  => $status,
             'code'    => $code,
-            'data'    => empty($envelopeData) ? new stdClass() : $envelopeData,
+            'data'    => $finalData,
             'message' => $message,
         ]);
 

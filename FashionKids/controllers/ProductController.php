@@ -278,24 +278,42 @@ class ProductController extends Controller {
 
             $productId = (int)$rawId;
             $quantity  = (int)$rawQty;
+            $isCartAction = in_array($actType, ['add_to_cart', 'buy_now', 'quick_add'], true);
 
-            $stockInfo = $this->productModel->kiemTraTonKhoChiTiet($productId, $quantity);
+            // Kiểm tra tổng số lượng cùng ma_san_pham đã có trong giỏ hàng (kể cả khác Size)
+            $existingQtyForProduct = 0;
+            if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as $cItem) {
+                    if ((int)($cItem['product_id'] ?? 0) === $productId) {
+                        $existingQtyForProduct += (int)($cItem['quantity'] ?? 0);
+                    }
+                }
+            }
+
+            $qtyToCheck = $isCartAction ? ($existingQtyForProduct + $quantity) : $quantity;
+            $stockInfo  = $this->productModel->kiemTraTonKhoChiTiet($productId, $qtyToCheck);
 
             if (!$stockInfo['du_hang']) {
+                $remainingCanAdd = max(0, (int)$stockInfo['available_stock'] - $existingQtyForProduct);
+                $msg = $isCartAction && $existingQtyForProduct > 0
+                    ? 'Kho chỉ còn ' . $stockInfo['available_stock'] . ' sản phẩm (bạn đã có ' . $existingQtyForProduct . ' trong giỏ, chỉ có thể thêm tối đa ' . $remainingCanAdd . ').'
+                    : 'Số lượng đặt mua (' . $quantity . ') vượt quá tồn kho hiện tại (' . $stockInfo['available_stock'] . ' sản phẩm)!';
+
                 $this->jsonResponse([
                     'status'          => 'error',
                     'code'            => 409,
                     'du_hang'         => false,
                     'available_stock' => $stockInfo['available_stock'],
-                    'requested_qty'   => $quantity,
+                    'requested_qty'   => $qtyToCheck,
+                    'in_cart_qty'     => $existingQtyForProduct,
                     'is_low_stock'    => $stockInfo['is_low_stock'],
                     'routine'         => $stockInfo['routine'],
-                    'message'         => 'Số lượng đặt mua (' . $quantity . ') vượt quá tồn kho hiện tại (' . $stockInfo['available_stock'] . ' sản phẩm)!'
+                    'message'         => $msg
                 ], 409);
             }
 
             // Nếu người dùng bấm Thêm vào giỏ hoặc Mua ngay, lưu vào $_SESSION['cart']
-            if (in_array($actType, ['add_to_cart', 'buy_now', 'quick_add'], true)) {
+            if ($isCartAction) {
                 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
                     $_SESSION['cart'] = [];
                 }
@@ -308,7 +326,7 @@ class ProductController extends Controller {
                     'price'        => $stockInfo['price'],
                     'image'        => $stockInfo['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
                     'size'         => $size,
-                    'quantity'     => min($stockInfo['available_stock'], $currentInCart + $quantity)
+                    'quantity'     => $currentInCart + $quantity
                 ];
             }
 

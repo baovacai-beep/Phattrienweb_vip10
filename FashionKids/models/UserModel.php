@@ -38,7 +38,7 @@ class UserModel extends Model {
             'vai_tro'            => 'quan_tri',
             'da_xac_thuc_otp'    => 1,
             'ten_hang'           => 'Quản trị viên',
-            'phan_tram_giam_gia' => 15
+            'phan_tram_giam_gia' => 0
         ],
         [
             'ma_nguoi_dung'      => 2,
@@ -53,7 +53,7 @@ class UserModel extends Model {
             'vai_tro'            => 'nhan_vien',
             'da_xac_thuc_otp'    => 1,
             'ten_hang'           => 'Nhân viên',
-            'phan_tram_giam_gia' => 10
+            'phan_tram_giam_gia' => 0
         ],
         [
             'ma_nguoi_dung'      => 3,
@@ -646,17 +646,174 @@ class UserModel extends Model {
      * Tính % giảm giá theo hạng thẻ qua Stored Function fn_hgb_tinh_phan_tram_giam_gia
      */
     public function tinhPhanTramGiamGia(int $maNguoiDung): float {
+        if ($maNguoiDung <= 0) {
+            return 0.0;
+        }
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare('SELECT fn_hgb_tinh_phan_tram_giam_gia(:id) AS giam_gia');
                 $stmt->execute([':id' => $maNguoiDung]);
                 $res = $stmt->fetch();
+                $stmt->closeCursor();
                 return (float)($res['giam_gia'] ?? 0.0);
             } catch (PDOException $e) {
                 error_log('[hgb] tinhPhanTramGiamGia: ' . $e->getMessage());
             }
         }
-        return 10.0;
+        foreach (array_merge($this->seedUsers, $_SESSION['hgb_registered_users'] ?? []) as $u) {
+            if ((int)($u['ma_nguoi_dung'] ?? 0) === $maNguoiDung) {
+                return (float)($u['phan_tram_giam_gia'] ?? 0.0);
+            }
+        }
+        return 0.0;
+    }
+
+    /**
+     * Truy vấn đầy đủ thông tin Hạng thành viên & % Chiết khấu VIP từ CSDL (Chế độ chỉ đọc - Tự động)
+     * Tuyệt đối không cho phép client tự ý thay đổi hạng thẻ.
+     */
+    public function layThongTinVipHienTai(?int $userId): array {
+        $tiers = $this->layDanhSachHangThanhVien();
+        $defaultTier = $tiers[0] ?? ['ma_hang' => 1, 'ten_hang' => 'Đồng (Bronze)', 'diem_toi_thieu' => 0, 'phan_tram_giam_gia' => 0];
+        $nextDefault = $tiers[1] ?? ['ten_hang' => 'Bạc (Silver)', 'diem_toi_thieu' => 500, 'phan_tram_giam_gia' => 5];
+
+        if ($userId === null || $userId <= 0) {
+            return [
+                'is_guest'         => true,
+                'user_id'          => 0,
+                'tier_id'          => 1,
+                'tier_name'        => 'Khách vãng lai (Hạng Đồng)',
+                'tier_short'       => 'Đồng',
+                'discount_percent' => 0.0,
+                'points'           => 0,
+                'role'             => 'guest',
+                'next_tier_name'   => (string)($nextDefault['ten_hang'] ?? 'Bạc (Silver)'),
+                'next_tier_min'    => (int)($nextDefault['diem_toi_thieu'] ?? 500),
+                'points_needed'    => (int)($nextDefault['diem_toi_thieu'] ?? 500),
+                'progress_percent' => 0,
+                'badge_class'      => 'tier-bronze',
+            ];
+        }
+
+        $discountPercent = $this->tinhPhanTramGiamGia($userId);
+        $userRow = null;
+
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("
+                    SELECT u.ma_nguoi_dung, u.ten_dang_nhap, u.ho_va_ten, u.thu_dien_tu,
+                           u.so_dien_thoai, u.dia_chi_nha, u.vai_tro, u.diem_tich_luy,
+                           u.ma_hang_thanh_vien,
+                           COALESCE(h.ten_hang, 'Đồng (Bronze)') AS ten_hang,
+                           COALESCE(h.phan_tram_giam_gia, 0) AS tier_discount
+                    FROM hgb_nguoi_dung u
+                    LEFT JOIN hgb_hang_thanh_vien h ON u.ma_hang_thanh_vien = h.ma_hang
+                    WHERE u.ma_nguoi_dung = :id
+                    LIMIT 1
+                ");
+                $stmt->execute([':id' => $userId]);
+                $userRow = $stmt->fetch();
+                $stmt->closeCursor();
+            } catch (PDOException $e) {
+                error_log('[hgb] layThongTinVipHienTai: ' . $e->getMessage());
+            }
+        }
+
+        if (!$userRow) {
+            foreach (array_merge($this->seedUsers, $_SESSION['hgb_registered_users'] ?? []) as $su) {
+                if ((int)($su['ma_nguoi_dung'] ?? 0) === $userId) {
+                    $userRow = $su;
+                    break;
+                }
+            }
+        }
+
+        $role     = (string)($userRow['vai_tro'] ?? ($_SESSION['user']['vai_tro'] ?? 'khach_hang'));
+        $points   = (int)($userRow['diem_tich_luy'] ?? 0);
+        $tierId   = (int)($userRow['ma_hang_thanh_vien'] ?? 1);
+        $tierName = (string)($userRow['ten_hang'] ?? $defaultTier['ten_hang']);
+
+        if (empty($userRow['ma_hang_thanh_vien']) && in_array($role, ['quan_tri', 'nhan_vien'], true)) {
+            $tierId   = 1;
+            $tierName = 'Thành viên nội bộ';
+            $discountPercent = 0.0;
+        }
+
+        // Xác định hạng kế tiếp dựa trên diem_tich_luy và bảng hgb_hang_thanh_vien
+        $nextTierName = null;
+        $nextTierMin  = $points;
+        foreach ($tiers as $t) {
+            $minPts = (int)($t['diem_toi_thieu'] ?? 0);
+            if ($minPts > $points) {
+                $nextTierName = (string)$t['ten_hang'];
+                $nextTierMin  = $minPts;
+                break;
+            }
+        }
+        $pointsNeeded = $nextTierName !== null ? max(0, $nextTierMin - $points) : 0;
+        $progressPct  = ($nextTierName !== null && $nextTierMin > 0)
+            ? min(100, (int)round(($points / $nextTierMin) * 100))
+            : 100;
+
+        $badgeClass = 'tier-bronze';
+        $shortName  = 'Đồng';
+        $lowerTier  = mb_strtolower($tierName, 'UTF-8');
+        if (strpos($lowerTier, 'kim cương') !== false || strpos($lowerTier, 'diamond') !== false || $tierId === 4) {
+            $badgeClass = 'tier-diamond';
+            $shortName  = 'Kim Cương';
+        } elseif (strpos($lowerTier, 'vàng') !== false || strpos($lowerTier, 'gold') !== false || $tierId === 3) {
+            $badgeClass = 'tier-gold';
+            $shortName  = 'Vàng';
+        } elseif (strpos($lowerTier, 'bạc') !== false || strpos($lowerTier, 'silver') !== false || $tierId === 2) {
+            $badgeClass = 'tier-silver';
+            $shortName  = 'Bạc';
+        }
+
+        return [
+            'is_guest'         => false,
+            'user_id'          => $userId,
+            'tier_id'          => $tierId,
+            'tier_name'        => $tierName,
+            'tier_short'       => $shortName,
+            'discount_percent' => $discountPercent,
+            'points'           => $points,
+            'role'             => $role,
+            'next_tier_name'   => $nextTierName,
+            'next_tier_min'    => $nextTierMin,
+            'points_needed'    => $pointsNeeded,
+            'progress_percent' => $progressPct,
+            'badge_class'      => $badgeClass,
+            'user_row'         => $userRow,
+        ];
+    }
+
+    /**
+     * Đồng bộ lại $_SESSION['user'] và $_SESSION['auth_user'] trực tiếp từ CSDL (sau khi tích điểm / thăng hạng)
+     */
+    public function dongBoSessionNguoiDung(?int $userId = null): ?array {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        $uid = $userId ?? (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['auth_user']['id'] ?? 0);
+        if ($uid <= 0) {
+            return null;
+        }
+        $vip = $this->layThongTinVipHienTai($uid);
+        $row = $vip['user_row'] ?? null;
+        if (!$row) {
+            return $_SESSION['user'] ?? null;
+        }
+        unset($row['mat_khau']);
+        $row['ten_hang']           = $vip['tier_name'];
+        $row['phan_tram_giam_gia'] = $vip['discount_percent'];
+        $row['diem_tich_luy']      = $vip['points'];
+        $row['ma_hang_thanh_vien'] = $vip['tier_id'];
+
+        $_SESSION['user'] = array_merge($_SESSION['user'] ?? [], $row);
+        if (class_exists('Rbac')) {
+            Rbac::syncSession();
+        }
+        return $_SESSION['user'];
     }
 
     /**

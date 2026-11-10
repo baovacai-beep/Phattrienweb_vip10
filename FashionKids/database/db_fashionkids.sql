@@ -109,8 +109,12 @@ CREATE TABLE `lnkt_don_hang` (
     `tien_hang_tam_tinh` DECIMAL(12,2) NOT NULL,
     `tien_giam_gia` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     `tong_tien_thanh_toan` DECIMAL(12,2) NOT NULL,
+    `phuong_thuc_thanh_toan` ENUM('cod', 'vietqr') NOT NULL DEFAULT 'cod',
+    `trang_thai_thanh_toan` ENUM('chua_thanh_toan', 'cho_chuyen_khoan', 'da_thanh_toan') NOT NULL DEFAULT 'chua_thanh_toan',
+    `ghi_chu` VARCHAR(255) NULL,
     `trang_thai_don_hang` ENUM('cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy') NOT NULL DEFAULT 'cho_duyet',
     `ngay_dat_hang` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `kn_don_hang_nguoi_dung` 
         FOREIGN KEY (`ma_nguoi_dung`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`) 
         ON DELETE SET NULL ON UPDATE CASCADE,
@@ -295,7 +299,16 @@ INSERT INTO `lbn_san_pham` (`ma_san_pham`, `ma_danh_muc`, `ten_san_pham`, `gia_b
 (1, 1, 'Váy Công Chúa Elsa Bạch Tuyết Cao Cấp', 450000.00, 25, 'vay_cong_chua_elsa.jpg', 'Vải cotton sợi tre 100% hữu cơ, kháng khuẩn, không gây ngứa da', 'quan_ao'),
 (2, 2, 'Bộ Thun Thể Thao Khủng Long Năng Động', 280000.00, 30, 'bo_thun_khung_long.jpg', 'Chất cotton 4 chiều co giãn thoáng mồ hôi cho bé trai vận động', 'quan_ao'),
 (3, 3, 'Áo Khoác Gió Bomber Trẻ Em 2 Lớp', 390000.00, 20, 'ao_khoac_bomber.jpg', 'Chất vải dù cản gió chống nước nhẹ, giữ ấm ngày mưa gió', 'quan_ao'),
-(4, 4, 'Giày Sandal Tập Đi Êm Ái Chống Trượt', 320000.00, 15, 'sandal_tap_di.jpg', 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé', 'giay_dep')
+(4, 4, 'Giày Sandal Tập Đi Êm Ái Chống Trượt', 320000.00, 15, 'sandal_tap_di.jpg', 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé', 'giay_dep'),
+(101, 1, 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi', 285000.00, 18, '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg', 'Vải cotton sợi tre 100% hữu cơ, kháng khuẩn, không gây ngứa da', 'quan_ao'),
+(102, 2, 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động', 225000.00, 24, '/FashionKids/images/bo-thun-khung-long.jpg', 'Chất sợi tre 4 chiều co giãn thoáng mồ hôi cho bé trai vận động', 'quan_ao'),
+(103, 4, 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân', 210000.00, 14, '/FashionKids/images/giay-sandal-tap-di.jpg', 'Đế cao su non uốn dẻo, bảo vệ xương bàn chân non nớt của bé', 'giay_dep'),
+(104, 3, 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV', 320000.00, 5, '/FashionKids/images/ao-khoac-cardigan.jpg', 'Sợi tre dệt kim UPF 50+ chống tia cực tím, cúc gỗ tự nhiên', 'quan_ao'),
+(105, 1, 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc', 365000.00, 11, '/FashionKids/images/vay-cong-chua-no-pastel.jpg', 'Lớp lót 100% sợi tre kháng khuẩn phối voan tùng xòe dự tiệc', 'quan_ao'),
+(106, 2, 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè', 195000.00, 32, '/FashionKids/images/bo-thun-gau-nhi.jpg', '100% sợi tre tự nhiên làm mát, thêu gấu nhí đáng yêu', 'quan_ao'),
+(107, 3, 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái', 340000.00, 4, '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg', 'Nỉ bông sợi tre hữu cơ kháng khuẩn, mũ phối tai thỏ', 'quan_ao'),
+(108, 4, 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ', 245000.00, 16, '/FashionKids/images/giay-sandal-be-trai.jpg', 'Quai vải canvas phối sợi tre êm cổ chân, đế rãnh chống trượt', 'giay_dep'),
+(109, 3, 'Áo Khoác Bomber Sợi Tre Phi Hành Gia Nhí Bé Trai', 350000.00, 9, '/FashionKids/images/ao-khoac-bomber.jpg', 'Chất vải sợi tre 2 lớp cản gió, huy hiệu phi hành gia thêu nổi', 'quan_ao')
 ON DUPLICATE KEY UPDATE `ten_san_pham`=VALUES(`ten_san_pham`);
 
 INSERT INTO `lnkt_don_hang` (`ma_don_hang`, `ma_nguoi_dung`, `ma_nhan_vien_xu_ly`, `ten_nguoi_nhan`, `so_dien_thoai_nhan`, `thu_dien_tu_nhan`, `dia_chi_giao_hang`, `tinh_thanh_pho`, `quan_huyen`, `tien_hang_tam_tinh`, `tien_giam_gia`, `tong_tien_thanh_toan`, `trang_thai_don_hang`) VALUES

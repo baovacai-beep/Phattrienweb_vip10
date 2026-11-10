@@ -4,148 +4,23 @@ require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 Rbac::enforceCurrentViewAccess();
 $isAdminUser = Rbac::isAdmin();
+require_once __DIR__ . "/../../models/ProductModel.php";
 
-// Danh sách Danh mục chuẩn lbn_categories
+$invProductModel    = new ProductModel();
+$lbn_inventory_list = $invProductModel->layTatCaSanPhamChuanHoa();
+$invStats           = $invProductModel->layThongKeKhoHang();
+
 $lbn_admin_categories = [
-    1 => ['id' => 1, 'name' => 'Váy công chúa', 'gender' => 'girl',   'type' => 'quan_ao',  'count' => 2],
-    2 => ['id' => 2, 'name' => 'Bộ thun',       'gender' => 'boy',    'type' => 'quan_ao',  'count' => 2],
-    3 => ['id' => 3, 'name' => 'Áo khoác',      'gender' => 'unisex', 'type' => 'quan_ao',  'count' => 2],
-    4 => ['id' => 4, 'name' => 'Giày sandal',   'gender' => 'unisex', 'type' => 'giay_dep', 'count' => 2]
+    1 => ['id' => 1, 'name' => 'Váy công chúa', 'gender' => 'girl',   'type' => 'quan_ao'],
+    2 => ['id' => 2, 'name' => 'Bộ thun',       'gender' => 'boy',    'type' => 'quan_ao'],
+    3 => ['id' => 3, 'name' => 'Áo khoác',      'gender' => 'unisex', 'type' => 'quan_ao'],
+    4 => ['id' => 4, 'name' => 'Giày sandal',   'gender' => 'unisex', 'type' => 'giay_dep']
 ];
 
-// Dữ liệu tồn kho sản phẩm (lbn_products) - Có các sản phẩm tồn kho <= 5 để kích hoạt cảnh báo đỏ "Sắp hết hàng"
-$lbn_inventory_list = [
-    [
-        'id'             => 101,
-        'sku'            => 'FK-LBN-01',
-        'image'          => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
-        'name'           => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
-        'category_id'    => 1,
-        'category_name'  => 'Váy công chúa',
-        'gender'         => 'girl',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 285000,
-        'stock_quantity' => 18,
-        'material'       => '100% sợi tre kháng khuẩn tự nhiên kết hợp lót cotton hữu cơ chuẩn OEKO-TEX 100.',
-        'icon'           => 'fa-person-dress text-peach'
-    ],
-    [
-        'id'             => 104,
-        'sku'            => 'FK-LBN-04',
-        'image'          => '/FashionKids/images/ao-khoac-cardigan.jpg',
-        'name'           => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
-        'category_id'    => 3,
-        'category_name'  => 'Áo khoác',
-        'gender'         => 'unisex',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 320000,
-        'stock_quantity' => 5,
-        'material'       => 'Vải sợi tre dệt kim 2 lớp chống tia cực tím UPF 50+, cúc gỗ tự nhiên mài nhẵn an toàn.',
-        'icon'           => 'fa-vest-patches text-success'
-    ],
-    [
-        'id'             => 102,
-        'sku'            => 'FK-LBN-02',
-        'image'          => '/FashionKids/images/bo-thun-khung-long.jpg',
-        'name'           => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
-        'category_id'    => 2,
-        'category_name'  => 'Bộ thun',
-        'gender'         => 'boy',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 225000,
-        'stock_quantity' => 24,
-        'material'       => 'Sợi tre Bamboo co giãn 4 chiều, bo chun bụng siêu mềm không gây hằn đỏ da bé.',
-        'icon'           => 'fa-shirt text-info'
-    ],
-    [
-        'id'             => 107,
-        'sku'            => 'FK-LBN-07',
-        'image'          => '/FashionKids/images/ao-khoac-hoodie-tai-tho.jpg',
-        'name'           => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
-        'category_id'    => 3,
-        'category_name'  => 'Áo khoác',
-        'gender'         => 'girl',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 340000,
-        'stock_quantity' => 3,
-        'material'       => 'Nỉ bông sợi tre hữu cơ kháng khuẩn, khóa kéo bọc vải bảo vệ cằm bé an toàn.',
-        'icon'           => 'fa-shirt text-peach'
-    ],
-    [
-        'id'             => 103,
-        'sku'            => 'FK-LBN-03',
-        'image'          => '/FashionKids/images/giay-sandal-tap-di.jpg',
-        'name'           => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
-        'category_id'    => 4,
-        'category_name'  => 'Giày sandal',
-        'gender'         => 'unisex',
-        'type'           => 'giay_dep',
-        'type_label'     => 'Giày dép (Size 21-30)',
-        'price'          => 210000,
-        'stock_quantity' => 14,
-        'material'       => 'Đế cao su non nguyên sinh chống trượt 360 độ, đệm lót vải sợi tre khử mùi.',
-        'icon'           => 'fa-shoe-prints text-warning'
-    ],
-    [
-        'id'             => 108,
-        'sku'            => 'FK-LBN-08',
-        'image'          => '/FashionKids/images/giay-sandal-be-trai.jpg',
-        'name'           => 'Giày Sandal Bé Trai Quai Dán Chống Trượt Siêu Nhẹ',
-        'category_id'    => 4,
-        'category_name'  => 'Giày sandal',
-        'gender'         => 'boy',
-        'type'           => 'giay_dep',
-        'type_label'     => 'Giày dép (Size 21-30)',
-        'price'          => 245000,
-        'stock_quantity' => 2,
-        'material'       => 'Quai vải canvas phối sợi tre êm cổ chân, đế rãnh chống trơn trượt an toàn.',
-        'icon'           => 'fa-shoe-prints text-info'
-    ],
-    [
-        'id'             => 105,
-        'sku'            => 'FK-LBN-05',
-        'image'          => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
-        'name'           => 'Váy Công Chúa Tùng Xòe Pastel Nơ Bản To Dự Tiệc',
-        'category_id'    => 1,
-        'category_name'  => 'Váy công chúa',
-        'gender'         => 'girl',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 365000,
-        'stock_quantity' => 11,
-        'material'       => 'Lớp lót 100% sợi tre kháng khuẩn tiếp xúc trực tiếp với làn da nhạy cảm của bé.',
-        'icon'           => 'fa-crown text-peach'
-    ],
-    [
-        'id'             => 106,
-        'sku'            => 'FK-LBN-06',
-        'image'          => '/FashionKids/images/bo-thun-gau-nhi.jpg',
-        'name'           => 'Bộ Thun Sợi Tre Cộc Tay Gấu Nhí Thoáng Khí Mùa Hè',
-        'category_id'    => 2,
-        'category_name'  => 'Bộ thun',
-        'gender'         => 'unisex',
-        'type'           => 'quan_ao',
-        'type_label'     => 'Quần áo (Size 1-5)',
-        'price'          => 195000,
-        'stock_quantity' => 32,
-        'material'       => '100% sợi tre tự nhiên làm mát, cúc bấm vai nhựa nguyên sinh không chứa BPA.',
-        'icon'           => 'fa-baby text-success'
-    ]
-];
-
-// Đếm số lượng sản phẩm sắp hết hàng (tồn kho <= 5)
-$low_stock_count = 0;
-$total_units = 0;
-foreach ($lbn_inventory_list as $inv) {
-    $total_units += $inv['stock_quantity'];
-    if ($inv['stock_quantity'] <= 5) {
-        $low_stock_count++;
-    }
-}
+$low_stock_count = (int)($invStats['low_stock_count'] ?? 0);
+$total_units     = (int)($invStats['total_units'] ?? 0);
+$total_sku       = (int)($invStats['total_sku'] ?? count($lbn_inventory_list));
+$summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun: 0 • Khoác: 0 • Sandal: 0');
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lbn_admin_inventory_section">
@@ -175,14 +50,14 @@ foreach ($lbn_inventory_list as $inv) {
         </div>
     </div>
 
-    <!-- 4 Thẻ Thống Kê Nhanh Kho Hàng & Routine lbn_count_products_by_category -->
+    <!-- 4 Thẻ Thống Kê Nhanh Kho Hàng -->
     <div class="row mb-4">
         <div class="col-12 col-sm-6 col-xl-3 mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">Tổng Mã Sản Phẩm</small>
-                        <h3 class="font-weight-bold text-slate mb-0"><?= count($lbn_inventory_list) ?> SKU</h3>
+                        <h3 class="font-weight-bold text-slate mb-0"><?= $total_sku ?> SKU</h3>
                         <small class="text-success font-weight-bold">4 danh mục hoạt động</small>
                     </div>
                     <span class="lbn-inv-thumb">
@@ -230,7 +105,7 @@ foreach ($lbn_inventory_list as $inv) {
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">Thống Kê Theo Danh Mục</small>
                         <div class="small font-weight-bold text-slate mt-1">
-                            Váy: 2 • Bộ thun: 2 • Khoác: 2 • Sandal: 2
+                            <?= htmlspecialchars($summary_text) ?>
                         </div>
                         <small class="text-mint-dark font-weight-bold">4 nhóm sản phẩm</small>
                     </div>
@@ -243,9 +118,7 @@ foreach ($lbn_inventory_list as $inv) {
     </div>
 
     <div class="row">
-        <!-- ================================================================
-             CỘT TRÁI (8 CỘT): BẢNG DỮ LIỆU SẢN PHẨM & TỒN KHO (CẢNH BÁO ĐỎ <= 5)
-             ================================================================ -->
+        <!-- CỘT TRÁI (8 CỘT): BẢNG DỮ LIỆU SẢN PHẨM & TỒN KHO -->
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
@@ -307,7 +180,7 @@ foreach ($lbn_inventory_list as $inv) {
                                     <th class="text-center">Thao Tác</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="lbn_inventoryBody">
                                 <?php foreach ($lbn_inventory_list as $prod): ?>
                                     <tr id="lbn_invRow_<?= $prod['id'] ?>"
                                         class="lbn-inv-row"
@@ -315,16 +188,13 @@ foreach ($lbn_inventory_list as $inv) {
                                         data-stock="<?= $prod['stock_quantity'] ?>"
                                         data-search="<?= htmlspecialchars($prod['sku'] . ' ' . $prod['name'] . ' ' . $prod['category_name']) ?>">
 
-                                        <!-- 1. Mã SP -->
                                         <td class="font-weight-bold text-nowrap">
                                             <span class="text-peach font-weight-bold"><?= htmlspecialchars($prod['sku']) ?></span>
                                             <div class="small text-muted-custom">Mã SP #<?= $prod['id'] ?></div>
                                         </td>
 
-                                        <!-- 2. Ảnh -->
                                         <td class="text-center"><span class="lbn-inv-thumb"><img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-thumb-img"></span></td>
 
-                                        <!-- 3. Tên Sản Phẩm -->
                                         <td>
                                             <div class="font-weight-bold text-slate">
                                                 <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>" class="text-slate text-decoration-none">
@@ -336,7 +206,6 @@ foreach ($lbn_inventory_list as $inv) {
                                             </small>
                                         </td>
 
-                                        <!-- 4. Danh mục -->
                                         <td class="text-nowrap">
                                             <span class="badge badge-pill badge-sky px-2 py-1">
                                                 <?= htmlspecialchars($prod['category_name']) ?>
@@ -344,12 +213,10 @@ foreach ($lbn_inventory_list as $inv) {
                                             <div class="small text-muted-custom mt-1"><?= htmlspecialchars($prod['type_label']) ?></div>
                                         </td>
 
-                                        <!-- 5. Đơn giá -->
                                         <td class="text-right font-weight-bold text-peach text-nowrap">
                                             <?= number_format($prod['price'], 0, ',', '.') ?> đ
                                         </td>
 
-                                        <!-- 6. Tồn kho + Huy hiệu đỏ "Sắp hết hàng" nếu tồn kho <= 5 -->
                                         <td class="text-center fk-minw-170">
                                             <div id="lbn_stockBadgeCell_<?= $prod['id'] ?>" class="mb-2">
                                                 <?php if ($prod['stock_quantity'] <= 5): ?>
@@ -363,7 +230,6 @@ foreach ($lbn_inventory_list as $inv) {
                                                 <?php endif; ?>
                                             </div>
 
-                                            <!-- Ô cập nhật nhanh tồn kho (lbn_update_stock) -->
                                             <div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">
                                                 <input type="number" id="lbn_stockInput_<?= $prod['id'] ?>"
                                                        class="form-control text-center font-weight-bold"
@@ -371,14 +237,13 @@ foreach ($lbn_inventory_list as $inv) {
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-outline-secondary"
                                                             title="Cập nhật tồn kho"
-                                                            onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= $prod['sku'] ?>')">
+                                                            onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= htmlspecialchars($prod['sku'], ENT_QUOTES) ?>')">
                                                         <i class="fa-solid fa-rotate"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </td>
 
-                                        <!-- 7. Thao tác Sửa (Chỉ Admin) hoặc Nhập thêm kho (Staff) -->
                                         <td class="text-center text-nowrap">
                                             <?php if ($isAdminUser): ?>
                                                 <button type="button"
@@ -399,8 +264,8 @@ foreach ($lbn_inventory_list as $inv) {
                                             <?php else: ?>
                                                 <button type="button"
                                                         class="btn btn-pastel-primary btn-sm rounded-pill px-3"
-                                                        title="Nhập thêm kho hàng (sp_lbn_nhap_them_kho_hang)"
-                                                        onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= htmlspecialchars($prod['sku']) ?>')">
+                                                        title="Nhập thêm số lượng tồn kho"
+                                                        onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= htmlspecialchars($prod['sku'], ENT_QUOTES) ?>')">
                                                     <i class="fa-solid fa-boxes-packing mr-1"></i> Nhập thêm kho
                                                 </button>
                                             <?php endif; ?>
@@ -414,10 +279,7 @@ foreach ($lbn_inventory_list as $inv) {
             </div>
         </div>
 
-        <!-- ================================================================
-             CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM (CHỈ ADMIN)
-             HOẶC BÀN NHẬP THÊM KHO HÀNG (STAFF - sp_lbn_nhap_them_kho_hang)
-             ================================================================ -->
+        <!-- CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM (ADMIN) HOẶC NHẬP KHO (NHÂN VIÊN) -->
         <div class="col-12 col-xl-4 mb-4">
             <?php if ($isAdminUser): ?>
             <div class="card card-pastel shadow-sm" id="lbn_adminProductFormCard">
@@ -479,7 +341,6 @@ foreach ($lbn_inventory_list as $inv) {
                             </div>
                         </div>
 
-                        <!-- 1. LOẠI KÍCH CỠ (QUẦN ÁO / GIÀY DÉP) -->
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate mb-1 d-block">
                                 Loại kích cỡ áp dụng:
@@ -509,7 +370,6 @@ foreach ($lbn_inventory_list as $inv) {
                             </div>
                         </div>
 
-                        <!-- 2. KHUNG CHỌN ẢNH TẢI LÊN (IMAGE UPLOAD DROPZONE) -->
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate mb-1 d-block">
                                 Khung chọn ảnh sản phẩm tải lên:
@@ -529,7 +389,6 @@ foreach ($lbn_inventory_list as $inv) {
                             <input type="file" id="lbn_productImageInput" name="image" class="d-none" accept="image/*">
                         </div>
 
-                        <!-- 3. MÔ TẢ CHẤT LIỆU AN TOÀN -->
                         <div class="form-group mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="small font-weight-bold text-slate mb-0" for="lbn_formProductMaterial">
@@ -540,7 +399,6 @@ foreach ($lbn_inventory_list as $inv) {
                             <textarea id="lbn_formProductMaterial" name="description" rows="3" class="form-control form-control-sm mb-2"
                                       placeholder="Mô tả thành phần sợi tre kháng khuẩn, độ co giãn, phụ liệu cúc bấm an toàn..." required>100% sợi tre hữu cơ kháng khuẩn tự nhiên 99.8%, thấm hút mồ hôi gấp 2 lần cotton.</textarea>
 
-                            <!-- Cụm nút chèn nhanh tiêu chuẩn an toàn -->
                             <div class="d-flex flex-wrap">
                                 <button type="button" onclick="lbnAppendSafeMaterialTag('100% Sợi tre kháng khuẩn')"
                                         class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small text-mint-dark">
@@ -564,17 +422,16 @@ foreach ($lbn_inventory_list as $inv) {
                 </div>
             </div>
             <?php else: ?>
-            <!-- Thẻ Hướng Dẫn & Nhập Thêm Kho Dành Cho Nhân Viên Vận Hành (sp_lbn_nhap_them_kho_hang) -->
             <div class="card card-pastel shadow-sm border-0 bg-white">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold mb-0 text-slate">
-                        <i class="fa-solid fa-boxes-packing text-peach mr-2"></i>Nhập Thêm Kho Hàng (Nhân Viên)
+                        <i class="fa-solid fa-boxes-packing text-peach mr-2"></i>Nhập Thêm Kho Hàng
                     </h6>
-                    <span class="badge badge-sky px-2 py-1 rounded-pill">RBAC Staff</span>
+                    <span class="badge badge-sky px-2 py-1 rounded-pill">Nhân viên kho</span>
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-info small py-2 mb-3">
-                        <i class="fa-solid fa-shield-halved mr-1"></i><strong>Phân quyền Nhân viên Vận hành:</strong> Bạn được cấp quyền cập nhật &amp; <strong>Nhập thêm kho hàng</strong> (<code>sp_lbn_nhap_them_kho_hang</code>). Quyền Thêm mới hoặc Sửa thông tin sản phẩm thuộc về Quản trị viên.
+                        <i class="fa-solid fa-shield-halved mr-1"></i><strong>Nghiệp vụ Nhân viên kho:</strong> Bạn được cấp quyền cập nhật và nhập bổ sung số lượng tồn kho cho các mã sản phẩm hiện có. Quyền tạo mới hoặc chỉnh sửa thông tin sản phẩm thuộc về Quản trị viên.
                     </div>
                     <form id="lbn_formStaffQuickRestock" onsubmit="return lbnSubmitStaffQuickRestock(event)">
                         <div class="form-group">
@@ -604,4 +461,3 @@ foreach ($lbn_inventory_list as $inv) {
 </div>
 
 <?php require_once __DIR__ . "/../layouts/footer.php"; ?>
-

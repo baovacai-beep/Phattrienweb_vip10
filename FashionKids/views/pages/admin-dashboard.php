@@ -1,98 +1,54 @@
 <?php
-$page_title = "Bàn Làm Việc Quản Trị Hệ Thống";
+$page_title = "Bảng Điều Khiển Quản Trị Hệ Thống";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 Rbac::enforceCurrentViewAccess();
+require_once __DIR__ . "/../../models/OrderModel.php";
 
-// Dữ liệu mô phỏng đơn hàng mới nhất cần duyệt (lnkt_orders)
-$recent_orders = [
-    [
-        'order_id'       => 1085,
-        'customer_name'  => 'Võ Thị Thanh Thảo',
-        'phone'          => '0918889999',
-        'address'        => 'Số 120 Điện Biên Phủ, Phường 17, Bình Thạnh, TP.HCM',
-        'items_count'    => 3,
-        'total_amount'   => 648000,
-        'vip_tier'       => 'Hạng Vàng (-10%)',
-        'payment_method' => 'COD',
-        'status'         => 'cho_xu_ly',
-        'status_label'   => 'Chờ xử lý',
-        'status_badge'   => 'badge-warning',
-        'time'           => '10 phút trước'
-    ],
-    [
-        'order_id'       => 1084,
-        'customer_name'  => 'Trần Thị Bông',
-        'phone'          => '0903112233',
-        'address'        => 'Số 45 Lê Duẩn, Quận 1, TP.HCM',
-        'items_count'    => 1,
-        'total_amount'   => 285000,
-        'vip_tier'       => 'Hạng Đồng (0%)',
-        'payment_method' => 'VIETQR',
-        'status'         => 'dang_dong_goi',
-        'status_label'   => 'Đang đóng gói',
-        'status_badge'   => 'badge-info',
-        'time'           => '35 phút trước'
-    ],
-    [
-        'order_id'       => 1083,
-        'customer_name'  => 'Lê Hoàng Nam',
-        'phone'          => '0988776655',
-        'address'        => 'Tòa Park 6, Times City, Hai Bà Trưng, Hà Nội',
-        'items_count'    => 2,
-        'total_amount'   => 545000,
-        'vip_tier'       => 'Hạng Bạc (-5%)',
-        'payment_method' => 'COD',
-        'status'         => 'dang_giao',
-        'status_label'   => 'Đang vận chuyển',
-        'status_badge'   => 'badge-primary',
-        'time'           => '2 giờ trước'
-    ],
-    [
-        'order_id'       => 1082,
-        'customer_name'  => 'Nguyễn Mai Anh',
-        'phone'          => '0934556677',
-        'address'        => 'Số 88 Nguyễn Văn Linh, Hải Châu, Đà Nẵng',
-        'items_count'    => 4,
-        'total_amount'   => 920000,
-        'vip_tier'       => 'Kim Cương (-15%)',
-        'payment_method' => 'VIETQR',
-        'status'         => 'hoan_tat',
-        'status_label'   => 'Hoàn tất',
-        'status_badge'   => 'badge-success',
-        'time'           => '5 giờ trước'
-    ]
-];
+$dashOrderModel = new OrderModel();
+$dashData       = $dashOrderModel->getAdminDashboardData();
 
-// Danh sách sản phẩm cảnh báo tồn kho <= 5 (lbn_products)
-$low_stock_products = [
-    [
-        'id'             => 107,
-        'sku'            => 'FK-LBN-07',
-        'name'           => 'Áo Khoác Hoodie Tai Thỏ Sợi Tre Ấm Áp Cho Bé Gái',
-        'category_name'  => 'Áo khoác',
-        'price'          => 340000,
-        'stock_quantity' => 4,
-        'reorder_level'  => 15
-    ],
-    [
-        'id'             => 104,
-        'sku'            => 'FK-LBN-04',
-        'name'           => 'Áo Khoác Cardigan Sợi Tre Hữu Cơ Chống Nắng UV',
-        'category_name'  => 'Áo khoác',
-        'price'          => 320000,
-        'stock_quantity' => 5,
-        'reorder_level'  => 20
-    ],
-    [
-        'id'             => 109,
-        'sku'            => 'FK-LBN-09',
-        'name'           => 'Áo Khoác Bomber Sợi Tre Phi Hành Gia Nhí Bé Trai',
-        'category_name'  => 'Áo khoác',
-        'price'          => 350000,
-        'stock_quantity' => 9,
-        'reorder_level'  => 20
-    ]
+$completedRevenue  = (float)($dashData['completed_revenue'] ?? 0);
+$pipelineRevenue   = (float)($dashData['pipeline_revenue'] ?? 0);
+$totalOrders       = (int)($dashData['total_orders'] ?? 0);
+$pendingOrders     = (int)($dashData['pending_orders'] ?? 0);
+$completedOrders   = (int)($dashData['completed_orders'] ?? 0);
+$totalCustomers    = (int)($dashData['total_customers'] ?? 0);
+$totalKolProfiles  = (int)($dashData['total_kol_profiles'] ?? 0);
+$lowStockProducts  = $dashData['low_stock_products'] ?? [];
+$lowStockCount     = (int)($dashData['low_stock_count'] ?? count($lowStockProducts));
+$recent_orders     = $dashData['recent_orders'] ?? [];
+$revenue7Days      = $dashData['revenue_7_days'] ?? [];
+$catBreakdown      = $dashData['category_breakdown'] ?? [];
+
+$maxDayRev = 0.0;
+foreach ($revenue7Days as $dayRow) {
+    $rev = (float)($dayRow['revenue'] ?? 0);
+    if ($rev > $maxDayRev) {
+        $maxDayRev = $rev;
+    }
+}
+
+$totalCatRev = 0.0;
+foreach ($catBreakdown as $catRow) {
+    $totalCatRev += (float)($catRow['revenue'] ?? 0);
+}
+
+function fkFormatCompactVnd(float $amount): string {
+    if ($amount >= 1000000) {
+        return number_format($amount / 1000000, 1, ',', '.') . 'M';
+    }
+    if ($amount >= 1000) {
+        return number_format($amount / 1000, 0, ',', '.') . 'K';
+    }
+    return '0 đ';
+}
+
+$catColors = [
+    ['bar' => 'bg-peach',     'icon' => 'fa-wand-magic-sparkles text-peach'],
+    ['bar' => 'bg-sky',       'icon' => 'fa-shirt text-info'],
+    ['bar' => 'bg-mint-soft', 'icon' => 'fa-vest-patches text-success'],
+    ['bar' => 'badge-gold',   'icon' => 'fa-shoe-prints text-warning'],
 ];
 ?>
 
@@ -104,7 +60,7 @@ $low_stock_products = [
                 <i class="fa-solid fa-gauge-high text-peach mr-2"></i>Bàn Làm Việc Quản Trị Hệ Thống
             </h3>
             <small class="text-muted-custom">
-                Thống kê dòng tiền, điều phối vận đơn, cảnh báo ngưỡng tồn kho tự động &amp; phân quyền người dùng
+                Thống kê doanh thu thực tế, điều phối vận đơn, cảnh báo tồn kho (&le; 5) &amp; quản trị thành viên
             </small>
         </div>
         <div class="mt-2 mt-md-0">
@@ -117,7 +73,7 @@ $low_stock_products = [
         </div>
     </div>
 
-    <!-- Thanh Điều Hướng Các Phân Hệ Quản Trị (Admin Navigation Bar) -->
+    <!-- Thanh Điều Hướng Các Phân Hệ Quản Trị -->
     <div class="card card-pastel border-0 shadow-sm mb-4">
         <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
             <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mr-2 mb-1">
@@ -139,7 +95,7 @@ $low_stock_products = [
                 <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Carousel
+                <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Chiến Dịch
             </a>
             <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mb-1 border">
                 <i class="fa-solid fa-newspaper text-primary mr-1"></i> Tạp Chí Bài Viết
@@ -147,17 +103,16 @@ $low_stock_products = [
         </div>
     </div>
 
-    <!-- Hàng 4 Card KPI Đo Lường Hiệu Năng Vận Hành -->
+    <!-- Hàng 4 Card KPI Thực Tế Từ CSDL -->
     <div class="row mb-4">
-        <!-- KPI 1: Doanh Thu Tháng -->
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Doanh Thu Tháng 11</small>
-                        <h4 class="font-weight-bold text-slate mb-1">128.450.000 đ</h4>
+                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Doanh Thu Hoàn Tất</small>
+                        <h4 class="font-weight-bold text-slate mb-1"><?= number_format($completedRevenue, 0, ',', '.') ?> đ</h4>
                         <span class="badge badge-pill badge-mint small">
-                            <i class="fa-solid fa-arrow-trend-up mr-1"></i>+14.2% so với tháng trước
+                            <i class="fa-solid fa-coins mr-1"></i>Đơn hiệu lực: <?= number_format($pipelineRevenue, 0, ',', '.') ?> đ
                         </span>
                     </div>
                     <div class="rounded-circle p-3 bg-peach text-white d-flex align-items-center justify-content-center avatar-56">
@@ -167,15 +122,14 @@ $low_stock_products = [
             </div>
         </div>
 
-        <!-- KPI 2: Tổng Đơn Hàng -->
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Tổng Đơn Hàng</small>
-                        <h4 class="font-weight-bold text-slate mb-1">342 đơn</h4>
+                        <h4 class="font-weight-bold text-slate mb-1"><?= number_format($totalOrders) ?> đơn</h4>
                         <span class="badge badge-pill badge-warning small text-dark">
-                            <i class="fa-solid fa-clock mr-1"></i>28 đơn đang chờ xử lý
+                            <i class="fa-solid fa-clock mr-1"></i><?= number_format($pendingOrders) ?> chờ duyệt • <?= number_format($completedOrders) ?> hoàn tất
                         </span>
                     </div>
                     <div class="rounded-circle p-3 bg-sky text-dark d-flex align-items-center justify-content-center avatar-56">
@@ -185,13 +139,12 @@ $low_stock_products = [
             </div>
         </div>
 
-        <!-- KPI 3: Cảnh Báo Tồn Kho Thấp -->
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Cảnh Báo Tồn Kho (≤ 5)</small>
-                        <h4 class="font-weight-bold text-danger mb-1"><?= count($low_stock_products) ?> mã SP</h4>
+                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Cảnh Báo Tồn Kho (&le; 5)</small>
+                        <h4 class="font-weight-bold text-danger mb-1"><span id="admin_lowStockCount"><?= $lowStockCount ?></span> mã SP</h4>
                         <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-danger">
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>Xem danh sách thiếu hàng
                         </a>
@@ -203,15 +156,14 @@ $low_stock_products = [
             </div>
         </div>
 
-        <!-- KPI 4: Khách Hàng VIP Mới -->
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Hội Viên VIP Mới</small>
-                        <h4 class="font-weight-bold text-slate mb-1">48 phụ huynh</h4>
+                        <small class="text-muted-custom font-weight-bold d-block text-uppercase">Khách Hàng Thành Viên</small>
+                        <h4 class="font-weight-bold text-slate mb-1"><?= number_format($totalCustomers) ?> phụ huynh</h4>
                         <span class="badge badge-pill badge-gold small">
-                            <i class="fa-solid fa-crown mr-1"></i>Tổng 1.250 khách hàng VIP
+                            <i class="fa-solid fa-crown mr-1"></i><?= number_format($totalKolProfiles) ?> hồ sơ KOL Nhí
                         </span>
                     </div>
                     <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center avatar-56">
@@ -222,138 +174,100 @@ $low_stock_products = [
         </div>
     </div>
 
-    <!-- Hàng 2: Biểu Đồ Doanh Thu & Cơ Cấu Danh Mục -->
+    <!-- Hàng 2: Biểu Đồ Doanh Thu 7 Ngày & Cơ Cấu Danh Mục -->
     <div class="row mb-4">
-        <!-- Cột Trái (8 Cột): Phân Tích Doanh Thu 7 Ngày Gần Nhất -->
         <div class="col-12 col-xl-8 mb-4 mb-xl-0">
             <div class="card card-pastel shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="font-weight-bold text-slate mb-0">
-                            <i class="fa-solid fa-chart-column text-peach mr-2"></i>Biểu Đồ Doanh Thu Tuần Hiện Tại (VNĐ)
+                            <i class="fa-solid fa-chart-column text-peach mr-2"></i>Biểu Đồ Doanh Thu 7 Ngày Gần Nhất (VNĐ)
                         </h6>
-                        <small class="text-muted-custom">Theo dõi tốc độ tăng trưởng doanh số bán hàng hàng ngày</small>
+                        <small class="text-muted-custom">Tổng hợp giá trị đơn hàng hợp lệ phát sinh mỗi ngày</small>
                     </div>
-                    <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold">Đạt 112% Chỉ Tiêu</span>
+                    <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold">Đồng bộ trực tiếp</span>
                 </div>
                 <div class="card-body p-4 pt-2">
-                    <!-- Mô phỏng biểu đồ cột 7 ngày -->
                     <div class="d-flex justify-content-between align-items-end pt-4 pb-2 text-center chart-container-220">
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-slate mb-1">14.2M</small>
-                            <div class="w-100 bg-sky rounded-top" title="Thứ Hai: 14.200.000 đ" data-fk-height="110"></div>
-                            <small class="text-muted-custom mt-2 font-weight-bold">T2 (02/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-slate mb-1">16.8M</small>
-                            <div class="w-100 bg-sky rounded-top" title="Thứ Ba: 16.800.000 đ" data-fk-height="135"></div>
-                            <small class="text-muted-custom mt-2 font-weight-bold">T3 (03/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-slate mb-1">19.5M</small>
-                            <div class="w-100 bg-sky rounded-top" title="Thứ Tư: 19.500.000 đ" data-fk-height="155"></div>
-                            <small class="text-muted-custom mt-2 font-weight-bold">T4 (04/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-slate mb-1">17.2M</small>
-                            <div class="w-100 bg-sky rounded-top" title="Thứ Năm: 17.200.000 đ" data-fk-height="138"></div>
-                            <small class="text-muted-custom mt-2 font-weight-bold">T5 (05/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-peach mb-1">24.6M</small>
-                            <div class="w-100 bg-peach rounded-top" title="Thứ Sáu: 24.600.000 đ" data-fk-height="190"></div>
-                            <small class="text-peach mt-2 font-weight-bold">T6 (06/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-peach mb-1">21.8M</small>
-                            <div class="w-100 bg-peach rounded-top" title="Thứ Bảy: 21.800.000 đ" data-fk-height="172"></div>
-                            <small class="text-peach mt-2 font-weight-bold">T7 (07/11)</small>
-                        </div>
-                        <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                            <small class="font-weight-bold text-slate mb-1">14.3M</small>
-                            <div class="w-100 bg-mint-soft rounded-top" title="Hôm nay: 14.350.000 đ" data-fk-height="115"></div>
-                            <small class="text-success mt-2 font-weight-bold">CN (Hôm nay)</small>
-                        </div>
+                        <?php $totalDays = count($revenue7Days); ?>
+                        <?php foreach ($revenue7Days as $idx => $dayRow):
+                            $dayRev    = (float)($dayRow['revenue'] ?? 0);
+                            $dayOrders = (int)($dayRow['orders'] ?? 0);
+                            $isToday   = ($idx === $totalDays - 1);
+                            $isPeak    = ($maxDayRev > 0 && $dayRev >= $maxDayRev);
+                            $barHeight = ($maxDayRev > 0 && $dayRev > 0)
+                                ? max(22, (int)round(($dayRev / $maxDayRev) * 180))
+                                : 10;
+                            $barColor  = $isToday ? 'bg-mint-soft' : ($isPeak ? 'bg-peach' : 'bg-sky');
+                            $lblClass  = $isToday ? 'text-success' : ($isPeak ? 'text-peach' : 'text-muted-custom');
+                        ?>
+                            <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
+                                <small class="font-weight-bold <?= $isPeak ? 'text-peach' : 'text-slate' ?> mb-1">
+                                    <?= htmlspecialchars(fkFormatCompactVnd($dayRev)) ?>
+                                </small>
+                                <div class="w-100 <?= $barColor ?> rounded-top"
+                                     title="<?= htmlspecialchars($dayRow['label'] . ': ' . number_format($dayRev, 0, ',', '.') . ' đ (' . $dayOrders . ' đơn)') ?>"
+                                     data-fk-height="<?= $barHeight ?>"></div>
+                                <small class="<?= $lblClass ?> mt-2 font-weight-bold">
+                                    <?= htmlspecialchars($isToday ? ('Hôm nay') : $dayRow['label']) ?>
+                                </small>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 small text-muted-custom">
-                        <span><i class="fa-solid fa-circle text-sky mr-1"></i>Ngày thường trong tuần</span>
-                        <span><i class="fa-solid fa-circle text-peach mr-1"></i>Cao điểm cuối tuần (Flash Sale)</span>
-                        <span><i class="fa-solid fa-circle text-mint-dark mr-1"></i>Doanh thu thời gian thực hôm nay</span>
+                    <div class="d-flex justify-content-between align-items-center mt-3 small text-muted-custom flex-wrap">
+                        <span><i class="fa-solid fa-circle text-sky mr-1"></i>Ngày trong tuần</span>
+                        <span><i class="fa-solid fa-circle text-peach mr-1"></i>Ngày doanh thu cao nhất</span>
+                        <span><i class="fa-solid fa-circle text-mint-dark mr-1"></i>Doanh thu hôm nay</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cột Phải (4 Cột): Tỷ Trọng Doanh Thu Theo Danh Mục (lbn_categories) -->
         <div class="col-12 col-xl-4">
             <div class="card card-pastel shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-0 py-3">
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-chart-pie text-peach mr-2"></i>Cơ Cấu Doanh Số Danh Mục
                     </h6>
-                    <small class="text-muted-custom">4 nhóm sản phẩm chính của hệ thống FashionKids</small>
+                    <small class="text-muted-custom">4 nhóm sản phẩm sợi tre chính của FashionKids</small>
                 </div>
                 <div class="card-body p-4 pt-2">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
-                            <span><i class="fa-solid fa-wand-magic-sparkles text-peach mr-2"></i>Váy Công Chúa (Bé gái)</span>
-                            <span class="text-slate">38% (48.8M)</span>
+                    <?php foreach ($catBreakdown as $cIdx => $catRow):
+                        $catRev = (float)($catRow['revenue'] ?? 0);
+                        $catQty = (int)($catRow['qty'] ?? 0);
+                        $pct    = ($totalCatRev > 0) ? (int)round(($catRev / $totalCatRev) * 100) : 0;
+                        $styleMeta = $catColors[$cIdx % count($catColors)];
+                    ?>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
+                                <span><i class="fa-solid <?= $styleMeta['icon'] ?> mr-2"></i><?= htmlspecialchars((string)$catRow['ten_danh_muc']) ?></span>
+                                <span class="text-slate"><?= $pct ?>% (<?= htmlspecialchars(fkFormatCompactVnd($catRev)) ?> • <?= $catQty ?> SP)</span>
+                            </div>
+                            <div class="progress progress-sm">
+                                <div class="progress-bar <?= $styleMeta['bar'] ?>" role="progressbar" data-fk-width="<?= $pct ?>"></div>
+                            </div>
                         </div>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-peach" role="progressbar" data-fk-width="38"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
-                            <span><i class="fa-solid fa-shirt text-info mr-2"></i>Bộ Thun Sợi Tre (Bé trai &amp; Unisex)</span>
-                            <span class="text-slate">32% (41.1M)</span>
-                        </div>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-sky" role="progressbar" data-fk-width="32"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
-                            <span><i class="fa-solid fa-shoe-prints text-warning mr-2"></i>Giày Sandal Tập Đi (Đế cao su)</span>
-                            <span class="text-slate">18% (23.1M)</span>
-                        </div>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar badge-gold" role="progressbar" data-fk-width="18"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
-                            <span><i class="fa-solid fa-vest-patches text-success mr-2"></i>Áo Khoác Chống Nắng UV</span>
-                            <span class="text-slate">12% (15.4M)</span>
-                        </div>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-mint-soft" role="progressbar" data-fk-width="12"></div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
 
                     <div class="p-3 rounded bg-milk-cream border mt-4 text-center">
-                        <small class="text-muted-custom d-block mb-1">Chất liệu sợi tre hữu cơ đóng góp</small>
-                        <h5 class="font-weight-bold text-success mb-0">86.4% Tổng Lượng Tiêu Thụ</h5>
+                        <small class="text-muted-custom d-block mb-1">Chứng nhận chất liệu an toàn cho bé</small>
+                        <h6 class="font-weight-bold text-success mb-0">100% Vải Sợi Tre Chuẩn OEKO-TEX®</h6>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hàng 3: Hai Bảng Dữ Liệu Trọng Yếu: Đơn Hàng Mới Cần Duyệt & Cảnh Báo Tồn Kho -->
+    <!-- Hàng 3: Đơn Hàng Mới & Cảnh Báo Tồn Kho -->
     <div class="row">
-        <!-- Bảng 1: Đơn Hàng Mới Nhất Chờ Xử Lý (lnkt_orders) -->
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm border-0">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="font-weight-bold text-slate mb-0">
-                            <i class="fa-solid fa-receipt text-peach mr-2"></i>Đơn Hàng Mới Chờ Xử Lý
+                            <i class="fa-solid fa-receipt text-peach mr-2"></i>Đơn Hàng Mới Nhất Hệ Thống
                         </h6>
-                        <small class="text-muted-custom">Tiếp nhận đơn hàng đặt trực tiếp qua giỏ hàng trực tuyến</small>
+                        <small class="text-muted-custom">Theo dõi nhanh dòng tiền và chuyển sang xử lý chi tiết</small>
                     </div>
                     <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
                         Xem Tất Cả Đơn <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -367,40 +281,55 @@ $low_stock_products = [
                                     <th>Mã Đơn</th>
                                     <th>Phụ Huynh &amp; SĐT</th>
                                     <th>Địa Chỉ Giao</th>
-                                    <th>Hạng VIP</th>
+                                    <th>Thanh Toán</th>
                                     <th class="text-right">Tổng Tiền</th>
                                     <th class="text-center">Trạng Thái</th>
                                     <th class="text-center">Thao Tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($recent_orders as $ord): ?>
+                                <?php if (empty($recent_orders)): ?>
                                     <tr>
-                                        <td class="font-weight-bold text-slate">#<?= $ord['order_id'] ?></td>
+                                        <td colspan="7" class="text-center py-4 text-muted-custom">Chưa có đơn hàng nào được ghi nhận.</td>
+                                    </tr>
+                                <?php endif; ?>
+                                <?php foreach ($recent_orders as $ord):
+                                    $oid     = (int)$ord['ma_don_hang'];
+                                    $ocode   = (string)$ord['ma_van_don'];
+                                    $stMeta  = $ord['status_meta'] ?? [];
+                                    $pm      = strtolower((string)($ord['phuong_thuc_thanh_toan'] ?? 'cod'));
+                                    $ps      = strtolower((string)($ord['trang_thai_thanh_toan'] ?? 'chua_thanh_toan'));
+                                    $addr    = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
+                                ?>
+                                    <tr>
+                                        <td class="font-weight-bold text-slate text-nowrap">#<?= htmlspecialchars($ocode) ?></td>
                                         <td>
-                                            <div class="font-weight-bold text-slate"><?= htmlspecialchars($ord['customer_name']) ?></div>
-                                            <small class="text-muted-custom"><i class="fa-solid fa-phone mr-1"></i><?= htmlspecialchars($ord['phone']) ?></small>
+                                            <div class="font-weight-bold text-slate"><?= htmlspecialchars((string)$ord['ten_nguoi_nhan']) ?></div>
+                                            <small class="text-muted-custom"><i class="fa-solid fa-phone mr-1"></i><?= htmlspecialchars((string)$ord['so_dien_thoai_nhan']) ?></small>
                                         </td>
                                         <td>
-                                            <small class="text-slate d-inline-block fk-ellipsis-220" title="<?= htmlspecialchars($ord['address']) ?>">
-                                                <?= htmlspecialchars($ord['address']) ?>
+                                            <small class="text-slate d-inline-block fk-ellipsis-220" title="<?= htmlspecialchars($addr) ?>">
+                                                <?= htmlspecialchars($addr) ?>
                                             </small>
                                         </td>
-                                        <td>
-                                            <span class="badge badge-pill badge-light border text-slate small font-weight-bold">
-                                                <?= htmlspecialchars($ord['vip_tier']) ?>
+                                        <td class="text-nowrap">
+                                            <span class="badge badge-pill <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small font-weight-bold">
+                                                <?= $pm === 'vietqr' ? 'VietQR' : 'COD' ?>
                                             </span>
+                                            <?php if ($ps === 'da_thanh_toan'): ?>
+                                                <span class="badge badge-pill badge-mint small">Đã TT</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-right font-weight-bold text-peach text-nowrap">
-                                            <?= number_format($ord['total_amount'], 0, ',', '.') ?> đ
+                                            <?= number_format((float)$ord['tong_tien_thanh_toan'], 0, ',', '.') ?> đ
                                         </td>
-                                        <td class="text-center">
-                                            <span class="badge badge-pill <?= $ord['status_badge'] ?> px-2 py-1">
-                                                <?= htmlspecialchars($ord['status_label']) ?>
+                                        <td class="text-center text-nowrap">
+                                            <span class="badge badge-pill <?= htmlspecialchars((string)($stMeta['badge_class'] ?? 'badge-warning')) ?> px-2 py-1">
+                                                <?= htmlspecialchars((string)($stMeta['label'] ?? 'Chờ duyệt')) ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <a href="/FashionKids/views/pages/staff-orders.php?order_id=<?= $ord['order_id'] ?>" class="btn btn-sm btn-pastel-sky font-weight-bold rounded-pill px-3">
+                                            <a href="/FashionKids/views/pages/staff-orders.php?order_id=<?= $oid ?>" class="btn btn-sm btn-pastel-sky font-weight-bold rounded-pill px-3">
                                                 Duyệt
                                             </a>
                                         </td>
@@ -413,37 +342,50 @@ $low_stock_products = [
             </div>
         </div>
 
-        <!-- Bảng 2: Cảnh Báo Ngưỡng Tồn Kho Thấp (lbn_products) -->
+        <!-- Bảng 2: Cảnh Báo Ngưỡng Tồn Kho Thấp -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm border-0">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="font-weight-bold text-danger mb-0">
-                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>Cảnh Báo Tồn Kho (≤ 5 Cái)
+                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>Cảnh Báo Tồn Kho (&le; 5 Cái)
                         </h6>
-                        <small class="text-muted-custom">Kích hoạt quy trình nhập bổ sung hàng hóa tại kho</small>
+                        <small class="text-muted-custom">Nhập bổ sung nhanh hoặc mở trang kho chi tiết</small>
                     </div>
                     <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-peach">
                         Kho hàng <i class="fa-solid fa-arrow-right ml-1"></i>
                     </a>
                 </div>
                 <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        <?php foreach ($low_stock_products as $lsp): ?>
-                            <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="font-weight-bold text-slate small"><?= htmlspecialchars($lsp['name']) ?></div>
+                    <div id="admin_dashRestockAlert" class="alert small mx-3 mt-3 mb-0 py-2 d-none" role="alert"></div>
+                    <ul class="list-group list-group-flush" id="admin_lowStockList">
+                        <?php if (empty($lowStockProducts)): ?>
+                            <li class="list-group-item p-4 text-center text-success font-weight-bold small">
+                                <i class="fa-solid fa-circle-check mr-1"></i>Tất cả sản phẩm hiện đều còn đủ tồn kho (&gt; 5 sản phẩm).
+                            </li>
+                        <?php endif; ?>
+                        <?php foreach ($lowStockProducts as $lsp):
+                            $pid    = (int)$lsp['ma_san_pham'];
+                            $skuNum = $pid >= 100 ? ($pid - 100) : $pid;
+                            $sku    = 'FK-LBN-' . str_pad((string)$skuNum, 2, '0', STR_PAD_LEFT);
+                            $qty    = (int)$lsp['so_luong_ton_kho'];
+                        ?>
+                            <li class="list-group-item p-3 d-flex justify-content-between align-items-center" id="dash_lowStockRow_<?= $pid ?>">
+                                <div class="pr-2">
+                                    <div class="font-weight-bold text-slate small"><?= htmlspecialchars((string)$lsp['ten_san_pham']) ?></div>
                                     <small class="text-muted-custom">
-                                        Mã: <strong class="text-slate"><?= htmlspecialchars($lsp['sku']) ?></strong> • Giá: <?= number_format($lsp['price'], 0, ',', '.') ?> đ
+                                        Mã: <strong class="text-slate"><?= htmlspecialchars($sku) ?></strong> • Giá: <?= number_format((float)$lsp['gia_ban'], 0, ',', '.') ?> đ
                                     </small>
                                 </div>
-                                <div class="text-right">
-                                    <span class="badge lbn-badge-low-stock font-weight-bold px-2 py-1 d-block mb-1">
-                                        Còn <?= $lsp['stock_quantity'] ?> cái
+                                <div class="text-right text-nowrap">
+                                    <span id="dash_stockBadge_<?= $pid ?>" class="badge lbn-badge-low-stock font-weight-bold px-2 py-1 d-block mb-1">
+                                        Còn <?= $qty ?> cái
                                     </span>
-                                    <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-primary">
-                                        <i class="fa-solid fa-plus-circle mr-1"></i>Nhập kho
-                                    </a>
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 small font-weight-bold"
+                                            onclick="lbnDashboardQuickRestock(<?= $pid ?>, 10, this)">
+                                        <i class="fa-solid fa-plus-circle mr-1"></i>+10 kho
+                                    </button>
                                 </div>
                             </li>
                         <?php endforeach; ?>
@@ -462,4 +404,3 @@ $low_stock_products = [
 <?php
 require_once __DIR__ . "/../layouts/footer.php";
 ?>
-

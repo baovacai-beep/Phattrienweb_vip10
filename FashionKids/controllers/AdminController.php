@@ -40,6 +40,28 @@ class AdminController extends Controller {
     }
 
     /**
+     * AJAX Lấy dữ liệu thống kê KPI, đơn hàng & cảnh báo tồn kho cho Dashboard Admin (MH 12)
+     */
+    public function ajaxDashboardStats(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Chỉ Quản trị viên mới được phép truy cập số liệu tổng quan Dashboard.'
+        );
+        require_once __DIR__ . '/../models/OrderModel.php';
+        $orderModel = new OrderModel();
+        $dashData   = $orderModel->getAdminDashboardData();
+        $this->json([
+            'status' => 'success',
+            'code'   => 200,
+            'data'   => $dashData,
+            'message'=> 'Đã đồng bộ dữ liệu KPI từ cơ sở dữ liệu.'
+        ], 200);
+    }
+
+    /**
      * Quản lý Kho hàng & Tồn kho (MH 13) - Admin & Nhân viên
      */
     public function inventory(): void {
