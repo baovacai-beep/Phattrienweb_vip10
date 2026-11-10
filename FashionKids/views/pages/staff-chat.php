@@ -1,5 +1,5 @@
 <?php
-$page_title = "Bàn Làm Việc CSKH Trực Tuyến Realtime (MH 11)";
+$page_title = "Bàn Làm Việc CSKH Trực Tuyến";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
@@ -8,6 +8,18 @@ $rtModel  = new RealtimeContentModel();
 $sessions = $rtModel->getChatSessions();
 $activeSessionId = $_GET['session_id'] ?? ($sessions[0]['session_id'] ?? 'sess_guest_123456');
 $messages = $rtModel->getChatMessages($activeSessionId);
+$activeSessionMeta = $sessions[0] ?? [
+    'session_id'    => $activeSessionId,
+    'customer_name' => 'Khách hàng trực tuyến',
+    'vip_label'     => 'Khách Trực Tuyến',
+    'badge_class'   => 'badge-peach',
+];
+foreach ($sessions as $sItem) {
+    if (($sItem['session_id'] ?? '') === $activeSessionId) {
+        $activeSessionMeta = $sItem;
+        break;
+    }
+}
 
 // Danh sách sản phẩm phục vụ Tra cứu Tồn kho Nhanh ngay trong màn hình Chat
 $quickStockProducts = [
@@ -51,19 +63,19 @@ $quickStockProducts = [
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="fk_staff_chat_section">
-    <!-- Header Bàn Làm Việc CSKH Trực Tuyến (MH 11) -->
+    <!-- Header Bàn Làm Việc CSKH Trực Tuyến -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h3 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-headset text-peach mr-2"></i>Bàn Làm Việc CSKH &amp; Tư Vấn Trực Tuyến Realtime (MH 11)
+                <i class="fa-solid fa-headset text-peach mr-2"></i>Bàn Làm Việc CSKH &amp; Tư Vấn Trực Tuyến
             </h3>
             <small class="text-muted-custom">
-                Đảm nhiệm: Trần Gia Bảo (<code>tgb_tin_nhan_tu_van</code>) — Đồng bộ tin nhắn hai chiều giữa Hộp thoại Khách hàng (MH 08) &amp; Nhân viên Tư vấn
+                Đồng bộ tin nhắn hai chiều giữa Hộp thoại Khách hàng &amp; Nhân viên Tư vấn
             </small>
         </div>
         <div class="mt-2 mt-md-0 d-flex align-items-center">
             <span class="badge badge-pill badge-mint px-3 py-2 mr-2 font-weight-bold">
-                <span class="fk-live-pulse-dot mr-1"></span>Đang kết nối Realtime (<span id="fk_staffPollClock"><?= date('H:i:s') ?></span>)
+                <span class="fk-live-pulse-dot mr-1"></span>Đang trực tuyến (<span id="fk_staffPollClock"><?= date('H:i:s') ?></span>)
             </span>
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
@@ -71,7 +83,7 @@ $quickStockProducts = [
                 </a>
             <?php else: ?>
                 <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
-                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Duyệt Đơn (MH 10)
+                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Duyệt Đơn
                 </a>
             <?php endif; ?>
         </div>
@@ -82,28 +94,28 @@ $quickStockProducts = [
         <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan (MH 12)
+                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng (MH 13)
+                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng
             </a>
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn (MH 10)
+                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn
             </a>
             <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mr-2 mb-1">
-                <i class="fa-solid fa-headset mr-1"></i> CSKH Realtime (MH 11)
+                <i class="fa-solid fa-headset mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí (MH 17)
+                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
             </a>
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner (MH 23)
+                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mb-1 border">
-                <i class="fa-solid fa-newspaper text-primary mr-1"></i> CMS Tạp Chí (MH 21)
+                <i class="fa-solid fa-newspaper text-primary mr-1"></i> Quản Lý Tạp Chí
             </a>
         </div>
     </div>
@@ -156,10 +168,10 @@ $quickStockProducts = [
                 <!-- Header Phiên Chat Đang Mở -->
                 <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center">
                     <div>
-                        <span class="font-weight-bold text-slate" id="fk_activeChatCustomerName">Mẹ Bé Sam (Võ Thị Thanh Thảo)</span>
-                        <span class="badge badge-pill badge-gold ml-2" id="fk_activeChatVipBadge">VIP Hạng Vàng (-10%)</span>
+                        <span class="font-weight-bold text-slate" id="fk_activeChatCustomerName"><?= htmlspecialchars((string)($activeSessionMeta['customer_name'] ?? 'Khách hàng trực tuyến')) ?></span>
+                        <span class="badge badge-pill <?= htmlspecialchars((string)($activeSessionMeta['badge_class'] ?? 'badge-peach')) ?> ml-2" id="fk_activeChatVipBadge"><?= htmlspecialchars((string)($activeSessionMeta['vip_label'] ?? 'Khách Trực Tuyến')) ?></span>
                         <div class="small text-muted-custom">
-                            Mã phiên: <code id="fk_activeChatSessionCode"><?= htmlspecialchars($activeSessionId) ?></code>
+                            Mã phiên: <span id="fk_activeChatSessionCode" class="font-weight-bold text-slate"><?= htmlspecialchars($activeSessionId) ?></span>
                         </div>
                     </div>
                     <div class="mt-2 mt-sm-0">
@@ -234,7 +246,7 @@ $quickStockProducts = [
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-magnifying-glass-chart text-peach mr-1"></i> Tra Cứu Tồn Kho Nhanh
                     </h6>
-                    <small class="text-muted-custom">Kiểm tra tồn kho <code>lbn_san_pham</code> &amp; chèn báo giá vào khung chat</small>
+                    <small class="text-muted-custom">Kiểm tra tồn kho hệ thống &amp; chèn báo giá vào khung chat</small>
                 </div>
                 <div class="card-body p-3">
                     <div class="input-group input-group-sm mb-3">

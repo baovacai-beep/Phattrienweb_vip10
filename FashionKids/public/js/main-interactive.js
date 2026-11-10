@@ -152,7 +152,7 @@ $(document).ready(function () {
                             '</div>' +
                             '<div class="d-flex">' +
                                 '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" ' +
-                                   'class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết PDP">' +
+                                   'class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">' +
                                     '<i class="fa-regular fa-eye"></i>' +
                                 '</a>' +
                                 '<button type="button" ' +
@@ -391,7 +391,7 @@ $(document).ready(function () {
             $alertBox
                 .removeClass('d-none alert-mint text-slate')
                 .addClass('alert-danger d-block')
-                .html('<i class="fa-solid fa-circle-exclamation mr-1"></i><strong>Tạm hết hàng:</strong> Sản phẩm kích cỡ <strong>' + lbnEscapeHtml(sizeLabel || '') + '</strong> hiện có tồn kho = 0 trong CSDL <code>lbn_san_pham</code>.');
+                .html('<i class="fa-solid fa-circle-exclamation mr-1"></i><strong>Tạm hết hàng:</strong> Sản phẩm kích cỡ <strong>' + lbnEscapeHtml(sizeLabel || '') + '</strong> hiện đã hết hàng tại cửa hàng.');
         } else if (reqQty > stock) {
             // Chặn đặt hàng nếu số lượng chọn vượt quá tồn kho thực tế
             $btnAdd.prop('disabled', true).addClass('disabled');
@@ -417,7 +417,7 @@ $(document).ready(function () {
             $alertBox
                 .removeClass('d-none alert-danger')
                 .addClass('lnkt-alert-mint-pastel alert-mint text-slate d-block')
-                .html('<i class="fa-solid fa-circle-check text-success mr-1"></i><strong>Tồn kho khả dụng (<code>fn_lbn_kiem_tra_ton_kho</code>):</strong> Phân loại <strong>' + lbnEscapeHtml(sizeLabel || '') + '</strong> còn <strong>' + stock + '</strong> sản phẩm tại kho.');
+                .html('<i class="fa-solid fa-circle-check text-success mr-1"></i><strong>Tồn kho khả dụng:</strong> Phân loại <strong>' + lbnEscapeHtml(sizeLabel || '') + '</strong> còn <strong>' + stock + '</strong> sản phẩm tại kho.');
         }
     };
 
@@ -537,7 +537,7 @@ $(document).ready(function () {
             let badge = $('.cart-badge-custom').first();
             let nextCount = (res && res.cart_count) ? res.cart_count : ((parseInt(badge.text(), 10) || 0) + qty);
             badge.text(nextCount);
-            alert('Đã kiểm tra tồn kho (fn_lbn_kiem_tra_ton_kho) & thêm ' + qty + ' x "' + prodName + '" (Phân loại: ' + chosenSize + ') vào giỏ hàng thành công!');
+            alert('Đã kiểm tra tồn kho & thêm ' + qty + ' x "' + prodName + '" (Phân loại: ' + chosenSize + ') vào giỏ hàng thành công!');
         });
     };
 
@@ -645,7 +645,7 @@ $(document).ready(function () {
         });
         $('#lbn_lowStockCounter').text(lowStockTotal);
 
-        alert('Đã thực thi lbn_update_stock cho mã SP ' + skuCode + ' -> Tồn kho mới: ' + newStock + ' sản phẩm.');
+        alert('Đã cập nhật tồn kho cho mã sản phẩm ' + skuCode + ': ' + newStock + ' sản phẩm.');
     };
 
     // Chuyển đổi hướng dẫn loại kích cỡ (Quần áo vs Giày dép) trong Form MH 13
@@ -704,7 +704,7 @@ $(document).ready(function () {
     window.lbnResetProductForm = function () {
         $('#lbn_formAdminProduct')[0].reset();
         $('#lbn_formProductId').val('');
-        $('#lbn_formModeTitle').html('<i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới (lbn_insert_product)');
+        $('#lbn_formModeTitle').html('<i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới');
         $('#lbn_btnSubmitProduct').html('<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Thêm Sản Phẩm Vào Kho');
         $('#lbn_btnResetForm').addClass('d-none');
         $('#lbn_uploadFileName').text('Kéo thả hoặc nhấn để chọn ảnh sản phẩm (JPG, PNG, WEBP)');
@@ -721,7 +721,7 @@ $(document).ready(function () {
         if (isEdit) {
             alert('Đã cập nhật thông tin sản phẩm "' + prodName + '" (Tồn kho: ' + prodStock + ') thành công!');
         } else {
-            alert('Đã thực thi Stored Procedure lbn_insert_product: Thêm mới sản phẩm "' + prodName + '" vào kho thành công!');
+            alert('Đã thêm mới sản phẩm "' + prodName + '" vào kho thành công!');
         }
     });
 });
@@ -731,8 +731,8 @@ $(document).ready(function () {
 /**
  * ============================================================================
  * PHÂN HỆ ĐẢM NHIỆM: LÊ NGUYỄN KHÁNH TRÌNH (lnkt_)
- * Homepage Carousel (MH 01), Size Chart Modal (MH 04), Checkout (MH 05),
- * Order Tracking (MH 06), Staff Orders (MH 10), Admin Size Charts (MH 14),
+ * Homepage Carousel (MH 01), Size Chart Modal, Checkout (MH 05),
+ * Order Tracking, Staff Orders (MH 10), Admin Size Charts (MH 14),
  * KOL Casting (MH 16), Admin Banners (MH 23)
  * ============================================================================
  */
@@ -958,7 +958,7 @@ $(document).ready(function () {
                 '<div class="d-flex justify-content-between align-items-center">' +
                 '<div><strong><i class="fa-solid fa-circle-check text-success mr-1"></i> Kích cỡ gợi ý chuẩn: <span class="text-peach">' + finalSize + '</span></strong>' +
                 '<div class="small mt-1">' + noteText + '</div></div>' +
-                '<span class="badge badge-pill badge-mint ml-2 px-2 py-1"><i class="fa-solid fa-bolt mr-1"></i>Đã đồng bộ PDP</span>' +
+                '<span class="badge badge-pill badge-mint ml-2 px-2 py-1"><i class="fa-solid fa-bolt mr-1"></i>Đã áp dụng</span>' +
                 '</div>'
             );
 
@@ -1089,7 +1089,7 @@ $(document).ready(function () {
         }
         window.lnktSyncSizeToPdpAndOrder(chosenSize);
         $('#modalSuggestSize').modal('hide');
-        alert('Đã áp dụng kích cỡ gợi ý "' + chosenSize + '" từ thước dây thông minh (fn_lnkt_goi_y_kich_co_chuan)!');
+        alert('Đã áp dụng kích cỡ gợi ý "' + chosenSize + '" vào sản phẩm!');
     };
 
     // ------------------------------------------------------------------------
@@ -1163,12 +1163,12 @@ $(document).ready(function () {
             .prop('disabled', true)
             .empty()
             .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
-        lnktSetProvinceStatus('Đang tải dữ liệu từ Provinces Open API...', 'fa-spinner fa-spin text-info');
+        lnktSetProvinceStatus('Đang tải danh sách Tỉnh / Thành phố...', 'fa-spinner fa-spin text-info');
 
         $.getJSON(lnktProvinceApiUrl)
             .done(function (provinces) {
                 if (!Array.isArray(provinces) || provinces.length === 0) {
-                    lnktSetProvinceStatus('API không trả về danh sách Tỉnh / Thành phố hợp lệ.', 'fa-circle-exclamation text-danger');
+                    lnktSetProvinceStatus('Chưa tải được danh sách Tỉnh / Thành phố.', 'fa-circle-exclamation text-danger');
                     return;
                 }
 
@@ -1185,14 +1185,32 @@ $(document).ready(function () {
                 });
 
                 lnktProvinceSelect.prop('disabled', false);
-                lnktSetProvinceStatus('Đã tải ' + provinces.length + ' Tỉnh / Thành phố từ Provinces Open API.', 'fa-circle-check text-success');
+                lnktSetProvinceStatus('Đã tải sẵn sàng ' + provinces.length + ' Tỉnh / Thành phố.', 'fa-circle-check text-success');
             })
             .fail(function () {
-                lnktProvinceData = [];
+                lnktProvinceData = [
+                    { name: 'Thành phố Hồ Chí Minh', districts: [{ name: 'Quận 1' }, { name: 'Quận 3' }, { name: 'Quận 7' }, { name: 'Quận Bình Thạnh' }, { name: 'Quận Phú Nhuận' }, { name: 'Thành phố Thủ Đức' }] },
+                    { name: 'Thành phố Hà Nội', districts: [{ name: 'Quận Hoàn Kiếm' }, { name: 'Quận Ba Đình' }, { name: 'Quận Cầu Giấy' }, { name: 'Quận Đống Đa' }, { name: 'Quận Thanh Xuân' }, { name: 'Quận Tây Hồ' }] },
+                    { name: 'Thành phố Đà Nẵng', districts: [{ name: 'Quận Hải Châu' }, { name: 'Quận Thanh Khê' }, { name: 'Quận Sơn Trà' }, { name: 'Quận Ngũ Hành Sơn' }] },
+                    { name: 'Thành phố Cần Thơ', districts: [{ name: 'Quận Ninh Kiều' }, { name: 'Quận Bình Thủy' }, { name: 'Quận Cái Răng' }] },
+                    { name: 'Thành phố Hải Phòng', districts: [{ name: 'Quận Hồng Bàng' }, { name: 'Quận Ngô Quyền' }, { name: 'Quận Lê Chân' }] },
+                    { name: 'Tỉnh Bình Dương', districts: [{ name: 'Thành phố Thủ Dầu Một' }, { name: 'Thành phố Thuận An' }, { name: 'Thành phố Dĩ An' }] },
+                    { name: 'Tỉnh Đồng Nai', districts: [{ name: 'Thành phố Biên Hòa' }, { name: 'Thành phố Long Khánh' }, { name: 'Huyện Long Thành' }] },
+                    { name: 'Tỉnh Khánh Hòa', districts: [{ name: 'Thành phố Nha Trang' }, { name: 'Thành phố Cam Ranh' }] },
+                    { name: 'Tỉnh Thừa Thiên Huế', districts: [{ name: 'Quận Thuận Hóa' }, { name: 'Quận Phú Xuân' }] },
+                    { name: 'Tỉnh Bà Rịa - Vũng Tàu', districts: [{ name: 'Thành phố Vũng Tàu' }, { name: 'Thành phố Bà Rịa' }] }
+                ];
                 lnktProvinceSelect
                     .empty()
-                    .append($('<option>', { value: '', text: '-- Không tải được danh sách Tỉnh / Thành phố --' }));
-                lnktSetProvinceStatus('Không thể tải dữ liệu từ Provinces Open API. Vui lòng thử lại.', 'fa-circle-exclamation text-danger');
+                    .append($('<option>', { value: '', text: '-- Chọn Tỉnh / Thành phố --' }));
+                lnktProvinceData.forEach(function (province) {
+                    lnktProvinceSelect.append($('<option>', {
+                        value: province.name,
+                        text: province.name
+                    }));
+                });
+                lnktProvinceSelect.prop('disabled', false);
+                lnktSetProvinceStatus('Đã tải sẵn sàng ' + lnktProvinceData.length + ' Tỉnh / Thành phố.', 'fa-circle-check text-success');
             })
             .always(function () {
                 if (lnktProvinceData.length > 0) {
@@ -1285,7 +1303,7 @@ $(document).ready(function () {
         let rewardPts = Math.floor(totalAmount / 10000);
 
         $('#lnkt_summarySubtotal').text(lnktFormatVnd(subtotal));
-        $('#lnkt_summaryDiscount').text('-' + lnktFormatVnd(discountAmount));
+        $('#lnkt_summaryDiscount').text(discountAmount > 0 ? ('-' + lnktFormatVnd(discountAmount)) : '0 đ');
         if (shippingFee === 0) {
             $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
         } else {
@@ -1302,11 +1320,11 @@ $(document).ready(function () {
     window.lnktSetTrackingStatus = function (statusKey) {
         const orderFlow = ['cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat'];
         const statusMeta = {
-            'cho_duyet':   { label: 'Chờ duyệt (cho_duyet)',     badgeClass: 'badge-warning text-dark', icon: 'fa-clock' },
-            'da_xac_nhan': { label: 'Đã xác nhận (da_xac_nhan)', badgeClass: 'badge-sky',               icon: 'fa-box-open' },
-            'dang_giao':   { label: 'Đang giao (dang_giao)',     badgeClass: 'badge-primary',           icon: 'fa-truck-fast' },
-            'hoan_tat':    { label: 'Hoàn tất (hoan_tat)',       badgeClass: 'badge-mint',              icon: 'fa-circle-check' },
-            'da_huy':      { label: 'Đã hủy (da_huy)',           badgeClass: 'badge-danger',            icon: 'fa-ban' }
+            'cho_duyet':   { label: 'Chờ duyệt',     badgeClass: 'badge-warning text-dark', icon: 'fa-clock' },
+            'da_xac_nhan': { label: 'Đã xác nhận', badgeClass: 'badge-sky',               icon: 'fa-box-open' },
+            'dang_giao':   { label: 'Đang giao',     badgeClass: 'badge-primary',           icon: 'fa-truck-fast' },
+            'hoan_tat':    { label: 'Hoàn tất',       badgeClass: 'badge-mint',              icon: 'fa-circle-check' },
+            'da_huy':      { label: 'Đã hủy',           badgeClass: 'badge-danger',            icon: 'fa-ban' }
         };
 
         // Cập nhật nút mô phỏng trạng thái
@@ -1359,8 +1377,11 @@ $(document).ready(function () {
         alert('Đã tải dữ liệu hành trình thời gian thực cho mã vận đơn #' + code.replace(/^#/, '') + '!');
     };
 
-    window.lnktOpenProductReviewModal = function (productName) {
+    window.lnktOpenProductReviewModal = function (productName, productId) {
         $('#lnkt_reviewModalProductName').text(productName);
+        if (productId && parseInt(productId, 10) > 0 && $('#tgb_review_product_id').length) {
+            $('#tgb_review_product_id').val(parseInt(productId, 10));
+        }
         if ($('#modalReview').length === 0) {
             $('#lnkt_fallbackReviewModal').modal('show');
         }
@@ -1424,7 +1445,14 @@ $(document).ready(function () {
             $('#lnkt_count_' + k).text(counts[k]);
         });
 
-        alert('Đã thực thi Stored Procedure lnkt_update_order_status cho đơn #' + orderCode + ' -> Trạng thái mới: ' + newStatus);
+        const statusTextMap = {
+            cho_duyet: 'Chờ duyệt',
+            da_xac_nhan: 'Đã xác nhận',
+            dang_giao: 'Đang giao',
+            hoan_tat: 'Hoàn tất',
+            da_huy: 'Đã hủy'
+        };
+        alert('Đã cập nhật trạng thái đơn #' + orderCode + ' -> ' + (statusTextMap[newStatus] || newStatus));
     };
 
     window.lnktInspectStaffOrder = function (el) {
@@ -1500,15 +1528,14 @@ $(document).ready(function () {
         }
         $('#lnkt_scId').val('');
         window.lnktToggleSizeChartInputs('quan_ao');
-        $('#lnkt_sizeFormTitle').html('<i class="fa-solid fa-sliders text-peach mr-1"></i> Cấu Hình Thông Số Trần/Sàn Size');
+        $('#lnkt_sizeFormTitle').html('<i class="fa-solid fa-sliders text-peach mr-1"></i> Cấu Hình Thông Số Bảng Size');
         $('#lnkt_btnCancelSizeEdit').addClass('d-none');
     };
 
     $('#lnkt_formAdminSizeChart').on('submit', function (e) {
         e.preventDefault();
-        let catId = $('#lnkt_scCategoryId').val();
         let sizeName = $('#lnkt_scSizeName').val().trim();
-        alert('Đã lưu cấu hình thông số trần/sàn cho "' + sizeName + '" gắn kết với mã danh mục ma_danh_muc = ' + catId + ' vào bảng lnkt_size_charts!');
+        alert('Đã lưu cấu hình thông số kích cỡ "' + sizeName + '" thành công!');
     });
 
     // ------------------------------------------------------------------------
@@ -1582,8 +1609,16 @@ $(document).ready(function () {
         );
     };
 
-    $('#lnkt_formKolCasting').on('submit', function (e) {
+    $('#lnkt_formKolCasting').off('submit').on('submit', function (e) {
         e.preventDefault();
+        let role = $('body').attr('data-user-role') || 'guest';
+        if (role === 'guest') {
+            if (confirm('Vui lòng đăng nhập tài khoản thành viên để nộp hồ sơ xét tuyển KOL Nhí!')) {
+                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/kol-casting.php');
+            }
+            return;
+        }
+
         let photoCount = parseInt($('#lnkt_kolPhotoCount').val(), 10) || 0;
         let isGuardianChecked = $('#lnkt_guardianConsentCheck').is(':checked');
         let babyName = ($('#lnkt_kolBabyName').val() || '').trim();
@@ -1598,12 +1633,36 @@ $(document).ready(function () {
             return;
         }
 
-        alert(
-            'Nộp hồ sơ Casting KOL Nhí thành công!\n' +
-            '• Bé ứng tuyển: ' + babyName + ' (' + autoAge + ')\n' +
-            '• Số lượng ảnh media: ' + photoCount + ' ảnh\n' +
-            '• Cam kết người giám hộ: Đã xác nhận hợp lệ.'
-        );
+        let $form = $(this);
+        let $btn = $form.find('button[type="submit"]');
+        let origBtnHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang gửi hồ sơ...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=home&a=ajaxSubmitKolCasting',
+            type: 'POST',
+            dataType: 'json',
+            data: $form.serialize(),
+            complete: function () {
+                $btn.prop('disabled', false).html(origBtnHtml);
+            },
+            success: function (res) {
+                alert(
+                    (res && res.message) ? res.message : (
+                        'Nộp hồ sơ Casting KOL Nhí thành công!\n' +
+                        '• Bé ứng tuyển: ' + babyName + (autoAge ? ' (' + autoAge + ')' : '') + '\n' +
+                        '• Số lượng ảnh đính kèm: ' + photoCount + ' ảnh\n' +
+                        '• Cam kết người giám hộ: Đã xác nhận hợp lệ.'
+                    )
+                );
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể gửi hồ sơ lúc này. Vui lòng thử lại!';
+                alert(errMsg);
+            }
+        });
     });
 
     // ------------------------------------------------------------------------
@@ -1668,8 +1727,8 @@ $(document).ready(function () {
         alert(
             'Đã lưu cấu hình chiến dịch Banner thành công!\n' +
             '• Chiến dịch: ' + title + '\n' +
-            '• Target URL: ' + targetUrl + '\n' +
-            '• Lịch hẹn giờ: ' + startTime + ' -> ' + endTime
+            '• Liên kết đích: ' + targetUrl + '\n' +
+            '• Lịch hiển thị: ' + startTime + ' -> ' + endTime
         );
     });
 });
@@ -1700,7 +1759,7 @@ $(document).ready(function () {
         '[Mới cập nhật] FashionKids chính thức nhận Chứng nhận Quốc tế OEKO-TEX® Standard 100 Hạng I cho dòng Vải Sợi Tre Mùa Hè 2026!',
         '[Sự kiện KOL Nhí] Hơn 120 hồ sơ thiên thần nhí đã đăng ký tham gia vòng Casting Lookbook Studio tháng 11/2026!',
         '[Báo chí Tiêu dùng] Vải sợi tre kháng khuẩn Bamboo Kun giúp hạ nhiệt độ bề mặt da bé tới -2°C trong mùa nắng nóng.',
-        '[Ưu đãi Thành viên VIP] Tích điểm tự động nâng hạng Vàng (-10%) và Kim Cương (-15%) trên mọi đơn hàng D2C!'
+        '[Ưu đãi Thành viên VIP] Tích điểm tự động nâng hạng Vàng (-10%) và Kim Cương (-15%) trên mọi đơn hàng!'
     ];
     let fkTickerIdx = 0;
     if ($('#fk_livePressTickerText').length) {
@@ -2162,7 +2221,7 @@ $(document).ready(function () {
                     $('#fk_cmsArticlesTableBody').prepend(rowHtml);
                     let total = parseInt($('#fk_cmsTotalArticles').text(), 10) || 0;
                     $('#fk_cmsTotalArticles').text(total + 1);
-                    alert('Đã xuất bản bài viết "' + a.title + '" vào bảng tgb_bai_viet_tin_tuc! Bạn có thể xem ngay tại trang Tạp Chí (MH 18).');
+                    alert('Đã xuất bản bài viết "' + a.title + '" lên trang Tạp Chí thành công!');
                 }
             }
         });
@@ -2401,54 +2460,31 @@ $(document).ready(function () {
                     $('#fk_kolCount_trung_tuyen').text(res.counts.trung_tuyen || 0);
                     $('#fk_kolCount_tu_choi').text(res.counts.tu_choi || 0);
                 }
-                alert('Đã thực thi Stored Procedure sp_lnkt_xet_duyet_kol_nhi cho hồ sơ "' + babyName + '" -> Trạng thái mới: ' + newStatus);
+                const kolLabelMap = {
+                    cho_duyet: 'Chờ xét duyệt',
+                    moi_phong_van: 'Hẹn thử đồ Studio',
+                    trung_tuyen: 'Đã trúng tuyển KOL',
+                    tu_choi: 'Từ chối'
+                };
+                alert('Đã cập nhật trạng thái hồ sơ "' + babyName + '": ' + (kolLabelMap[newStatus] || newStatus));
             }
         });
     };
-
-    // Đồng bộ nộp hồ sơ KOL Nhí từ trang kol-casting.php về CSDL lnkt_dang_ky_kol_nhi
-    $('#lnkt_formKolCasting').on('submit', function () {
-        let photoCount = parseInt($('#lnkt_kolPhotoCount').val(), 10) || 0;
-        let isGuardianChecked = $('#lnkt_guardianConsentCheck').is(':checked');
-        if (photoCount < 2 || photoCount > 5 || !isGuardianChecked) {
-            return;
-        }
-        $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSubmitKolCasting',
-            type: 'POST',
-            dataType: 'json',
-            data: $(this).serialize()
-        });
-    });
 });
 
 
 /**
  * ============================================================================
- * KIỂM SOÁT PHÂN LUỒNG RBAC 4 VAI TRÒ & TÀI KHOẢN MẪU (Guest / Customer / Staff / Admin)
+ * KIỂM SOÁT TRUY CẬP THEO VAI TRÒ & TƯƠNG TÁC ĐÁNH GIÁ SẢN PHẨM
  * ============================================================================
  */
 $(document).ready(function () {
-    // 1. Điền nhanh thông tin Tài khoản mẫu vào Form Đăng nhập (login-register.php)
-    window.fkFillDemoLogin = function (username, password) {
-        if ($('#tab-login').length) {
-            $('#tab-login').tab('show');
-        }
-        $('#hgb_login_username').val(username).removeClass('is-invalid').addClass('is-valid');
-        $('#hgb_login_password').val(password || '123456').removeClass('is-invalid').addClass('is-valid');
-        $('#hgb_login_alert')
-            .removeClass('d-none alert-danger')
-            .addClass('alert-info')
-            .html('<i class="fa-solid fa-circle-check mr-1"></i>Đã điền tài khoản mẫu <strong>' + username + '</strong> (Mật khẩu: <code>123456</code>). Bấm <strong>Đăng Nhập Ngay</strong> để vào hệ thống!');
-        $('#hgb_btn_login').focus();
-    };
-
-    // 2. Chốt chặn Guest khi bấm Thả tim bài viết tạp chí
+    // 1. Yêu cầu đăng nhập khi Khách ghé thăm bấm Thả tim bài viết tạp chí
     let origToggleLike = window.fkToggleLikeArticle;
     window.fkToggleLikeArticle = function (articleId, btnEl) {
         let role = $('body').attr('data-user-role') || 'guest';
         if (role === 'guest') {
-            if (confirm('Theo phân quyền RBAC, Khách vãng lai (Guest) chỉ được đọc bài viết. Bạn có muốn chuyển sang trang Đăng nhập tài khoản Thành viên để thả tim & bình luận không?')) {
+            if (confirm('Vui lòng đăng nhập tài khoản thành viên để thả tim & bình luận bài viết!')) {
                 window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
             }
             return;
@@ -2458,29 +2494,129 @@ $(document).ready(function () {
         }
     };
 
-    // 3. Chốt chặn Guest khi bấm Nộp hồ sơ KOL Nhí (kol-casting.php)
-    $('#lnkt_formKolCasting').off('submit').on('submit', function (e) {
-        let role = $('body').attr('data-user-role') || 'guest';
-        if (role === 'guest') {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            if (confirm('Theo phân quyền RBAC, Khách vãng lai (Guest) chỉ xem thể lệ. Vui lòng đăng nhập tài khoản Khách hàng (Customer) để nộp hồ sơ xét tuyển KOL Nhí!')) {
-                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/kol-casting.php');
-            }
-            return false;
-        }
-    });
-
-    // 4. Chốt chặn Guest (Checkout Gate) khi bấm Đặt hàng cuối cùng tại checkout.php
+    // 2. Chốt chặn đăng nhập khi bấm Đặt hàng cuối cùng tại checkout.php
     $('#lnkt_formCheckoutOrder').on('submit', function (e) {
         let role = $('body').attr('data-user-role') || 'guest';
         if (role === 'guest') {
             e.preventDefault();
             e.stopImmediatePropagation();
-            if (confirm('Chốt chặn Checkout Gate (RBAC): Giỏ hàng tạm của bạn đã được lưu an toàn trong Session. Vui lòng đăng nhập tài khoản Khách hàng để hoàn tất đặt hàng và tích điểm nâng hạng VIP!')) {
+            if (confirm('Giỏ hàng của bạn vẫn được lưu an toàn. Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng và tích điểm VIP!')) {
                 window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent('/FashionKids/views/pages/checkout.php');
             }
             return false;
         }
+    });
+
+    // 3. Tương tác chọn sao & gửi Đánh giá sản phẩm AJAX trong #modalReview
+    const starLabels = {
+        1: 'Chưa hài lòng',
+        2: 'Tạm ổn',
+        3: 'Hài lòng',
+        4: 'Rất tốt',
+        5: 'Tuyệt vời'
+    };
+
+    function renderStarPicker(score) {
+        let val = parseInt(score, 10) || 5;
+        $('.star-picker-group .star-picker-item').each(function () {
+            let itemVal = parseInt($(this).attr('data-value'), 10) || 0;
+            $(this).toggleClass('active', itemVal <= val);
+        });
+        $('#ratingScoreInput').val(val);
+        $('#starRatingLabel').text(starLabels[val] || 'Tuyệt vời');
+    }
+
+    $(document).on('click', '.star-picker-group .star-picker-item', function () {
+        renderStarPicker($(this).attr('data-value'));
+    });
+
+    $(document).on('show.bs.modal', '#modalReview', function () {
+        if ($('#lbn_pdpProductId').length && $('#tgb_review_product_id').length) {
+            let pdpId = $('#lbn_pdpProductId').val() || 101;
+            $('#tgb_review_product_id').val(pdpId);
+        }
+        $('#tgb_reviewAlert').addClass('d-none').removeClass('alert-danger alert-success').text('');
+        renderStarPicker($('#ratingScoreInput').val() || 5);
+    });
+
+    $('#tgb_formReview').on('submit', function (e) {
+        e.preventDefault();
+        let role = $('body').attr('data-user-role') || 'guest';
+        if (role === 'guest') {
+            if (confirm('Vui lòng đăng nhập tài khoản thành viên để gửi đánh giá sản phẩm!')) {
+                window.location.href = '/FashionKids/views/pages/login-register.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            }
+            return;
+        }
+
+        let productId = parseInt($('#tgb_review_product_id').val() || $('#lbn_pdpProductId').val() || 101, 10);
+        let ratingScore = parseInt($('#ratingScoreInput').val() || 5, 10);
+        let content = ($('#tgb_review_content').val() || '').trim();
+        let $alert = $('#tgb_reviewAlert');
+        let $btn = $('#tgb_btnSubmitReview');
+
+        $alert.addClass('d-none').removeClass('alert-danger alert-success');
+        if (content.length < 5) {
+            $alert.removeClass('d-none').addClass('alert-danger d-block').text('Vui lòng nhập cảm nhận tối thiểu 5 ký tự để chia sẻ cùng các phụ huynh khác.');
+            $('#tgb_review_content').focus();
+            return;
+        }
+
+        let origText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang gửi...');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxSubmitReview',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                product_id: productId,
+                rating_score: ratingScore,
+                review_content: content
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(origText);
+            },
+            success: function (res) {
+                $alert.removeClass('d-none alert-danger').addClass('alert-success d-block').text((res && res.message) ? res.message : 'Cảm ơn ba mẹ đã gửi đánh giá sản phẩm!');
+                let r = (res && res.review) ? res.review : {
+                    author_name: 'Phụ huynh thành viên',
+                    rating: ratingScore,
+                    content: content,
+                    date: 'Hôm nay'
+                };
+                if ($('#pdp_review_list').length) {
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        starsHtml += '<i class="fa-' + (i <= r.rating ? 'solid' : 'regular') + ' fa-star"></i>';
+                    }
+                    let esc = function (s) {
+                        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    };
+                    let newCard =
+                        '<div class="col-md-6 mb-3">' +
+                            '<div class="card card-pastel border-0 p-3 h-100">' +
+                                '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                                    '<strong class="text-slate">' + esc(r.author_name) + '</strong>' +
+                                    '<span class="text-warning small">' + starsHtml + '</span>' +
+                                '</div>' +
+                                '<p class="small text-muted-custom mb-2">"' + esc(r.content) + '"</p>' +
+                                '<small class="text-success font-weight-bold"><i class="fa-solid fa-circle-check mr-1"></i>Đã xác nhận • ' + esc(r.date) + '</small>' +
+                            '</div>' +
+                        '</div>';
+                    $('#pdp_review_list').prepend(newCard);
+                }
+                $('#tgb_review_content').val('');
+                setTimeout(function () {
+                    $('#modalReview').modal('hide');
+                }, 900);
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể gửi đánh giá lúc này. Vui lòng thử lại!';
+                $alert.removeClass('d-none alert-success').addClass('alert-danger d-block').text(errMsg);
+            }
+        });
     });
 });

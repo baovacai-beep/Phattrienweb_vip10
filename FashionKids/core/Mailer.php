@@ -43,6 +43,16 @@ class Mailer {
             error_log('[FashionKids Mailer] ' . self::$lastError);
             return false;
         }
+        if (!filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            self::$lastError = 'Địa chỉ email người nhận không đúng định dạng.';
+            error_log('[FashionKids Mailer] ' . self::$lastError . ' (' . $toEmail . ')');
+            return false;
+        }
+        if (!extension_loaded('openssl')) {
+            self::$lastError = 'Máy chủ PHP chưa bật tiện ích mở rộng OpenSSL để kết nối SMTP bảo mật.';
+            error_log('[FashionKids Mailer] ' . self::$lastError);
+            return false;
+        }
 
         $safeName = htmlspecialchars($toName !== '' ? $toName : 'Quý khách', ENT_QUOTES, 'UTF-8');
         $safeOtp  = htmlspecialchars($otp, ENT_QUOTES, 'UTF-8');

@@ -1,5 +1,5 @@
 <?php
-$page_title = "Xét Duyệt Hồ Sơ Siêu Sao Nhí KOL (MH 17)";
+$page_title = "Xét Duyệt Hồ Sơ Siêu Sao Nhí KOL";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
@@ -22,19 +22,19 @@ foreach ($kolList as $k) {
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="fk_staff_casting_review_section">
-    <!-- Header Xét Duyệt Hồ Sơ Siêu Sao Nhí KOL (MH 17) -->
+    <!-- Header Xét Duyệt Hồ Sơ Siêu Sao Nhí KOL -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h3 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-crown text-peach mr-2"></i>Xét Duyệt Hồ Sơ Tuyển Chọn Siêu Sao Nhí KOL (MH 17)
+                <i class="fa-solid fa-crown text-peach mr-2"></i>Xét Duyệt Hồ Sơ Tuyển Chọn Siêu Sao Nhí KOL
             </h3>
             <small class="text-muted-custom">
-                Đảm nhiệm: Lê Nguyễn Khánh Trình (<code>lnkt_dang_ky_kol_nhi</code>, Stored Procedure <code>sp_lnkt_xet_duyet_kol_nhi</code>) — Phân loại độ tuổi &amp; hẹn lịch chụp Lookbook Studio
+                Quản lý danh sách ứng viên nhí, phân loại độ tuổi &amp; hẹn lịch chụp Lookbook Studio
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
-                <i class="fa-solid fa-id-card-clip mr-1"></i> Cổng Đăng Ký KOL (MH 16)
+                <i class="fa-solid fa-id-card-clip mr-1"></i> Cổng Đăng Ký KOL
             </a>
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
@@ -42,7 +42,7 @@ foreach ($kolList as $k) {
                 </a>
             <?php else: ?>
                 <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
-                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Duyệt Đơn (MH 10)
+                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Duyệt Đơn
                 </a>
             <?php endif; ?>
         </div>
@@ -53,28 +53,28 @@ foreach ($kolList as $k) {
         <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan (MH 12)
+                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng (MH 13)
+                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng
             </a>
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn (MH 10)
+                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn
             </a>
             <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Realtime (MH 11)
+                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mr-2 mb-1">
-                <i class="fa-solid fa-crown mr-1"></i> Duyệt KOL Nhí (MH 17)
+                <i class="fa-solid fa-crown mr-1"></i> Duyệt KOL Nhí
             </a>
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner (MH 23)
+                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mb-1 border">
-                <i class="fa-solid fa-newspaper text-primary mr-1"></i> CMS Tạp Chí (MH 21)
+                <i class="fa-solid fa-newspaper text-primary mr-1"></i> Quản Lý Tạp Chí
             </a>
         </div>
     </div>
@@ -142,10 +142,10 @@ foreach ($kolList as $k) {
             <div class="d-flex align-items-center">
                 <select id="fk_kolStatusFilterSelect" class="custom-select custom-select-sm rounded-pill font-weight-bold text-slate" onchange="fkApplyKolFilters()">
                     <option value="all">Tất cả trạng thái xét duyệt</option>
-                    <option value="cho_duyet">Chờ xét duyệt (cho_duyet)</option>
-                    <option value="moi_phong_van">Hẹn thử đồ Studio (moi_phong_van)</option>
-                    <option value="trung_tuyen">Đã trúng tuyển (trung_tuyen)</option>
-                    <option value="tu_choi">Từ chối (tu_choi)</option>
+                    <option value="cho_duyet">Chờ xét duyệt</option>
+                    <option value="moi_phong_van">Hẹn thử đồ Studio</option>
+                    <option value="trung_tuyen">Đã trúng tuyển</option>
+                    <option value="tu_choi">Từ chối</option>
                 </select>
             </div>
         </div>
@@ -178,7 +178,7 @@ foreach ($kolList as $k) {
 
                     <div class="card-body p-3 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <small class="text-muted-custom font-weight-bold">Mã: <code><?= htmlspecialchars($kol['code']) ?></code></small>
+                            <small class="text-muted-custom font-weight-bold">Mã: <strong class="text-slate"><?= htmlspecialchars($kol['code']) ?></strong></small>
                             <span class="badge badge-pill badge-light border text-peach font-weight-bold"><?= htmlspecialchars($kol['age_label']) ?></span>
                         </div>
                         <h6 class="font-weight-bold text-slate mb-1"><?= htmlspecialchars($kol['baby_name']) ?></h6>
@@ -224,7 +224,7 @@ foreach ($kolList as $k) {
                                 <button type="button"
                                         onclick="fkReviewKolApplication(<?= $kol['id'] ?>, 'moi_phong_van', '<?= htmlspecialchars($kol['baby_name'], ENT_QUOTES) ?>')"
                                         class="btn btn-sm btn-pastel-sky font-weight-bold btn-block">
-                                    <i class="fa-solid fa-camera mr-1"></i>Duyệt Vòng 1: Hẹn Studio (Staff)
+                                    <i class="fa-solid fa-camera mr-1"></i>Duyệt Vòng 1: Hẹn Studio
                                 </button>
                             <?php endif; ?>
                         </div>

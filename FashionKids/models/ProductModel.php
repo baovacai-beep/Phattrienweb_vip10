@@ -576,6 +576,7 @@ class ProductModel extends Model {
             'product_name'     => $foundProduct['name'] ?? ('Sản phẩm #' . $maSanPham),
             'sku'              => $foundProduct['sku'] ?? ('FK-LBN-' . $maSanPham),
             'price'            => $foundProduct['price'] ?? 285000,
+            'image'            => $foundProduct['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
             'requested_qty'    => $soLuongCanMua,
             'available_stock'  => $tonKhoHienTai,
             'du_hang'          => $duHang,
@@ -586,11 +587,11 @@ class ProductModel extends Model {
     }
 
     /**
-     * Cập nhật số lượng tồn kho trên MH 13 (triệu gọi Stored Procedure sp_lbn_nhap_them_kho_hang)
+     * Cập nhật số lượng tồn kho trên trang Quản trị Kho
      */
     public function capNhatTonKhoSanPham(int $maSanPham, int $soLuongMoi, string $mode = 'set'): array {
         if ($soLuongMoi < 0) {
-            throw new InvalidArgumentException('Lỗi [LBN_ERR_04]: Số lượng hàng tồn kho không được là số âm!');
+            throw new InvalidArgumentException('Số lượng hàng tồn kho không được là số âm!');
         }
 
         $allProducts = $this->layTatCaSanPhamChuanHoa();
@@ -667,10 +668,10 @@ class ProductModel extends Model {
 
         $catMap = $this->getCategoryMetadataMap();
         if (!isset($catMap[$catId])) {
-            throw new InvalidArgumentException('Lỗi [LBN_ERR_01]: Mã danh mục không tồn tại trên hệ thống!');
+            throw new InvalidArgumentException('Danh mục sản phẩm không tồn tại trên hệ thống!');
         }
         if ($name === '') {
-            throw new InvalidArgumentException('Lỗi [LBN_ERR_02]: Tên sản phẩm không được phép để trống!');
+            throw new InvalidArgumentException('Tên sản phẩm không được phép để trống!');
         }
 
         if ($sizeType === 'giay_dep' || $catId === 4) {

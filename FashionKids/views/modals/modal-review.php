@@ -11,16 +11,18 @@
         </button>
       </div>
 
-      <form action="/controllers/ReviewController.php?action=create" method="POST" enctype="multipart/form-data">
+      <form id="tgb_formReview" method="POST" enctype="multipart/form-data" novalidate>
+        <input type="hidden" name="product_id" id="tgb_review_product_id" value="101">
         <div class="modal-body p-4">
+          <div id="tgb_reviewAlert" class="alert d-none small py-2 mb-3"></div>
           <!-- Chọn số sao tương tác -->
           <div class="text-center mb-4">
             <div class="d-flex justify-content-center mb-2 star-picker-group">
-              <i class="fas fa-star star-picker-item mx-1" data-value="1"></i>
-              <i class="fas fa-star star-picker-item mx-1" data-value="2"></i>
-              <i class="fas fa-star star-picker-item mx-1" data-value="3"></i>
-              <i class="fas fa-star star-picker-item mx-1" data-value="4"></i>
-              <i class="fas fa-star star-picker-item mx-1 active" data-value="5"></i>
+              <i class="fas fa-star star-picker-item active mx-1" data-value="1"></i>
+              <i class="fas fa-star star-picker-item active mx-1" data-value="2"></i>
+              <i class="fas fa-star star-picker-item active mx-1" data-value="3"></i>
+              <i class="fas fa-star star-picker-item active mx-1" data-value="4"></i>
+              <i class="fas fa-star star-picker-item active mx-1" data-value="5"></i>
             </div>
             <input type="hidden" name="rating_score" id="ratingScoreInput" value="5">
             <span id="starRatingLabel" class="badge badge-pill bg-pastel-butter text-pastel-butter font-weight-bold px-3 py-2">Tuyệt vời</span>
@@ -28,8 +30,8 @@
 
           <!-- Nhập cảm nhận chất lượng -->
           <div class="form-group mb-3">
-            <label class="font-weight-bold small text-secondary">Cảm nhận của bạn về sản phẩm</label>
-            <textarea class="form-control rounded-lg" name="review_content" rows="4" placeholder="Chia sẻ về độ mềm của vải, form dáng, đường may và trải nghiệm của bé khi mặc..."></textarea>
+            <label class="font-weight-bold small text-secondary" for="tgb_review_content">Cảm nhận của bạn về sản phẩm</label>
+            <textarea class="form-control rounded-lg" id="tgb_review_content" name="review_content" rows="4" placeholder="Chia sẻ về độ mềm của vải, form dáng, đường may và trải nghiệm của bé khi mặc..." required></textarea>
           </div>
 
           <!-- Tải tệp hình ảnh/video thực tế -->
@@ -45,7 +47,7 @@
 
         <div class="modal-footer border-0 p-3 bg-light">
           <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm">Gửi Đánh Giá</button>
+          <button type="submit" id="tgb_btnSubmitReview" class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm">Gửi Đánh Giá</button>
         </div>
       </form>
     </div>

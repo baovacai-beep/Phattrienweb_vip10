@@ -1,5 +1,5 @@
 <?php
-$page_title = "Quản Trị Bảng Quy Chuẩn Size & Ràng Buộc Danh Mục (MH 14)";
+$page_title = "Quản Trị Bảng Quy Chuẩn Size & Ràng Buộc Danh Mục";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -187,23 +187,23 @@ $lnkt_size_charts = [
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_admin_size_charts_section">
-    <!-- Header Quản Trị Bảng Size (MH 14) -->
+    <!-- Header Quản Trị Bảng Size -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h4 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-ruler-combined text-peach mr-2"></i>Quản Trị Bảng Quy Chuẩn Size &amp; Thông Số Trần/Sàn (MH 14)
+                <i class="fa-solid fa-ruler-combined text-peach mr-2"></i>Quản Trị Bảng Quy Chuẩn Size &amp; Thông Số Chuẩn
             </h4>
             <small class="text-muted-custom">
-                Đảm nhiệm: Lê Nguyễn Khánh Trình (<code>lnkt_</code>) — Cấu hình bảng <code>lnkt_size_charts</code> ràng buộc khóa ngoại <code>ma_danh_muc</code> (<code>category_id</code>)
+                Thiết lập bảng quy chuẩn kích cỡ quần áo và giày dép theo từng danh mục
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold rounded-pill px-3 mr-2 shadow-sm"
                     data-toggle="modal" data-target="#modalSuggestSize">
-                <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i> Kiểm Thử Modal Gợi Ý Size (MH 04)
+                <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i> Dùng Thử Thước Dây Gợi Ý Size
             </button>
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
-                <i class="fa-solid fa-clipboard-check mr-1"></i> Duyệt Đơn Hàng (MH 10)
+                <i class="fa-solid fa-clipboard-check mr-1"></i> Duyệt Đơn Hàng
             </a>
         </div>
     </div>
@@ -218,10 +218,10 @@ $lnkt_size_charts = [
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                         <div>
                             <h6 class="font-weight-bold text-slate mb-0">
-                                Danh Sách Quy Chuẩn Trần/Sàn Gắn Kết Mã Danh Mục (<code>ma_danh_muc</code>)
+                                Danh Sách Quy Chuẩn Kích Cỡ Theo Danh Mục
                             </h6>
                             <small class="text-muted-custom">
-                                Dữ liệu đầu vào trực tiếp cho Stored Function <code>lnkt_suggest_size</code>
+                                Dữ liệu chuẩn phục vụ gợi ý kích cỡ cho phụ huynh
                             </small>
                         </div>
                         <button type="button" onclick="lnktResetSizeChartForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
@@ -229,15 +229,15 @@ $lnkt_size_charts = [
                         </button>
                     </div>
 
-                    <!-- Bộ lọc theo ma_danh_muc và phân loại -->
+                    <!-- Bộ lọc theo danh mục và phân loại -->
                     <div class="form-row">
                         <div class="col-12 col-md-6 mb-2 mb-md-0">
                             <select id="lnkt_filterSizeCategory" class="custom-select custom-select-sm rounded-pill"
                                     onchange="lnktFilterAdminSizeCharts()">
-                                <option value="all">-- Lọc theo tất cả Mã danh mục (ma_danh_muc) --</option>
+                                <option value="all">-- Lọc theo tất cả danh mục --</option>
                                 <?php foreach ($lnkt_categories_ref as $cat): ?>
                                     <option value="<?= $cat['id'] ?>">
-                                        ma_danh_muc = <?= $cat['id'] ?> (<?= htmlspecialchars($cat['code'] . ' - ' . $cat['name']) ?>)
+                                        <?= htmlspecialchars($cat['code'] . ' - ' . $cat['name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -258,7 +258,7 @@ $lnkt_size_charts = [
                         <table class="table table-hover align-middle mb-0">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Mã DM (<code>ma_danh_muc</code>)</th>
+                                    <th>Mã DM</th>
                                     <th>Ký Hiệu Size</th>
                                     <th class="text-center">Chiều Cao (cm)</th>
                                     <th class="text-center">Vòng Ngực (cm)</th>
@@ -274,7 +274,7 @@ $lnkt_size_charts = [
                                         data-type="<?= $sc['type'] ?>">
                                         <td>
                                             <span class="badge badge-pill badge-sky px-2 py-1">
-                                                <?= htmlspecialchars($sc['category_code']) ?> (#<?= $sc['ma_danh_muc'] ?>)
+                                                <?= htmlspecialchars($sc['category_code']) ?>
                                             </span>
                                             <div class="small font-weight-bold text-slate mt-1">
                                                 <?= htmlspecialchars($sc['category_name']) ?>
@@ -284,7 +284,7 @@ $lnkt_size_charts = [
                                         <td>
                                             <div class="font-weight-bold text-peach"><?= htmlspecialchars($sc['size_name']) ?></div>
                                             <small class="text-muted-custom">
-                                                <?= $sc['type'] === 'quan_ao' ? 'Quần áo' : 'Giày dép' ?> • <?= strtoupper($sc['gender']) ?>
+                                                <?= $sc['type'] === 'quan_ao' ? 'Quần áo' : 'Giày dép' ?> • <?= $sc['gender'] === 'girl' ? 'Bé gái' : ($sc['gender'] === 'boy' ? 'Bé trai' : 'Unisex') ?>
                                             </small>
                                         </td>
 
@@ -364,7 +364,7 @@ $lnkt_size_charts = [
             <div class="card card-pastel shadow-sm" id="lnkt_sizeChartFormCard">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold text-slate mb-0" id="lnkt_sizeFormTitle">
-                        <i class="fa-solid fa-Sliders text-peach mr-1"></i> Cấu Hình Thông Số Trần/Sàn Size
+                        <i class="fa-solid fa-sliders text-peach mr-1"></i> Cấu Hình Thông Số Kích Cỡ
                     </h6>
                     <button type="button" id="lnkt_btnCancelSizeEdit" onclick="lnktResetSizeChartForm()"
                             class="btn btn-light btn-sm rounded-pill border d-none">
@@ -376,22 +376,22 @@ $lnkt_size_charts = [
                     <form id="lnkt_formAdminSizeChart">
                         <input type="hidden" id="lnkt_scId" value="">
 
-                        <!-- Ràng buộc trực tiếp với ma_danh_muc -->
+                        <!-- Chọn danh mục áp dụng -->
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate mb-1" for="lnkt_scCategoryId">
-                                Ràng buộc Mã Danh Mục (<code>ma_danh_muc</code> / FK <code>lbn_categories</code>):
+                                Chọn Danh Mục Áp Dụng:
                             </label>
                             <select id="lnkt_scCategoryId" class="custom-select form-control-sm" required>
-                                <option value="1">ma_danh_muc = 1 (DM01 - Váy công chúa)</option>
-                                <option value="2">ma_danh_muc = 2 (DM02 - Bộ thun)</option>
-                                <option value="3">ma_danh_muc = 3 (DM03 - Áo khoác)</option>
-                                <option value="4">ma_danh_muc = 4 (DM04 - Giày sandal)</option>
+                                <option value="1">DM01 - Váy công chúa</option>
+                                <option value="2">DM02 - Bộ thun</option>
+                                <option value="3">DM03 - Áo khoác</option>
+                                <option value="4">DM04 - Giày sandal</option>
                             </select>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group col-5">
-                                <label class="small font-weight-bold text-slate mb-1">Phân nhóm (<code>type</code>):</label>
+                                <label class="small font-weight-bold text-slate mb-1">Phân nhóm:</label>
                                 <select id="lnkt_scType" class="custom-select form-control-sm" onchange="lnktToggleSizeChartInputs(this.value)">
                                     <option value="quan_ao">Quần áo</option>
                                     <option value="giay_dep">Giày dép</option>
@@ -400,8 +400,8 @@ $lnkt_size_charts = [
                             <div class="form-group col-3">
                                 <label class="small font-weight-bold text-slate mb-1">Giới tính:</label>
                                 <select id="lnkt_scGender" class="custom-select form-control-sm">
-                                    <option value="girl">Girl</option>
-                                    <option value="boy">Boy</option>
+                                    <option value="girl">Bé gái</option>
+                                    <option value="boy">Bé trai</option>
                                     <option value="unisex">Unisex</option>
                                 </select>
                             </div>
@@ -415,38 +415,38 @@ $lnkt_size_charts = [
                         <!-- Khối thông số Quần áo: Chiều cao, Vòng ngực, Vòng eo -->
                         <div id="lnkt_clothingSpecGroup" class="p-3 rounded bg-milk-cream border mb-3">
                             <div class="small font-weight-bold text-peach mb-2">
-                                <i class="fa-solid fa-shirt mr-1"></i>Thông Số Trần / Sàn Quần Áo (Đơn vị: cm)
+                                <i class="fa-solid fa-shirt mr-1"></i>Thông Số Chuẩn Quần Áo (Đơn vị: cm)
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group col-6 mb-2">
-                                    <label class="small font-weight-bold text-slate mb-1">Chiều cao sàn (Min):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Chiều cao tối thiểu (Min):</label>
                                     <input type="number" id="lnkt_scHeightMin" class="form-control form-control-sm" value="84" step="0.5">
                                 </div>
                                 <div class="form-group col-6 mb-2">
-                                    <label class="small font-weight-bold text-slate mb-1">Chiều cao trần (Max):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Chiều cao tối đa (Max):</label>
                                     <input type="number" id="lnkt_scHeightMax" class="form-control form-control-sm" value="94" step="0.5">
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group col-6 mb-2">
-                                    <label class="small font-weight-bold text-slate mb-1">Vòng ngực sàn (Min):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Vòng ngực tối thiểu (Min):</label>
                                     <input type="number" id="lnkt_scChestMin" class="form-control form-control-sm" value="52" step="0.5">
                                 </div>
                                 <div class="form-group col-6 mb-2">
-                                    <label class="small font-weight-bold text-slate mb-1">Vòng ngực trần (Max):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Vòng ngực tối đa (Max):</label>
                                     <input type="number" id="lnkt_scChestMax" class="form-control form-control-sm" value="55" step="0.5">
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group col-6 mb-0">
-                                    <label class="small font-weight-bold text-slate mb-1">Vòng eo sàn (Min):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Vòng eo tối thiểu (Min):</label>
                                     <input type="number" id="lnkt_scWaistMin" class="form-control form-control-sm" value="49" step="0.5">
                                 </div>
                                 <div class="form-group col-6 mb-0">
-                                    <label class="small font-weight-bold text-slate mb-1">Vòng eo trần (Max):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Vòng eo tối đa (Max):</label>
                                     <input type="number" id="lnkt_scWaistMax" class="form-control form-control-sm" value="51" step="0.5">
                                 </div>
                             </div>
@@ -455,16 +455,16 @@ $lnkt_size_charts = [
                         <!-- Khối thông số Giày dép: Chiều dài bàn chân -->
                         <div id="lnkt_shoesSpecGroup" class="p-3 rounded bg-milk-cream border mb-3">
                             <div class="small font-weight-bold text-warning mb-2">
-                                <i class="fa-solid fa-shoe-prints mr-1"></i>Thông Số Trần / Sàn Giày Dép (Đơn vị: cm)
+                                <i class="fa-solid fa-shoe-prints mr-1"></i>Thông Số Chuẩn Giày Dép (Đơn vị: cm)
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group col-6 mb-0">
-                                    <label class="small font-weight-bold text-slate mb-1">Dài chân sàn (Min):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Dài chân tối thiểu (Min):</label>
                                     <input type="number" id="lnkt_scFootMin" class="form-control form-control-sm" value="0" step="0.1">
                                 </div>
                                 <div class="form-group col-6 mb-0">
-                                    <label class="small font-weight-bold text-slate mb-1">Dài chân trần (Max):</label>
+                                    <label class="small font-weight-bold text-slate mb-1">Dài chân tối đa (Max):</label>
                                     <input type="number" id="lnkt_scFootMax" class="form-control form-control-sm" value="0" step="0.1">
                                 </div>
                             </div>

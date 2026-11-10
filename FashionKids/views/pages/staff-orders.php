@@ -1,5 +1,5 @@
 <?php
-$page_title = "Bàn Làm Việc Quản Trị & Duyệt Đơn Hàng (MH 10)";
+$page_title = "Bàn Làm Việc Quản Trị & Duyệt Đơn Hàng";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -10,7 +10,7 @@ $lnkt_staff_orders = [
         'order_code'       => 'FK-ORD-202608',
         'user_id'          => 3,
         'vip_tier'         => 'Vàng (-10%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
+        'handled_by'       => 'Lê Nguyễn Khánh Trình',
         'receiver_name'    => 'Võ Thị Thanh Thảo',
         'receiver_phone'   => '0918889999',
         'shipping_address' => 'Số 120 Điện Biên Phủ, Phường 17',
@@ -28,7 +28,7 @@ $lnkt_staff_orders = [
         'order_code'       => 'FK-ORD-202607',
         'user_id'          => 4,
         'vip_tier'         => 'Đồng (0%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
+        'handled_by'       => 'Lê Nguyễn Khánh Trình',
         'receiver_name'    => 'Trần Thị Bông',
         'receiver_phone'   => '0903112233',
         'shipping_address' => 'Số 45 Nguyễn Thị Minh Khai, Phường Bến Nghé',
@@ -46,7 +46,7 @@ $lnkt_staff_orders = [
         'order_code'       => 'FK-ORD-202606',
         'user_id'          => 6,
         'vip_tier'         => 'Bạc (-5%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
+        'handled_by'       => 'Lê Nguyễn Khánh Trình',
         'receiver_name'    => 'Nguyễn Hoàng Minh Anh',
         'receiver_phone'   => '0987654321',
         'shipping_address' => 'Số 88 Cầu Giấy, Phường Quan Hoa',
@@ -64,7 +64,7 @@ $lnkt_staff_orders = [
         'order_code'       => 'FK-ORD-202605',
         'user_id'          => 7,
         'vip_tier'         => 'Kim Cương (-15%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
+        'handled_by'       => 'Lê Nguyễn Khánh Trình',
         'receiver_name'    => 'Phạm Ngọc Lan Khuê',
         'receiver_phone'   => '0939556677',
         'shipping_address' => 'Số 210 Bạch Đằng, Phường Phước Ninh',
@@ -82,7 +82,7 @@ $lnkt_staff_orders = [
         'order_code'       => 'FK-ORD-202604',
         'user_id'          => 8,
         'vip_tier'         => 'Đồng (0%)',
-        'handled_by'       => 'Lê Nguyễn Khánh Trình (#NV02)',
+        'handled_by'       => 'Lê Nguyễn Khánh Trình',
         'receiver_name'    => 'Lê Quang Hải',
         'receiver_phone'   => '0977123123',
         'shipping_address' => 'Số 15 Đại lộ Hòa Bình',
@@ -117,22 +117,22 @@ function lnktRenderOrderStatusBadge($status) {
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_staff_orders_section">
-    <!-- Header Bàn Làm Việc Nhân Viên Vận Hành (MH 10) -->
+    <!-- Header Bàn Làm Việc Nhân Viên Vận Hành -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h4 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-clipboard-check text-peach mr-2"></i>Bàn Làm Việc Nhân Viên Quản Trị &amp; Duyệt Đơn Hàng (MH 10)
+                <i class="fa-solid fa-clipboard-check text-peach mr-2"></i>Bàn Làm Việc Nhân Viên Quản Trị &amp; Duyệt Đơn Hàng
             </h4>
             <small class="text-muted-custom">
-                Đảm nhiệm: Lê Nguyễn Khánh Trình (<code>lnkt_</code>) — Xử lý bảng <code>lnkt_orders</code> &amp; Stored Procedure <code>lnkt_update_order_status</code>
+                Quản lý đơn hàng và cập nhật trạng thái xử lý nhanh chóng
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <a href="/FashionKids/views/pages/order-tracking.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
-                <i class="fa-solid fa-route mr-1"></i> Xem Tiến Trình Khách Hàng (MH 06)
+                <i class="fa-solid fa-route mr-1"></i> Xem Tiến Trình Khách Hàng
             </a>
             <a href="/FashionKids/views/pages/admin-size-charts.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
-                <i class="fa-solid fa-ruler-combined mr-1"></i> Quản Trị Bảng Size (MH 14)
+                <i class="fa-solid fa-ruler-combined mr-1"></i> Quản Trị Bảng Size
             </a>
         </div>
     </div>
@@ -218,11 +218,11 @@ function lnktRenderOrderStatusBadge($status) {
                                 Danh Sách Đơn Đặt Hàng &amp; Điều Phối Vận Chuyển Thời Gian Thực
                             </h6>
                             <small class="text-muted-custom">
-                                Chọn trạng thái mới và nhấn <strong>Cập nhật</strong> để thực thi <code>lnkt_update_order_status(order_id, new_status, staff_id)</code>
+                                Chọn trạng thái mới và nhấn <strong>Lưu</strong> để cập nhật đơn hàng
                             </small>
                         </div>
                         <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1">
-                            Nhân viên trực: Lê Nguyễn Khánh Trình (#NV02)
+                            Nhân viên trực: <?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Lê Nguyễn Khánh Trình') ?>
                         </span>
                     </div>
 
@@ -237,11 +237,11 @@ function lnktRenderOrderStatusBadge($status) {
                             <select id="lnkt_staffOrderStatusFilter" class="custom-select custom-select-sm rounded-pill"
                                     onchange="lnktFilterStaffOrders()">
                                 <option value="all">-- Tất cả trạng thái đơn hàng (5 trạng thái) --</option>
-                                <option value="cho_duyet">1. Chờ duyệt (cho_duyet)</option>
-                                <option value="da_xac_nhan">2. Đã xác nhận (da_xac_nhan)</option>
-                                <option value="dang_giao">3. Đang giao (dang_giao)</option>
-                                <option value="hoan_tat">4. Hoàn tất (hoan_tat)</option>
-                                <option value="da_huy">5. Đã hủy (da_huy)</option>
+                                <option value="cho_duyet">1. Chờ duyệt </option>
+                                <option value="da_xac_nhan">2. Đã xác nhận </option>
+                                <option value="dang_giao">3. Đang giao </option>
+                                <option value="hoan_tat">4. Hoàn tất </option>
+                                <option value="da_huy">5. Đã hủy </option>
                             </select>
                         </div>
                     </div>
@@ -317,7 +317,7 @@ function lnktRenderOrderStatusBadge($status) {
                                                 </select>
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-pastel-primary px-2"
-                                                            title="Thực thi lnkt_update_order_status"
+                                                            title="Cập nhật trạng thái đơn hàng"
                                                             onclick="lnktUpdateStaffOrderStatus(<?= $ord['id'] ?>, '<?= $ord['order_code'] ?>')">
                                                         <i class="fa-solid fa-check"></i> Lưu
                                                     </button>
@@ -360,13 +360,13 @@ function lnktRenderOrderStatusBadge($status) {
                             <strong class="text-slate" id="lnkt_inspectAddress">Số 120 Điện Biên Phủ, Phường 17, Quận Bình Thạnh, TP. Hồ Chí Minh</strong>
                         </div>
                         <div class="pt-2 border-top">
-                            <span class="text-muted-custom d-block">Nhân viên thụ lý (<code>handled_by</code>):</span>
-                            <strong class="text-mint-dark" id="lnkt_inspectStaff">Lê Nguyễn Khánh Trình (#NV02)</strong>
+                            <span class="text-muted-custom d-block">Nhân viên thụ lý:</span>
+                            <strong class="text-mint-dark" id="lnkt_inspectStaff">Lê Nguyễn Khánh Trình</strong>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="small font-weight-bold text-slate mb-1">Danh mục sản phẩm đóng gói (<code>tgb_order_items</code>):</label>
+                        <label class="small font-weight-bold text-slate mb-1">Danh mục sản phẩm đóng gói:</label>
                         <div class="p-3 rounded border bg-white small font-weight-bold text-slate" id="lnkt_inspectItems">
                             1x Váy Công Chúa Sợi Tre (Size 2), 2x Bộ Thun Khủng Long (Size 3), 1x Sandal Tập Đi (Size 22)
                         </div>

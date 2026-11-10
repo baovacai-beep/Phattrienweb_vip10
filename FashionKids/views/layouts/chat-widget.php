@@ -2,10 +2,10 @@
 require_once __DIR__ . '/../../core/Rbac.php';
 $chatSessId = Rbac::chatSessionId();
 $chatIdentityText = Rbac::isGuest()
-    ? 'Phiên Khách vãng lai (Session ID)'
+    ? 'Khách ghé thăm'
     : ('Tài khoản: ' . ($_SESSION['user']['ho_va_ten'] ?? 'Khách hàng'));
 ?>
-<!-- views/layouts/chat-widget.php - MH 08: Hộp Thoại Tư Vấn Trực Tuyến Realtime (tgb_tin_nhan_tu_van) -->
+<!-- views/layouts/chat-widget.php - Hộp Thoại Tư Vấn Trực Tuyến Realtime (tgb_tin_nhan_tu_van) -->
 <button class="btn rounded-circle shadow-lg d-flex align-items-center justify-content-center chat-floating-button"
         type="button" id="triggerChatBtn" data-toggle="collapse" data-target="#customerChatWidget" aria-expanded="false"
         title="Chat tư vấn trực tuyến cùng FashionKids">
@@ -63,7 +63,7 @@ $chatIdentityText = Rbac::isGuest()
             </div>
             <div class="d-flex mb-2">
                 <div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">
-                    Dạ chào mẹ bé Sam, với số đo 92cm bé mặc <strong>Size 2 (2-3T)</strong> là vừa vặn và thoải mái nhất ạ!
+                    Dạ chào ba mẹ, với số đo 92cm bé mặc <strong>Size 2 (2-3T)</strong> là vừa vặn và thoải mái nhất ạ!
                 </div>
             </div>
         </div>

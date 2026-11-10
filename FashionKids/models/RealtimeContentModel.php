@@ -60,7 +60,7 @@ class RealtimeContentModel extends BaseModel {
                         <li class="mb-2"><strong>Combo Năng Động:</strong> Kết hợp cùng Giày Sandal Tập Đi Đế Cao Su Non chống trượt bảo vệ cổ chân bé.</li>
                     </ul>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">3. Chọn kích cỡ chuẩn xác theo chiều cao thực tế</h4>
-                    <p class="text-slate">Mẹ đừng quên sử dụng công cụ <strong>Thước Dây Gợi Ý Size Thông Minh (MH 04)</strong> ngay trên website FashionKids để đo chiều cao (cm) và độ dài bàn chân (cm) của bé trước khi đặt hàng nhé!</p>
+                    <p class="text-slate">Mẹ đừng quên sử dụng công cụ <strong>Thước Dây Gợi Ý Size Thông Minh</strong> ngay trên website FashionKids để đo chiều cao (cm) và độ dài bàn chân (cm) của bé trước khi đặt hàng nhé!</p>
                 '
             ],
             2 => [
@@ -83,7 +83,7 @@ class RealtimeContentModel extends BaseModel {
                 'tags'          => ['#CastingKOLNhi', '#LookbookStudio', '#SieuSaoNhi', '#FashionKids2026'],
                 'related_product_ids' => [102, 101],
                 'content'       => '
-                    <p class="lead font-weight-bold text-slate mb-4">Hơn 120 hồ sơ ứng tuyển Đại sứ thương hiệu nhí (KOL Nhí) đã gửi về cổng Casting trực tuyến MH 16 chỉ trong tuần đầu tiên mở cổng. Cuối tuần qua, 15 gương mặt xuất sắc nhất đã có buổi thử đồ và chụp hình Lookbook tại Studio Quận 1, TP.HCM.</p>
+                    <p class="lead font-weight-bold text-slate mb-4">Hơn 120 hồ sơ ứng tuyển Đại sứ thương hiệu nhí (KOL Nhí) đã gửi về cổng Casting trực tuyến chỉ trong tuần đầu tiên mở cổng. Cuối tuần qua, 15 gương mặt xuất sắc nhất đã có buổi thử đồ và chụp hình Lookbook tại Studio Quận 1, TP.HCM.</p>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">1. Phim trường tiêu chuẩn an toàn dành riêng cho bé</h4>
                     <p class="text-slate">Để các bé từ 1 đến 6 tuổi tự nhiên tỏa sáng trước ống kính, toàn bộ hệ thống đèn chiếu sáng tại Studio đều sử dụng công nghệ Softbox khuếch tán ánh sáng dịu nhẹ, tuyệt đối không dùng đèn Flash chói mắt bé. Nhiệt độ phòng luôn duy trì ở mức 26°C kèm khu vực vui chơi cầu trượt và bàn tiệc bánh quy hữu cơ.</p>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">2. Đặc quyền trị giá 15.000.000đ cho Quán Quân KOL Nhí</h4>
@@ -126,7 +126,7 @@ class RealtimeContentModel extends BaseModel {
                 'badge_class'   => 'badge-gold',
                 'image'         => '/FashionKids/images/magazine/mag-chung-nhan-oekotex.jpg',
                 'author'        => 'Ban Biên Tập Báo Chí',
-                'author_role'   => 'Truyền Thông Thương Hiệu D2C',
+                'author_role'   => 'Truyền Thông Thương Hiệu',
                 'read_time'     => '3 phút đọc',
                 'published_at'  => '07/11/2026',
                 'views'         => 1650,
@@ -137,7 +137,7 @@ class RealtimeContentModel extends BaseModel {
                 'tags'          => ['#BaoChi', '#OekoTexStandard100', '#ThuongHieuXanh', '#SuKien2026'],
                 'related_product_ids' => [101, 104],
                 'content'       => '
-                    <p class="lead font-weight-bold text-slate mb-4">TP. Hồ Chí Minh, ngày 07/11/2026 — Nền tảng thương mại điện tử thời trang trẻ em D2C FashionKids vinh dự đón nhận chứng chỉ quốc tế OEKO-TEX® Standard 100 Product Class I (cấp độ khắt khe nhất dành cho trẻ sơ sinh và trẻ nhỏ dưới 36 tháng tuổi).</p>
+                    <p class="lead font-weight-bold text-slate mb-4">TP. Hồ Chí Minh, ngày 07/11/2026 — Thương hiệu thời trang trẻ em FashionKids vinh dự đón nhận chứng chỉ quốc tế OEKO-TEX® Standard 100 Product Class I (cấp độ khắt khe nhất dành cho trẻ sơ sinh và trẻ nhỏ dưới 36 tháng tuổi).</p>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">Cam kết 100% Minh bạch nguồn gốc nguyên liệu</h4>
                     <p class="text-slate">Từ sợi chỉ may, nhãn mác in nhiệt mềm cho đến từng chiếc cúc gỗ sồi tự nhiên trên sản phẩm của FashionKids đều được kiểm nghiệm độc lập, đảm bảo 0% kim loại nặng, 0% chất tẩy trắng quang học và thân thiện hoàn toàn với môi trường.</p>
                 '
@@ -268,7 +268,7 @@ class RealtimeContentModel extends BaseModel {
                 'tags'          => ['#VietnamKidsFashionWeek', '#CatwalkMauNhi', '#HauTruongShow', '#KOLNhi'],
                 'related_product_ids' => [101, 104],
                 'content'       => '
-                    <p class="lead font-weight-bold text-slate mb-4">Đêm diễn mở màn Tuần lễ Thời trang Trẻ em Việt Nam 2026 đã chứng kiến màn trình diễn bùng nổ của 20 mẫu nhí trưởng thành từ chương trình Tuyển chọn KOL Nhí FashionKids (MH 16).</p>
+                    <p class="lead font-weight-bold text-slate mb-4">Đêm diễn mở màn Tuần lễ Thời trang Trẻ em Việt Nam 2026 đã chứng kiến màn trình diễn bùng nổ của 20 mẫu nhí trưởng thành từ chương trình Tuyển chọn KOL Nhí FashionKids.</p>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">Từ cổng đăng ký trực tuyến đến ánh đèn sân khấu lớn</h4>
                     <p class="text-slate">Chỉ sau 2 buổi tập luyện làm quen nhịp nhạc cùng biên đạo catwalk, các bé từ 3 đến 6 tuổi đã tự tin trình diễn những thiết kế Bomber Pastel, Đầm Công Chúa Sợi Tre và Set Đồ Năng Động trước hơn 500 khách mời và cơ quan báo chí.</p>
                 '
@@ -332,7 +332,7 @@ class RealtimeContentModel extends BaseModel {
                 'badge_class'   => 'badge-gold',
                 'image'         => '/FashionKids/images/magazine/mag-bao-chi-thuong-hieu-xanh.jpg',
                 'author'        => 'Ban Biên Tập Báo Chí',
-                'author_role'   => 'Truyền Thông Thương Hiệu D2C',
+                'author_role'   => 'Truyền Thông Thương Hiệu',
                 'read_time'     => '3 phút đọc',
                 'published_at'  => '25/10/2026',
                 'views'         => 1490,
@@ -368,7 +368,7 @@ class RealtimeContentModel extends BaseModel {
                 'tags'          => ['#MeoChupAnhBe', '#HoSoCastingKOL', '#MauNhiTaiNang', '#GocChupDep'],
                 'related_product_ids' => [101, 103],
                 'content'       => '
-                    <p class="lead font-weight-bold text-slate mb-4">Ban giám khảo cổng Tuyển chọn KOL Nhí (MH 16 - MH 17) luôn đánh giá cao những bức ảnh thể hiện rõ nét hồn nhiên, nụ cười tự nhiên và tỷ lệ vóc dáng thực tế của bé hơn là những bức ảnh chỉnh sửa quá đà.</p>
+                    <p class="lead font-weight-bold text-slate mb-4">Ban giám khảo cổng Tuyển chọn KOL Nhí luôn đánh giá cao những bức ảnh thể hiện rõ nét hồn nhiên, nụ cười tự nhiên và tỷ lệ vóc dáng thực tế của bé hơn là những bức ảnh chỉnh sửa quá đà.</p>
                     <h4 class="font-weight-bold text-slate mt-4 mb-3">Công thức 3 bức ảnh vàng trong hồ sơ ứng tuyển</h4>
                     <ul class="text-slate mb-4">
                         <li class="mb-2"><strong>Ảnh 1 (Chân dung cận mặt):</strong> Đặt máy ngang tầm mắt của bé, chụp cạnh cửa sổ vào khoảng 8h–10h sáng để đôi mắt bé có ánh sáng lấp lánh (catchlight).</li>
@@ -414,7 +414,7 @@ class RealtimeContentModel extends BaseModel {
         }
         try {
             $count = (int)$this->db->query("SELECT COUNT(*) FROM `tgb_bai_viet_tin_tuc`")->fetchColumn();
-            $oldImgCount = (int)$this->db->query("SELECT COUNT(*) FROM `tgb_bai_viet_tin_tuc` WHERE `ma_bai_viet` <= 14 AND (`anh_dai_dien` IS NULL OR `anh_dai_dien` NOT LIKE '/FashionKids/images/magazine/%')")->fetchColumn();
+            $oldImgCount = (int)$this->db->query("SELECT COUNT(*) FROM `tgb_bai_viet_tin_tuc` WHERE `ma_bai_viet` <= 14 AND (`anh_dai_dien` IS NULL OR `anh_dai_dien` NOT LIKE '/FashionKids/images/magazine/%' OR `noi_dung_chi_tiet` LIKE '%D2C%' OR `noi_dung_chi_tiet` LIKE '%MH 0%' OR `noi_dung_chi_tiet` LIKE '%MH 1%')")->fetchColumn();
             if ($count < 14 || $oldImgCount > 0) {
                 $defaults = $this->getDefaultArticles();
                 $stmt = $this->db->prepare("
@@ -685,10 +685,10 @@ class RealtimeContentModel extends BaseModel {
                 'id'          => 1,
                 'article_id'  => $articleId,
                 'parent_id'   => null,
-                'author_name' => 'Võ Thị Thanh Thảo (Mẹ Bé Sam)',
+                'author_name' => 'Võ Thị Thanh Thảo',
                 'author_role' => 'khach_hang',
                 'vip_badge'   => 'Hạng Vàng (-10%)',
-                'content'     => 'Bài viết rất hữu ích! Mình vừa áp dụng cách phối váy sợi tre nơ hồng pastel với giày sandal đế cao su non cho bé Sam đi tiệc cuối tuần, ai cũng khen bé xinh và thoáng mát.',
+                'content'     => 'Bài viết rất hữu ích! Mình vừa áp dụng cách phối váy sợi tre nơ hồng pastel với giày sandal đế cao su non cho bé đi tiệc cuối tuần, ai cũng khen bé xinh và thoáng mát.',
                 'created_at'  => '2 giờ trước',
                 'replies'     => [
                     [
@@ -698,7 +698,7 @@ class RealtimeContentModel extends BaseModel {
                         'author_name' => 'Ban Biên Tập FashionKids',
                         'author_role' => 'quan_tri',
                         'vip_badge'   => 'Quản Trị Viên',
-                        'content'     => 'Dạ FashionKids cảm ơn mẹ bé Sam rất nhiều ạ! Chúc bé Sam luôn khỏe mạnh và tỏa sáng trong các thiết kế sợi tre kháng khuẩn của shop nhé!',
+                        'content'     => 'Dạ FashionKids cảm ơn chị Thanh Thảo rất nhiều ạ! Chúc bé luôn khỏe mạnh và tỏa sáng trong các thiết kế sợi tre kháng khuẩn của shop nhé!',
                         'created_at'  => '1 giờ trước'
                     ]
                 ]
@@ -707,7 +707,7 @@ class RealtimeContentModel extends BaseModel {
                 'id'          => 3,
                 'article_id'  => $articleId,
                 'parent_id'   => null,
-                'author_name' => 'Trần Minh Anh (Mẹ Bé Bơ)',
+                'author_name' => 'Trần Minh Anh',
                 'author_role' => 'khach_hang',
                 'vip_badge'   => 'Hạng Bạc (-5%)',
                 'content'     => 'Từ ngày chuyển sang mặc bộ thun sợi tre của FashionKids, bé nhà mình ngủ ngon hẳn, không còn bị mồ hôi trộm ướt lưng nữa.',
@@ -875,7 +875,7 @@ class RealtimeContentModel extends BaseModel {
             'badge_class'         => $meta['badge'],
             'image'               => $image,
             'author'              => $_SESSION['user']['ho_va_ten'] ?? 'Ban Biên Tập FashionKids',
-            'author_role'         => 'Quản Trị Nội Dung CMS',
+            'author_role'         => 'Biên Tập Viên Tạp Chí',
             'read_time'           => '4 phút đọc',
             'published_at'        => date('d/m/Y'),
             'views'               => 125,
@@ -903,7 +903,7 @@ class RealtimeContentModel extends BaseModel {
         $sessions = [
             'sess_guest_123456' => [
                 'session_id'    => 'sess_guest_123456',
-                'customer_name' => 'Mẹ Bé Sam (Võ Thị Thanh Thảo)',
+                'customer_name' => 'Võ Thị Thanh Thảo',
                 'vip_label'     => 'VIP Hạng Vàng (-10%)',
                 'badge_class'   => 'badge-gold',
                 'online'        => true,
@@ -913,7 +913,7 @@ class RealtimeContentModel extends BaseModel {
             ],
             'sess_vip_me_chip' => [
                 'session_id'    => 'sess_vip_me_chip',
-                'customer_name' => 'Chị Lan Anh (Mẹ Bé Bắp)',
+                'customer_name' => 'Trần Lan Anh',
                 'vip_label'     => 'VIP Kim Cương (-15%)',
                 'badge_class'   => 'badge-mint',
                 'online'        => true,
@@ -995,7 +995,7 @@ class RealtimeContentModel extends BaseModel {
                     'id'         => 3,
                     'session_id' => 'sess_guest_123456',
                     'sender'     => 'nhan_vien',
-                    'content'    => 'Dạ chào mẹ bé Sam, với chiều cao 92cm và cân nặng 13kg, bé mặc Size 2 (2-3T, khung chuẩn 90-100cm) là vừa vặn và thoải mái nhất ạ!',
+                    'content'    => 'Dạ chào chị Thanh Thảo, với chiều cao 92cm và cân nặng 13kg, bé mặc Size 2 (2-3T, khung chuẩn 90-100cm) là vừa vặn và thoải mái nhất ạ!',
                     'time'       => '09:17'
                 ]
             ],
@@ -1108,9 +1108,9 @@ class RealtimeContentModel extends BaseModel {
             } elseif (strpos($lower, 'sợi tre') !== false || strpos($lower, 'chất') !== false || strpos($lower, 'giặt') !== false) {
                 $replyText = 'Dạ 100% sản phẩm FashionKids làm từ vải sợi tre hữu cơ đạt chuẩn OEKO-TEX® Standard 100, kháng khuẩn 99.8% và hạ nhiệt -2°C cho làn da nhạy cảm của bé ạ!';
             } elseif (strpos($lower, 'đơn') !== false || strpos($lower, 'giao') !== false || strpos($lower, 'ship') !== false) {
-                $replyText = 'Dạ FashionKids miễn phí vận chuyển toàn quốc cho đơn từ 300.000đ và giao nhanh trong 24-48h. Mẹ có thể tra cứu trực tiếp tại mục Tiến Trình Đơn Hàng (MH 06) nhé!';
+                $replyText = 'Dạ FashionKids miễn phí vận chuyển toàn quốc cho đơn từ 300.000đ và giao nhanh trong 24-48h. Mẹ có thể tra cứu trực tiếp tại mục Tra Cứu Đơn Hàng nhé!';
             } elseif (strpos($lower, 'kol') !== false || strpos($lower, 'mẫu nhí') !== false || strpos($lower, 'casting') !== false) {
-                $replyText = 'Dạ Chiến dịch Tuyển chọn Siêu sao nhí KOL 2026 đang mở nhận hồ sơ tại mục Tuyển KOL Nhí (MH 16) với giải thưởng gói trang phục 15.000.000đ và thẻ VIP Kim Cương ạ!';
+                $replyText = 'Dạ Chiến dịch Tuyển chọn Siêu sao nhí KOL 2026 đang mở nhận hồ sơ tại mục Tuyển KOL Nhí với giải thưởng gói trang phục 15.000.000đ và thẻ VIP Kim Cương ạ!';
             }
 
             if ($replyText !== '') {

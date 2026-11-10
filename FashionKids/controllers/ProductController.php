@@ -145,8 +145,8 @@ class ProductController extends Controller {
             $size = $this->sizeChartModel->goiYSizeChuan($maDanhMuc, $chieuCao, $vongNguc, $vongEo, $daiChan);
 
             $note = ($maDanhMuc === 4)
-                ? 'Kích cỡ giày/sandal đối chiếu từ Stored Function fn_lnkt_goi_y_kich_co_chuan & đế cao su non uốn dẻo 360 độ (khuyên cộng dư 0.5cm cho bé mang tất).'
-                : 'Kích cỡ tính toán tự động dựa trên quy chuẩn Stored Function fn_lnkt_goi_y_kich_co_chuan & chất liệu sợi tre Organic Bamboo co giãn 4 chiều (+8% đến +12%).';
+                ? 'Kích cỡ giày/sandal được tính theo bảng đo bàn chân chuẩn & đế cao su non uốn dẻo (khuyên cộng dư 0.5cm cho bé mang tất).'
+                : 'Kích cỡ được tính toán tự động theo vóc dáng thực tế của bé & chất liệu sợi tre co giãn 4 chiều thoải mái.';
 
             if (ob_get_level() > 0) {
                 ob_clean();
@@ -270,10 +270,10 @@ class ProductController extends Controller {
             $actType = trim((string)($_POST['action_type'] ?? 'check'));
 
             if ($rawId === '' || !is_numeric($rawId) || (int)$rawId <= 0) {
-                throw new InvalidArgumentException('Lỗi [LBN_ERR_08]: Mã sản phẩm tra cứu tồn kho không hợp lệ!');
+                throw new InvalidArgumentException('Mã sản phẩm tra cứu tồn kho không hợp lệ!');
             }
             if ($rawQty === '' || !is_numeric($rawQty) || (int)$rawQty <= 0) {
-                throw new InvalidArgumentException('Lỗi [LBN_ERR_07]: Số lượng kiểm tra đặt mua phải là số nguyên lớn hơn 0!');
+                throw new InvalidArgumentException('Số lượng đặt mua phải là số nguyên lớn hơn 0!');
             }
 
             $productId = (int)$rawId;
@@ -306,6 +306,7 @@ class ProductController extends Controller {
                     'product_name' => $stockInfo['product_name'],
                     'sku'          => $stockInfo['sku'],
                     'price'        => $stockInfo['price'],
+                    'image'        => $stockInfo['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
                     'size'         => $size,
                     'quantity'     => min($stockInfo['available_stock'], $currentInCart + $quantity)
                 ];
@@ -319,8 +320,8 @@ class ProductController extends Controller {
             }
 
             $msg = ($actType === 'check')
-                ? 'Kiểm tra fn_lbn_kiem_tra_ton_kho hợp lệ: Còn ' . $stockInfo['available_stock'] . ' sản phẩm sẵn sàng.'
-                : 'Đã kiểm tra tồn kho (fn_lbn_kiem_tra_ton_kho) & thêm ' . $quantity . ' x "' . $stockInfo['product_name'] . '" (' . $size . ') vào giỏ hàng!';
+                ? 'Còn ' . $stockInfo['available_stock'] . ' sản phẩm sẵn sàng trong kho.'
+                : 'Đã thêm ' . $quantity . ' x "' . $stockInfo['product_name'] . '" (' . $size . ') vào giỏ hàng!';
 
             $this->jsonResponse(array_merge($stockInfo, [
                 'status'     => 'success',
@@ -358,7 +359,7 @@ class ProductController extends Controller {
             $mode     = trim((string)($_POST['mode'] ?? 'set'));
 
             if ($rawId === '' || !is_numeric($rawId) || (int)$rawId <= 0) {
-                throw new InvalidArgumentException('Lỗi [LBN_ERR_06]: Mã sản phẩm cần cập nhật kho không tồn tại!');
+                throw new InvalidArgumentException('Mã sản phẩm cần cập nhật kho không tồn tại!');
             }
             if ($rawStock === '' || !is_numeric($rawStock)) {
                 throw new InvalidArgumentException('Số lượng tồn kho không hợp lệ! Vui lòng chỉ nhập chữ số nguyên.');
@@ -367,19 +368,19 @@ class ProductController extends Controller {
             $productId = (int)$rawId;
             $newStock  = (int)$rawStock;
             if ($newStock < 0) {
-                throw new InvalidArgumentException('Lỗi [LBN_ERR_04]: Số lượng tồn kho không được là số âm (phải >= 0)!');
+                throw new InvalidArgumentException('Số lượng tồn kho không được là số âm (phải >= 0)!');
             }
 
             $result = $this->productModel->capNhatTonKhoSanPham($productId, $newStock, $mode);
 
             $warningNote = $result['is_low_stock']
-                ? ' [CẢNH BÁO: Tồn kho <= 5, cần nhập bổ sung ngay!]'
-                : ' [Trạng thái: Đủ hàng an toàn]';
+                ? ' (Cảnh báo: Tồn kho thấp <= 5, cần nhập bổ sung sớm!)'
+                : ' (Đủ hàng an toàn)';
 
             $this->jsonResponse(array_merge($result, [
                 'status'  => 'success',
                 'code'    => 200,
-                'message' => 'Đã thực thi ' . $result['routine'] . ' cho mã ' . $result['sku'] . ': Tồn kho = ' . $result['new_stock'] . ' SP.' . $warningNote
+                'message' => 'Đã cập nhật tồn kho cho mã ' . $result['sku'] . ': ' . $result['new_stock'] . ' sản phẩm.' . $warningNote
             ]), 200);
         } catch (Exception $e) {
             $this->jsonResponse([
@@ -418,16 +419,16 @@ class ProductController extends Controller {
             $errors['sku'] = 'Mã SKU không được để trống (tối thiểu 3 ký tự, VD: FK-LBN-10).';
         }
         if ($name === '' || mb_strlen($name, 'UTF-8') < 4) {
-            $errors['name'] = 'Lỗi [LBN_ERR_02]: Tên sản phẩm không được để trống (tối thiểu 4 ký tự).';
+            $errors['name'] = 'Tên sản phẩm không được để trống (tối thiểu 4 ký tự).';
         }
         if (!is_numeric($categoryId) || !in_array((int)$categoryId, [1, 2, 3, 4], true)) {
-            $errors['category_id'] = 'Lỗi [LBN_ERR_01]: Danh mục sản phẩm không tồn tại trên hệ thống.';
+            $errors['category_id'] = 'Danh mục sản phẩm không tồn tại trên hệ thống.';
         }
         if ($rawPrice === '' || !is_numeric($rawPrice) || (float)$rawPrice <= 0) {
-            $errors['price'] = 'Lỗi [LBN_ERR_03]: Đơn giá bán sản phẩm phải là số lớn hơn 0 VNĐ.';
+            $errors['price'] = 'Đơn giá bán sản phẩm phải là số lớn hơn 0 VNĐ.';
         }
         if ($rawStock === '' || !is_numeric($rawStock) || (int)$rawStock < 0) {
-            $errors['stock_quantity'] = 'Lỗi [LBN_ERR_04]: Số lượng tồn kho không được là số âm.';
+            $errors['stock_quantity'] = 'Số lượng tồn kho không được là số âm.';
         }
         if ($description === '') {
             $errors['description'] = 'Vui lòng nhập mô tả chất liệu an toàn cho bé.';
@@ -487,7 +488,7 @@ class ProductController extends Controller {
             $httpCode = $saved['is_edit'] ? 200 : 201;
             $actionText = $saved['is_edit']
                 ? 'Đã cập nhật sản phẩm "' . $saved['product']['name'] . '" (Mã: ' . $saved['product']['sku'] . ') thành công!'
-                : 'Đã thực thi Stored Procedure sp_lbn_them_san_pham_moi: Thêm mới "' . $saved['product']['name'] . '" (Mã: ' . $saved['product']['sku'] . ') vào kho thành công!';
+                : 'Đã thêm mới sản phẩm "' . $saved['product']['name'] . '" (Mã: ' . $saved['product']['sku'] . ') vào kho thành công!';
 
             $this->jsonResponse(array_merge($saved, [
                 'status'  => 'success',

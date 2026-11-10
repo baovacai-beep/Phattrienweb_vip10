@@ -23,7 +23,7 @@ $(document).ready(function () {
         let orderPayload = {
             receiver_name:    receiverName,
             receiver_phone:   receiverPhone,
-            receiver_email:   $('#tgb_receiver_email, #lnkt_receiverEmail').val() || 'customer@fashionkids.vn',
+            receiver_email:   $('#tgb_receiver_email, #lnkt_receiverEmail').val() || '',
             shipping_address: $('#tgb_full_address').val() || address,
             province:         province,
             district:         district,
@@ -41,7 +41,7 @@ $(document).ready(function () {
             timeout: 3000,
             success: function (res) {
                 if (res && res.status === 'success') {
-                    console.log('Tạo đơn hàng thành công qua Stored Procedure, Mã đơn:', res.order_id);
+                    console.log('Tạo đơn hàng thành công, Mã đơn:', res.order_id);
                 }
             }
         });

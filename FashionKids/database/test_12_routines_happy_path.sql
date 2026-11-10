@@ -14,7 +14,7 @@ UPDATE `lnkt_don_hang` SET `trang_thai_don_hang` = 'cho_duyet', `ma_nhan_vien_xu
 UPDATE `lnkt_dang_ky_kol_nhi` SET `trang_thai_duyet` = 'cho_duyet' WHERE `ma_ho_so` = 1;
 
 -- Test 1: Đăng ký thành viên mới hoàn toàn (Hồ Gia Bảo - Nhận Hạng Đồng)
-CALL sp_hgb_dang_ky_thanh_vien('khach_hang_moi_1', 'hash_pass_123', 'Nguyễn Thị Hoa', 'hoa.nguyen@gmail.com', '0912345678', 'Q.7, TP.HCM', @ma_user_moi);
+CALL sp_hgb_dang_ky_thanh_vien('khach_hang_moi_1', 'e10adc3949ba59abbe56e057f20f883e', 'Nguyễn Thị Hoa', 'hoa.nguyen@gmail.com', '0912345678', 'Q.7, TP.HCM', @ma_user_moi);
 SELECT @ma_user_moi AS ma_khach_hang_moi;
 
 -- Test 2: Tích điểm thăng hạng (Cộng 1.600 điểm -> Khách tự nhảy lên Hạng Vàng)

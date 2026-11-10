@@ -1,37 +1,44 @@
-
 <?php
-$page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP (MH 15)";
+$page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
-// Du lieu gia lap nguoi dung
-$users_list = [
-    ['id' => 1, 'username' => 'admin_fashion', 'name' => 'Hồ Gia Bảo', 'email' => 'admin@fashionkids.vn', 'role' => 'quan_tri', 'tier' => 'Quản trị viên', 'points' => 0, 'status' => 1],
-    ['id' => 2, 'username' => 'staff_tuvan', 'name' => 'Lê Nguyễn Khánh Trình', 'email' => 'staff@fashionkids.vn', 'role' => 'nhan_vien', 'tier' => 'Nhân viên CSKH', 'points' => 0, 'status' => 1],
-    ['id' => 3, 'username' => 'me_be_sam', 'name' => 'Võ Thị Thanh Thảo', 'email' => 'thanhthao@gmail.com', 'role' => 'khach_hang', 'tier' => 'Vàng (Gold)', 'points' => 1650, 'status' => 1],
-    ['id' => 4, 'username' => 'me_be_bong', 'name' => 'Trần Thị Bông', 'email' => 'bong@gmail.com', 'role' => 'khach_hang', 'tier' => 'Đồng (Bronze)', 'points' => 120, 'status' => 1],
-    ['id' => 5, 'username' => 'spammer_99', 'name' => 'Nguyễn Văn Spam', 'email' => 'spam@gmail.com', 'role' => 'khach_hang', 'tier' => 'Đồng (Bronze)', 'points' => 0, 'status' => 0]
-];
+require_once __DIR__ . "/../../models/UserModel.php";
 
-// 4 Cap do Hang The VIP
-$tiers = [
-    ['id' => 1, 'name' => 'Đồng (Bronze)', 'min' => 0, 'discount' => 0, 'badge' => 'badge-secondary'],
-    ['id' => 2, 'name' => 'Bạc (Silver)', 'min' => 500, 'discount' => 5, 'badge' => 'badge-sky'],
-    ['id' => 3, 'name' => 'Vàng (Gold)', 'min' => 1500, 'discount' => 10, 'badge' => 'badge-gold'],
-    ['id' => 4, 'name' => 'Kim Cương (Diamond)', 'min' => 3000, 'discount' => 15, 'badge' => 'badge-primary']
+$userModel = new UserModel();
+$users_list = $userModel->layDanhSachNguoiDung();
+$rawTiers = $userModel->layDanhSachHangThanhVien();
+$tierBadgeMap = [
+    1 => 'badge-secondary',
+    2 => 'badge-sky',
+    3 => 'badge-gold',
+    4 => 'badge-primary',
 ];
+$tiers = [];
+foreach ($rawTiers as $rt) {
+    $tid = (int)($rt['ma_hang'] ?? 1);
+    $tiers[] = [
+        'id'       => $tid,
+        'name'     => (string)($rt['ten_hang'] ?? ''),
+        'min'      => (int)($rt['diem_toi_thieu'] ?? 0),
+        'discount' => (float)($rt['phan_tram_giam_gia'] ?? 0),
+        'badge'    => $tierBadgeMap[$tid] ?? 'badge-secondary',
+    ];
+}
 ?>
 
-<div class="container-fluid my-4 px-lg-5">
+<div class="container-fluid my-4 px-lg-5" id="hgb_admin_users_section">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="font-weight-bold text-slate mb-1">Quản Trị Người Dùng & Cấu Hình Hạng VIP (MH 15)</h4>
+            <h4 class="font-weight-bold text-slate mb-1">Quản Trị Người Dùng &amp; Cấu Hình Hạng VIP</h4>
             <small class="text-muted-custom">Phân quyền vai trò hệ thống và thiết lập tỷ lệ chiết khấu thẻ thành viên</small>
         </div>
         <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
             <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
         </a>
     </div>
+
+    <div id="hgb_admin_users_alert" class="alert small py-2 d-none" role="alert"></div>
 
     <div class="row">
         <!-- Cot 1: Danh Sach Tai Khoan Nguoi Dung -->
@@ -62,7 +69,11 @@ $tiers = [
                                         <td class="font-weight-bold">#<?= $u['id'] ?></td>
                                         <td>
                                             <div class="font-weight-bold text-slate"><?= htmlspecialchars($u['name']) ?></div>
-                                            <span class="badge badge-mint small py-0 px-2 rounded-pill">Đã OTP</span>
+                                            <?php if (!empty($u['otp_verified'])): ?>
+                                                <span class="badge badge-mint small py-0 px-2 rounded-pill">Đã xác thực</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">Chờ xác thực</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <div class="small font-weight-bold"><?= htmlspecialchars($u['username']) ?></div>
@@ -78,24 +89,32 @@ $tiers = [
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <strong><?= $u['tier'] ?></strong>
+                                            <strong><?= htmlspecialchars($u['tier']) ?></strong>
                                         </td>
                                         <td class="text-right text-primary font-weight-bold"><?= number_format($u['points']) ?></td>
-                                        <td class="text-center">
+                                        <td class="text-center" id="hgb_userStatusCell_<?= (int)$u['id'] ?>">
                                             <?php if ($u['status'] == 1): ?>
-                                                <span class="badge badge-success px-2 py-1">Hoạt động</span>
+                                                <span class="badge badge-success badge-pill px-2 py-1">Hoạt động</span>
                                             <?php else: ?>
-                                                <span class="badge badge-danger px-2 py-1">Đã khóa</span>
+                                                <span class="badge badge-danger badge-pill px-2 py-1">Đã khóa</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
                                             <?php if ($u['role'] !== 'quan_tri'): ?>
                                                 <?php if ($u['status'] == 1): ?>
-                                                    <button class="btn btn-outline-danger btn-sm rounded-circle" title="Khóa tài khoản">
+                                                    <button type="button"
+                                                            class="btn btn-outline-danger btn-sm rounded-circle hgb-btn-toggle-user-status"
+                                                            data-user-id="<?= (int)$u['id'] ?>"
+                                                            data-next-status="0"
+                                                            title="Khóa tài khoản">
                                                         <i class="fa-solid fa-lock"></i>
                                                     </button>
                                                 <?php else: ?>
-                                                    <button class="btn btn-outline-success btn-sm rounded-circle" title="Mở khóa tài khoản">
+                                                    <button type="button"
+                                                            class="btn btn-outline-success btn-sm rounded-circle hgb-btn-toggle-user-status"
+                                                            data-user-id="<?= (int)$u['id'] ?>"
+                                                            data-next-status="1"
+                                                            title="Mở khóa tài khoản">
                                                         <i class="fa-solid fa-lock-open"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -110,31 +129,31 @@ $tiers = [
             </div>
         </div>
 
-        <!-- Cot 2: Form Cau Hinh Diem San & Chiet Khau VIP -->
+        <!-- Cot 2: Form Cau Hinh Muc Diem Toi Thieu & Chiet Khau VIP -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
-                    <h6 class="font-weight-bold mb-0 text-slate">Cấu Hình Điểm Sàn & % Giảm Giá VIP</h6>
+                    <h6 class="font-weight-bold mb-0 text-slate">Cấu Hình Mức Điểm Tối Thiểu &amp; % Giảm Giá VIP</h6>
                 </div>
                 <div class="card-body p-4 pt-0">
-                    <form>
+                    <form id="hgb_formVipTiers">
                         <?php foreach ($tiers as $t): ?>
                             <div class="p-3 mb-3 rounded bg-milk-cream border">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="font-weight-bold text-slate">
-                                        <i class="fa-solid fa-medal mr-1 text-peach"></i> Hạng <?= $t['name'] ?>
+                                        <i class="fa-solid fa-medal mr-1 text-peach"></i> Hạng <?= htmlspecialchars($t['name']) ?>
                                     </span>
-                                    <span class="badge <?= $t['badge'] ?> px-2 py-1">Cấp <?= $t['id'] ?></span>
+                                    <span class="badge <?= $t['badge'] ?> px-2 py-1">Cấp <?= (int)$t['id'] ?></span>
                                 </div>
                                 <div class="form-row">
                                     <div class="col-6">
-                                        <label class="small text-muted-custom mb-1 font-weight-bold">Điểm sàn (pts):</label>
-                                        <input type="number" class="form-control form-control-sm" value="<?= $t['min'] ?>" required>
+                                        <label class="small text-muted-custom mb-1 font-weight-bold">Mức điểm tối thiểu (pts):</label>
+                                        <input type="number" class="form-control form-control-sm" name="tiers[<?= (int)$t['id'] ?>][min]" value="<?= (int)$t['min'] ?>" min="0" required>
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-muted-custom mb-1 font-weight-bold">Giảm giá (%):</label>
                                         <div class="input-group input-group-sm">
-                                            <input type="number" class="form-control" value="<?= $t['discount'] ?>" required>
+                                            <input type="number" class="form-control" name="tiers[<?= (int)$t['id'] ?>][discount]" value="<?= (float)$t['discount'] ?>" min="0" max="50" required>
                                             <div class="input-group-append">
                                                 <span class="input-group-text">%</span>
                                             </div>
@@ -144,7 +163,7 @@ $tiers = [
                             </div>
                         <?php endforeach; ?>
 
-                        <button type="button" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
+                        <button type="submit" id="hgb_btnSaveVipTiers" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
                             <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Cấu Hình Hạng Thẻ
                         </button>
                     </form>

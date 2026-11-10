@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../core/Rbac.php';
                     <img src="/FashionKids/images/logo-fashionkids.jpg" alt="FashionKids Logo" class="fk-brand-logo-sm mr-2">FashionKids Official
                 </h5>
                 <p class="text-muted-custom small">
-                    Nền tảng thương mại điện tử D2C độc quyền phân phối các sản phẩm thời trang trẻ em sản xuất từ 100% sợi tre tự nhiên và cotton hữu cơ. Chứng nhận an toàn tuyệt đối cho làn da bé.
+                    Cửa hàng thời trang trẻ em chuyên phân phối các sản phẩm sản xuất từ 100% sợi tre tự nhiên và cotton hữu cơ. Chứng nhận an toàn tuyệt đối cho làn da bé.
                 </p>
                 <div class="d-flex mt-3">
                     <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-sm btn-light rounded-circle mr-2 text-primary shadow-sm border" title="Cộng đồng Facebook"><i class="fa-brands fa-facebook-f"></i></a>
@@ -43,7 +43,7 @@ require_once __DIR__ . '/../../core/Rbac.php';
 
             <!-- Cot 4: Tong Dai CSKH -->
             <div class="col-12 col-md-4 mb-4">
-                <h6 class="font-weight-bold mb-3 text-slate">Tổng Đài Hỗ Trợ &amp; CSKH Realtime</h6>
+                <h6 class="font-weight-bold mb-3 text-slate">Tổng Đài Hỗ Trợ &amp; CSKH Trực Tuyến</h6>
                 <div class="p-3 footer-support-box mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -68,24 +68,31 @@ require_once __DIR__ . '/../../core/Rbac.php';
         </div>
 
         <div class="border-top pt-4 mt-2 text-center small text-muted-custom">
-            &copy; 2026 FashionKids D2C Platform. Đồ án Môn học Phát triển Ứng dụng Web - Nhóm 10 (Đại học Kinh tế TP.HCM - UEH).
+            &copy; 2026 FashionKids. Thời trang trẻ em sợi tre kháng khuẩn an toàn cho bé.
         </div>
     </div>
 </footer>
 
 <?php
-// Nhung Widget Chat Realtime toan trang (MH 08)
+// Nhung Widget Chat toan trang
 require_once __DIR__ . "/chat-widget.php";
 
 $appBase = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
+$jsFiles = [
+    'main-interactive.js',
+    'mvc-ajax-bridge.js',
+    'auth-ajax.js',
+    'lbn-ajax.js',
+    'fk-ui.js',
+];
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-<script src="<?= $appBase ?>/public/js/main-interactive.js"></script>
-<script src="<?= $appBase ?>/public/js/mvc-ajax-bridge.js"></script>
-<script src="<?= $appBase ?>/public/js/auth-ajax.js"></script>
-<script src="<?= $appBase ?>/public/js/lbn-ajax.js"></script>
-<script src="<?= $appBase ?>/public/js/fk-ui.js"></script>
+<?php foreach ($jsFiles as $_jsFile):
+    $_jsVer = @filemtime(__DIR__ . '/../../public/js/' . $_jsFile) ?: '20261110';
+?>
+<script src="<?= $appBase ?>/public/js/<?= $_jsFile ?>?v=<?= $_jsVer ?>"></script>
+<?php endforeach; ?>
 </body>
 </html>

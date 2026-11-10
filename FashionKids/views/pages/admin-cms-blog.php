@@ -1,5 +1,5 @@
 <?php
-$page_title = "Quản Trị Nội Dung Tạp Chí & Báo Chí CMS (MH 21)";
+$page_title = "Quản Trị Nội Dung Tạp Chí & Báo Chí";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
@@ -11,19 +11,18 @@ $isAdminUser = Rbac::isAdmin();
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="fk_admin_cms_blog_section">
-    <!-- Header Bàn Làm Việc CMS Tạp Chí (MH 21) -->
+    <!-- Header Bàn Làm Việc CMS Tạp Chí -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h3 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-newspaper text-peach mr-2"></i><?= $isAdminUser ? 'Quản Trị Nội Dung Tạp Chí &amp; Điểm Tin Báo Chí (MH 21)' : 'Bàn Soạn Thảo Bản Nháp Tạp Chí Nhân Viên (MH 21)' ?>
+                <i class="fa-solid fa-newspaper text-peach mr-2"></i><?= $isAdminUser ? 'Quản Trị Nội Dung Tạp Chí &amp; Điểm Tin Báo Chí' : 'Bàn Soạn Thảo Bản Nháp Tạp Chí Nhân Viên' ?>
             </h3>
-            <small class="text-muted-custom">
-                Đảm nhiệm: Trần Gia Bảo (<code>tgb_bai_viet_tin_tuc</code>, <code>tgb_binh_luan_bai_viet</code>) — Phân quyền hiện tại: <strong><?= htmlspecialchars(Rbac::roleLabel()) ?></strong>
+            <small class="text-muted-custom">Phân quyền hiện tại: <strong><?= htmlspecialchars(Rbac::roleLabel()) ?></strong>
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
-                <i class="fa-solid fa-eye mr-1"></i> Xem Trang Tạp Chí (MH 18)
+                <i class="fa-solid fa-eye mr-1"></i> Xem Trang Tạp Chí
             </a>
             <?php if ($isAdminUser): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
@@ -31,7 +30,7 @@ $isAdminUser = Rbac::isAdmin();
                 </a>
             <?php else: ?>
                 <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
-                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên (MH 10)
+                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên
                 </a>
             <?php endif; ?>
         </div>
@@ -42,28 +41,28 @@ $isAdminUser = Rbac::isAdmin();
         <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
             <?php if ($isAdminUser): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan (MH 12)
+                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng (MH 13)
+                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng
             </a>
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn (MH 10)
+                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn
             </a>
             <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Realtime (MH 11)
+                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí (MH 17)
+                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
             </a>
             <?php if ($isAdminUser): ?>
                 <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner (MH 23)
+                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner
                 </a>
             <?php endif; ?>
             <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mb-1">
-                <i class="fa-solid fa-newspaper mr-1"></i> CMS Tạp Chí (MH 21)
+                <i class="fa-solid fa-newspaper mr-1"></i> Quản Lý Tạp Chí
             </a>
         </div>
     </div>
@@ -76,14 +75,14 @@ $isAdminUser = Rbac::isAdmin();
             <div class="card card-pastel border-0 shadow-sm bg-white">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold text-slate mb-0" id="fk_cmsFormTitle">
-                        <i class="fa-solid fa-pen-to-square text-peach mr-2"></i><?= $isAdminUser ? 'Soạn Thảo &amp; Xuất Bản Bài Viết' : 'Soạn Bản Nháp Bài Viết (Staff)' ?>
+                        <i class="fa-solid fa-pen-to-square text-peach mr-2"></i><?= $isAdminUser ? 'Soạn Thảo &amp; Xuất Bản Bài Viết' : 'Soạn Bản Nháp Bài Viết' ?>
                     </h6>
-                    <span class="badge badge-pill badge-mint px-2 py-1">Đồng bộ <code>tgb_bai_viet_tin_tuc</code></span>
+                    <span class="badge badge-pill badge-mint px-2 py-1">Đồng bộ hệ thống</span>
                 </div>
                 <div class="card-body p-4">
                     <?php if (!$isAdminUser): ?>
                         <div class="alert alert-info small py-2 mb-3">
-                            <i class="fa-solid fa-circle-info mr-1"></i><strong>Phân quyền Nhân viên (<code>nhan_vien</code>):</strong> Bạn được phép tạo bài viết ở trạng thái <code>ban_nhap</code>. Quyền Xuất bản chính thức (<code>xuat_ban</code>) và Xóa bài viết thuộc về Quản trị viên (<code>quan_tri</code>).
+                            <i class="fa-solid fa-circle-info mr-1"></i><strong>Phân quyền Nhân viên:</strong> Bạn được phép tạo bài viết ở trạng thái <strong>Bản nháp</strong>. Quyền Xuất bản chính thức và Xóa bài viết thuộc về Quản trị viên.
                         </div>
                     <?php endif; ?>
                     <form id="fk_formCmsBlog">
@@ -108,32 +107,32 @@ $isAdminUser = Rbac::isAdmin();
                                 <label class="small font-weight-bold text-slate" for="fk_cmsStatus">Trạng thái xuất bản:</label>
                                 <select id="fk_cmsStatus" name="status" class="custom-select form-control">
                                     <?php if ($isAdminUser): ?>
-                                        <option value="xuat_ban" selected>Xuất bản ngay (xuat_ban)</option>
-                                        <option value="ban_nhap">Lưu bản nháp (ban_nhap)</option>
+                                        <option value="xuat_ban" selected>Xuất bản ngay</option>
+                                        <option value="ban_nhap">Lưu bản nháp</option>
                                     <?php else: ?>
-                                        <option value="ban_nhap" selected>Lưu bản nháp chờ Admin duyệt (ban_nhap)</option>
+                                        <option value="ban_nhap" selected>Lưu bản nháp</option>
                                     <?php endif; ?>
                                 </select>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="small font-weight-bold text-slate" for="fk_cmsImageSelect">Chọn ảnh bìa tạp chí (Thư mục <code>/FashionKids/images/magazine/</code>):</label>
+                            <label class="small font-weight-bold text-slate" for="fk_cmsImageSelect">Chọn ảnh bìa tạp chí:</label>
                             <select id="fk_cmsImageSelect" name="image" class="custom-select form-control">
-                                <option value="/FashionKids/images/magazine/mag-set-do-di-hoc-mam-non.jpg">mag-set-do-di-hoc-mam-non.jpg (Set đồ đi học mầm non)</option>
-                                <option value="/FashionKids/images/magazine/mag-phoi-do-du-tiec.jpg">mag-phoi-do-du-tiec.jpg (Đầm dự tiệc bé gái)</option>
-                                <option value="/FashionKids/images/magazine/mag-studio-kol-nhi.jpg">mag-studio-kol-nhi.jpg (Hậu trường Studio KOL Nhí)</option>
-                                <option value="/FashionKids/images/magazine/mag-soi-tre-khang-khuan.jpg">mag-soi-tre-khang-khuan.jpg (Vải sợi tre kháng khuẩn)</option>
-                                <option value="/FashionKids/images/magazine/mag-chung-nhan-oekotex.jpg">mag-chung-nhan-oekotex.jpg (Chứng nhận OEKO-TEX 100)</option>
-                                <option value="/FashionKids/images/magazine/mag-chon-sandal-tap-di.jpg">mag-chon-sandal-tap-di.jpg (Chọn sandal tập đi)</option>
-                                <option value="/FashionKids/images/magazine/mag-giat-bao-quan-soi-tre.jpg">mag-giat-bao-quan-soi-tre.jpg (Bảo quản đồ sợi tre)</option>
-                                <option value="/FashionKids/images/magazine/mag-chong-nang-uv-mua-he.jpg">mag-chong-nang-uv-mua-he.jpg (Chống nắng UV mùa hè)</option>
-                                <option value="/FashionKids/images/magazine/mag-catwalk-tuan-le-thoi-trang.jpg">mag-catwalk-tuan-le-thoi-trang.jpg (Catwalk Tuần lễ Thời trang)</option>
-                                <option value="/FashionKids/images/magazine/mag-phong-ngua-rom-say-be.jpg">mag-phong-ngua-rom-say-be.jpg (Phòng ngừa rôm sảy cho bé)</option>
-                                <option value="/FashionKids/images/magazine/mag-phoi-do-anh-em-unisex.jpg">mag-phoi-do-anh-em-unisex.jpg (Phối đồ đôi Anh Em Pastel)</option>
-                                <option value="/FashionKids/images/magazine/mag-bao-chi-thuong-hieu-xanh.jpg">mag-bao-chi-thuong-hieu-xanh.jpg (Báo chí Thương hiệu Xanh)</option>
-                                <option value="/FashionKids/images/magazine/mag-bi-quyet-anh-casting-kol.jpg">mag-bi-quyet-anh-casting-kol.jpg (Mẹo chụp ảnh Casting KOL)</option>
-                                <option value="/FashionKids/images/magazine/mag-phu-lieu-cuc-go-an-toan.jpg">mag-phu-lieu-cuc-go-an-toan.jpg (Phụ liệu cúc gỗ an toàn)</option>
+                                <option value="/FashionKids/images/magazine/mag-set-do-di-hoc-mam-non.jpg">Set đồ sợi tre đi học mầm non</option>
+                                <option value="/FashionKids/images/magazine/mag-phoi-do-du-tiec.jpg">Đầm dự tiệc bé gái Pastel</option>
+                                <option value="/FashionKids/images/magazine/mag-studio-kol-nhi.jpg">Hậu trường Studio KOL Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-soi-tre-khang-khuan.jpg">Vải sợi tre kháng khuẩn tự nhiên</option>
+                                <option value="/FashionKids/images/magazine/mag-chung-nhan-oekotex.jpg">Chứng nhận quốc tế OEKO-TEX® 100</option>
+                                <option value="/FashionKids/images/magazine/mag-chon-sandal-tap-di.jpg">Chọn sandal tập đi chống trượt</option>
+                                <option value="/FashionKids/images/magazine/mag-giat-bao-quan-soi-tre.jpg">Bảo quản đồ sợi tre bền đẹp</option>
+                                <option value="/FashionKids/images/magazine/mag-chong-nang-uv-mua-he.jpg">Chống nắng UV mùa hè cho bé</option>
+                                <option value="/FashionKids/images/magazine/mag-catwalk-tuan-le-thoi-trang.jpg">Catwalk Tuần lễ Thời trang Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-phong-ngua-rom-say-be.jpg">Phòng ngừa rôm sảy mùa hè cho bé</option>
+                                <option value="/FashionKids/images/magazine/mag-phoi-do-anh-em-unisex.jpg">Phối đồ đôi Anh Em Pastel</option>
+                                <option value="/FashionKids/images/magazine/mag-bao-chi-thuong-hieu-xanh.jpg">Báo chí Thương hiệu Thời trang Xanh</option>
+                                <option value="/FashionKids/images/magazine/mag-bi-quyet-anh-casting-kol.jpg">Mẹo chụp ảnh Casting KOL Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-phu-lieu-cuc-go-an-toan.jpg">Phụ liệu cúc gỗ tự nhiên an toàn</option>
                             </select>
                         </div>
 
@@ -165,7 +164,7 @@ $isAdminUser = Rbac::isAdmin();
                     <h6 class="font-weight-bold text-slate mb-0">
                         <i class="fa-solid fa-list-check text-peach mr-2"></i>Danh Sách Bài Viết Đã Lưu (<span id="fk_cmsTotalArticles"><?= count($articles) ?></span> bài)
                     </h6>
-                    <span class="badge badge-pill badge-sky px-3 py-1">Realtime Sync</span>
+                    <span class="badge badge-pill badge-sky px-3 py-1">Đồng bộ trực tiếp</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -211,7 +210,7 @@ $isAdminUser = Rbac::isAdmin();
                                                 <i class="fa-regular fa-eye"></i>
                                             </a>
                                             <?php if ($isAdminUser): ?>
-                                                <button type="button" onclick="fkDeleteCmsArticleRow(<?= $art['id'] ?>)" class="btn btn-outline-danger btn-sm rounded-circle" title="Xóa/Ẩn bài viết (Chỉ Admin)">
+                                                <button type="button" onclick="fkDeleteCmsArticleRow(<?= $art['id'] ?>)" class="btn btn-outline-danger btn-sm rounded-circle" title="Xóa/Ẩn bài viết">
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -228,7 +227,7 @@ $isAdminUser = Rbac::isAdmin();
             <div class="card card-pastel border-0 shadow-sm bg-white">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold text-slate mb-0">
-                        <i class="fa-solid fa-comments text-peach mr-2"></i>Kiểm Duyệt Bình Luận Mới Nhất (<code>tgb_binh_luan_bai_viet</code>)
+                        <i class="fa-solid fa-comments text-peach mr-2"></i>Kiểm Duyệt Bình Luận Mới Nhất
                     </h6>
                     <span class="badge badge-pill badge-mint px-3 py-1">Tự động lọc từ khóa</span>
                 </div>

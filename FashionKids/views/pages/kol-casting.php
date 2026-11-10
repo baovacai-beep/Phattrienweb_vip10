@@ -1,5 +1,5 @@
 <?php
-$page_title = "Cổng Tuyển Chọn Siêu Sao Nhí KOL (MH 16)";
+$page_title = "Cổng Tuyển Chọn Siêu Sao Nhí KOL";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -36,12 +36,12 @@ $lnkt_kol_stars = [
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_kol_casting_section">
-    <!-- Banner Giới Thiệu Cổng Casting KOL Nhí (MH 16) -->
+    <!-- Banner Giới Thiệu Cổng Casting KOL Nhí -->
     <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5 mb-5 shadow-sm rounded-lg">
         <div class="row align-items-center">
             <div class="col-12 col-lg-8 mb-3 mb-lg-0">
                 <span class="badge badge-gold px-3 py-2 rounded-pill mb-2 shadow-sm">
-                    <i class="fa-solid fa-crown mr-1"></i>Chiến Dịch Tuyển Chọn Đại Sứ Thương Hiệu Nhí 2026 (MH 16)
+                    <i class="fa-solid fa-crown mr-1"></i>Chiến Dịch Tuyển Chọn Đại Sứ Thương Hiệu Nhí 2026
                 </span>
                 <h2 class="font-weight-bold text-slate mb-2">
                     Cổng Casting <span class="text-peach">Siêu Sao Nhí KOL</span> FashionKids
@@ -53,11 +53,11 @@ $lnkt_kol_stars = [
             <div class="col-12 col-lg-4 text-lg-right">
                 <?php if (Rbac::isStaffOrAdmin()): ?>
                     <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-pastel-primary rounded-pill px-4 py-2 font-weight-bold shadow-sm mr-2 mb-2">
-                        <i class="fa-solid fa-clipboard-check mr-1"></i> Bàn Duyệt KOL (MH 17)
+                        <i class="fa-solid fa-clipboard-check mr-1"></i> Bàn Duyệt KOL
                     </a>
                 <?php endif; ?>
                 <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mb-2">
-                    <i class="fa-solid fa-arrow-left mr-1 text-peach"></i> Về Trang Chủ (MH 01)
+                    <i class="fa-solid fa-arrow-left mr-1 text-peach"></i> Về Trang Chủ
                 </a>
             </div>
         </div>
@@ -74,7 +74,7 @@ $lnkt_kol_stars = [
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-id-card-clip text-peach mr-2"></i>Biểu Mẫu Đăng Ký Hồ Sơ KOL Nhí
                         </h5>
-                        <small class="text-muted-custom">Bảng CSDL: <code>lnkt_dang_ky_kol_nhi</code> • Liên kết <code>ma_nguoi_dung</code></small>
+                        <small class="text-muted-custom">Lưu hồ sơ trực tiếp vào tài khoản thành viên của phụ huynh</small>
                     </div>
                     <span class="badge badge-pill badge-mint px-3 py-1">Đang mở nhận hồ sơ</span>
                 </div>
@@ -88,15 +88,12 @@ $lnkt_kol_stars = [
                                         <i class="fa-solid fa-user-lock text-peach mr-1"></i>Yêu cầu Đăng nhập Thành viên để Nộp hồ sơ KOL
                                     </strong>
                                     <span class="small text-muted-custom">
-                                        Theo Ma trận Phân quyền RBAC: Khách vãng lai (<code>guest</code>) được xem thể lệ &amp; gương mặt mẫu nhí. Để nộp hồ sơ lưu vào <code>lnkt_dang_ky_kol_nhi</code>, ba mẹ vui lòng đăng nhập tài khoản Khách hàng (<code>khach_hang</code>).
+                                        Quý phụ huynh có thể xem thể lệ và các gương mặt mẫu nhí nổi bật. Vui lòng đăng nhập tài khoản thành viên để nộp hồ sơ ứng tuyển cho bé.
                                     </span>
                                 </div>
                                 <div class="d-flex flex-wrap">
-                                    <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/kol-casting.php') ?>" class="btn btn-pastel-primary btn-sm rounded-pill px-3 mr-1 font-weight-bold">
+                                    <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/kol-casting.php') ?>" class="btn btn-pastel-primary btn-sm rounded-pill px-3 font-weight-bold">
                                         Đăng nhập ngay
-                                    </a>
-                                    <a href="<?= htmlspecialchars(APP_ENDPOINT) ?>?c=auth&amp;a=quickSwitchRole&amp;user=me_be_sam" class="btn btn-success btn-sm rounded-pill px-3 font-weight-bold">
-                                        Dùng TK Mẫu (me_be_sam)
                                     </a>
                                 </div>
                             </div>
@@ -198,14 +195,14 @@ $lnkt_kol_stars = [
                                     Họ tên Phụ huynh / Người giám hộ (<span class="text-danger">*</span>):
                                 </label>
                                 <input type="text" id="lnkt_kolParentName" name="guardian_name" class="form-control"
-                                       value="<?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Võ Thị Thanh Thảo') ?>" required>
+                                       value="<?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? '') ?>" placeholder="Nhập họ tên phụ huynh..." required>
                             </div>
                             <div class="form-group col-12 col-md-6">
                                 <label class="small font-weight-bold text-slate" for="lnkt_kolParentPhone">
                                     Số điện thoại liên hệ (<span class="text-danger">*</span>):
                                 </label>
                                 <input type="tel" id="lnkt_kolParentPhone" name="guardian_phone" class="form-control"
-                                       value="<?= htmlspecialchars($_SESSION['user']['so_dien_thoai'] ?? '0918889999') ?>" required>
+                                       value="<?= htmlspecialchars($_SESSION['user']['so_dien_thoai'] ?? '') ?>" placeholder="VD: 0918889999" required>
                             </div>
                         </div>
 
@@ -236,21 +233,21 @@ $lnkt_kol_stars = [
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
                                         <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Chân dung bé Sam" class="img-fluid rounded mb-1">
-                                        <span class="font-weight-bold text-slate d-block text-truncate">1. chan-dung-be-sam.jpg</span>
+                                        <span class="font-weight-bold text-slate d-block text-truncate">1. Ảnh chân dung bé</span>
                                         <small class="text-success">Ảnh chân dung</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
                                         <img src="/FashionKids/images/vay-cong-chua-hoa-cuc.jpg" alt="Toàn thân váy sợi tre" class="img-fluid rounded mb-1">
-                                        <span class="font-weight-bold text-slate d-block text-truncate">2. toan-than-vay-tre.jpg</span>
+                                        <span class="font-weight-bold text-slate d-block text-truncate">2. Ảnh toàn thân trang phục</span>
                                         <small class="text-success">Ảnh toàn thân</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
                                         <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" alt="Góc nghiêng studio" class="img-fluid rounded mb-1">
-                                        <span class="font-weight-bold text-slate d-block text-truncate">3. goc-nghieng-studio.jpg</span>
+                                        <span class="font-weight-bold text-slate d-block text-truncate">3. Ảnh góc nghiêng tự nhiên</span>
                                         <small class="text-success">Góc tự nhiên</small>
                                     </div>
                                 </div>
@@ -303,7 +300,7 @@ $lnkt_kol_stars = [
                     <li class="d-flex align-items-start">
                         <span class="badge badge-sky p-2 rounded-circle mr-3"><i class="fa-solid fa-camera"></i></span>
                         <div>
-                            <strong class="text-slate d-block">Xuất hiện trên Banner Trang Chủ (MH 01)</strong>
+                            <strong class="text-slate d-block">Xuất hiện trên Banner Trang Chủ</strong>
                             <span class="text-muted-custom">Tham gia buổi chụp Lookbook chuyên nghiệp cùng ekip FashionKids.</span>
                         </div>
                     </li>

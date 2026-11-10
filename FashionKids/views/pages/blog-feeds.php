@@ -1,5 +1,5 @@
 <?php
-$page_title = "Tạp Chí Mẫu Nhí & Điểm Tin Báo Chí (MH 18)";
+$page_title = "Tạp Chí Mẫu Nhí & Điểm Tin Báo Chí";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
@@ -40,7 +40,7 @@ foreach ($articles as $a) {
         <div class="d-flex align-items-center py-1">
             <span class="fk-live-pulse-dot mr-2"></span>
             <span class="badge badge-pill badge-peach px-3 py-1 mr-2">
-                <i class="fa-solid fa-bolt mr-1"></i>BÁO CHÍ REALTIME
+                <i class="fa-solid fa-bolt mr-1"></i>ĐIỂM TIN MỚI
             </span>
             <span id="fk_livePressTickerText" class="small font-weight-bold text-slate">
                 [Mới cập nhật] FashionKids chính thức nhận Chứng nhận Quốc tế OEKO-TEX® Standard 100 Hạng I cho dòng Vải Sợi Tre Mùa Hè 2026!
@@ -52,7 +52,7 @@ foreach ($articles as $a) {
             </a>
             <?php if (Rbac::isStaffOrAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill border px-3 py-1 small font-weight-bold text-slate">
-                    <i class="fa-solid fa-pen-nib text-peach mr-1"></i><?= Rbac::isAdmin() ? 'Quản trị CMS (MH 21)' : 'Soạn bản nháp CMS (MH 21)' ?>
+                    <i class="fa-solid fa-pen-nib text-peach mr-1"></i><?= Rbac::isAdmin() ? 'Quản lý bài viết' : 'Soạn bản nháp' ?>
                 </a>
             <?php endif; ?>
         </div>
@@ -65,7 +65,7 @@ foreach ($articles as $a) {
         <div class="row align-items-center">
             <div class="col-12 col-lg-8 mb-3 mb-lg-0">
                 <span class="badge badge-pill badge-mint px-3 py-2 mb-3 shadow-sm">
-                    <i class="fa-solid fa-book-open-reader mr-1"></i>Chuyên Trang Tạp Chí &amp; Truyền Thông FashionKids (MH 18)
+                    <i class="fa-solid fa-book-open-reader mr-1"></i>Chuyên Trang Tạp Chí &amp; Truyền Thông FashionKids
                 </span>
                 <h1 class="font-weight-bold text-slate mb-2">
                     Tạp Chí <span class="text-peach">Mẫu Nhí FashionKids</span> &amp; Cẩm Nang Sợi Tre

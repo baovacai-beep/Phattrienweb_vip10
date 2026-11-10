@@ -33,6 +33,22 @@ class Rbac {
     ];
 
     /**
+     * Chuẩn hóa địa chỉ IP (đặc biệt loopback IPv4/IPv6 trên Windows localhost) và User-Agent
+     */
+    public static function normalizeIp(?string $ip): string {
+        $raw = trim((string)$ip);
+        if ($raw === '' || $raw === '::1' || $raw === '0:0:0:0:0:0:0:1' || strcasecmp($raw, '::ffff:127.0.0.1') === 0) {
+            return '127.0.0.1';
+        }
+        return $raw;
+    }
+
+    public static function normalizeUa(?string $ua): string {
+        $raw = trim((string)$ua);
+        return $raw !== '' ? $raw : 'Browser';
+    }
+
+    /**
      * Đồng bộ cấu trúc $_SESSION['auth_user'] và $_SESSION['user'],
      * đồng thời kiểm tra chống chiếm quyền điều khiển phiên (Session Hijacking) cho Admin.
      */
@@ -50,12 +66,14 @@ class Rbac {
         if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
             $u = $_SESSION['user'];
             $role = $u['vai_tro'] ?? 'khach_hang';
-            $clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-            $clientUa = $_SERVER['HTTP_USER_AGENT'] ?? 'Browser';
+            $clientIp = self::normalizeIp($_SERVER['REMOTE_ADDR'] ?? null);
+            $clientUa = self::normalizeUa($_SERVER['HTTP_USER_AGENT'] ?? null);
 
             // Kiểm tra chống Session Hijacking đối với Quản trị viên (quan_tri)
             if ($role === 'quan_tri' && isset($_SESSION['auth_user']['ip'], $_SESSION['auth_user']['ua'])) {
-                if ($_SESSION['auth_user']['ip'] !== $clientIp || $_SESSION['auth_user']['ua'] !== $clientUa) {
+                $sessIp = self::normalizeIp((string)$_SESSION['auth_user']['ip']);
+                $sessUa = self::normalizeUa((string)$_SESSION['auth_user']['ua']);
+                if ($sessIp !== $clientIp || $sessUa !== $clientUa) {
                     // Phiên quản trị có dấu hiệu khác IP/User-Agent -> Hủy phiên bảo mật
                     unset($_SESSION['user'], $_SESSION['auth_user'], $_SESSION['role'], $_SESSION['user_id']);
                     return;
@@ -161,10 +179,10 @@ class Rbac {
     public static function roleLabel(?string $role = null): string {
         $r = $role ?? self::currentRole();
         return match ($r) {
-            'quan_tri'   => 'Quản trị viên (Admin)',
-            'nhan_vien'  => 'Nhân viên Vận hành (Staff)',
-            'khach_hang' => 'Khách hàng Thành viên',
-            default      => 'Khách vãng lai (Guest)',
+            'quan_tri'   => 'Quản trị viên',
+            'nhan_vien'  => 'Nhân viên vận hành',
+            'khach_hang' => 'Khách hàng thành viên',
+            default      => 'Khách vãng lai',
         };
     }
 

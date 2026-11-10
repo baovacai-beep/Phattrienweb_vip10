@@ -138,7 +138,7 @@ $(document).ready(function () {
                                 stockHtml +
                             '</div>' +
                             '<div class="d-flex">' +
-                                '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết PDP">' +
+                                '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">' +
                                     '<i class="fa-regular fa-eye"></i>' +
                                 '</a>' +
                                 '<button type="button" onclick="lbnQuickAddToCart(\'' + lbnEscapeHtml(safeNameJs) + '\', ' + prod.price + ', ' + prod.id + ')" class="btn btn-pastel-primary btn-sm px-3 py-1">' +
@@ -301,8 +301,8 @@ $(document).ready(function () {
                         $catalogAlert,
                         'success',
                         'Đã thêm "' + lbnEscapeHtml(productName) + '" (' + lbnFormatVnd(price) + ') vào giỏ hàng!',
-                        res.message || 'Đã kiểm tra tồn kho khả dụng qua Stored Function fn_lbn_kiem_tra_ton_kho.',
-                        'fn_lbn_kiem_tra_ton_kho'
+                        res.message || 'Sản phẩm hiện sẵn sàng tại cửa hàng.',
+                        'Còn hàng'
                     );
                 },
                 error: function (xhr) {
@@ -330,13 +330,18 @@ $(document).ready(function () {
         );
 
         function lbnGetCurrentPdpProductId() {
+            var hiddenId = parseInt($('#lbn_pdpProductId').val(), 10);
+            if (!isNaN(hiddenId) && hiddenId > 0) {
+                return hiddenId;
+            }
             var urlParams = new URLSearchParams(window.location.search);
             return parseInt(urlParams.get('id'), 10) || 101;
         }
 
         function lbnValidateAndCheckPdpStock(actionType, onValidCallback) {
             var rawQty     = String($pdpQtyInput.val() || '').trim();
-            var maxStock   = parseInt($pdpQtyInput.attr('data-max'), 10) || 20;
+            var rawMax     = parseInt($pdpQtyInput.attr('data-max'), 10);
+            var maxStock   = isNaN(rawMax) ? 20 : rawMax;
             var productId  = lbnGetCurrentPdpProductId();
             var chosenSize = $('#lbn_selectedSizeInput').val() || $('#lbn_selectedSizeText').text().trim() || 'Size 2 (2-3T)';
             var prodName   = $('#lbn_pdpProductTitle').text().trim();
@@ -348,7 +353,7 @@ $(document).ready(function () {
                     'error',
                     'Lỗi dữ liệu số lượng đặt mua',
                     'Vui lòng chỉ nhập số nguyên dương (không nhập chữ cái hoặc ký tự đặc biệt)!',
-                    'LBN_ERR_07'
+                    'Chưa hợp lệ'
                 );
                 return;
             }
@@ -360,8 +365,8 @@ $(document).ready(function () {
                     $pdpAlert,
                     'error',
                     'Số lượng đặt mua không hợp lệ',
-                    'Lỗi [LBN_ERR_07]: Số lượng kiểm tra đặt mua phải lớn hơn 0!',
-                    'LBN_ERR_07'
+                    'Số lượng đặt mua phải lớn hơn 0!',
+                    'Chưa hợp lệ'
                 );
                 return;
             }
@@ -392,7 +397,7 @@ $(document).ready(function () {
                             'success',
                             titleMsg,
                             res.message,
-                            'fn_lbn_kiem_tra_ton_kho'
+                            'Còn hàng'
                         );
                         if (typeof onValidCallback === 'function') {
                             onValidCallback(res);
@@ -404,7 +409,7 @@ $(document).ready(function () {
                             'error',
                             'Vượt quá số lượng tồn kho',
                             (res && res.message) ? res.message : ('Kho hiện chỉ còn ' + maxStock + ' sản phẩm!'),
-                            'fn_lbn_kiem_tra_ton_kho'
+                            'Hết hàng'
                         );
                     }
                 },
@@ -412,7 +417,7 @@ $(document).ready(function () {
                     var res = xhr.responseJSON;
                     if (res && res.message) {
                         $pdpQtyInput.removeClass('is-valid').addClass('is-invalid');
-                        lbnShowAlert($pdpAlert, 'error', 'Không đủ hàng tồn kho', res.message, 'fn_lbn_kiem_tra_ton_kho');
+                        lbnShowAlert($pdpAlert, 'error', 'Không đủ hàng tồn kho', res.message, 'Kiểm tra kho');
                         return;
                     }
                     // Fallback khi chạy offline
@@ -423,7 +428,7 @@ $(document).ready(function () {
                             'error',
                             'Vượt quá số lượng tồn kho',
                             'Số lượng đặt mua (' + qty + ') vượt quá tồn kho hiện tại (' + maxStock + ' sản phẩm)!',
-                            'fn_lbn_kiem_tra_ton_kho'
+                            'Kiểm tra kho'
                         );
                     } else {
                         $pdpQtyInput.removeClass('is-invalid').addClass('is-valid');
@@ -435,8 +440,8 @@ $(document).ready(function () {
                             $pdpAlert,
                             'success',
                             'Kiểm tra tồn kho hợp lệ (' + qty + ' / ' + maxStock + ' SP)',
-                            'Đã đối chiếu qua fn_lbn_kiem_tra_ton_kho cho phân loại ' + chosenSize + '.',
-                            'fn_lbn_kiem_tra_ton_kho'
+                            'Phân loại ' + chosenSize + ' hiện sẵn sàng đặt mua.',
+                            'Còn hàng'
                         );
                         if (typeof onValidCallback === 'function') {
                             onValidCallback({ du_hang: true });
@@ -527,7 +532,7 @@ $(document).ready(function () {
                     'error',
                     'Lỗi cập nhật tồn kho mã ' + lbnEscapeHtml(skuCode),
                     'Số lượng tồn kho không hợp lệ! Vui lòng chỉ nhập số nguyên (không nhập chữ cái).',
-                    'LBN_ERR_04'
+                    'Chưa hợp lệ'
                 );
                 return;
             }
@@ -539,8 +544,8 @@ $(document).ready(function () {
                     $adminAlert,
                     'error',
                     'Lỗi cập nhật tồn kho mã ' + lbnEscapeHtml(skuCode),
-                    'Lỗi [LBN_ERR_04]: Số lượng tồn kho không được là số âm (phải >= 0)!',
-                    'LBN_ERR_04'
+                    'Số lượng tồn kho không được là số âm (phải lớn hơn hoặc bằng 0)!',
+                    'Chưa hợp lệ'
                 );
                 return;
             }
@@ -599,8 +604,8 @@ $(document).ready(function () {
                         $adminAlert,
                         'success',
                         'Cập nhật tồn kho thành công cho mã ' + lbnEscapeHtml(skuCode) + ' (Tồn mới: ' + updatedStock + ' SP)',
-                        (res && res.message) ? res.message : 'Đã đồng bộ qua Stored Procedure sp_lbn_nhap_them_kho_hang.',
-                        'sp_lbn_nhap_them_kho_hang'
+                        (res && res.message) ? res.message : 'Đã cập nhật số lượng tồn kho thành công.',
+                        'Đã lưu'
                     );
                 },
                 error: function (xhr) {
@@ -608,7 +613,7 @@ $(document).ready(function () {
                         ? xhr.responseJSON.message
                         : 'Không thể cập nhật tồn kho, vui lòng kiểm tra lại dữ liệu!';
                     $inputEl.removeClass('is-valid').addClass('is-invalid');
-                    lbnShowAlert($adminAlert, 'error', 'Cập nhật tồn kho thất bại', msg, 'Lỗi 400');
+                    lbnShowAlert($adminAlert, 'error', 'Cập nhật tồn kho thất bại', msg, 'Chưa thể lưu');
                 }
             });
         };
@@ -625,7 +630,7 @@ $(document).ready(function () {
                     'data-search="' + lbnEscapeHtml(prod.sku + ' ' + prod.name + ' ' + prod.category_name) + '">' +
                     '<td class="font-weight-bold text-nowrap">' +
                         '<code class="text-peach font-weight-bold">' + lbnEscapeHtml(prod.sku) + '</code>' +
-                        '<div class="small text-muted-custom">#ID: ' + prod.id + '</div>' +
+                        '<div class="small text-muted-custom">Mã SP: #' + prod.id + '</div>' +
                     '</td>' +
                     '<td class="text-center"><span class="lbn-inv-thumb"><img src="' + lbnEscapeHtml(prod.image) + '" alt="' + lbnEscapeHtml(prod.name) + '" class="lbn-thumb-img"></span></td>' +
                     '<td>' +
@@ -648,7 +653,7 @@ $(document).ready(function () {
                         '<div class="input-group input-group-sm justify-content-center mx-auto fk-w-125">' +
                             '<input type="number" id="lbn_stockInput_' + prod.id + '" class="form-control text-center font-weight-bold" value="' + prod.stock_quantity + '" min="0">' +
                             '<div class="input-group-append">' +
-                                '<button type="button" class="btn btn-outline-secondary" title="Cập nhật tồn kho (lbn_update_stock)" onclick="lbnQuickUpdateStock(' + prod.id + ', \'' + lbnEscapeHtml(prod.sku) + '\')">' +
+                                '<button type="button" class="btn btn-outline-secondary" title="Cập nhật tồn kho" onclick="lbnQuickUpdateStock(' + prod.id + ', \'' + lbnEscapeHtml(prod.sku) + '\')">' +
                                     '<i class="fa-solid fa-rotate"></i>' +
                                 '</button>' +
                             '</div>' +
@@ -735,7 +740,7 @@ $(document).ready(function () {
                         'error',
                         'Thông tin sản phẩm chưa hợp lệ',
                         'Vui lòng kiểm tra các trường được đánh dấu đỏ trong biểu mẫu!',
-                        'Validation 422'
+                        'Kiểm tra lại'
                     );
                     return;
                 }
@@ -777,7 +782,7 @@ $(document).ready(function () {
                                 'success',
                                 res.is_edit ? ('Cập nhật sản phẩm #' + prod.id + ' thành công') : ('Thêm sản phẩm mới thành công (Mã: ' + lbnEscapeHtml(prod.sku) + ')'),
                                 res.message,
-                                res.routine || 'sp_lbn_them_san_pham_moi'
+                                'Đã lưu'
                             );
 
                             if (!res.is_edit && typeof window.lbnResetProductForm === 'function') {
@@ -795,7 +800,7 @@ $(document).ready(function () {
                             if (res.errors.description) $matInput.addClass('is-invalid').siblings('.invalid-feedback').text(res.errors.description);
                         }
                         var errMsg = (res && res.message) ? res.message : 'Lỗi lưu sản phẩm vào kho hàng!';
-                        lbnShowAlert($adminAlert, 'error', 'Không thể lưu sản phẩm', errMsg, 'Lỗi ' + (xhr.status || 400));
+                        lbnShowAlert($adminAlert, 'error', 'Không thể lưu sản phẩm', errMsg, 'Chưa thể lưu');
                     }
                 });
             });

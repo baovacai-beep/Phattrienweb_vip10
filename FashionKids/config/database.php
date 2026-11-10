@@ -18,7 +18,9 @@ $isHosting = (
         strpos($httpHost, 'kesug.com') !== false
     )
 );
-$isLocalhost = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+$isLocalhost = in_array($remoteAddr, ['127.0.0.1', '::1', '::ffff:127.0.0.1'], true)
+    || stripos($httpHost, 'localhost') === 0
+    || strpos($httpHost, '127.0.0.1') === 0;
 
 if ($isHosting) {
     // 1. Môi trường Production (InfinityFree Hosting)

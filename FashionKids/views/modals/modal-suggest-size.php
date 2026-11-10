@@ -1,6 +1,6 @@
 <!-- ==========================================================================
      MODAL TRA CỨU & GỢI Ý SIZE THƯỚC DÂY - MH 04
-     Đảm nhiệm: Lê Nguyễn Khánh Trình (lnkt_) - Stored Function: lnkt_suggest_size
+      (lnkt_) - Stored Function: lnkt_suggest_size
      ========================================================================== -->
 <div class="modal fade" id="modalSuggestSize" tabindex="-1" role="dialog" aria-labelledby="lnkt_modalSuggestSizeTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -13,7 +13,7 @@
                     </span>
                     <div>
                         <span class="badge badge-pill badge-sky px-2 py-1 small mb-1">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Thuật Toán <code>lnkt_suggest_size</code> (MH 04)
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Tư Vấn Thông Minh
                         </span>
                         <h5 class="modal-title font-weight-bold text-slate mb-0" id="lnkt_modalSuggestSizeTitle">
                             Thước Dây Thông Minh &amp; Gợi Ý Kích Cỡ Cho Bé
@@ -28,7 +28,7 @@
             <!-- Modal Body -->
             <div class="modal-body p-4 p-md-5">
                 <p class="small text-muted-custom mb-3">
-                    Nhập số đo thực tế của bé (đơn vị: <strong>cm</strong>), hệ thống tự động đối chiếu bảng quy chuẩn <code>lnkt_size_charts</code> theo danh mục để trả về kích cỡ vừa vặn nhất.
+                    Nhập số đo thực tế của bé (đơn vị: <strong>cm</strong>), hệ thống tự động đối chiếu bảng quy chuẩn hệ thống theo danh mục để trả về kích cỡ vừa vặn nhất.
                 </p>
 
                 <!-- Cấu trúc 2 Tab Giao Diện: Quần áo vs Giày dép -->
@@ -85,12 +85,12 @@
                             <div class="form-row align-items-end">
                                 <div class="form-group col-12 col-md-5 mb-2 mb-md-0">
                                     <label class="small font-weight-bold text-slate mb-1" for="lnkt_clothingCategory">
-                                        Danh mục trang phục (<code>ma_danh_muc</code>):
+                                        Danh mục trang phục:
                                     </label>
                                     <select id="lnkt_clothingCategory" class="custom-select form-control">
-                                        <option value="1" data-stretch="Vải sợi tre phối ren hoa co giãn 4 chiều (+8%), tùng váy xòe rộng thoải mái.">DM01 - Váy công chúa (Bé gái)</option>
-                                        <option value="2" data-stretch="Thun sợi tre Bamboo kháng khuẩn đàn hồi 4 chiều (+12%), bo chun bụng siêu mềm không hằn da.">DM02 - Bộ thun (Bé trai / Unisex)</option>
-                                        <option value="3" data-stretch="Sợi tre dệt kim 2 lớp chống tia UV, phom khoác ngoài rộng rãi dễ mặc lót thêm áo.">DM03 - Áo khoác (Unisex)</option>
+                                        <option value="1" data-stretch="Vải sợi tre phối ren hoa co giãn 4 chiều (+8%), tùng váy xòe rộng thoải mái.">Váy công chúa (Bé gái)</option>
+                                        <option value="2" data-stretch="Thun sợi tre Bamboo kháng khuẩn đàn hồi 4 chiều (+12%), bo chun bụng siêu mềm không hằn da.">Bộ thun (Bé trai / Unisex)</option>
+                                        <option value="3" data-stretch="Sợi tre dệt kim 2 lớp chống tia UV, phom khoác ngoài rộng rãi dễ mặc lót thêm áo.">Áo khoác (Unisex)</option>
                                     </select>
                                 </div>
 
@@ -135,10 +135,10 @@
                             <div class="form-row align-items-end">
                                 <div class="form-group col-12 col-md-6 mb-2 mb-md-0">
                                     <label class="small font-weight-bold text-slate mb-1" for="lnkt_shoesCategory">
-                                        Danh mục giày dép (<code>ma_danh_muc</code>):
+                                        Danh mục giày dép:
                                     </label>
                                     <select id="lnkt_shoesCategory" class="custom-select form-control">
-                                        <option value="4" data-stretch="Đế cao su non uốn dẻo 360 độ kết hợp lót đệm sợi tre êm ái, quai dán Velcro dễ điều chỉnh độ rộng mu bàn chân.">DM04 - Giày sandal tập đi &amp; Dạo phố</option>
+                                        <option value="4" data-stretch="Đế cao su non uốn dẻo 360 độ kết hợp lót đệm sợi tre êm ái, quai dán Velcro dễ điều chỉnh độ rộng mu bàn chân.">Giày sandal tập đi &amp; Dạo phố</option>
                                     </select>
                                 </div>
 
@@ -185,7 +185,7 @@
                 <div id="lnkt_sizeResultContainer" class="lnkt-size-result-mint p-3 p-md-4 mb-4 shadow-sm">
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                         <span class="badge badge-light px-3 py-1 rounded-pill font-weight-bold text-mint-dark shadow-sm">
-                            <i class="fa-solid fa-circle-check text-success mr-1"></i> Kết quả gợi ý chuẩn từ <code>lnkt_suggest_size</code>
+                            <i class="fa-solid fa-circle-check text-success mr-1"></i> Kết quả gợi ý chuẩn từ hệ thống
                         </span>
                         <span id="lnkt_resultInputSummary" class="small font-weight-bold text-mint-dark">
                             Số đo: Chiều cao 88 cm
@@ -219,11 +219,13 @@
                 <div class="border rounded p-3 bg-white">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="small font-weight-bold text-slate">
-                            <i class="fa-solid fa-table-list text-peach mr-1"></i> Bảng đối chiếu thông số trần/sàn (<code>lnkt_size_charts</code>)
+                            <i class="fa-solid fa-table-list text-peach mr-1"></i> Bảng đối chiếu thông số kích cỡ
                         </span>
+                        <?php if (Rbac::isAdmin()): ?>
                         <a href="/FashionKids/views/pages/admin-size-charts.php" class="small font-weight-bold text-peach text-decoration-none">
-                            Quản trị Bảng Size (MH 14) &raquo;
+                            Quản trị Bảng Size &raquo;
                         </a>
+                        <?php endif; ?>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered text-center small mb-0">

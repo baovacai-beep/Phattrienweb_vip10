@@ -1,9 +1,20 @@
 <?php
+if (ob_get_level() === 0) {
+    ob_start();
+}
 if (session_status() === PHP_SESSION_NONE) {
     $savePath = session_save_path();
-    if (empty($savePath) || !is_writable($savePath)) {
+    $canWrite = false;
+    if (!empty($savePath) && is_dir($savePath)) {
+        $probe = @tempnam($savePath, 'fk_');
+        if ($probe !== false) {
+            @unlink($probe);
+            $canWrite = true;
+        }
+    }
+    if (!$canWrite) {
         $temp = sys_get_temp_dir();
-        if (is_writable($temp)) {
+        if (is_dir($temp)) {
             @session_save_path($temp);
         }
     }
@@ -13,6 +24,7 @@ require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../core/Csrf.php';
 require_once __DIR__ . '/../../core/Rbac.php';
 Rbac::syncSession();
+$fk_rbac_access_granted = Rbac::enforceCurrentViewAccess();
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -41,6 +53,7 @@ Rbac::syncSession();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom Bright Pastel Theme (60-30-10) -->
-    <link rel="stylesheet" href="/FashionKids/public/css/style-pastel.css">
+    <?php $cssVer = @filemtime(__DIR__ . '/../../public/css/style-pastel.css') ?: '20261110'; ?>
+    <link rel="stylesheet" href="/FashionKids/public/css/style-pastel.css?v=<?= $cssVer ?>">
 </head>
 <body class="bg-milk-cream" data-user-role="<?= htmlspecialchars(Rbac::currentRole()) ?>">

@@ -1,5 +1,5 @@
 <?php
-$page_title = "Quản Trị Banner Slider & Lịch Chiến Dịch (MH 23)";
+$page_title = "Quản Trị Banner Slider & Lịch Chiến Dịch";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -54,22 +54,22 @@ $lnkt_banners_list = [
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_admin_banners_section">
-    <!-- Header Quản Trị Banner (MH 23) -->
+    <!-- Header Quản Trị Banner -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h4 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-images text-peach mr-2"></i>Bảng Điều Khiển Quản Trị Banner Slider &amp; Lịch Chiến Dịch (MH 23)
+                <i class="fa-solid fa-images text-peach mr-2"></i>Bảng Điều Khiển Quản Trị Banner Slider &amp; Lịch Chiến Dịch
             </h4>
             <small class="text-muted-custom">
-                Đảm nhiệm: Lê Nguyễn Khánh Trình (<code>lnkt_</code>) — Quản lý Carousel Trang chủ (MH 01, <code>data-interval="4000"</code>), lịch hẹn giờ và Target URL
+                Quản lý Banner Trang chủ, lịch hẹn giờ và đường dẫn đích
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <a href="/FashionKids/views/pages/home.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
-                <i class="fa-solid fa-eye mr-1"></i> Xem Carousel Trang Chủ (MH 01)
+                <i class="fa-solid fa-eye mr-1"></i> Xem Carousel Trang Chủ
             </a>
             <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
-                <i class="fa-solid fa-crown mr-1"></i> Cổng Casting KOL (MH 16)
+                <i class="fa-solid fa-crown mr-1"></i> Cổng Casting KOL
             </a>
         </div>
     </div>
@@ -100,8 +100,8 @@ $lnkt_banners_list = [
                             <thead class="thead-light">
                                 <tr>
                                     <th class="text-center">Thứ Tự</th>
-                                    <th>Thông Điệp Chiến Dịch &amp; Nút CTA</th>
-                                    <th>Target URL Điều Hướng</th>
+                                    <th>Thông Điệp Chiến Dịch &amp; Nút Bấm</th>
+                                    <th>Đường Dẫn Điều Hướng</th>
                                     <th>Lịch Hẹn Giờ (Bắt Đầu - Kết Thúc)</th>
                                     <th class="text-center">Trạng Thái</th>
                                     <th class="text-center">Thao Tác</th>
@@ -126,7 +126,7 @@ $lnkt_banners_list = [
                                                     <div class="font-weight-bold text-slate"><?= htmlspecialchars($bn['title']) ?></div>
                                                     <small class="text-muted-custom d-block mb-1"><?= htmlspecialchars($bn['subtitle']) ?></small>
                                                     <span class="badge px-2 py-1 text-white" data-fk-bg="<?= htmlspecialchars($bn['cta_color']) ?>">
-                                                        CTA: <?= htmlspecialchars($bn['cta_label']) ?>
+                                                        Nút bấm: <?= htmlspecialchars($bn['cta_label']) ?>
                                                     </span>
                                                 </div>
                                             </div>
@@ -134,7 +134,7 @@ $lnkt_banners_list = [
 
                                         <td>
                                             <a href="<?= htmlspecialchars($bn['target_url']) ?>" class="small font-weight-bold text-peach text-decoration-none d-block">
-                                                <i class="fa-solid fa-up-right-from-square mr-1"></i><code><?= htmlspecialchars($bn['target_url']) ?></code>
+                                                <i class="fa-solid fa-up-right-from-square mr-1"></i><strong class="text-slate"><?= htmlspecialchars($bn['target_url']) ?></strong>
                                             </a>
                                         </td>
 
@@ -195,9 +195,9 @@ $lnkt_banners_list = [
             <div class="card card-pastel p-4 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="font-weight-bold text-slate mb-0">
-                        <i class="fa-solid fa-desktop text-peach mr-2"></i>Xem Trước Giao Diện Hiển Thị Banner (Live Preview)
+                        <i class="fa-solid fa-desktop text-peach mr-2"></i>Xem Trước Giao Diện Hiển Thị Banner Trực Quan
                     </h6>
-                    <span class="badge badge-pill badge-sky px-3 py-1">data-interval="4000" (4 giây)</span>
+                    <span class="badge badge-pill badge-sky px-3 py-1">Chuyển ảnh tự động 4 giây</span>
                 </div>
                 <div class="lnkt-hero-slide lnkt-slide-kol p-4 rounded border">
                     <span class="badge badge-gold px-3 py-1 rounded-pill mb-2">Xem trước Chiến dịch</span>
@@ -254,7 +254,7 @@ $lnkt_banners_list = [
                         <!-- Trường nhập Target URL điều hướng -->
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate mb-1" for="lnkt_bnTargetUrl">
-                                Đường dẫn điều hướng (<strong>Target URL</strong>) (<span class="text-danger">*</span>):
+                                Đường dẫn điều hướng (<span class="text-danger">*</span>):
                             </label>
                             <div class="input-group input-group-sm mb-2">
                                 <div class="input-group-prepend">
@@ -267,11 +267,11 @@ $lnkt_banners_list = [
                             <div class="d-flex flex-wrap">
                                 <button type="button" onclick="lnktSetQuickTargetUrl('/FashionKids/views/pages/kol-casting.php')"
                                         class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small">
-                                    MH 16: Cổng Casting KOL
+                                    Cổng Casting KOL
                                 </button>
                                 <button type="button" onclick="lnktSetQuickTargetUrl('/FashionKids/views/pages/shop-catalog.php')"
                                         class="btn btn-light btn-sm border rounded-pill mb-1 py-0 px-2 small">
-                                    MH 02: Cửa Hàng BST Hè
+                                    Cửa Hàng BST Hè
                                 </button>
                             </div>
                         </div>
@@ -279,7 +279,7 @@ $lnkt_banners_list = [
                         <div class="form-row">
                             <div class="form-group col-7">
                                 <label class="small font-weight-bold text-slate mb-1" for="lnkt_bnCtaLabel">
-                                    Nhãn nút CTA (#FF9E93):
+                                    Nhãn nút bấm:
                                 </label>
                                 <input type="text" id="lnkt_bnCtaLabel" class="form-control form-control-sm"
                                        value="Đăng ký cho bé tham gia ngay »"

@@ -7,7 +7,7 @@ $article   = $rtModel->getArticleById($articleId, true);
 $comments  = $rtModel->getCommentsByArticle((int)$article['id']);
 $allPosts  = $rtModel->getArticles('all', '', 'newest');
 
-$page_title = $article['title'] . " - Tạp Chí FashionKids (MH 19)";
+$page_title = $article['title'] . " - Tạp Chí FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -55,7 +55,7 @@ $relatedProductsCatalog = [
             </li>
             <li class="breadcrumb-item">
                 <a href="/FashionKids/views/pages/blog-feeds.php" class="text-muted-custom text-decoration-none">
-                    Tạp chí Mẫu nhí (MH 18)
+                    Tạp chí Mẫu nhí
                 </a>
             </li>
             <li class="breadcrumb-item active font-weight-bold text-peach" aria-current="page">
@@ -151,24 +151,21 @@ $relatedProductsCatalog = [
                         <i class="fa-solid fa-comments text-peach mr-2"></i>Bình Luận &amp; Chia Sẻ Từ Phụ Huynh (<span id="fk_totalCommentsCounter"><?= count($comments) ?></span>)
                     </h5>
                     <span class="badge badge-pill badge-mint px-3 py-1">
-                        <i class="fa-solid fa-bolt mr-1"></i>Realtime <code>tgb_binh_luan_bai_viet</code>
+                        <i class="fa-solid fa-bolt mr-1"></i>Bình luận trực tuyến
                     </span>
                 </div>
 
                 <?php if (Rbac::isGuest()): ?>
-                    <!-- Khách vãng lai (Guest): Chỉ được Đọc, muốn Bình luận / Thả tim phải Đăng nhập -->
+                    <!-- Khách vãng lai: Chỉ được Đọc, muốn Bình luận / Thả tim phải Đăng nhập -->
                     <div class="p-4 rounded bg-milk-cream border mb-4 text-center">
                         <i class="fa-solid fa-user-lock text-peach h3 mb-2"></i>
                         <h6 class="font-weight-bold text-slate mb-1">Chức năng Bình luận &amp; Thả tim dành cho Thành viên</h6>
                         <p class="small text-muted-custom mb-3">
-                            Theo phân quyền RBAC, Khách vãng lai (<code>guest</code>) có thể đọc toàn bộ Tạp chí. Ba mẹ vui lòng đăng nhập tài khoản Khách hàng (<code>khach_hang</code>) để gửi bình luận đa cấp và lưu lượt yêu thích nhé!
+                            Quý phụ huynh có thể tự do đọc toàn bộ bài viết Tạp chí. Vui lòng đăng nhập tài khoản thành viên để gửi bình luận và lưu bài viết yêu thích nhé!
                         </p>
                         <div class="d-flex justify-content-center flex-wrap">
                             <a href="/FashionKids/views/pages/login-register.php?redirect=<?= urlencode('/FashionKids/views/pages/blog-detail.php?id=' . $article['id']) ?>" class="btn btn-pastel-primary btn-sm rounded-pill px-4 m-1 font-weight-bold">
                                 <i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng nhập để bình luận
-                            </a>
-                            <a href="<?= htmlspecialchars(APP_ENDPOINT) ?>?c=auth&amp;a=quickSwitchRole&amp;user=me_be_sam" class="btn btn-light border btn-sm rounded-pill px-3 m-1 font-weight-bold text-slate">
-                                <i class="fa-solid fa-bolt text-success mr-1"></i>Dùng thử TK Khách VIP (me_be_sam)
                             </a>
                         </div>
                     </div>
@@ -185,7 +182,7 @@ $relatedProductsCatalog = [
                             </div>
                             <div class="col-12 col-md-6 d-flex align-items-end">
                                 <small class="text-muted-custom">
-                                    <i class="fa-solid fa-shield-heart text-success mr-1"></i>Định danh <code>ma_nguoi_dung = <?= (int)($_SESSION['user']['ma_nguoi_dung'] ?? 0) ?></code>
+                                    <i class="fa-solid fa-shield-heart text-success mr-1"></i>Thành viên đã xác thực tài khoản
                                 </small>
                             </div>
                         </div>
@@ -313,7 +310,7 @@ $relatedProductsCatalog = [
                 <?php endforeach; ?>
 
                 <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm btn-block font-weight-bold rounded-pill mt-2">
-                    Khám phá toàn bộ Cửa Hàng (MH 02) &raquo;
+                    Khám phá toàn bộ Cửa Hàng &raquo;
                 </a>
             </div>
 

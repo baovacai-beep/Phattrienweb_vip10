@@ -1,5 +1,5 @@
 <?php
-$page_title = "Theo Dõi Tiến Trình Đơn Hàng (MH 06)";
+$page_title = "Theo Dõi Tiến Trình Đơn Hàng - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -82,13 +82,13 @@ $lnkt_tracked_items = [
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_order_tracking_section">
-    <!-- Breadcrumb & Header MH 06 -->
+    <!-- Breadcrumb & Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent p-0 mb-1 small">
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
-                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Theo dõi tiến trình đơn hàng (MH 06)</li>
+                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Theo dõi tiến trình đơn hàng</li>
                 </ol>
             </nav>
             <h3 class="font-weight-bold text-slate mb-0">
@@ -96,16 +96,18 @@ $lnkt_tracked_items = [
             </h3>
         </div>
         <div class="mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-outline btn-sm font-weight-bold mr-2">
-                <i class="fa-solid fa-user-gear mr-1"></i> Bàn Làm Việc Nhân Viên Duyệt Đơn (MH 10)
-            </a>
+            <?php if (Rbac::isStaffOrAdmin()): ?>
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-outline btn-sm font-weight-bold mr-2">
+                    <i class="fa-solid fa-user-gear mr-1"></i> Quản Lý Đơn Hàng
+                </a>
+            <?php endif; ?>
             <a href="/FashionKids/views/pages/checkout.php" class="btn btn-pastel-primary btn-sm font-weight-bold">
-                <i class="fa-solid fa-basket-shopping mr-1"></i> Giỏ Hàng (MH 05)
+                <i class="fa-solid fa-basket-shopping mr-1"></i> Giỏ Hàng
             </a>
         </div>
     </div>
 
-    <!-- Thanh Tra Cứu Vận Đơn & Bộ Chuyển Đổi Nhanh 5 Trạng Thái Phục Vụ Kiểm Thử -->
+    <!-- Thanh Tra Cứu Vận Đơn & Bộ Chuyển Đổi Nhanh 5 Trạng Thái -->
     <div class="card card-pastel p-3 p-md-4 mb-4 shadow-sm bg-white">
         <div class="row align-items-center">
             <div class="col-12 col-lg-5 mb-3 mb-lg-0">
@@ -124,7 +126,7 @@ $lnkt_tracked_items = [
             <div class="col-12 col-lg-7">
                 <div class="d-flex flex-wrap justify-content-lg-end align-items-center">
                     <span class="small font-weight-bold text-slate mr-2 mb-2 mb-sm-0">
-                        <i class="fa-solid fa-sliders text-peach mr-1"></i>Mô phỏng trạng thái (<code>lnkt_orders.status</code>):
+                        <i class="fa-solid fa-sliders text-peach mr-1"></i>Xem tiến trình theo giai đoạn:
                     </span>
                     <div class="btn-group btn-group-sm flex-wrap" role="group">
                         <button type="button" class="btn btn-outline-secondary font-weight-bold lnkt-status-sim-btn"
@@ -141,7 +143,7 @@ $lnkt_tracked_items = [
                         </button>
                         <button type="button" class="btn btn-success font-weight-bold lnkt-status-sim-btn active"
                                 data-status="hoan_tat" onclick="lnktSetTrackingStatus('hoan_tat')">
-                            4. Hoàn tất (hoan_tat)
+                            4. Hoàn tất
                         </button>
                         <button type="button" class="btn btn-outline-danger font-weight-bold lnkt-status-sim-btn"
                                 data-status="da_huy" onclick="lnktSetTrackingStatus('da_huy')">
@@ -169,10 +171,10 @@ $lnkt_tracked_items = [
 
             <div class="mt-2 mt-md-0 text-md-right">
                 <span id="lnkt_currentStatusBadge" class="badge badge-mint px-3 py-2 rounded-pill h6 mb-0">
-                    <i class="fa-solid fa-circle-check mr-1"></i> Trạng thái: Hoàn tất (hoan_tat)
+                    <i class="fa-solid fa-circle-check mr-1"></i> Trạng thái: Hoàn tất
                 </span>
                 <div class="small text-muted-custom mt-1">
-                    Nhân viên thụ lý (<code>handled_by</code>): <strong>Lê Nguyễn Khánh Trình (#NV02)</strong>
+                    Nhân viên phụ trách: <strong>Lê Nguyễn Khánh Trình</strong>
                 </div>
             </div>
         </div>
@@ -197,12 +199,12 @@ $lnkt_tracked_items = [
             <?php endforeach; ?>
         </div>
 
-        <!-- THÔNG BÁO KHI ĐƠN HÀNG ĐẠT TRẠNG THÁI HOÀN TẤT (hoan_tat) & NÚT VÀNG BƠ (#FDE2B8) -->
+        <!-- THÔNG BÁO KHI ĐƠN HÀNG ĐẠT TRẠNG THÁI HOÀN TẤT -->
         <div id="lnkt_completedReviewBanner" class="mt-4 p-3 p-md-4 rounded lnkt-completed-callout shadow-sm">
             <div class="row align-items-center">
                 <div class="col-12 col-lg-8 mb-3 mb-lg-0">
                     <div class="d-flex align-items-center mb-1">
-                        <span class="badge badge-mint px-2 py-1 rounded-pill mr-2">Đơn hàng hoan_tat</span>
+                        <span class="badge badge-mint px-2 py-1 rounded-pill mr-2">Giao hàng thành công</span>
                         <small class="font-weight-bold text-slate">Đã cộng +85 điểm thưởng vào thẻ VIP Vàng</small>
                     </div>
                     <h5 class="font-weight-bold text-slate mb-1">
@@ -213,11 +215,10 @@ $lnkt_tracked_items = [
                     </p>
                 </div>
                 <div class="col-12 col-lg-4 text-lg-right">
-                    <!-- Nút màu vàng bơ (#FDE2B8) với nhãn "★ Viết đánh giá sản phẩm" mở Modal đánh giá (MH 19) -->
                     <button type="button"
                             class="btn lnkt-btn-buttercup px-4 py-2 shadow-sm font-weight-bold"
                             data-toggle="modal" data-target="#modalReview"
-                            onclick="lnktOpenProductReviewModal('Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi')">
+                            onclick="lnktOpenProductReviewModal('Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi', 101)">
                         &#9733; Viết đánh giá sản phẩm
                     </button>
                 </div>
@@ -234,7 +235,7 @@ $lnkt_tracked_items = [
             <div class="card card-pastel shadow-sm h-100">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold text-slate mb-0">
-                        <i class="fa-solid fa-box-archive text-peach mr-2"></i>Chi Tiết Sản Phẩm Trong Đơn (<code>tgb_order_items</code>)
+                        <i class="fa-solid fa-box-archive text-peach mr-2"></i>Chi Tiết Sản Phẩm Trong Đơn
                     </h6>
                     <span class="small text-muted-custom font-weight-bold"><?= count($lnkt_tracked_items) ?> sản phẩm</span>
                 </div>
@@ -248,7 +249,7 @@ $lnkt_tracked_items = [
                                     <th class="text-center">Kích Cỡ</th>
                                     <th class="text-center">SL</th>
                                     <th class="text-right">Thành Tiền</th>
-                                    <th class="text-center">Đánh Giá (MH 19)</th>
+                                    <th class="text-center">Đánh Giá</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -264,7 +265,7 @@ $lnkt_tracked_items = [
                                                        class="font-weight-bold text-slate text-decoration-none d-block">
                                                         <?= htmlspecialchars($item['name']) ?>
                                                     </a>
-                                                    <small class="text-muted-custom">Mã SKU: <code><?= htmlspecialchars($item['sku']) ?></code></small>
+                                                    <small class="text-muted-custom">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong></small>
                                                 </div>
                                             </div>
                                         </td>
@@ -276,11 +277,10 @@ $lnkt_tracked_items = [
                                             <?= number_format($item['price'] * $item['quantity'], 0, ',', '.') ?> đ
                                         </td>
                                         <td class="text-center text-nowrap">
-                                            <!-- Nút vàng bơ (#FDE2B8) xuất hiện khi trạng thái = hoan_tat -->
                                             <button type="button"
                                                     class="btn btn-sm lnkt-btn-buttercup lnkt-item-review-btn px-3 py-1 font-weight-bold shadow-sm"
                                                     data-toggle="modal" data-target="#modalReview"
-                                                    onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($item['name'], ENT_QUOTES) ?>')">
+                                                    onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($item['name'], ENT_QUOTES) ?>', <?= (int)$item['product_id'] ?>)">
                                                 &#9733; Viết đánh giá sản phẩm
                                             </button>
                                             <span class="small text-muted-custom lnkt-item-pending-review d-none">
@@ -304,7 +304,7 @@ $lnkt_tracked_items = [
                 </h6>
 
                 <div class="d-flex justify-content-between small mb-2">
-                    <span class="text-muted-custom">Tiền tạm tính (<code>subtotal</code>):</span>
+                    <span class="text-muted-custom">Tiền hàng tạm tính:</span>
                     <span class="font-weight-bold text-slate">945.000 đ</span>
                 </div>
                 <div class="d-flex justify-content-between small mb-2">
@@ -331,13 +331,13 @@ $lnkt_tracked_items = [
     </div>
 </div>
 
-<!-- Modal Đánh Giá Dự Phòng (Chỉ mở khi #modalReview của MH 19 chưa được nạp nội dung) -->
+<!-- Modal Đánh Giá Dự Phòng -->
 <div class="modal fade" id="lnkt_fallbackReviewModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg card-pastel">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="modal-title font-weight-bold text-slate">
-                    <i class="fa-solid fa-star text-warning mr-1"></i> Đánh Giá Sản Phẩm (MH 19)
+                    <i class="fa-solid fa-star text-warning mr-1"></i> Đánh Giá Sản Phẩm
                 </h5>
                 <button type="button" class="close text-slate" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>

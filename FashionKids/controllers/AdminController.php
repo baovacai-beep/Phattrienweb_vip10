@@ -45,13 +45,13 @@ class AdminController extends Controller {
         $products = $this->productModel->getAllProducts();
 
         $this->view('admin-inventory', [
-            'page_title' => 'Quản Trị Kho Hàng & Tồn Kho (MH 13)',
+            'page_title' => 'Quản Trị Kho Hàng & Tồn Kho',
             'products'   => $products
         ]);
     }
 
     /**
-     * Quản lý Bảng quy chuẩn kích cỡ (MH 14) - Chỉ Admin
+     * Quản lý Bảng quy chuẩn kích cỡ - Chỉ Admin
      */
     public function sizeCharts(): void {
         if (!Rbac::isAdmin()) {
@@ -60,13 +60,13 @@ class AdminController extends Controller {
         $charts = $this->sizeChartModel->getAllCharts();
 
         $this->view('admin-size-charts', [
-            'page_title'  => 'Quản Trị Bảng Quy Chuẩn Kích Cỡ (MH 14)',
+            'page_title'  => 'Quản Trị Bảng Quy Chuẩn Kích Cỡ',
             'size_charts' => $charts
         ]);
     }
 
     /**
-     * AJAX Cập nhật tồn kho (triệu gọi sp_lbn_nhap_them_kho_hang) - Cho phép Staff & Admin
+     * AJAX Cập nhật tồn kho - Cho phép Staff & Admin
      */
     public function ajaxUpdateStock(): void {
         if (ob_get_level() > 0) {
@@ -74,7 +74,7 @@ class AdminController extends Controller {
         }
         Rbac::requireRolesJson(
             ['nhan_vien', 'quan_tri'],
-            'Truy cập bị từ chối (403): Chỉ Nhân viên kho và Quản trị viên mới được phép nhập kho (sp_lbn_nhap_them_kho_hang)!'
+            'Chỉ Nhân viên kho và Quản trị viên mới được phép nhập kho.'
         );
 
         $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
@@ -103,7 +103,7 @@ class AdminController extends Controller {
         }
         Rbac::requireRolesJson(
             ['nhan_vien', 'quan_tri'],
-            'Truy cập bị từ chối (403): Chỉ Nhân viên kho và Quản trị viên mới được phép cập nhật tồn kho!'
+            'Chỉ Nhân viên kho và Quản trị viên mới được phép cập nhật tồn kho.'
         );
         require_once __DIR__ . '/ProductController.php';
         $productCtrl = new ProductController();
@@ -111,7 +111,7 @@ class AdminController extends Controller {
     }
 
     /**
-     * AJAX Thêm mới / Cập nhật sản phẩm kho hàng (sp_lbn_them_san_pham_moi) - CHỈ ADMIN (quan_tri)
+     * AJAX Thêm mới / Cập nhật sản phẩm kho hàng - CHỈ ADMIN (quan_tri)
      */
     public function ajaxSaveProduct(): void {
         if (ob_get_level() > 0) {
@@ -119,10 +119,76 @@ class AdminController extends Controller {
         }
         Rbac::requireRolesJson(
             ['quan_tri'],
-            'Truy cập bị từ chối (403): Theo phân quyền RBAC, Nhân viên chỉ được nhập thêm tồn kho. Quyền Thêm/Sửa sản phẩm mới (sp_lbn_them_san_pham_moi) chỉ dành cho Quản trị viên!'
+            'Nhân viên chỉ được phép nhập thêm tồn kho. Quyền thêm hoặc chỉnh sửa sản phẩm mới chỉ dành cho Quản trị viên.'
         );
         require_once __DIR__ . '/ProductController.php';
         $productCtrl = new ProductController();
         $productCtrl->ajaxSaveProduct();
+    }
+
+    /**
+     * AJAX Khóa / Mở khóa tài khoản người dùng - CHỈ ADMIN (quan_tri)
+     */
+    public function ajaxToggleUserStatus(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Chỉ Quản trị viên mới được phép thay đổi trạng thái tài khoản.'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->json(['status' => 'error', 'message' => 'Phương thức không hợp lệ.'], 405);
+        }
+
+        $userId = (int)($_POST['user_id'] ?? 0);
+        $status = isset($_POST['status']) ? (int)$_POST['status'] : -1;
+        if ($userId <= 0 || !in_array($status, [0, 1], true)) {
+            $this->json(['status' => 'error', 'message' => 'Thông tin tài khoản không hợp lệ.'], 400);
+        }
+
+        require_once __DIR__ . '/../models/UserModel.php';
+        $userModel = new UserModel();
+        $ok = $userModel->capNhatTrangThaiNguoiDung($userId, $status);
+        if ($ok) {
+            $this->json([
+                'status'     => 'success',
+                'user_id'    => $userId,
+                'new_status' => $status,
+                'message'    => $status === 1 ? 'Đã mở khóa tài khoản thành công.' : 'Đã tạm khóa tài khoản thành công.'
+            ]);
+        } else {
+            $this->json(['status' => 'error', 'message' => 'Không thể khóa tài khoản Quản trị viên.'], 400);
+        }
+    }
+
+    /**
+     * AJAX Lưu cấu hình mức điểm tối thiểu và phần trăm giảm giá VIP - CHỈ ADMIN (quan_tri)
+     */
+    public function ajaxSaveVipTiers(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Chỉ Quản trị viên mới được phép cấu hình hạng thẻ thành viên.'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->json(['status' => 'error', 'message' => 'Phương thức không hợp lệ.'], 405);
+        }
+
+        $tiersInput = $_POST['tiers'] ?? [];
+        if (!is_array($tiersInput) || empty($tiersInput)) {
+            $this->json(['status' => 'error', 'message' => 'Dữ liệu cấu hình hạng thẻ không hợp lệ.'], 400);
+        }
+
+        require_once __DIR__ . '/../models/UserModel.php';
+        $userModel = new UserModel();
+        $saved = $userModel->luuCauHinhHangThanhVien($tiersInput);
+        $this->json([
+            'status'  => 'success',
+            'tiers'   => $saved,
+            'message' => 'Đã lưu cấu hình mức điểm tối thiểu và mức chiết khấu VIP thành công!'
+        ]);
     }
 }

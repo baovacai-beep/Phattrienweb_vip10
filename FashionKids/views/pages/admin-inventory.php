@@ -1,5 +1,5 @@
 <?php
-$page_title = "Quản Lý Sản Phẩm & Tồn Kho (MH 13)";
+$page_title = "Quản Lý Sản Phẩm & Tồn Kho";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -151,15 +151,15 @@ foreach ($lbn_inventory_list as $inv) {
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h4 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-boxes-stacked text-peach mr-2"></i>Bàn Làm Việc Quản Lý Sản Phẩm &amp; Tồn Kho (MH 13)
+                <i class="fa-solid fa-boxes-stacked text-peach mr-2"></i>Bàn Làm Việc Quản Lý Sản Phẩm &amp; Tồn Kho
             </h4>
             <small class="text-muted-custom">
-                Đảm nhiệm: Lê Bảo Ngọc (<code>lbn_</code>) — Quản trị bảng <code>lbn_categories</code>, <code>lbn_products</code> và cảnh báo tồn kho tự động (&le; 5)
+                Quản trị danh mục, sản phẩm và cảnh báo tồn kho tự động (&le; 5)
             </small>
         </div>
         <div class="mt-2 mt-md-0">
             <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
-                <i class="fa-solid fa-store mr-1"></i> Xem Cửa Hàng (MH 02)
+                <i class="fa-solid fa-store mr-1"></i> Xem Cửa Hàng
             </a>
             <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
@@ -190,7 +190,7 @@ foreach ($lbn_inventory_list as $inv) {
                     <div>
                         <small class="text-muted-custom font-weight-bold text-uppercase">Tổng Tồn Kho Sẵn Sàng</small>
                         <h3 class="font-weight-bold text-slate mb-0"><?= number_format($total_units) ?> SP</h3>
-                        <small class="text-muted-custom">Đồng bộ <code>lbn_update_stock</code></small>
+                        <small class="text-muted-custom">Đang có sẵn trong kho</small>
                     </div>
                     <span class="lbn-inv-thumb">
                         <i class="fa-solid fa-warehouse text-info h4 mb-0"></i>
@@ -224,7 +224,7 @@ foreach ($lbn_inventory_list as $inv) {
                         <div class="small font-weight-bold text-slate mt-1">
                             Váy: 2 • Bộ thun: 2 • Khoác: 2 • Sandal: 2
                         </div>
-                        <small class="text-mint-dark font-weight-bold"><code>lbn_count_products_by_category</code></small>
+                        <small class="text-mint-dark font-weight-bold">4 nhóm sản phẩm</small>
                     </div>
                     <span class="lbn-inv-thumb">
                         <i class="fa-solid fa-chart-pie text-success h4 mb-0"></i>
@@ -303,8 +303,8 @@ foreach ($lbn_inventory_list as $inv) {
 
                                         <!-- 1. Mã SP -->
                                         <td class="font-weight-bold text-nowrap">
-                                            <code class="text-peach font-weight-bold"><?= htmlspecialchars($prod['sku']) ?></code>
-                                            <div class="small text-muted-custom">#ID: <?= $prod['id'] ?></div>
+                                            <span class="text-peach font-weight-bold"><?= htmlspecialchars($prod['sku']) ?></span>
+                                            <div class="small text-muted-custom">Mã SP #<?= $prod['id'] ?></div>
                                         </td>
 
                                         <!-- 2. Ảnh -->
@@ -356,7 +356,7 @@ foreach ($lbn_inventory_list as $inv) {
                                                        value="<?= $prod['stock_quantity'] ?>" min="0">
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-outline-secondary"
-                                                            title="Cập nhật tồn kho (lbn_update_stock)"
+                                                            title="Cập nhật tồn kho"
                                                             onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= $prod['sku'] ?>')">
                                                         <i class="fa-solid fa-rotate"></i>
                                                     </button>
@@ -392,14 +392,14 @@ foreach ($lbn_inventory_list as $inv) {
         </div>
 
         <!-- ================================================================
-             CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM (MH 13)
+             CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM
              Khung chọn ảnh tải lên, Loại kích cỡ (quần áo/giày dép), Mô tả chất liệu an toàn
              ================================================================ -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm" id="lbn_adminProductFormCard">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold mb-0 text-slate" id="lbn_formModeTitle">
-                        <i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới (lbn_insert_product)
+                        <i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới
                     </h6>
                     <button type="button" id="lbn_btnResetForm" onclick="lbnResetProductForm()"
                             class="btn btn-light btn-sm rounded-pill border d-none">
@@ -418,7 +418,7 @@ foreach ($lbn_inventory_list as $inv) {
                                        placeholder="VD: FK-LBN-10" required>
                             </div>
                             <div class="form-group col-7">
-                                <label class="small font-weight-bold text-slate mb-1">Danh mục (<code>lbn_categories</code>):</label>
+                                <label class="small font-weight-bold text-slate mb-1">Danh mục:</label>
                                 <select id="lbn_formProductCategory" name="category_id" class="custom-select custom-select-sm" required>
                                     <option value="1">Váy công chúa</option>
                                     <option value="2">Bộ thun</option>
@@ -458,7 +458,7 @@ foreach ($lbn_inventory_list as $inv) {
                         <!-- 1. LOẠI KÍCH CỠ (QUẦN ÁO / GIÀY DÉP) -->
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate mb-1 d-block">
-                                Loại kích cỡ áp dụng (<code>type</code>):
+                                Loại kích cỡ áp dụng:
                             </label>
                             <div class="p-2 rounded bg-milk-cream border">
                                 <div class="d-flex justify-content-around mb-1">

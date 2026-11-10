@@ -145,7 +145,7 @@ class HomeController extends Controller {
         }
         Rbac::requireRolesJson(
             ['nhan_vien', 'quan_tri'],
-            'Truy cập bị từ chối (403): Chỉ Nhân viên và Quản trị viên mới được phép thao tác CMS Tạp chí!'
+            'Chỉ Nhân viên và Quản trị viên mới được phép chỉnh sửa nội dung Tạp chí.'
         );
 
         $title = trim($_POST['title'] ?? '');
@@ -161,8 +161,8 @@ class HomeController extends Controller {
 
         $article = $this->realtimeModel->saveArticle($payload);
         $msg = Rbac::isStaff()
-            ? 'Nhân viên đã lưu bài viết ở trạng thái Bản nháp (ban_nhap) chờ Admin phê duyệt xuất bản!'
-            : 'Quản trị viên đã xuất bản bài viết vào CSDL tgb_bai_viet_tin_tuc thành công!';
+            ? 'Đã lưu bài viết ở trạng thái Bản nháp chờ quản trị viên duyệt xuất bản.'
+            : 'Đã xuất bản bài viết mới lên Tạp chí FashionKids thành công!';
 
         $this->json([
             'status'  => 'success',
@@ -190,7 +190,7 @@ class HomeController extends Controller {
         }
 
         if (in_array($sender, ['nhan_vien', 'quan_tri'], true) && !Rbac::isStaffOrAdmin()) {
-            $this->json(['status' => 'error', 'message' => 'Truy cập bị từ chối (403): Chỉ Nhân viên CSKH mới được gửi phản hồi từ bàn tư vấn!'], 403);
+            $this->json(['status' => 'error', 'message' => 'Chỉ nhân viên tư vấn mới được gửi phản hồi từ bàn làm việc CSKH.'], 403);
             return;
         }
 
@@ -236,7 +236,7 @@ class HomeController extends Controller {
         }
         Rbac::requireRolesJson(
             ['nhan_vien', 'quan_tri'],
-            'Truy cập bị từ chối (403): Chỉ Nhân viên và Quản trị viên mới được xét duyệt hồ sơ KOL!'
+            'Chỉ Nhân viên và Quản trị viên mới được xét duyệt hồ sơ.'
         );
 
         $id        = (int)($_POST['id'] ?? $_GET['id'] ?? 1);
@@ -245,7 +245,7 @@ class HomeController extends Controller {
         if (Rbac::isStaff() && in_array($newStatus, ['trung_tuyen', 'tu_choi'], true)) {
             $this->json([
                 'status'  => 'error',
-                'message' => 'Theo phân quyền RBAC: Nhân viên chỉ được quyền Sơ tuyển Vòng 1 (Hẹn Studio). Quyết định Trúng tuyển / Từ chối thuộc về Quản trị viên (Admin)!'
+                'message' => 'Nhân viên chỉ được phép hẹn lịch phỏng vấn (Vòng 1). Quyết định trúng tuyển hoặc từ chối do quản trị viên phê duyệt.'
             ], 403);
             return;
         }
@@ -256,7 +256,7 @@ class HomeController extends Controller {
             'id'         => $res['id'],
             'new_status' => $res['new_status'],
             'counts'     => $res['counts'],
-            'message'    => 'Đã cập nhật trạng thái hồ sơ KOL Nhí qua Stored Procedure sp_lnkt_xet_duyet_kol_nhi!'
+            'message'    => 'Đã cập nhật trạng thái hồ sơ Siêu sao nhí KOL thành công!'
         ]);
     }
 
@@ -271,14 +271,14 @@ class HomeController extends Controller {
         }
         Rbac::requireRolesJson(
             ['khach_hang', 'nhan_vien', 'quan_tri'],
-            'Khách vãng lai chỉ được xem thể lệ. Vui lòng đăng nhập tài khoản Khách hàng để nộp hồ sơ ứng tuyển KOL Nhí!'
+            'Vui lòng đăng nhập tài khoản thành viên để nộp hồ sơ ứng tuyển KOL Nhí.'
         );
 
         $res = $this->realtimeModel->submitKolApplication($_POST);
         $this->json([
             'status'      => 'success',
             'application' => $res,
-            'message'     => 'Đã lưu hồ sơ ứng tuyển của ' . $res['baby_name'] . ' (Mã hồ sơ: #' . $res['code'] . ') vào bảng lnkt_dang_ky_kol_nhi!'
+            'message'     => 'Đã tiếp nhận hồ sơ ứng tuyển của ' . $res['baby_name'] . ' (Mã hồ sơ: #' . $res['code'] . ') thành công!'
         ]);
     }
 }

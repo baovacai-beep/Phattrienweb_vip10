@@ -1,5 +1,5 @@
 <?php
-$page_title = "Hồ Sơ Cá Nhân & Thẻ VIP Điện Tử (MH 07)";
+$page_title = "Hồ Sơ Thành Viên & Thẻ VIP - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -22,7 +22,7 @@ if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
         $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 5);
         $diemKeTiep = 1500;
     } else {
-        $tenHang = strtoupper((string)($sessUser['ten_hang'] ?? 'ĐỒNG (BRONZE)'));
+        $tenHang = mb_strtoupper((string)($sessUser['ten_hang'] ?? 'ĐỒNG (BRONZE)'), 'UTF-8');
         $hangClass = 'vip-card-bronze';
         $phanTramGiam = (int)($sessUser['phan_tram_giam_gia'] ?? 0);
         $diemKeTiep = 500;
@@ -44,44 +44,29 @@ if (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) {
     ];
 } else {
     $user = [
-        'ma_nguoi_dung'  => 3,
-        'ho_va_ten'      => 'Võ Thị Thanh Thảo',
-        'ten_dang_nhap'  => 'me_be_sam',
-        'thu_dien_tu'    => 'thanhthao@gmail.com',
-        'so_dien_thoai'  => '0918889999',
-        'dia_chi_nha'    => 'Số 120 Điện Biên Phủ, Phường 17, Quận Bình Thạnh, TP.HCM',
-        'diem_tich_luy'  => 1650,
-        'ten_hang'       => 'VÀNG (GOLD)',
-        'hang_class'     => 'vip-card-gold',
-        'phan_tram_giam' => 10,
-        'diem_ke_tiep'   => 3000,
-        'da_xac_thuc'    => 1,
+        'ma_nguoi_dung'  => 0,
+        'ho_va_ten'      => 'Khách hàng',
+        'ten_dang_nhap'  => '',
+        'thu_dien_tu'    => '',
+        'so_dien_thoai'  => '',
+        'dia_chi_nha'    => '',
+        'diem_tich_luy'  => 0,
+        'ten_hang'       => 'ĐỒNG (BRONZE)',
+        'hang_class'     => 'vip-card-bronze',
+        'phan_tram_giam' => 0,
+        'diem_ke_tiep'   => 500,
+        'da_xac_thuc'    => 0,
     ];
 }
 
 $progress = $user['diem_ke_tiep'] > 0 ? min(100, round(($user['diem_tich_luy'] / $user['diem_ke_tiep']) * 100)) : 100;
 $diemConThieu = max(0, $user['diem_ke_tiep'] - $user['diem_tich_luy']);
-$maTheHienThi = sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']);
+$maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']) : '#FK-GUEST';
 ?>
 
 <div class="container my-4 my-md-5" id="hgb_profile_section">
-    <!-- Bộ chuyển đổi Demo nhanh 4 cấp độ thẻ VIP phục vụ chụp ảnh báo cáo -->
-    <div class="card card-pastel p-3 mb-4 shadow-sm bg-white">
-        <div class="d-flex flex-wrap justify-content-between align-items-center">
-            <span class="small font-weight-bold text-slate mb-2 mb-md-0">
-                <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i> Chế độ xem mô phỏng màu thẻ VIP:
-            </span>
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-secondary font-weight-bold" onclick="hgbSwitchVipCard('bronze')">Đồng</button>
-                <button type="button" class="btn btn-outline-info font-weight-bold" onclick="hgbSwitchVipCard('silver')">Bạc</button>
-                <button type="button" class="btn btn-outline-warning font-weight-bold" onclick="hgbSwitchVipCard('gold')">Vàng</button>
-                <button type="button" class="btn btn-outline-primary font-weight-bold" onclick="hgbSwitchVipCard('diamond')">Kim Cương</button>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
-        <!-- Cột Trái: Thẻ VIP Điện Tử Mô Phỏng & Tiến Trình -->
+        <!-- Cột Trái: Thẻ VIP Thành Viên & Tiến Trình -->
         <div class="col-12 col-lg-5 mb-4">
             <div id="hgb_vipCardPreview" class="vip-card-box <?= $user['hang_class'] ?> mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -130,12 +115,14 @@ $maTheHienThi = sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']);
             <div class="card card-pastel p-4 p-md-5 shadow-sm mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="font-weight-bold mb-0 text-slate">Thông Tin Tài Khoản</h5>
-                    <span class="badge badge-pill badge-mint px-3 py-2">
-                        <i class="fa-solid fa-shield-check mr-1"></i> Tài khoản đã xác minh OTP
+                    <span class="badge badge-pill <?= !empty($user['da_xac_thuc']) ? 'badge-mint' : 'badge-gold' ?> px-3 py-2">
+                        <i class="fa-solid <?= !empty($user['da_xac_thuc']) ? 'fa-circle-check' : 'fa-clock' ?> mr-1"></i> <?= !empty($user['da_xac_thuc']) ? 'Tài khoản đã xác thực' : 'Chưa xác thực OTP' ?>
                     </span>
                 </div>
 
-                <form id="hgb_formProfileUpdate">
+                <div id="hgb_profile_alert" class="alert small py-2 d-none" role="alert"></div>
+
+                <form id="hgb_formProfileUpdate" novalidate>
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label class="small font-weight-bold text-slate">Tên đăng nhập:</label>
@@ -143,7 +130,7 @@ $maTheHienThi = sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']);
                         </div>
                         <div class="form-group col-md-6">
                             <label class="small font-weight-bold text-slate">Họ và tên:</label>
-                            <input type="text" class="form-control" name="ho_va_ten" value="<?= htmlspecialchars($user['ho_va_ten']) ?>">
+                            <input type="text" class="form-control" id="hgb_profile_fullname" name="ho_va_ten" value="<?= htmlspecialchars($user['ho_va_ten']) ?>" required>
                         </div>
                     </div>
 
@@ -154,16 +141,16 @@ $maTheHienThi = sprintf('#FK-2026-VIP%02d', (int)$user['ma_nguoi_dung']);
                         </div>
                         <div class="form-group col-md-6">
                             <label class="small font-weight-bold text-slate">Số điện thoại:</label>
-                            <input type="text" class="form-control" name="so_dien_thoai" value="<?= htmlspecialchars($user['so_dien_thoai']) ?>">
+                            <input type="tel" class="form-control" id="hgb_profile_phone" name="so_dien_thoai" maxlength="11" inputmode="numeric" value="<?= htmlspecialchars($user['so_dien_thoai']) ?>">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="small font-weight-bold text-slate">Địa chỉ giao hàng mặc định:</label>
-                        <input type="text" class="form-control" name="dia_chi" value="<?= htmlspecialchars($user['dia_chi_nha']) ?>">
+                        <input type="text" class="form-control" id="hgb_profile_address" name="dia_chi" value="<?= htmlspecialchars($user['dia_chi_nha']) ?>">
                     </div>
 
-                    <button type="button" class="btn btn-pastel-primary font-weight-bold px-4">
+                    <button type="submit" id="hgb_btnUpdateProfile" class="btn btn-pastel-primary font-weight-bold px-4">
                         <i class="fa-solid fa-floppy-disk mr-1"></i> Cập Nhật Thông Tin
                     </button>
                 </form>

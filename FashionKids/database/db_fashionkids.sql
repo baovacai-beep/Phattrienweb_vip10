@@ -267,10 +267,10 @@ INSERT INTO `hgb_hang_thanh_vien` (`ma_hang`, `ten_hang`, `diem_toi_thieu`, `pha
 ON DUPLICATE KEY UPDATE `ten_hang`=VALUES(`ten_hang`);
 
 INSERT INTO `hgb_nguoi_dung` (`ma_nguoi_dung`, `ma_hang_thanh_vien`, `ten_dang_nhap`, `mat_khau`, `ho_va_ten`, `thu_dien_tu`, `so_dien_thoai`, `dia_chi_nha`, `diem_tich_luy`, `vai_tro`, `da_xac_thuc_otp`) VALUES
-(1, NULL, 'admin_fashion', '$2y$10$abcdefghijklmnopqrstuvwxy123456', 'Hồ Gia Bảo (Chủ Shop)', 'admin@fashionkids.vn', '0901234567', 'Quận 1, TP.HCM', 0, 'quan_tri', 1),
-(2, NULL, 'staff_tuvan', '$2y$10$abcdefghijklmnopqrstuvwxy123456', 'Lê Nguyễn Khánh Trình', 'staff@fashionkids.vn', '0907654321', 'Quận 3, TP.HCM', 0, 'nhan_vien', 1),
-(3, 3, 'me_be_sam', '$2y$10$abcdefghijklmnopqrstuvwxy123456', 'Võ Thị Thanh Thảo', 'thanhthao@gmail.com', '0918889999', 'Số 120 Điện Biên Phủ, Bình Thạnh', 1600, 'khach_hang', 1)
-ON DUPLICATE KEY UPDATE `ho_va_ten`=VALUES(`ho_va_ten`);
+(1, NULL, 'admin_fashion', 'e10adc3949ba59abbe56e057f20f883e', 'Hồ Gia Bảo', 'admin@fashionkids.vn', '0901234567', 'Quận 1, TP.HCM', 0, 'quan_tri', 1),
+(2, NULL, 'staff_tuvan', 'e10adc3949ba59abbe56e057f20f883e', 'Lê Nguyễn Khánh Trình', 'staff@fashionkids.vn', '0907654321', 'Quận 3, TP.HCM', 0, 'nhan_vien', 1),
+(3, 3, 'me_be_sam', 'e10adc3949ba59abbe56e057f20f883e', 'Võ Thị Thanh Thảo', 'thanhthao@gmail.com', '0918889999', 'Số 120 Điện Biên Phủ, Bình Thạnh', 1600, 'khach_hang', 1)
+ON DUPLICATE KEY UPDATE `ho_va_ten`=VALUES(`ho_va_ten`), `mat_khau`=VALUES(`mat_khau`);
 
 INSERT INTO `lbn_danh_muc` (`ma_danh_muc`, `ten_danh_muc`, `gioi_tinh`, `loai_hang`) VALUES
 (1, 'Váy đầm công chúa bé gái', 'be_gai', 'quan_ao'),
@@ -300,7 +300,7 @@ ON DUPLICATE KEY UPDATE `ten_san_pham`=VALUES(`ten_san_pham`);
 
 INSERT INTO `lnkt_don_hang` (`ma_don_hang`, `ma_nguoi_dung`, `ma_nhan_vien_xu_ly`, `ten_nguoi_nhan`, `so_dien_thoai_nhan`, `thu_dien_tu_nhan`, `dia_chi_giao_hang`, `tinh_thanh_pho`, `quan_huyen`, `tien_hang_tam_tinh`, `tien_giam_gia`, `tong_tien_thanh_toan`, `trang_thai_don_hang`) VALUES
 (1, 3, 2, 'Võ Thị Thanh Thảo', '0918889999', 'thanhthao@gmail.com', 'Số 120 Điện Biên Phủ, P.17', 'Thành phố Hồ Chí Minh', 'Quận Bình Thạnh', 900000.00, 90000.00, 810000.00, 'hoan_tat'),
-(2, 3, NULL, 'Võ Thị Thanh Thảo (Đơn 2)', '0918889999', 'thanhthao@gmail.com', 'Số 120 Điện Biên Phủ, P.17', 'Thành phố Hồ Chí Minh', 'Quận Bình Thạnh', 280000.00, 28000.00, 252000.00, 'cho_duyet')
+(2, 3, NULL, 'Võ Thị Thanh Thảo', '0918889999', 'thanhthao@gmail.com', 'Số 120 Điện Biên Phủ, P.17', 'Thành phố Hồ Chí Minh', 'Quận Bình Thạnh', 280000.00, 28000.00, 252000.00, 'cho_duyet')
 ON DUPLICATE KEY UPDATE `ten_nguoi_nhan`=VALUES(`ten_nguoi_nhan`);
 
 INSERT INTO `tgb_chi_tiet_don_hang` (`ma_chi_tiet_don`, `ma_don_hang`, `ma_san_pham`, `kich_co_chon`, `so_luong`, `don_gia_mua`) VALUES
@@ -816,7 +816,7 @@ UPDATE `lnkt_don_hang` SET `trang_thai_don_hang` = 'cho_duyet', `ma_nhan_vien_xu
 UPDATE `lnkt_dang_ky_kol_nhi` SET `trang_thai_duyet` = 'cho_duyet' WHERE `ma_ho_so` = 1;
 
 -- Test 1: Đăng ký thành viên mới hoàn toàn (Hồ Gia Bảo - Nhận Hạng Đồng)
-CALL sp_hgb_dang_ky_thanh_vien('khach_hang_moi_1', 'hash_pass_123', 'Nguyễn Thị Hoa', 'hoa.nguyen@gmail.com', '0912345678', 'Q.7, TP.HCM', @ma_user_moi);
+CALL sp_hgb_dang_ky_thanh_vien('khach_hang_moi_1', 'e10adc3949ba59abbe56e057f20f883e', 'Nguyễn Thị Hoa', 'hoa.nguyen@gmail.com', '0912345678', 'Q.7, TP.HCM', @ma_user_moi);
 SELECT @ma_user_moi AS ma_khach_hang_moi;
 
 -- Test 2: Tích điểm thăng hạng (Cộng 1.600 điểm -> Khách tự nhảy lên Hạng Vàng)
