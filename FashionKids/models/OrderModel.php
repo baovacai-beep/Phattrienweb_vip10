@@ -91,8 +91,85 @@ class OrderModel extends Model {
                 $stmt->closeCursor();
             } catch (PDOException $e) {
                 error_log("Lỗi cập nhật trạng thái đơn: " . $e->getMessage());
+                throw $e;
             }
         }
+    }
+
+    /**
+     * Cập nhật tiến trình đơn hàng qua AJAX (MH 10) sử dụng sp_lnkt_cap_nhat_trang_thai_don_hang
+     * Kết hợp đóng con trỏ $stmt->closeCursor() và đồng bộ Session
+     */
+    public function capNhatTrangThaiDonHangChiTiet(int $maDonHang, int $maNhanVien, string $trangThaiMoi): array {
+        $allowedStatuses = ['cho_xac_nhan', 'dang_dong_goi', 'dang_giao_hang', 'hoan_tat', 'da_huy'];
+        if (!in_array($trangThaiMoi, $allowedStatuses, true)) {
+            throw new InvalidArgumentException('Trạng thái đơn hàng không hợp lệ!');
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        $currentStatus = $_SESSION['lnkt_order_status_overrides'][$maDonHang] ?? null;
+        if ($this->hasConnection()) {
+            try {
+                $chkStmt = $this->db->prepare("SELECT trang_thai_don_hang FROM lnkt_don_hang WHERE ma_don_hang = :id LIMIT 1");
+                $chkStmt->execute([':id' => $maDonHang]);
+                $row = $chkStmt->fetch();
+                $chkStmt->closeCursor();
+                if ($row && !empty($row['trang_thai_don_hang'])) {
+                    $currentStatus = $row['trang_thai_don_hang'];
+                }
+            } catch (PDOException $e) {}
+        }
+
+        if ($currentStatus === 'hoan_tat' && $trangThaiMoi === 'cho_xac_nhan') {
+            throw new InvalidArgumentException('Lỗi: Không thể đưa đơn hàng đã hoàn tất quay ngược về chờ xác nhận!');
+        }
+        if ($currentStatus === 'da_huy' && $trangThaiMoi !== 'da_huy') {
+            throw new InvalidArgumentException('Lỗi: Đơn hàng đã hủy không thể chuyển sang trạng thái vận chuyển khác!');
+        }
+
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("CALL sp_lnkt_cap_nhat_trang_thai_don_hang(:ma_don, :ma_nv, :trang_thai)");
+                $stmt->execute([
+                    ':ma_don'     => $maDonHang,
+                    ':ma_nv'      => $maNhanVien,
+                    ':trang_thai' => $trangThaiMoi
+                ]);
+                $stmt->closeCursor();
+            } catch (PDOException $e) {
+                $errMsg = $e->getMessage();
+                if (stripos($errMsg, 'Không thể đưa đơn hàng') !== false || $e->getCode() === '45000') {
+                    throw new RuntimeException('Không thể đưa đơn hàng đã hoàn tất quay ngược về chờ xác nhận!');
+                }
+                error_log("Lỗi sp_lnkt_cap_nhat_trang_thai_don_hang: " . $errMsg);
+            }
+        }
+
+        $_SESSION['lnkt_order_status_overrides'][$maDonHang] = $trangThaiMoi;
+
+        $statusMeta = [
+            'cho_xac_nhan'   => ['label' => 'Chờ xác nhận',  'badge_class' => 'badge-gold',   'icon' => 'fa-clock'],
+            'dang_dong_goi'  => ['label' => 'Đang đóng gói', 'badge_class' => 'badge-sky',    'icon' => 'fa-box-open'],
+            'dang_giao_hang' => ['label' => 'Đang giao hàng', 'badge_class' => 'badge-sky',    'icon' => 'fa-truck-fast'],
+            'hoan_tat'       => ['label' => 'Đã hoàn tất',   'badge_class' => 'badge-mint',   'icon' => 'fa-circle-check'],
+            'da_huy'         => ['label' => 'Đã hủy đơn',    'badge_class' => 'badge-danger', 'icon' => 'fa-ban']
+        ];
+        $meta = $statusMeta[$trangThaiMoi] ?? $statusMeta['dang_dong_goi'];
+
+        return [
+            'order_id'     => $maDonHang,
+            'handled_by'   => $maNhanVien,
+            'old_status'   => $currentStatus ?? 'cho_xac_nhan',
+            'new_status'   => $trangThaiMoi,
+            'status_label' => $meta['label'],
+            'badge_class'  => $meta['badge_class'],
+            'icon'         => $meta['icon'],
+            'routine'      => 'sp_lnkt_cap_nhat_trang_thai_don_hang',
+            'updated_at'   => date('d/m/Y H:i')
+        ];
     }
 
     public function updateStatus(int $orderId, string $newStatus, int $handledBy): bool {

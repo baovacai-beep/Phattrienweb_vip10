@@ -2,6 +2,7 @@
 $page_title = "Xét Duyệt Hồ Sơ Siêu Sao Nhí KOL";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 
 $rtModel  = new RealtimeContentModel();

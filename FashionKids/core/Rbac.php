@@ -223,12 +223,19 @@ class Rbac {
     }
 
     /**
-     * Tự động kiểm tra quyền truy cập của trang View hiện tại (gọi từ header.php).
-     * Chặn hoàn toàn Khách vãng lai (Guest) hoặc Khách hàng (Customer) truy cập trái phép vào trang Admin/Staff!
+     * Tự động kiểm tra quyền truy cập của trang View hiện tại (gọi từ header.php hoặc Base Controller).
+     * Chặn hoàn toàn Khách vãng lai (Guest), Khách hàng (Customer) hoặc Nhân viên (nhan_vien)
+     * truy cập trái phép vào các trang cấu hình hệ thống Admin (HTTP 403 Forbidden)!
      */
-    public static function enforceCurrentViewAccess(): bool {
+    public static function enforceCurrentViewAccess(?string $targetPage = null): bool {
         self::syncSession();
-        $scriptName = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        $rawPage = $targetPage !== null && $targetPage !== ''
+            ? $targetPage
+            : ($_SERVER['FK_CURRENT_VIEW_PAGE'] ?? ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $scriptName = basename((string)$rawPage);
+        if ($scriptName !== '' && substr($scriptName, -4) !== '.php') {
+            $scriptName .= '.php';
+        }
         if (!isset(self::PAGE_PERMISSIONS[$scriptName])) {
             return true;
         }
@@ -240,7 +247,7 @@ class Rbac {
             return true;
         }
 
-        // Nếu chưa đăng nhập mà vào trang yêu cầu quyền -> lưu trang đích và gợi ý đăng nhập
+        // Trả về mã lỗi HTTP 403 Forbidden khi truy cập trái thẩm quyền RBAC
         http_response_code(403);
         return false;
     }
@@ -261,7 +268,11 @@ class Rbac {
      * Lấy danh sách quyền yêu cầu của trang hiện tại
      */
     public static function getRequiredRolesForCurrentPage(): array {
-        $scriptName = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        $rawPage = $_SERVER['FK_CURRENT_VIEW_PAGE'] ?? ($_SERVER['SCRIPT_NAME'] ?? '');
+        $scriptName = basename((string)$rawPage);
+        if ($scriptName !== '' && substr($scriptName, -4) !== '.php') {
+            $scriptName .= '.php';
+        }
         return self::PAGE_PERMISSIONS[$scriptName] ?? ['guest', 'khach_hang', 'nhan_vien', 'quan_tri'];
     }
 }

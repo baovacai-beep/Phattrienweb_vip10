@@ -2,6 +2,7 @@
 $page_title = "Bàn Làm Việc Quản Trị & Duyệt Đơn Hàng";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 
 // Danh sách đơn hàng mẫu chuẩn bảng lnkt_orders
 $lnkt_staff_orders = [

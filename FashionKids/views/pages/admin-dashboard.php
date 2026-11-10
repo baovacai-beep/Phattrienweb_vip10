@@ -2,6 +2,7 @@
 $page_title = "Bàn Làm Việc Quản Trị Hệ Thống";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 
 // Dữ liệu mô phỏng đơn hàng mới nhất cần duyệt (lnkt_orders)
 $recent_orders = [

@@ -36,6 +36,10 @@ abstract class Controller {
      * @return void
      */
     protected function view(string $viewPath, array $data = []): void {
+        $_SERVER['FK_CURRENT_VIEW_PAGE'] = basename($viewPath);
+        if (class_exists('Rbac')) {
+            Rbac::enforceCurrentViewAccess(basename($viewPath));
+        }
         extract($data);
 
         // 1. Thử tìm đường dẫn trực tiếp trong views/

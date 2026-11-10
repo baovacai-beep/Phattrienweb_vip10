@@ -38,6 +38,7 @@ class SizeChartModel extends Model {
                     ':f'   => $daiChan
                 ]);
                 $res = $stmt->fetch();
+                $stmt->closeCursor();
                 $sizeChuan = $res['size_chuan'] ?? $res['size_goi_y'] ?? '';
                 if (!empty($sizeChuan) && $sizeChuan !== 'Chưa có size phù hợp') {
                     return $sizeChuan;
@@ -89,5 +90,112 @@ class SizeChartModel extends Model {
             } catch (PDOException $e) {}
         }
         return [];
+    }
+
+    /**
+     * Thêm mới hoặc cập nhật mốc quy chuẩn kích cỡ (lnkt_bang_kich_co) - MH 14 (Chỉ Admin)
+     */
+    public function luuCauHinhSizeChart(array $data): array {
+        $sizeId    = (int)($data['size_id'] ?? $data['ma_kich_co'] ?? 0);
+        $catId     = (int)($data['category_id'] ?? $data['ma_danh_muc'] ?? 1);
+        $sizeLabel = trim((string)($data['size_label'] ?? $data['ten_kich_co'] ?? ''));
+        $minVal    = (float)($data['min_val'] ?? $data['chieu_cao_toi_thieu'] ?? 0);
+        $maxVal    = (float)($data['max_val'] ?? $data['chieu_cao_toi_da'] ?? 0);
+        $chestMax  = isset($data['chest_max']) && $data['chest_max'] !== '' ? (float)$data['chest_max'] : null;
+        $waistMax  = isset($data['waist_max']) && $data['waist_max'] !== '' ? (float)$data['waist_max'] : null;
+
+        if ($sizeLabel === '') {
+            throw new InvalidArgumentException('Nhãn kích cỡ (Size Label) không được để trống!');
+        }
+        if ($minVal <= 0 || $maxVal <= 0 || $minVal >= $maxVal) {
+            throw new InvalidArgumentException('Khoảng số đo không hợp lệ (Giá trị tối đa phải lớn hơn giá trị tối thiểu và lớn hơn 0)!');
+        }
+
+        $isShoes   = ($catId === 4);
+        $minHeight = $isShoes ? 75.0 : $minVal;
+        $maxHeight = $isShoes ? 135.0 : $maxVal;
+        $minFoot   = $isShoes ? $minVal : null;
+        $maxFoot   = $isShoes ? $maxVal : null;
+
+        if ($this->hasConnection()) {
+            try {
+                if ($sizeId > 0) {
+                    $stmt = $this->db->prepare("
+                        UPDATE lnkt_bang_kich_co
+                        SET ma_danh_muc = :cat,
+                            ten_kich_co = :label,
+                            chieu_cao_toi_thieu = :min_h,
+                            chieu_cao_toi_da = :max_h,
+                            vong_nguc_tb = :chest,
+                            vong_eo_tb = :waist,
+                            chieu_dai_chan_min = :min_f,
+                            chieu_dai_chan_max = :max_f
+                        WHERE ma_kich_co = :id
+                    ");
+                    $stmt->execute([
+                        ':cat'   => $catId,
+                        ':label' => $sizeLabel,
+                        ':min_h' => $minHeight,
+                        ':max_h' => $maxHeight,
+                        ':chest' => $chestMax,
+                        ':waist' => $waistMax,
+                        ':min_f' => $minFoot,
+                        ':max_f' => $maxFoot,
+                        ':id'    => $sizeId
+                    ]);
+                } else {
+                    $stmt = $this->db->prepare("
+                        INSERT INTO lnkt_bang_kich_co
+                            (ma_danh_muc, ten_kich_co, chieu_cao_toi_thieu, chieu_cao_toi_da, vong_nguc_tb, vong_eo_tb, chieu_dai_chan_min, chieu_dai_chan_max)
+                        VALUES
+                            (:cat, :label, :min_h, :max_h, :chest, :waist, :min_f, :max_f)
+                    ");
+                    $stmt->execute([
+                        ':cat'   => $catId,
+                        ':label' => $sizeLabel,
+                        ':min_h' => $minHeight,
+                        ':max_h' => $maxHeight,
+                        ':chest' => $chestMax,
+                        ':waist' => $waistMax,
+                        ':min_f' => $minFoot,
+                        ':max_f' => $maxFoot
+                    ]);
+                    $sizeId = (int)$this->db->lastInsertId();
+                }
+            } catch (PDOException $e) {
+                error_log('Lỗi lưu cấu hình lnkt_bang_kich_co: ' . $e->getMessage());
+            }
+        }
+
+        if ($sizeId <= 0) {
+            $sizeId = rand(400, 999);
+        }
+
+        $catNames = [
+            1 => 'Váy công chúa',
+            2 => 'Bộ thun',
+            3 => 'Áo khoác',
+            4 => 'Giày sandal'
+        ];
+
+        $record = [
+            'size_id'       => $sizeId,
+            'category_id'   => $catId,
+            'category_name' => $catNames[$catId] ?? 'Danh mục #' . $catId,
+            'size_type'     => $isShoes ? 'giay_dep' : 'quan_ao',
+            'size_label'    => $sizeLabel,
+            'min_val'       => $minVal,
+            'max_val'       => $maxVal,
+            'chest_max'     => $chestMax,
+            'waist_max'     => $waistMax,
+            'unit'          => 'cm'
+        ];
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        $_SESSION['lnkt_custom_size_charts'][$sizeId] = $record;
+
+        return $record;
     }
 }

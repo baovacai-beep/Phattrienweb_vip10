@@ -2,6 +2,7 @@
 $page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 
 require_once __DIR__ . "/../../models/UserModel.php";
 

@@ -2,6 +2,7 @@
 $page_title = "Quản Trị Bảng Quy Chuẩn Size & Ràng Buộc Danh Mục";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
 
 // Danh sách Danh mục chuẩn lbn_categories gắn kết trực tiếp qua ma_danh_muc (category_id)
 $lnkt_categories_ref = [

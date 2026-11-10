@@ -2,6 +2,8 @@
 $page_title = "Quản Lý Sản Phẩm & Tồn Kho";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+Rbac::enforceCurrentViewAccess();
+$isAdminUser = Rbac::isAdmin();
 
 // Danh sách Danh mục chuẩn lbn_categories
 $lbn_admin_categories = [
@@ -161,9 +163,15 @@ foreach ($lbn_inventory_list as $inv) {
             <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
                 <i class="fa-solid fa-store mr-1"></i> Xem Cửa Hàng
             </a>
-            <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
-                <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
-            </a>
+            <?php if ($isAdminUser): ?>
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
+                </a>
+            <?php else: ?>
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -250,9 +258,15 @@ foreach ($lbn_inventory_list as $inv) {
                                 Tự động gắn huy hiệu đỏ <strong>"Sắp hết hàng"</strong> khi số lượng tồn kho &le; 5
                             </small>
                         </div>
-                        <button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
-                            <i class="fa-solid fa-plus mr-1"></i> Thêm SP Mới
-                        </button>
+                        <?php if ($isAdminUser): ?>
+                            <button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
+                                <i class="fa-solid fa-plus mr-1"></i> Thêm SP Mới
+                            </button>
+                        <?php else: ?>
+                            <span class="badge badge-sky px-3 py-2 rounded-pill mt-2 mt-sm-0">
+                                <i class="fa-solid fa-boxes-packing mr-1"></i>Chế độ Nhân viên: Chỉ Nhập thêm kho
+                            </span>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Thanh lọc nhanh trong Kho -->
@@ -364,23 +378,32 @@ foreach ($lbn_inventory_list as $inv) {
                                             </div>
                                         </td>
 
-                                        <!-- 7. Thao tác Sửa -->
+                                        <!-- 7. Thao tác Sửa (Chỉ Admin) hoặc Nhập thêm kho (Staff) -->
                                         <td class="text-center text-nowrap">
-                                            <button type="button"
-                                                    class="btn btn-outline-primary btn-sm rounded-pill px-2"
-                                                    title="Chỉnh sửa sản phẩm"
-                                                    data-id="<?= $prod['id'] ?>"
-                                                    data-sku="<?= htmlspecialchars($prod['sku']) ?>"
-                                                    data-name="<?= htmlspecialchars($prod['name']) ?>"
-                                                    data-cat-id="<?= $prod['category_id'] ?>"
-                                                    data-gender="<?= $prod['gender'] ?>"
-                                                    data-price="<?= $prod['price'] ?>"
-                                                    data-stock="<?= $prod['stock_quantity'] ?>"
-                                                    data-type="<?= $prod['type'] ?>"
-                                                    data-material="<?= htmlspecialchars($prod['material']) ?>"
-                                                    onclick="lbnEditInventoryProduct(this)">
-                                                <i class="fa-solid fa-pen-to-square"></i> Sửa
-                                            </button>
+                                            <?php if ($isAdminUser): ?>
+                                                <button type="button"
+                                                        class="btn btn-outline-primary btn-sm rounded-pill px-2"
+                                                        title="Chỉnh sửa sản phẩm"
+                                                        data-id="<?= $prod['id'] ?>"
+                                                        data-sku="<?= htmlspecialchars($prod['sku']) ?>"
+                                                        data-name="<?= htmlspecialchars($prod['name']) ?>"
+                                                        data-cat-id="<?= $prod['category_id'] ?>"
+                                                        data-gender="<?= $prod['gender'] ?>"
+                                                        data-price="<?= $prod['price'] ?>"
+                                                        data-stock="<?= $prod['stock_quantity'] ?>"
+                                                        data-type="<?= $prod['type'] ?>"
+                                                        data-material="<?= htmlspecialchars($prod['material']) ?>"
+                                                        onclick="lbnEditInventoryProduct(this)">
+                                                    <i class="fa-solid fa-pen-to-square"></i> Sửa
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="button"
+                                                        class="btn btn-pastel-primary btn-sm rounded-pill px-3"
+                                                        title="Nhập thêm kho hàng (sp_lbn_nhap_them_kho_hang)"
+                                                        onclick="lbnQuickUpdateStock(<?= $prod['id'] ?>, '<?= htmlspecialchars($prod['sku']) ?>')">
+                                                    <i class="fa-solid fa-boxes-packing mr-1"></i> Nhập thêm kho
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -392,10 +415,11 @@ foreach ($lbn_inventory_list as $inv) {
         </div>
 
         <!-- ================================================================
-             CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM
-             Khung chọn ảnh tải lên, Loại kích cỡ (quần áo/giày dép), Mô tả chất liệu an toàn
+             CỘT PHẢI (4 CỘT): FORM THÊM / SỬA SẢN PHẨM (CHỈ ADMIN)
+             HOẶC BÀN NHẬP THÊM KHO HÀNG (STAFF - sp_lbn_nhap_them_kho_hang)
              ================================================================ -->
         <div class="col-12 col-xl-4 mb-4">
+            <?php if ($isAdminUser): ?>
             <div class="card card-pastel shadow-sm" id="lbn_adminProductFormCard">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h6 class="font-weight-bold mb-0 text-slate" id="lbn_formModeTitle">
@@ -539,6 +563,42 @@ foreach ($lbn_inventory_list as $inv) {
                     </form>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Thẻ Hướng Dẫn & Nhập Thêm Kho Dành Cho Nhân Viên Vận Hành (sp_lbn_nhap_them_kho_hang) -->
+            <div class="card card-pastel shadow-sm border-0 bg-white">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0 text-slate">
+                        <i class="fa-solid fa-boxes-packing text-peach mr-2"></i>Nhập Thêm Kho Hàng (Nhân Viên)
+                    </h6>
+                    <span class="badge badge-sky px-2 py-1 rounded-pill">RBAC Staff</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info small py-2 mb-3">
+                        <i class="fa-solid fa-shield-halved mr-1"></i><strong>Phân quyền Nhân viên Vận hành:</strong> Bạn được cấp quyền cập nhật &amp; <strong>Nhập thêm kho hàng</strong> (<code>sp_lbn_nhap_them_kho_hang</code>). Quyền Thêm mới hoặc Sửa thông tin sản phẩm thuộc về Quản trị viên.
+                    </div>
+                    <form id="lbn_formStaffQuickRestock" onsubmit="return lbnSubmitStaffQuickRestock(event)">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="lbn_staffRestockProductId">Chọn sản phẩm cần nhập thêm kho:</label>
+                            <select id="lbn_staffRestockProductId" class="custom-select custom-select-sm">
+                                <?php foreach ($lbn_inventory_list as $prod): ?>
+                                    <option value="<?= $prod['id'] ?>" data-sku="<?= htmlspecialchars($prod['sku']) ?>">
+                                        <?= htmlspecialchars($prod['sku'] . ' - ' . $prod['name']) ?> (Hiện có: <?= $prod['stock_quantity'] ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate mb-1" for="lbn_staffRestockQty">Số lượng tồn kho mới (&ge; 0):</label>
+                            <input type="number" id="lbn_staffRestockQty" class="form-control form-control-sm font-weight-bold" value="25" min="0" required>
+                            <small class="text-muted-custom">Hệ thống tự động cảnh báo đỏ nếu số lượng &le; 5 sản phẩm.</small>
+                        </div>
+                        <button type="submit" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
+                            <i class="fa-solid fa-rotate mr-1"></i> Xác Nhận Nhập Thêm Kho
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

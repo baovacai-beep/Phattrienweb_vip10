@@ -549,6 +549,21 @@ class RealtimeContentModel extends BaseModel {
             }
         }
 
+        // Đồng bộ trạng thái xuất bản / xóa trong phiên (dành cho Admin MH 21/22)
+        if (!empty($_SESSION['fk_published_articles']) && is_array($_SESSION['fk_published_articles'])) {
+            foreach ($_SESSION['fk_published_articles'] as $pubId => $pubStatus) {
+                $pid = (int)$pubId;
+                if (isset($articlesMap[$pid])) {
+                    $articlesMap[$pid]['status'] = (string)$pubStatus;
+                }
+            }
+        }
+        if (!empty($_SESSION['fk_deleted_articles']) && is_array($_SESSION['fk_deleted_articles'])) {
+            foreach ($_SESSION['fk_deleted_articles'] as $delId) {
+                unset($articlesMap[(int)$delId]);
+            }
+        }
+
         $result = [];
         $kwLower = mb_strtolower(trim($keyword), 'UTF-8');
 
@@ -895,6 +910,54 @@ class RealtimeContentModel extends BaseModel {
     }
 
     /**
+     * Xuất bản bài viết từ Bản nháp (ban_nhap -> xuat_ban) - CHỈ ADMIN (MH 21/22)
+     */
+    public function publishArticle(int $id): array {
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("UPDATE `tgb_bai_viet_tin_tuc` SET `trang_thai_bai_viet` = 'xuat_ban', `ngay_dang` = NOW() WHERE `ma_bai_viet` = :id");
+                $stmt->execute([':id' => $id]);
+                $stmt->closeCursor();
+            } catch (PDOException $e) {}
+        }
+
+        $_SESSION['fk_published_articles'][$id] = 'xuat_ban';
+        if (isset($_SESSION['fk_custom_articles'][$id])) {
+            $_SESSION['fk_custom_articles'][$id]['status'] = 'xuat_ban';
+        }
+
+        return [
+            'id'           => $id,
+            'status'       => 'xuat_ban',
+            'status_label' => 'Đã xuất bản',
+            'published_at' => date('d/m/Y')
+        ];
+    }
+
+    /**
+     * Xóa / Ẩn bài viết Tạp chí khỏi hệ thống - CHỈ ADMIN (MH 21/22)
+     */
+    public function deleteArticle(int $id): bool {
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("DELETE FROM `tgb_bai_viet_tin_tuc` WHERE `ma_bai_viet` = :id");
+                $stmt->execute([':id' => $id]);
+                $stmt->closeCursor();
+            } catch (PDOException $e) {}
+        }
+
+        if (!isset($_SESSION['fk_deleted_articles']) || !is_array($_SESSION['fk_deleted_articles'])) {
+            $_SESSION['fk_deleted_articles'] = [];
+        }
+        if (!in_array($id, $_SESSION['fk_deleted_articles'], true)) {
+            $_SESSION['fk_deleted_articles'][] = $id;
+        }
+        unset($_SESSION['fk_custom_articles'][$id]);
+
+        return true;
+    }
+
+    /**
      * ========================================================================
      * PHÂN HỆ 2: TIN NHẮN TƯ VẤN TRỰC TUYẾN REALTIME (tgb_tin_nhan_tu_van)
      * ========================================================================
@@ -971,7 +1034,49 @@ class RealtimeContentModel extends BaseModel {
             } catch (PDOException $e) {}
         }
 
+        // Đồng bộ trạng thái đã đọc trong phiên làm việc của Nhân viên CSKH (tgb_danh_dau_tin_da_doc)
+        if (!empty($_SESSION['fk_chat_read_sessions']) && is_array($_SESSION['fk_chat_read_sessions'])) {
+            foreach ($_SESSION['fk_chat_read_sessions'] as $readSid => $isRead) {
+                if ($isRead && isset($sessions[$readSid])) {
+                    $sessions[$readSid]['unread'] = 0;
+                }
+            }
+        }
+
         return array_values($sessions);
+    }
+
+    /**
+     * Đánh dấu toàn bộ tin nhắn của khách hàng trong phiên chat là Đã đọc (tgb_danh_dau_tin_da_doc) - MH 11
+     */
+    public function markChatSessionAsRead(string $sessionId): int {
+        $updatedRows = 0;
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("CALL `tgb_danh_dau_tin_da_doc`(:sid)");
+                $stmt->execute([':sid' => $sessionId]);
+                $stmt->closeCursor();
+                $updatedRows = 1;
+            } catch (PDOException $e) {
+                try {
+                    $stmt2 = $this->db->prepare("
+                        UPDATE `tgb_tin_nhan_tu_van`
+                        SET `da_xem` = 1
+                        WHERE `ma_phien_khach` = :sid AND `nguoi_gui` = 'khach_hang' AND `da_xem` = 0
+                    ");
+                    $stmt2->execute([':sid' => $sessionId]);
+                    $updatedRows = $stmt2->rowCount();
+                    $stmt2->closeCursor();
+                } catch (PDOException $e2) {}
+            }
+        }
+
+        if (!isset($_SESSION['fk_chat_read_sessions']) || !is_array($_SESSION['fk_chat_read_sessions'])) {
+            $_SESSION['fk_chat_read_sessions'] = [];
+        }
+        $_SESSION['fk_chat_read_sessions'][$sessionId] = true;
+
+        return $updatedRows;
     }
 
     public function getChatMessages(string $sessionId = 'sess_guest_123456'): array {
@@ -1097,6 +1202,12 @@ class RealtimeContentModel extends BaseModel {
 
         if (!$savedDb) {
             $_SESSION['fk_chat_messages'][$sessionId][] = $msgObj;
+        }
+
+        if ($sender === 'khach_hang') {
+            $_SESSION['fk_chat_read_sessions'][$sessionId] = false;
+        } else {
+            $this->markChatSessionAsRead($sessionId);
         }
 
         $autoReplyObj = null;
@@ -1259,24 +1370,33 @@ class RealtimeContentModel extends BaseModel {
     }
 
     /**
-     * Xét duyệt hồ sơ KOL Nhí qua Stored Procedure sp_lnkt_xet_duyet_kol_nhi
+     * Xét duyệt hồ sơ KOL Nhí qua Stored Procedure sp_lnkt_duyet_ho_so_kol_nhi / sp_lnkt_xet_duyet_kol_nhi
      */
-    public function reviewKolApplication(int $id, string $newStatus): array {
+    public function reviewKolApplication(int $id, string $newStatus, ?int $reviewerId = null): array {
         $allowed = ['cho_duyet', 'moi_phong_van', 'trung_tuyen', 'tu_choi'];
         if (!in_array($newStatus, $allowed, true)) {
             $newStatus = 'moi_phong_van';
         }
+        $staffOrAdminId = $reviewerId ?? (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['auth_user']['id'] ?? 2);
         $_SESSION['fk_kol_status_overrides'][$id] = $newStatus;
 
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("CALL `sp_lnkt_xet_duyet_kol_nhi`(:id, 2, :st)");
-                $stmt->execute([':id' => $id, ':st' => $newStatus]);
+                $stmt = $this->db->prepare("CALL `sp_lnkt_duyet_ho_so_kol_nhi`(:id, :uid, :st)");
+                $stmt->execute([':id' => $id, ':uid' => $staffOrAdminId, ':st' => $newStatus]);
+                $stmt->closeCursor();
             } catch (PDOException $e) {
                 try {
-                    $stmt2 = $this->db->prepare("UPDATE `lnkt_dang_ky_kol_nhi` SET `trang_thai_duyet` = :st WHERE `ma_ho_so` = :id");
-                    $stmt2->execute([':st' => $newStatus, ':id' => $id]);
-                } catch (PDOException $e2) {}
+                    $stmt2 = $this->db->prepare("CALL `sp_lnkt_xet_duyet_kol_nhi`(:id, :uid, :st)");
+                    $stmt2->execute([':id' => $id, ':uid' => $staffOrAdminId, ':st' => $newStatus]);
+                    $stmt2->closeCursor();
+                } catch (PDOException $e2) {
+                    try {
+                        $stmt3 = $this->db->prepare("UPDATE `lnkt_dang_ky_kol_nhi` SET `trang_thai_duyet` = :st WHERE `ma_ho_so` = :id");
+                        $stmt3->execute([':st' => $newStatus, ':id' => $id]);
+                        $stmt3->closeCursor();
+                    } catch (PDOException $e3) {}
+                }
             }
         }
 
