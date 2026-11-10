@@ -133,6 +133,187 @@ class StaffController extends Controller {
     }
 
     /**
+     * MH 10 (Orders): AJAX Đối soát thanh toán VietQR qua Casso cho 1 đơn hàng
+     * URL: index.php?c=staff&a=ajaxVerifyOrderPayment
+     */
+    public function ajaxVerifyOrderPayment(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép đối soát giao dịch ngân hàng đơn hàng!'
+        );
+
+        $data    = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $orderId = (int)($data['order_id'] ?? $data['ma_don_hang'] ?? $_GET['order_id'] ?? 0);
+        if ($orderId <= 0) {
+            $this->json(['status' => 'error', 'message' => 'Mã đơn hàng cần đối soát không hợp lệ!'], 400);
+        }
+
+        try {
+            $staffId = (int)(Rbac::currentUserId() ?? 0);
+            $res     = $this->orderModel->checkAndReconcileVietQr($orderId, $staffId, true, true);
+            $counts  = $this->orderModel->getOrderStatusCounts();
+            $this->json([
+                'status'       => 'success',
+                'paid'         => !empty($res['paid']),
+                'check_status' => $res['status'] ?? 'pending',
+                'tx_key'       => $res['tx_key'] ?? null,
+                'amount'       => $res['amount'] ?? ($res['received_amount'] ?? 0),
+                'shortage'     => $res['shortage'] ?? 0,
+                'order'        => $res['order'] ?? null,
+                'counts'       => $counts,
+                'message'      => (string)($res['message'] ?? 'Đã hoàn tất đối soát giao dịch Casso.')
+            ], 200);
+        } catch (Throwable $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * MH 10 (Orders): AJAX Đồng bộ nền toàn bộ đơn VietQR đang chờ chuyển khoản qua Casso
+     * URL: index.php?c=staff&a=ajaxSyncPendingPayments
+     */
+    public function ajaxSyncPendingPayments(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép đồng bộ giao dịch chờ thanh toán!'
+        );
+
+        try {
+            $syncRes  = $this->orderModel->reconcileAllPendingVietQrFromCasso(false);
+            $pollData = $this->orderModel->getNewOrdersSince(0);
+            $this->json([
+                'status'            => 'success',
+                'confirmed_ids'     => $syncRes['confirmed_ids'] ?? [],
+                'expired_count'     => (int)($syncRes['expired_count'] ?? 0),
+                'api_error'         => $syncRes['api_error'] ?? null,
+                'pending_sync_rows' => $pollData['pending_sync_rows'] ?? [],
+                'counts'            => $pollData['counts'] ?? [],
+                'message'           => !empty($syncRes['confirmed_ids'])
+                    ? ('Vừa đối soát thành công ' . count($syncRes['confirmed_ids']) . ' đơn chuyển khoản MB Bank!')
+                    : 'Đã đồng bộ dữ liệu thanh toán.'
+            ], 200);
+        } catch (Throwable $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * MH 10 & MH 12: AJAX Tạo dữ liệu Tem/Phiếu Giao Hàng & Hóa Đơn Thu Hộ (COD = 0 đồng nếu đã TT)
+     * URL: index.php?c=staff&a=ajaxGetShippingLabel&order_id=...
+     */
+    public function ajaxGetShippingLabel(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép xuất phiếu giao hàng & mã vận đơn!'
+        );
+
+        $orderId = (int)($_GET['order_id'] ?? $_POST['order_id'] ?? 0);
+        if ($orderId <= 0) {
+            $this->json(['status' => 'error', 'message' => 'Mã đơn hàng không hợp lệ!'], 400);
+        }
+
+        $order = $this->orderModel->getOrderById($orderId);
+        if (!$order) {
+            $this->json(['status' => 'error', 'message' => 'Không tìm thấy đơn hàng #' . $orderId . '!'], 404);
+        }
+
+        $isPaid      = !empty($order['is_paid']);
+        $statusKey   = (string)($order['trang_thai_don_hang'] ?? 'cho_duyet');
+        $payMethod   = (string)($order['phuong_thuc_thanh_toan'] ?? 'cod');
+        $isCancelled = ($statusKey === 'da_huy');
+        $isExpired   = !empty($order['is_payment_expired']);
+        $totalAmount = (float)($order['tong_tien_thanh_toan'] ?? 0);
+        $codCollect  = ($isPaid || $isCancelled) ? 0.0 : $totalAmount;
+
+        $baseUrl     = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
+        $scheme      = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host        = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $trackingUrl = $scheme . '://' . $host . $baseUrl . '/views/pages/order-tracking.php?code=' . urlencode((string)$order['ma_van_don']);
+        $qrTrackImg  = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=4&data=' . rawurlencode($trackingUrl);
+        $barcodeCode = 'FKORD' . str_pad((string)$orderId, 6, '0', STR_PAD_LEFT);
+
+        if ($isPaid) {
+            $codCollectText = '0 đồng';
+            $codInstruction = ($payMethod === 'vietqr')
+                ? ('ĐÃ THANH TOÁN CHUYỂN KHOẢN MB BANK' . (!empty($order['ma_giao_dich_ngan_hang']) ? (' (Mã GD: ' . $order['ma_giao_dich_ngan_hang'] . ')') : '') . ' — Bưu tá KHÔNG thu thêm tiền hàng.')
+                : 'ĐÃ THANH TOÁN HOÀN TẤT — Bưu tá KHÔNG thu thêm tiền hàng.';
+        } elseif ($isCancelled) {
+            $codCollectText = '0 đồng (Đơn đã hủy)';
+            $codInstruction = $isExpired
+                ? 'Đơn đã tự động hủy do quá hạn thanh toán 24 giờ — KHÔNG xuất kho giao hàng.'
+                : 'Đơn hàng đã hủy — KHÔNG xuất kho giao hàng.';
+        } elseif ($payMethod === 'vietqr') {
+            $codCollectText = number_format($totalAmount, 0, ',', '.') . ' đồng (CHỜ CHUYỂN KHOẢN)';
+            $codInstruction = 'Khách chọn VietQR nhưng CHƯA chuyển khoản đủ — Chờ đối soát Casso hoặc đổi sang COD trước khi bàn giao bưu tá.';
+        } else {
+            $codCollectText = number_format($totalAmount, 0, ',', '.') . ' đồng';
+            $codInstruction = 'THANH TOÁN TIỀN MẶT KHI NHẬN HÀNG (COD) — Bưu tá thu đúng ' . number_format($totalAmount, 0, ',', '.') . ' đồng từ người nhận (được đồng kiểm).';
+        }
+
+        $fullAddr = trim(implode(', ', array_filter([
+            $order['dia_chi_giao_hang'] ?? '',
+            $order['quan_huyen'] ?? '',
+            $order['tinh_thanh_pho'] ?? '',
+        ])));
+
+        $this->json([
+            'status' => 'success',
+            'order'  => $order,
+            'label'  => [
+                'order_id'            => $orderId,
+                'ma_van_don'          => (string)$order['ma_van_don'],
+                'barcode_value'       => $barcodeCode,
+                'tracking_url'        => $trackingUrl,
+                'qr_tracking_img'     => $qrTrackImg,
+                'created_at_label'    => !empty($order['ngay_dat_hang']) ? date('d/m/Y H:i', strtotime((string)$order['ngay_dat_hang'])) : date('d/m/Y H:i'),
+                'printed_at_label'    => date('d/m/Y H:i'),
+                'status_code'         => $statusKey,
+                'status_label'        => (string)($order['status_meta']['label'] ?? 'Chờ duyệt'),
+                'handled_by_name'     => (string)($order['nhan_vien_phu_trach'] ?? ($_SESSION['user']['ho_va_ten'] ?? 'Nhân viên FashionKids')),
+                'sender'              => [
+                    'name'    => 'FASHIONKIDS OFFICIAL',
+                    'hotline' => '1900 6868',
+                    'address' => 'Kho Vận Hành Thời Trang Sợi Tre FashionKids, TP. Hồ Chí Minh',
+                ],
+                'recipient'           => [
+                    'name'         => (string)($order['ten_nguoi_nhan'] ?? ''),
+                    'phone'        => (string)($order['so_dien_thoai_nhan'] ?? ''),
+                    'full_address' => $fullAddr,
+                    'province'     => (string)($order['tinh_thanh_pho'] ?? ''),
+                    'district'     => (string)($order['quan_huyen'] ?? ''),
+                    'note'         => (string)($order['ghi_chu'] ?? ''),
+                ],
+                'payment_method'      => $payMethod,
+                'payment_method_name' => $payMethod === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Tiền mặt khi nhận hàng (COD)',
+                'payment_status'      => (string)($order['trang_thai_thanh_toan'] ?? 'chua_thanh_toan'),
+                'is_paid'             => $isPaid,
+                'is_cancelled'        => $isCancelled,
+                'is_expired'          => $isExpired,
+                'tx_code'             => (string)($order['ma_giao_dich_ngan_hang'] ?? ''),
+                'paid_at_label'       => !empty($order['thoi_gian_thanh_toan']) ? date('d/m/Y H:i', strtotime((string)$order['thoi_gian_thanh_toan'])) : '',
+                'subtotal'            => (float)($order['tien_hang_tam_tinh'] ?? 0),
+                'discount'            => (float)($order['tien_giam_gia'] ?? 0),
+                'shipping_fee'        => 0.0,
+                'total_amount'        => $totalAmount,
+                'cod_collect_amount'  => $codCollect,
+                'cod_collect_text'    => $codCollectText,
+                'cod_instruction'     => $codInstruction,
+                'items'               => $order['items'] ?? [],
+            ],
+            'message' => 'Đã tạo phiếu giao hàng & mã vạch vận đơn #' . $order['ma_van_don']
+        ], 200);
+    }
+
+    /**
      * 2. MH 11 (Live Chat): AJAX Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc)
      * Sử dụng PDO Singleton từ core/Database.php và $stmt->closeCursor()
      * URL: index.php?c=staff&a=ajaxMarkChatRead

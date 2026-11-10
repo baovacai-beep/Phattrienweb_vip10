@@ -447,9 +447,13 @@ unset($_SESSION['checkout_flash_error']);
                         <div class="custom-control custom-radio">
                             <input type="radio" id="lnkt_payBank" name="phuong_thuc_thanh_toan" form="lnkt_formCheckoutOrder" class="custom-control-input" value="vietqr">
                             <label class="custom-control-label small font-weight-bold text-slate" for="lnkt_payBank">
-                                <i class="fa-solid fa-qrcode text-info mr-1"></i> Chuyển khoản nhanh VietQR / Ví MoMo
+                                <i class="fa-solid fa-qrcode text-info mr-1"></i> Chuyển khoản nhanh VietQR MB Bank (Tự động đối soát 24/7)
                             </label>
                         </div>
+                        <small class="text-muted-custom d-block mt-2">
+                            <i class="fa-regular fa-clock text-warning mr-1"></i>
+                            Đơn VietQR giữ chỗ trong <strong>24 giờ</strong> (MB Bank <strong><?= htmlspecialchars(defined('VIETQR_ACCOUNT_NO') ? VIETQR_ACCOUNT_NO : '0913672861') ?></strong> - <?= htmlspecialchars(defined('VIETQR_ACCOUNT_NAME') ? VIETQR_ACCOUNT_NAME : 'HO GIA BAO') ?>) và tự động hủy nếu quá hạn. Khi chưa thanh toán, bạn vẫn có thể đổi sang COD bất kỳ lúc nào.
+                        </small>
                     </div>
 
                     <!-- Nút Chốt Đặt Hàng -->

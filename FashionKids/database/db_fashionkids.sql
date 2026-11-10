@@ -111,10 +111,17 @@ CREATE TABLE `lnkt_don_hang` (
     `tong_tien_thanh_toan` DECIMAL(12,2) NOT NULL,
     `phuong_thuc_thanh_toan` ENUM('cod', 'vietqr') NOT NULL DEFAULT 'cod',
     `trang_thai_thanh_toan` ENUM('chua_thanh_toan', 'cho_chuyen_khoan', 'da_thanh_toan') NOT NULL DEFAULT 'chua_thanh_toan',
+    `ma_giao_dich_ngan_hang` VARCHAR(100) NULL DEFAULT NULL,
+    `cac_ma_giao_dich` TEXT NULL DEFAULT NULL,
+    `so_tien_da_nhan` DECIMAL(12,2) NULL DEFAULT NULL,
+    `thoi_gian_thanh_toan` DATETIME NULL DEFAULT NULL,
+    `han_thanh_toan` DATETIME NULL DEFAULT NULL,
+    `noi_dung_chuyen_khoan` VARCHAR(50) NULL DEFAULT NULL,
     `ghi_chu` VARCHAR(255) NULL,
     `trang_thai_don_hang` ENUM('cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy') NOT NULL DEFAULT 'cho_duyet',
     `ngay_dat_hang` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_lnkt_ma_gd_ngan_hang` (`ma_giao_dich_ngan_hang`),
     CONSTRAINT `kn_don_hang_nguoi_dung` 
         FOREIGN KEY (`ma_nguoi_dung`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`) 
         ON DELETE SET NULL ON UPDATE CASCADE,

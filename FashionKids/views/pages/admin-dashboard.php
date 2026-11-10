@@ -294,12 +294,15 @@ $catColors = [
                                     </tr>
                                 <?php endif; ?>
                                 <?php foreach ($recent_orders as $ord):
-                                    $oid     = (int)$ord['ma_don_hang'];
-                                    $ocode   = (string)$ord['ma_van_don'];
-                                    $stMeta  = $ord['status_meta'] ?? [];
-                                    $pm      = strtolower((string)($ord['phuong_thuc_thanh_toan'] ?? 'cod'));
-                                    $ps      = strtolower((string)($ord['trang_thai_thanh_toan'] ?? 'chua_thanh_toan'));
-                                    $addr    = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
+                                    $oid       = (int)$ord['ma_don_hang'];
+                                    $ocode     = (string)$ord['ma_van_don'];
+                                    $stCode    = (string)($ord['trang_thai_don_hang'] ?? 'cho_duyet');
+                                    $stMeta    = $ord['status_meta'] ?? [];
+                                    $pm        = strtolower((string)($ord['phuong_thuc_thanh_toan'] ?? 'cod'));
+                                    $isPaid    = !empty($ord['is_paid']);
+                                    $isExpired = !empty($ord['is_payment_expired']);
+                                    $totalFmt  = number_format((float)$ord['tong_tien_thanh_toan'], 0, ',', '.') . ' đ';
+                                    $addr      = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
                                 ?>
                                     <tr>
                                         <td class="font-weight-bold text-slate text-nowrap">#<?= htmlspecialchars($ocode) ?></td>
@@ -314,24 +317,36 @@ $catColors = [
                                         </td>
                                         <td class="text-nowrap">
                                             <span class="badge badge-pill <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small font-weight-bold">
-                                                <?= $pm === 'vietqr' ? 'VietQR' : 'COD' ?>
+                                                <?= $pm === 'vietqr' ? 'VietQR MB' : 'COD' ?>
                                             </span>
-                                            <?php if ($ps === 'da_thanh_toan'): ?>
-                                                <span class="badge badge-pill badge-mint small">Đã TT</span>
+                                            <?php if ($isPaid): ?>
+                                                <span class="badge badge-pill badge-mint small">Đã TT • Thu 0 đ</span>
+                                            <?php elseif ($stCode === 'da_huy' && $isExpired): ?>
+                                                <span class="badge badge-pill badge-danger small">Quá hạn 24h</span>
+                                            <?php elseif ($pm === 'vietqr' && $stCode !== 'da_huy'): ?>
+                                                <span class="badge badge-pill badge-warning text-dark small">Chờ CK</span>
+                                            <?php elseif ($stCode !== 'da_huy'): ?>
+                                                <span class="badge badge-pill badge-butter small">Thu tiền mặt</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-right font-weight-bold text-peach text-nowrap">
-                                            <?= number_format((float)$ord['tong_tien_thanh_toan'], 0, ',', '.') ?> đ
+                                            <?= htmlspecialchars($totalFmt) ?>
+                                            <small class="d-block <?= $isPaid ? 'text-success' : 'text-muted-custom' ?>">
+                                                <?= $isPaid ? 'Thu hộ: 0 đ' : ($stCode === 'da_huy' ? 'Đã hủy' : ($pm === 'cod' ? ('Thu COD: ' . $totalFmt) : 'Chờ CK đủ')) ?>
+                                            </small>
                                         </td>
                                         <td class="text-center text-nowrap">
                                             <span class="badge badge-pill <?= htmlspecialchars((string)($stMeta['badge_class'] ?? 'badge-warning')) ?> px-2 py-1">
                                                 <?= htmlspecialchars((string)($stMeta['label'] ?? 'Chờ duyệt')) ?>
                                             </span>
                                         </td>
-                                        <td class="text-center">
-                                            <a href="/FashionKids/views/pages/staff-orders.php?order_id=<?= $oid ?>" class="btn btn-sm btn-pastel-sky font-weight-bold rounded-pill px-3">
+                                        <td class="text-center text-nowrap">
+                                            <a href="/FashionKids/views/pages/staff-orders.php?order_id=<?= $oid ?>" class="btn btn-sm btn-pastel-sky font-weight-bold rounded-pill px-2 mr-1">
                                                 Duyệt
                                             </a>
+                                            <button type="button" onclick="lnktOpenShippingLabelModal(<?= $oid ?>)" class="btn btn-sm btn-light border font-weight-bold rounded-pill px-2" title="In phiếu giao hàng &amp; thu hộ">
+                                                <i class="fa-solid fa-barcode text-peach"></i> In tem
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -402,5 +417,6 @@ $catColors = [
 </div>
 
 <?php
+require_once __DIR__ . "/../modals/modal-shipping-label.php";
 require_once __DIR__ . "/../layouts/footer.php";
 ?>

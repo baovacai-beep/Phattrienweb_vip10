@@ -417,6 +417,9 @@ class OrderController extends Controller {
                     'tong_tien'             => $result['tong_tien'],
                     'phuong_thuc'           => $result['phuong_thuc'],
                     'trang_thai_thanh_toan' => $result['trang_thai_thanh_toan'],
+                    'han_thanh_toan'        => $result['han_thanh_toan'] ?? null,
+                    'han_thanh_toan_ts'     => $result['han_thanh_toan_ts'] ?? 0,
+                    'noi_dung_chuyen_khoan' => $result['noi_dung_chuyen_khoan'] ?? '',
                     'qr_url'                => $result['qr_url'],
                 ],
                 'message'    => 'Đặt hàng thành công! Mã đơn hàng #' . $result['ma_don_hang'] . ' đã được gửi tới bộ phận xử lý.'
@@ -432,7 +435,37 @@ class OrderController extends Controller {
     }
 
     /**
-     * API AJAX Tra cứu vận đơn & Cập nhật trạng thái Realtime (MH 06)
+     * Xây dựng payload chuẩn cho màn hình Theo dõi đơn hàng (MH 06)
+     */
+    private function buildTrackOrderPayload(array $order, ?array $checkResult = null): array {
+        $currentUid = Rbac::currentUserId();
+        $isOwner    = ($currentUid !== null && (int)($order['ma_nguoi_dung'] ?? 0) === $currentUid);
+        $isStaffAdm = Rbac::isStaffOrAdmin();
+        $statusCode = (string)($order['trang_thai_don_hang'] ?? 'cho_duyet');
+        $payMethod  = (string)($order['phuong_thuc_thanh_toan'] ?? 'cod');
+        $payStatus  = (string)($order['trang_thai_thanh_toan'] ?? 'chua_thanh_toan');
+        $isExpired  = !empty($order['is_payment_expired']);
+        $isPaid     = ($payStatus === 'da_thanh_toan');
+
+        if ($isOwner && $currentUid) {
+            $this->userModel->dongBoSessionNguoiDung($currentUid);
+        }
+
+        return [
+            'order'              => $order,
+            'is_owner'           => $isOwner,
+            'can_cancel'         => ($isOwner && $statusCode === 'cho_duyet'),
+            'can_confirm_qr'     => (($isOwner || $isStaffAdm) && $payMethod === 'vietqr' && !$isPaid && $statusCode === 'cho_duyet' && !$isExpired),
+            'can_switch_payment' => (($isOwner || $isStaffAdm) && !$isPaid && $statusCode === 'cho_duyet' && !$isExpired),
+            'can_review'         => ($isOwner && $statusCode === 'hoan_tat'),
+            'check_result'       => $checkResult,
+            'user_points'        => $currentUid ? (int)($_SESSION['user']['diem_tich_luy'] ?? 0) : null,
+            'user_tier'          => $currentUid ? (string)($_SESSION['user']['ten_hang'] ?? '') : null,
+        ];
+    }
+
+    /**
+     * API AJAX Tra cứu vận đơn & Cập nhật trạng thái + Tự động đối soát Casso Realtime (MH 06)
      * URL: index.php?c=order&a=ajaxTrackOrder
      */
     public function ajaxTrackOrder(): void {
@@ -459,36 +492,163 @@ class OrderController extends Controller {
             ], 404);
         }
 
-        $currentUid  = Rbac::currentUserId();
-        $isOwner     = ($currentUid !== null && (int)($order['ma_nguoi_dung'] ?? 0) === $currentUid);
-        $isStaffAdm  = Rbac::isStaffOrAdmin();
-        $statusCode  = (string)($order['trang_thai_don_hang'] ?? 'cho_duyet');
-        $payMethod   = (string)($order['phuong_thuc_thanh_toan'] ?? 'cod');
-        $payStatus   = (string)($order['trang_thai_thanh_toan'] ?? 'chua_thanh_toan');
-
-        // Đồng bộ lại session nếu chủ đơn vừa được hoàn tất đơn & thăng hạng VIP
-        if ($isOwner && $currentUid) {
-            $this->userModel->dongBoSessionNguoiDung($currentUid);
+        $checkResult = null;
+        if (
+            strtolower((string)($order['phuong_thuc_thanh_toan'] ?? 'cod')) === 'vietqr'
+            && strtolower((string)($order['trang_thai_thanh_toan'] ?? 'chua_thanh_toan')) !== 'da_thanh_toan'
+            && (string)($order['trang_thai_don_hang'] ?? 'cho_duyet') === 'cho_duyet'
+        ) {
+            $checkResult = $this->orderModel->checkAndReconcileVietQr(
+                (int)$order['ma_don_hang'],
+                (int)(Rbac::currentUserId() ?? 0),
+                Rbac::isStaffOrAdmin(),
+                false,
+                null,
+                true
+            );
+            if (!empty($checkResult['order'])) {
+                $order = $checkResult['order'];
+            }
         }
 
+        $payload = $this->buildTrackOrderPayload($order, $checkResult);
+
         $this->jsonResponse([
-            'status' => 'success',
-            'code'   => 200,
-            'data'   => [
-                'order'          => $order,
-                'is_owner'       => $isOwner,
-                'can_cancel'     => ($isOwner && $statusCode === 'cho_duyet'),
-                'can_confirm_qr' => (($isOwner || $isStaffAdm) && $payMethod === 'vietqr' && $payStatus !== 'da_thanh_toan' && $statusCode !== 'da_huy'),
-                'can_review'     => ($isOwner && $statusCode === 'hoan_tat'),
-                'user_points'    => $currentUid ? (int)($_SESSION['user']['diem_tich_luy'] ?? 0) : null,
-                'user_tier'      => $currentUid ? (string)($_SESSION['user']['ten_hang'] ?? '') : null,
-            ],
-            'message' => 'Đã tải thông tin đơn hàng #' . $order['ma_don_hang']
+            'status'  => 'success',
+            'code'    => 200,
+            'data'    => $payload,
+            'message' => (!empty($checkResult['newly_paid']))
+                ? (string)$checkResult['message']
+                : ('Đã tải thông tin đơn hàng #' . $order['ma_don_hang'])
         ], 200);
     }
 
     /**
-     * API AJAX Khách hàng báo đã chuyển khoản VietQR
+     * API AJAX Chủ đơn / Nhân viên chủ động bấm kiểm tra giao dịch Casso MB Bank ngay
+     * URL: index.php?c=order&a=ajaxCheckVietQrPayment
+     */
+    public function ajaxCheckVietQrPayment(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['khach_hang', 'nhan_vien', 'quan_tri'],
+            'Vui lòng đăng nhập để kiểm tra trạng thái thanh toán đơn hàng!'
+        );
+
+        $data       = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $orderId    = (int)($data['order_id'] ?? $data['ma_don_hang'] ?? $_GET['order_id'] ?? 0);
+        $manualSync = isset($data['manual']) ? (bool)$data['manual'] : (isset($_GET['manual']) ? (bool)$_GET['manual'] : true);
+        $userId     = (int)(Rbac::currentUserId() ?? 0);
+
+        if ($orderId <= 0) {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Mã đơn hàng không hợp lệ!'], 400);
+        }
+
+        try {
+            $res   = $this->orderModel->checkAndReconcileVietQr($orderId, $userId, Rbac::isStaffOrAdmin(), $manualSync);
+            $order = !empty($res['order']) ? $res['order'] : ($this->orderModel->getOrderById($orderId) ?? []);
+            $trackPayload = !empty($order) ? $this->buildTrackOrderPayload($order, $res) : null;
+
+            $this->jsonResponse([
+                'status'       => 'success',
+                'code'         => 200,
+                'paid'         => !empty($res['paid']),
+                'check_status' => $res['status'] ?? 'pending',
+                'tx_key'       => $res['tx_key'] ?? null,
+                'amount'       => $res['amount'] ?? ($res['received_amount'] ?? 0),
+                'shortage'     => $res['shortage'] ?? 0,
+                'data'         => $trackPayload,
+                'check_result' => $res,
+                'message'      => (string)($res['message'] ?? 'Đã kiểm tra giao dịch ngân hàng.')
+            ], 200);
+        } catch (Throwable $e) {
+            $code = (strpos($e->getMessage(), 'quyền') !== false) ? 403 : 400;
+            $this->jsonResponse(['status' => 'error', 'code' => $code, 'data' => null, 'message' => $e->getMessage()], $code);
+        }
+    }
+
+    /**
+     * API AJAX Đổi phương thức thanh toán (VietQR <-> COD) khi đơn chưa thanh toán & đang 'cho_duyet'
+     * URL: index.php?c=order&a=ajaxSwitchPaymentMethod
+     */
+    public function ajaxSwitchPaymentMethod(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['khach_hang', 'nhan_vien', 'quan_tri'],
+            'Vui lòng đăng nhập để thay đổi phương thức thanh toán!'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'code' => 405, 'data' => null, 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $data      = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $orderId   = (int)($data['order_id'] ?? $data['ma_don_hang'] ?? 0);
+        $newMethod = strtolower(trim((string)($data['payment_method'] ?? $data['phuong_thuc_thanh_toan'] ?? '')));
+        $userId    = (int)(Rbac::currentUserId() ?? 0);
+
+        if ($orderId <= 0 || !in_array($newMethod, ['cod', 'vietqr'], true)) {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Thông tin đơn hàng hoặc phương thức thanh toán mới không hợp lệ!'], 400);
+        }
+
+        try {
+            $order   = $this->orderModel->switchPaymentMethod($orderId, $userId, $newMethod, Rbac::isStaffOrAdmin());
+            $payload = $this->buildTrackOrderPayload($order);
+            $msg = ($newMethod === 'cod')
+                ? ('Đã chuyển đơn #' . $orderId . ' sang hình thức Thanh toán tiền mặt khi nhận hàng (COD)!')
+                : ('Đã chuyển đơn #' . $orderId . ' sang hình thức Quét mã VietQR MB Bank (hạn thanh toán 24 giờ)!');
+
+            $this->jsonResponse([
+                'status'  => 'success',
+                'code'    => 200,
+                'data'    => $payload,
+                'message' => $msg
+            ], 200);
+        } catch (Throwable $e) {
+            $code = (strpos($e->getMessage(), 'quyền') !== false) ? 403 : 400;
+            $this->jsonResponse(['status' => 'error', 'code' => $code, 'data' => null, 'message' => $e->getMessage()], $code);
+        }
+    }
+
+    /**
+     * Webhook v2 nhận thông báo giao dịch tức thì từ Casso
+     * URL: index.php?c=order&a=cassoWebhook
+     */
+    public function cassoWebhook(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        $rawBody = (string)file_get_contents('php://input');
+        $token   = (string)($_SERVER['HTTP_SECURE_TOKEN'] ?? $_SERVER['HTTP_X_SECURE_TOKEN'] ?? '');
+        $casso   = $this->orderModel->getCassoService();
+
+        if (!$casso->verifyWebhookToken($token)) {
+            $this->jsonResponse([
+                'error'   => 1,
+                'message' => 'Invalid Secure-Token'
+            ], 401);
+        }
+
+        try {
+            $records = $casso->parseWebhookPayload($rawBody);
+            $res     = $this->orderModel->reconcilePendingFromWebhook($records);
+            $this->jsonResponse([
+                'error'   => 0,
+                'message' => 'ok',
+                'data'    => $res
+            ], 200);
+        } catch (Throwable $e) {
+            $this->jsonResponse([
+                'error'   => 1,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API AJAX Xác nhận thanh toán VietQR (BẮT BUỘC đối soát giao dịch thật qua Casso, chặn đánh dấu mù)
      * URL: index.php?c=order&a=ajaxConfirmVietQr
      */
     public function ajaxConfirmVietQr(): void {
@@ -513,7 +673,7 @@ class OrderController extends Controller {
                 'status'  => 'success',
                 'code'    => 200,
                 'data'    => $res,
-                'message' => 'Đã ghi nhận thông tin chuyển khoản VietQR cho đơn #' . $orderId . '! Nhân viên sẽ đối soát và xác nhận ngay.'
+                'message' => (string)($res['message'] ?? ('Đã đối soát thanh toán VietQR thành công cho đơn #' . $orderId . '!'))
             ], 200);
         } catch (Throwable $e) {
             $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => $e->getMessage()], 400);

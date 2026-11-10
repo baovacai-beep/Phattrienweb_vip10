@@ -46,3 +46,10 @@ if (!defined('SMTP_FROM_NAME'))     define('SMTP_FROM_NAME', 'FashionKids Suppor
 // Chống dò mật khẩu: khóa tạm form đăng nhập sau N lần sai liên tiếp
 if (!defined('LOGIN_MAX_FAILS'))    define('LOGIN_MAX_FAILS', 5);
 if (!defined('LOGIN_LOCK_SECONDS')) define('LOGIN_LOCK_SECONDS', 60);
+
+// Đồng bộ múi giờ Việt Nam cho toàn bộ View/Controller/Casso Timestamp
+if (function_exists('date_default_timezone_set')) {
+    @date_default_timezone_set('Asia/Ho_Chi_Minh');
+}
+
+require_once __DIR__ . '/payment.php';

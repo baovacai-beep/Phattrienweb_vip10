@@ -40,27 +40,42 @@ $lnkt_stepper_steps = [
     ['key' => 'da_huy',      'label' => 'Đã hủy',      'desc' => 'Đơn hàng hủy theo yêu cầu',         'icon' => 'fa-ban'],
 ];
 
-$hasOrder        = is_array($trackedOrder) && !empty($trackedOrder['ma_don_hang']);
-$orderId         = $hasOrder ? (int)$trackedOrder['ma_don_hang'] : 0;
-$orderCode       = $hasOrder ? (string)$trackedOrder['ma_van_don'] : '';
-$statusKey       = $hasOrder ? (string)($trackedOrder['trang_thai_don_hang'] ?? 'cho_duyet') : 'cho_duyet';
-$statusMeta      = $hasOrder ? ($trackedOrder['status_meta'] ?? []) : ['label' => 'Chờ duyệt', 'badge_class' => 'badge-warning text-dark', 'icon' => 'fa-clock'];
-$isOwner         = ($hasOrder && $currentUid !== null && (int)($trackedOrder['ma_nguoi_dung'] ?? 0) === $currentUid);
-$canCancel       = ($isOwner && $statusKey === 'cho_duyet');
-$payMethod       = $hasOrder ? (string)($trackedOrder['phuong_thuc_thanh_toan'] ?? 'cod') : 'cod';
-$payStatus       = $hasOrder ? (string)($trackedOrder['trang_thai_thanh_toan'] ?? 'chua_thanh_toan') : 'chua_thanh_toan';
-$isVietQr        = ($hasOrder && $payMethod === 'vietqr' && $statusKey !== 'da_huy');
-$isPaid          = ($payStatus === 'da_thanh_toan');
-$canConfirmQr    = ($isVietQr && !$isPaid && ($isOwner || $isStaffOrAdmin));
-$orderTotal      = $hasOrder ? (float)($trackedOrder['tong_tien_thanh_toan'] ?? 0) : 0;
-$orderSubtotal   = $hasOrder ? (float)($trackedOrder['tien_hang_tam_tinh'] ?? 0) : 0;
-$orderDiscount   = $hasOrder ? (float)($trackedOrder['tien_giam_gia'] ?? 0) : 0;
-$orderRewardPts  = (int)floor($orderTotal / 10000);
-$createdTs       = ($hasOrder && !empty($trackedOrder['ngay_dat_hang'])) ? strtotime($trackedOrder['ngay_dat_hang']) : time();
-$createdLabel    = ($hasOrder && !empty($trackedOrder['ngay_dat_hang'])) ? date('d/m/Y H:i', $createdTs) : '--:--';
-$updatedLabel    = ($hasOrder && !empty($trackedOrder['ngay_cap_nhat'])) ? date('d/m/Y H:i', strtotime($trackedOrder['ngay_cap_nhat'])) : $createdLabel;
-$trackedItems    = $hasOrder && !empty($trackedOrder['items']) ? $trackedOrder['items'] : [];
-$fullAddress     = $hasOrder ? trim(implode(', ', array_filter([
+$hasOrder         = is_array($trackedOrder) && !empty($trackedOrder['ma_don_hang']);
+$orderId          = $hasOrder ? (int)$trackedOrder['ma_don_hang'] : 0;
+$orderCode        = $hasOrder ? (string)$trackedOrder['ma_van_don'] : '';
+$statusKey        = $hasOrder ? (string)($trackedOrder['trang_thai_don_hang'] ?? 'cho_duyet') : 'cho_duyet';
+$statusMeta       = $hasOrder ? ($trackedOrder['status_meta'] ?? []) : ['label' => 'Chờ duyệt', 'badge_class' => 'badge-warning text-dark', 'icon' => 'fa-clock'];
+$isOwner          = ($hasOrder && $currentUid !== null && (int)($trackedOrder['ma_nguoi_dung'] ?? 0) === $currentUid);
+$canCancel        = ($isOwner && $statusKey === 'cho_duyet');
+$payMethod        = $hasOrder ? (string)($trackedOrder['phuong_thuc_thanh_toan'] ?? 'cod') : 'cod';
+$payStatus        = $hasOrder ? (string)($trackedOrder['trang_thai_thanh_toan'] ?? 'chua_thanh_toan') : 'chua_thanh_toan';
+$isPaid           = ($payStatus === 'da_thanh_toan');
+$isExpired        = $hasOrder && !empty($trackedOrder['is_payment_expired']);
+$isVietQrActive   = ($hasOrder && $payMethod === 'vietqr' && !$isPaid && $statusKey !== 'da_huy');
+$isCodUnpaid      = ($hasOrder && $payMethod === 'cod' && !$isPaid && $statusKey !== 'da_huy');
+$isCancelledExp   = ($hasOrder && $statusKey === 'da_huy' && $isExpired);
+$canConfirmQr     = ($isVietQrActive && !$isExpired && ($isOwner || $isStaffOrAdmin));
+$canSwitchPayment = ($hasOrder && ($isOwner || $isStaffOrAdmin) && !$isPaid && $statusKey === 'cho_duyet' && !$isExpired);
+
+$bankName         = defined('VIETQR_BANK_NAME') ? VIETQR_BANK_NAME : 'MB Bank';
+$bankAccountNo    = defined('VIETQR_ACCOUNT_NO') ? VIETQR_ACCOUNT_NO : '0913672861';
+$bankAccountName  = defined('VIETQR_ACCOUNT_NAME') ? VIETQR_ACCOUNT_NAME : 'HO GIA BAO';
+$transferPrefix   = defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK';
+$transferMemo     = $hasOrder ? (string)($trackedOrder['noi_dung_chuyen_khoan'] ?? ($transferPrefix . $orderId)) : '';
+$txCode           = $hasOrder ? (string)($trackedOrder['ma_giao_dich_ngan_hang'] ?? '') : '';
+$paidAtLabel      = ($hasOrder && !empty($trackedOrder['thoi_gian_thanh_toan'])) ? date('d/m/Y H:i', strtotime((string)$trackedOrder['thoi_gian_thanh_toan'])) : '';
+$orderTotal       = $hasOrder ? (float)($trackedOrder['tong_tien_thanh_toan'] ?? 0) : 0;
+$orderSubtotal    = $hasOrder ? (float)($trackedOrder['tien_hang_tam_tinh'] ?? 0) : 0;
+$orderDiscount    = $hasOrder ? (float)($trackedOrder['tien_giam_gia'] ?? 0) : 0;
+$codCollectAmt    = $hasOrder ? (float)($trackedOrder['cod_collect_amount'] ?? ($isPaid || $statusKey === 'da_huy' ? 0 : $orderTotal)) : 0;
+$orderRewardPts   = (int)floor($orderTotal / 10000);
+$createdTs        = ($hasOrder && !empty($trackedOrder['ngay_dat_hang'])) ? strtotime($trackedOrder['ngay_dat_hang']) : time();
+$deadlineTs       = $hasOrder ? (int)($trackedOrder['han_thanh_toan_ts'] ?? ($createdTs + 86400)) : ($createdTs + 86400);
+$deadlineLabel    = $deadlineTs > 0 ? date('d/m/Y H:i', $deadlineTs) : '--:--';
+$createdLabel     = ($hasOrder && !empty($trackedOrder['ngay_dat_hang'])) ? date('d/m/Y H:i', $createdTs) : '--:--';
+$updatedLabel     = ($hasOrder && !empty($trackedOrder['ngay_cap_nhat'])) ? date('d/m/Y H:i', strtotime($trackedOrder['ngay_cap_nhat'])) : $createdLabel;
+$trackedItems     = $hasOrder && !empty($trackedOrder['items']) ? $trackedOrder['items'] : [];
+$fullAddress      = $hasOrder ? trim(implode(', ', array_filter([
     $trackedOrder['dia_chi_giao_hang'] ?? '',
     $trackedOrder['quan_huyen'] ?? '',
     $trackedOrder['tinh_thanh_pho'] ?? '',
@@ -77,7 +92,11 @@ foreach ($trackedItems as $ti) {
 <div class="container my-4 my-md-5"
      id="lnkt_order_tracking_section"
      data-order-id="<?= $orderId ?>"
-     data-order-created-ts="<?= $createdTs ?>">
+     data-order-created-ts="<?= $createdTs ?>"
+     data-deadline-ts="<?= $deadlineTs ?>"
+     data-payment-method="<?= htmlspecialchars($payMethod) ?>"
+     data-payment-status="<?= htmlspecialchars($payStatus) ?>"
+     data-is-expired="<?= $isExpired ? '1' : '0' ?>">
     <!-- Breadcrumb & Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -234,48 +253,161 @@ foreach ($trackedItems as $ti) {
                 <?php endforeach; ?>
             </div>
 
-            <!-- CỔNG THANH TOÁN VIETQR ĐỘNG (Khi chọn chuyển khoản VietQR) -->
-            <div id="lnkt_vietQrPanel" class="mt-4 p-4 rounded lnkt-vietqr-card shadow-sm <?= $isVietQr ? '' : 'd-none' ?>">
+            <!-- CỔNG THANH TOÁN VIETQR MB BANK ĐỘNG (Khi chọn VietQR & chưa hoàn tất chuyển khoản) -->
+            <div id="lnkt_vietQrPanel" class="mt-4 p-4 rounded lnkt-vietqr-card shadow-sm <?= $isVietQrActive ? '' : 'd-none' ?>">
                 <div class="row align-items-center">
                     <div class="col-12 col-md-4 text-center mb-3 mb-md-0">
                         <div class="bg-white p-2 rounded shadow-sm d-inline-block">
                             <img id="lnkt_vietQrImg"
                                  src="<?= $hasOrder && !empty($trackedOrder['qr_url']) ? htmlspecialchars((string)$trackedOrder['qr_url']) : '' ?>"
-                                 alt="Mã QR Thanh toán VietQR"
+                                 alt="Mã QR Thanh toán VietQR MB Bank"
                                  class="lnkt-vietqr-img">
                         </div>
+                        <small class="d-block text-muted-custom mt-2">
+                            <span class="fk-live-pulse-dot mr-1"></span>Tự động kiểm tra Casso mỗi 5 giây
+                        </small>
                     </div>
                     <div class="col-12 col-md-8">
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-                            <span class="badge badge-pill badge-sky px-3 py-1 font-weight-bold">
-                                <i class="fa-solid fa-qrcode mr-1"></i>Thanh toán nhanh VietQR Napas 247
+                            <span class="badge badge-pill badge-sky px-3 py-1 font-weight-bold mb-1">
+                                <i class="fa-solid fa-qrcode mr-1"></i>VietQR Napas 247 • <?= htmlspecialchars($bankName) ?>
                             </span>
-                            <span id="lnkt_vietQrPaidBadge" class="badge badge-pill badge-mint px-3 py-1 font-weight-bold <?= $isPaid ? '' : 'd-none' ?>">
-                                <i class="fa-solid fa-circle-check mr-1"></i>Đã thanh toán
-                            </span>
-                            <span id="lnkt_vietQrCountdownWrap" class="badge badge-pill badge-warning text-dark px-3 py-1 font-weight-bold <?= $isPaid ? 'd-none' : '' ?>">
-                                <i class="fa-regular fa-clock mr-1"></i>Hiệu lực mã: <span id="lnkt_qrCountdown">15:00</span>
+                            <span id="lnkt_vietQrCountdownWrap" class="badge badge-pill badge-warning text-dark px-3 py-1 font-weight-bold mb-1">
+                                <i class="fa-regular fa-clock mr-1"></i>Thời hạn TT 24h còn: <span id="lnkt_qrCountdown">24:00:00</span>
                             </span>
                         </div>
 
-                        <h5 class="font-weight-bold text-slate mb-2">Quét mã QR bằng ứng dụng Ngân hàng hoặc Ví điện tử</h5>
-                        <div class="row small mb-3">
-                            <div class="col-sm-6 mb-1">Ngân hàng: <strong class="text-slate">MB Bank (0901234567)</strong></div>
-                            <div class="col-sm-6 mb-1">Chủ tài khoản: <strong class="text-slate">FASHIONKIDS OFFICIAL</strong></div>
-                            <div class="col-sm-6 mb-1">Số tiền cần chuyển: <strong class="text-peach" id="lnkt_vietQrAmount"><?= number_format($orderTotal, 0, ',', '.') ?> đ</strong></div>
-                            <div class="col-sm-6 mb-1">Nội dung CK: <strong class="text-slate" id="lnkt_vietQrContent">FK<?= $orderId ?></strong></div>
+                        <h5 class="font-weight-bold text-slate mb-1">Quét mã QR bằng ứng dụng Ngân hàng hoặc Ví điện tử</h5>
+                        <p class="small text-muted-custom mb-3">
+                            Hạn thanh toán: <strong class="text-slate" id="lnkt_qrDeadlineLabel"><?= htmlspecialchars($deadlineLabel) ?></strong>. Nếu quá 24 giờ chưa thanh toán, hệ thống và shop sẽ tự động không xác nhận &amp; hủy đơn hàng.
+                        </p>
+
+                        <div class="row small mb-3 bg-white p-3 rounded border mx-0">
+                            <div class="col-sm-6 mb-2">
+                                Ngân hàng thụ hưởng: <strong class="text-slate"><?= htmlspecialchars($bankName) ?></strong>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                Chủ tài khoản: <strong class="text-slate"><?= htmlspecialchars($bankAccountName) ?></strong>
+                            </div>
+                            <div class="col-sm-6 mb-2 mb-sm-0">
+                                Số tài khoản:
+                                <strong class="text-slate" id="lnkt_vietQrAccNo"><?= htmlspecialchars($bankAccountNo) ?></strong>
+                                <button type="button" class="btn btn-light btn-xs border rounded-pill ml-1 px-2 py-0 fk-btn-copy"
+                                        onclick="lnktCopyBankText('<?= htmlspecialchars($bankAccountNo, ENT_QUOTES) ?>', this)" title="Sao chép số tài khoản">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                            <div class="col-sm-6 mb-2 mb-sm-0">
+                                Số tiền chính xác:
+                                <strong class="text-peach" id="lnkt_vietQrAmount"><?= number_format($orderTotal, 0, ',', '.') ?> đ</strong>
+                                <button type="button" id="lnkt_btnCopyAmount" class="btn btn-light btn-xs border rounded-pill ml-1 px-2 py-0 fk-btn-copy"
+                                        onclick="lnktCopyBankText('<?= (int)round($orderTotal) ?>', this)" title="Sao chép số tiền">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                            <div class="col-12 mt-2 pt-2 border-top">
+                                Nội dung chuyển khoản bắt buộc:
+                                <strong class="badge badge-light border text-slate px-2 py-1 ml-1" id="lnkt_vietQrContent"><?= htmlspecialchars($transferMemo) ?></strong>
+                                <button type="button" id="lnkt_btnCopyMemo" class="btn btn-light btn-xs border rounded-pill ml-1 px-2 py-0 fk-btn-copy"
+                                        onclick="lnktCopyBankText('<?= htmlspecialchars($transferMemo, ENT_QUOTES) ?>', this)" title="Sao chép nội dung chuyển khoản">
+                                    <i class="fa-regular fa-copy mr-1"></i>Chép nội dung
+                                </button>
+                            </div>
                         </div>
 
-                        <div id="lnkt_vietQrActionRow" class="<?= $canConfirmQr ? '' : 'd-none' ?>">
-                            <button type="button" id="lnkt_btnConfirmVietQr"
-                                    class="btn btn-pastel-primary font-weight-bold px-4 py-2 shadow-sm"
-                                    onclick="lnktConfirmVietQr(<?= $orderId ?>)">
-                                <i class="fa-solid fa-check-double mr-2"></i>Tôi đã chuyển khoản
-                            </button>
-                            <small class="text-muted-custom ml-2 d-inline-block mt-2 mt-sm-0">Nhân viên sẽ đối soát giao dịch ngay sau khi bạn xác nhận.</small>
+                        <div id="lnkt_vietQrActionRow" class="d-flex flex-wrap align-items-center <?= ($canConfirmQr || $canSwitchPayment) ? '' : 'd-none' ?>">
+                            <?php if ($canConfirmQr): ?>
+                                <button type="button" id="lnkt_btnConfirmVietQr"
+                                        class="btn btn-pastel-primary font-weight-bold px-4 py-2 shadow-sm mr-2 mb-2"
+                                        onclick="lnktCheckVietQrPayment(<?= $orderId ?>, true)">
+                                    <i class="fa-solid fa-rotate mr-2"></i>Tôi đã chuyển khoản — Kiểm tra ngay
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($canSwitchPayment): ?>
+                                <button type="button" id="lnkt_btnSwitchToCod"
+                                        class="btn btn-pastel-outline font-weight-bold px-3 py-2 mb-2"
+                                        onclick="lnktSwitchOrderPaymentMethod(<?= $orderId ?>, 'cod')">
+                                    <i class="fa-solid fa-money-bill-wave mr-1"></i>Đổi sang Tiền mặt (COD)
+                                </button>
+                            <?php endif; ?>
                         </div>
                         <div id="lnkt_vietQrAlert" class="alert small py-2 mt-2 mb-0 d-none"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- BANNER ĐÃ THANH TOÁN THÀNH CÔNG (Bưu tá thu hộ 0 đồng) -->
+            <div id="lnkt_paidReceiptBanner" class="mt-4 p-4 rounded fk-paid-receipt-box shadow-sm <?= ($hasOrder && $isPaid) ? '' : 'd-none' ?>">
+                <div class="row align-items-center">
+                    <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                        <div class="d-flex flex-wrap align-items-center mb-1">
+                            <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold mr-2">
+                                <i class="fa-solid fa-circle-check mr-1"></i>ĐÃ THANH TOÁN HOÀN TẤT
+                            </span>
+                            <small class="text-slate font-weight-bold" id="lnkt_paidTxMeta">
+                                <?php if ($txCode !== ''): ?>
+                                    MB Bank • Mã GD: <?= htmlspecialchars($txCode) ?><?= $paidAtLabel !== '' ? (' • Lúc ' . htmlspecialchars($paidAtLabel)) : '' ?>
+                                <?php else: ?>
+                                    Đã ghi nhận thanh toán thành công trên hệ thống FashionKids
+                                <?php endif; ?>
+                            </small>
+                        </div>
+                        <h5 class="font-weight-bold text-slate mb-1" id="lnkt_paidHeadline">
+                            Shop đã nhận đủ <?= number_format($orderTotal, 0, ',', '.') ?> đồng qua chuyển khoản
+                        </h5>
+                        <p class="small text-muted-custom mb-0">
+                            Nhân viên sẽ đối chiếu và tiến hành xác nhận đóng gói. Khi giao hàng cho bưu tá, trên phiếu dán đơn sẽ ghi rõ thu hộ <strong>0 đồng</strong>.
+                        </p>
+                    </div>
+                    <div class="col-12 col-lg-4 text-lg-right">
+                        <div class="p-3 rounded bg-white border text-center d-inline-block w-100">
+                            <small class="text-muted-custom font-weight-bold d-block text-uppercase">Số tiền cần trả khi nhận hàng</small>
+                            <div class="h3 font-weight-bold text-success mb-0">0 đồng</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL THANH TOÁN TIỀN MẶT (COD - CHO PHÉP ĐỔI SANG VIETQR KHI CHỜ DUYỆT) -->
+            <div id="lnkt_codPaymentPanel" class="mt-4 p-4 rounded fk-cod-panel shadow-sm <?= $isCodUnpaid ? '' : 'd-none' ?>">
+                <div class="row align-items-center">
+                    <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                        <span class="badge badge-pill badge-butter px-3 py-1 font-weight-bold mb-2">
+                            <i class="fa-solid fa-money-bill-wave mr-1"></i>Thanh toán tiền mặt khi nhận hàng (COD)
+                        </span>
+                        <h5 class="font-weight-bold text-slate mb-1">
+                            Số tiền cần thanh toán cho bưu tá: <span class="text-peach" id="lnkt_codPanelAmount"><?= number_format($orderTotal, 0, ',', '.') ?> đồng</span>
+                        </h5>
+                        <p class="small text-muted-custom mb-0">
+                            Đơn hàng sẽ in hóa đơn ghi rõ tổng tiền thu hộ <strong><?= number_format($orderTotal, 0, ',', '.') ?> đồng</strong> (được đồng kiểm trước khi trả tiền). Hoặc bạn có thể chuyển sang thanh toán online qua MB Bank ngay.
+                        </p>
+                    </div>
+                    <div class="col-12 col-lg-4 text-lg-right">
+                        <button type="button" id="lnkt_btnSwitchToVietQr"
+                                class="btn btn-pastel-primary btn-sm font-weight-bold px-3 py-2 <?= $canSwitchPayment ? '' : 'd-none' ?>"
+                                onclick="lnktSwitchOrderPaymentMethod(<?= $orderId ?>, 'vietqr')">
+                            <i class="fa-solid fa-qrcode mr-1"></i>Đổi sang Quét mã VietQR
+                        </button>
+                    </div>
+                </div>
+                <div id="lnkt_codSwitchAlert" class="alert small py-2 mt-2 mb-0 d-none"></div>
+            </div>
+
+            <!-- BANNER QUÁ HẠN THANH TOÁN 24 GIỜ -->
+            <div id="lnkt_expiredPaymentBanner" class="mt-4 p-4 rounded fk-expired-banner shadow-sm <?= $isCancelledExp ? '' : 'd-none' ?>">
+                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <span class="badge badge-pill badge-danger px-3 py-1 font-weight-bold mb-2">
+                            <i class="fa-solid fa-hourglass-end mr-1"></i>Quá Hạn Thanh Toán 24 Giờ
+                        </span>
+                        <h5 class="font-weight-bold text-danger mb-1">Đơn hàng đã tự động hủy &amp; Shop không xác nhận đơn</h5>
+                        <p class="small text-slate mb-0">
+                            Đơn hàng VietQR chưa nhận đủ tiền chuyển khoản trong vòng 24 giờ nên hệ thống đã tự động hủy và hoàn sản phẩm về kho.
+                        </p>
+                    </div>
+                    <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary btn-sm font-weight-bold mt-2 mt-md-0 px-3 py-2">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Đặt Lại Đơn Mới
+                    </a>
                 </div>
             </div>
 
@@ -419,11 +551,23 @@ foreach ($trackedItems as $ti) {
                         <span class="text-muted-custom">Phí vận chuyển:</span>
                         <span class="badge badge-mint px-2 py-0 rounded-pill">Miễn phí (0 đ)</span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-3 pb-2 border-bottom">
+                    <div class="d-flex justify-content-between small mb-2">
                         <span class="text-muted-custom">Phương thức thanh toán:</span>
                         <span class="font-weight-bold text-slate" id="lnkt_sumPaymentMethod">
-                            <?= $payMethod === 'vietqr' ? 'Chuyển khoản VietQR' : 'Thanh toán khi nhận hàng (COD)' ?>
+                            <?= $payMethod === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thanh toán khi nhận hàng (COD)' ?>
                         </span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="text-muted-custom">Trạng thái thanh toán:</span>
+                        <span id="lnkt_sumPaymentStatus" class="font-weight-bold <?= $isPaid ? 'text-success' : ($isCancelledExp ? 'text-danger' : 'text-warning') ?>">
+                            <?= $isPaid ? 'Đã thanh toán' : ($isCancelledExp ? 'Quá hạn 24h (Đã hủy)' : ($payMethod === 'vietqr' ? 'Chờ chuyển khoản' : 'Thanh toán khi giao')) ?>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-3 pb-2 border-bottom">
+                        <span class="text-muted-custom">Cần trả bưu tá khi giao:</span>
+                        <strong id="lnkt_sumCodCollect" class="<?= $codCollectAmt <= 0 ? 'text-success' : 'text-peach' ?>">
+                            <?= number_format($codCollectAmt, 0, ',', '.') ?> đồng
+                        </strong>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="font-weight-bold text-slate">Tổng thanh toán:</span>

@@ -40,6 +40,7 @@ function lnktRenderOrderStatusBadge(string $status): string {
     }
 }
 
+$inspOid        = $inspectOrder ? (int)$inspectOrder['ma_don_hang'] : 0;
 $inspCode       = $inspectOrder ? ('#' . $inspectOrder['ma_van_don']) : 'Chưa chọn đơn';
 $inspReceiver   = $inspectOrder ? (string)$inspectOrder['ten_nguoi_nhan'] : '---';
 $inspPhone      = $inspectOrder ? (string)$inspectOrder['so_dien_thoai_nhan'] : '---';
@@ -50,9 +51,18 @@ $inspSubtotal   = $inspectOrder ? (number_format((float)$inspectOrder['tien_hang
 $inspDiscountV  = $inspectOrder ? (float)($inspectOrder['tien_giam_gia'] ?? 0) : 0;
 $inspDiscount   = $inspDiscountV > 0 ? ('-' . number_format($inspDiscountV, 0, ',', '.') . ' đ') : '0 đ';
 $inspTotal      = $inspectOrder ? (number_format((float)$inspectOrder['tong_tien_thanh_toan'], 0, ',', '.') . ' đ') : '0 đ';
-$inspPm         = $inspectOrder ? strtolower((string)($inspectOrder['phuong_thuc_thanh_toan'] ?? 'cod')) : 'cod';
-$inspPs         = $inspectOrder ? strtolower((string)($inspectOrder['trang_thai_thanh_toan'] ?? 'chua_thanh_toan')) : 'chua_thanh_toan';
-$inspPayText    = ($inspPm === 'vietqr' ? 'Chuyển khoản VietQR' : 'Thu hộ COD') . ' (' . ($inspPs === 'da_thanh_toan' ? 'Đã thanh toán' : ($inspPm === 'vietqr' ? 'Chờ đối soát CK' : 'Chưa thu tiền')) . ')';
+$inspPayText    = $inspectOrder ? (string)($inspectOrder['payment_display_label'] ?? 'Thu hộ COD') : '---';
+$inspIsPaid     = $inspectOrder && !empty($inspectOrder['is_paid']);
+$inspStatus     = $inspectOrder ? (string)($inspectOrder['trang_thai_don_hang'] ?? 'cho_duyet') : 'cho_duyet';
+$inspCodAmt     = $inspectOrder ? (float)($inspectOrder['cod_collect_amount'] ?? 0) : 0;
+$inspCodText    = $inspectOrder
+    ? ($inspIsPaid
+        ? '0 đồng (Đã thanh toán — Không thu tiền)'
+        : ($inspStatus === 'da_huy'
+            ? '0 đồng (Đơn đã hủy)'
+            : (number_format($inspCodAmt, 0, ',', '.') . ' đồng' . (($inspectOrder['phuong_thuc_thanh_toan'] ?? 'cod') === 'vietqr' ? ' (Chờ CK)' : ' (Thu hộ tiền mặt COD)'))))
+    : '0 đồng';
+$inspCodClass   = $inspIsPaid ? 'text-success' : ($inspStatus === 'da_huy' ? 'text-danger' : 'text-peach');
 $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)$inspectOrder['ghi_chu'] : 'Không có ghi chú thêm.';
 ?>
 
@@ -76,6 +86,11 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                   onclick="lnktAcknowledgeNewOrders()">
                 <i class="fa-solid fa-bell mr-1"></i>Đơn mới: <span id="new_order_count">0</span>
             </span>
+
+            <button type="button" id="lnkt_btnSyncAllCasso" onclick="lnktStaffSyncAllPendingCasso(this)"
+                    class="btn btn-pastel-sky btn-sm rounded-pill px-3 mr-2 font-weight-bold text-slate">
+                <i class="fa-solid fa-building-columns text-info mr-1"></i>Đối soát Casso MB
+            </button>
 
             <button type="button" id="lnkt_btnToggleSound" onclick="lnktToggleOrderSound()"
                     class="btn btn-light btn-sm border rounded-pill px-3 mr-2 font-weight-bold text-slate">
@@ -236,11 +251,24 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                     $isLocked   = in_array($st, ['hoan_tat', 'da_huy'], true);
                                     $pm         = strtolower((string)($ord['phuong_thuc_thanh_toan'] ?? 'cod'));
                                     $ps         = strtolower((string)($ord['trang_thai_thanh_toan'] ?? 'chua_thanh_toan'));
+                                    $isPaid     = !empty($ord['is_paid']);
+                                    $isExpired  = !empty($ord['is_payment_expired']);
+                                    $remSec     = (int)($ord['remaining_seconds'] ?? 0);
+                                    $remHrs     = $remSec > 0 ? ceil($remSec / 3600) : 0;
+                                    $txCode     = trim((string)($ord['ma_giao_dich_ngan_hang'] ?? ''));
+                                    $codAmt     = (float)($ord['cod_collect_amount'] ?? ($isPaid || $st === 'da_huy' ? 0 : $ord['tong_tien_thanh_toan']));
+                                    $lockConfirm = ($st === 'cho_duyet' && $pm === 'vietqr' && !$isPaid);
                                     $fullAddr   = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
                                     $createdStr = !empty($ord['ngay_dat_hang']) ? date('d/m/Y H:i', strtotime($ord['ngay_dat_hang'])) : '';
                                     $handledBy  = trim((string)($ord['nhan_vien_phu_trach'] ?? '')) ?: 'Chưa tiếp nhận';
                                     $noteStr    = trim((string)($ord['ghi_chu'] ?? ''));
-                                    $payLabel   = ($pm === 'vietqr' ? 'Chuyển khoản VietQR' : 'Thu hộ COD') . ' (' . ($ps === 'da_thanh_toan' ? 'Đã thanh toán' : ($pm === 'vietqr' ? 'Chờ đối soát CK' : 'Chưa thu tiền')) . ')';
+                                    $payLabel   = (string)($ord['payment_display_label'] ?? 'Thu hộ COD');
+                                    $codInspTxt = $isPaid
+                                        ? '0 đồng (Đã thanh toán — Không thu tiền)'
+                                        : ($st === 'da_huy'
+                                            ? '0 đồng (Đơn đã hủy)'
+                                            : (number_format($codAmt, 0, ',', '.') . ' đồng' . ($pm === 'vietqr' ? ' (Chờ CK)' : ' (Thu hộ tiền mặt COD)')));
+                                    $codInspCls = $isPaid ? 'text-success' : ($st === 'da_huy' ? 'text-danger' : 'text-peach');
                                     $subtotalF  = number_format((float)$ord['tien_hang_tam_tinh'], 0, ',', '.') . ' đ';
                                     $discVal    = (float)($ord['tien_giam_gia'] ?? 0);
                                     $discountF  = $discVal > 0 ? ('-' . number_format($discVal, 0, ',', '.') . ' đ') : '0 đ';
@@ -250,10 +278,13 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                         id="lnkt_orderRow_<?= $oid ?>"
                                         data-order-id="<?= $oid ?>"
                                         data-status="<?= htmlspecialchars($st) ?>"
+                                        data-payment-method="<?= htmlspecialchars($pm) ?>"
+                                        data-payment-status="<?= htmlspecialchars($ps) ?>"
                                         data-search="<?= htmlspecialchars($ocode . ' ' . $oid . ' ' . $ord['ten_nguoi_nhan'] . ' ' . $ord['so_dien_thoai_nhan'] . ' ' . ($ord['tinh_thanh_pho'] ?? '') . ' ' . $noteStr) ?>">
                                         <td>
                                             <a href="javascript:void(0)"
                                                onclick="lnktInspectStaffOrder(this)"
+                                               data-order-id="<?= $oid ?>"
                                                data-code="<?= htmlspecialchars($ocode) ?>"
                                                data-receiver="<?= htmlspecialchars((string)$ord['ten_nguoi_nhan']) ?>"
                                                data-phone="<?= htmlspecialchars((string)$ord['so_dien_thoai_nhan']) ?>"
@@ -264,6 +295,8 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                                data-total="<?= htmlspecialchars($totalF) ?>"
                                                data-staff="<?= htmlspecialchars($handledBy) ?>"
                                                data-payment="<?= htmlspecialchars($payLabel) ?>"
+                                               data-cod-collect="<?= htmlspecialchars($codInspTxt) ?>"
+                                               data-cod-class="<?= htmlspecialchars($codInspCls) ?>"
                                                data-note="<?= htmlspecialchars($noteStr !== '' ? $noteStr : 'Không có ghi chú thêm.') ?>"
                                                class="font-weight-bold text-peach text-decoration-none d-block">
                                                 #<?= htmlspecialchars($ocode) ?>
@@ -277,14 +310,27 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                             <small class="text-muted-custom d-block">
                                                 <i class="fa-solid fa-phone mr-1"></i><?= htmlspecialchars((string)$ord['so_dien_thoai_nhan']) ?>
                                             </small>
-                                            <span class="badge <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small py-0 px-2 rounded-pill">
-                                                <?= $pm === 'vietqr' ? 'VietQR' : 'COD' ?>
-                                            </span>
-                                            <?php if ($ps === 'da_thanh_toan'): ?>
-                                                <span class="badge badge-mint small py-0 px-2 rounded-pill">Đã TT</span>
-                                            <?php elseif ($pm === 'vietqr'): ?>
-                                                <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">Chờ CK</span>
-                                            <?php endif; ?>
+                                            <div id="lnkt_payBadgeWrap_<?= $oid ?>" class="mt-1">
+                                                <span class="badge <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small py-0 px-2 rounded-pill">
+                                                    <?= $pm === 'vietqr' ? 'VietQR MB' : 'COD' ?>
+                                                </span>
+                                                <?php if ($isPaid): ?>
+                                                    <span class="badge badge-mint small py-0 px-2 rounded-pill">
+                                                        <i class="fa-solid fa-circle-check mr-1"></i>Đã TT • Thu 0 đ
+                                                    </span>
+                                                    <?php if ($txCode !== ''): ?>
+                                                        <small class="d-block text-success font-weight-bold">GD: <?= htmlspecialchars($txCode) ?></small>
+                                                    <?php endif; ?>
+                                                <?php elseif ($st === 'da_huy' && $isExpired): ?>
+                                                    <span class="badge badge-danger small py-0 px-2 rounded-pill">Quá hạn 24h</span>
+                                                <?php elseif ($pm === 'vietqr'): ?>
+                                                    <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">
+                                                        Chờ CK (còn ~<?= $remHrs ?>h)
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge badge-butter small py-0 px-2 rounded-pill">Thu tiền mặt</span>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
 
                                         <td>
@@ -298,8 +344,18 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                         </td>
 
                                         <td class="text-right text-nowrap">
-                                            <div class="font-weight-bold text-peach"><?= htmlspecialchars($totalF) ?></div>
-                                            <small class="text-muted-custom">Gốc: <?= htmlspecialchars($subtotalF) ?></small>
+                                            <div class="font-weight-bold text-slate"><?= htmlspecialchars($totalF) ?></div>
+                                            <div id="lnkt_collectBadge_<?= $oid ?>">
+                                                <?php if ($isPaid): ?>
+                                                    <small class="text-success font-weight-bold">Thu hộ: 0 đ</small>
+                                                <?php elseif ($st === 'da_huy'): ?>
+                                                    <small class="text-danger font-weight-bold">Đã hủy (0 đ)</small>
+                                                <?php elseif ($pm === 'vietqr'): ?>
+                                                    <small class="text-warning font-weight-bold">Chờ CK: <?= htmlspecialchars($totalF) ?></small>
+                                                <?php else: ?>
+                                                    <small class="text-peach font-weight-bold">Thu hộ: <?= htmlspecialchars($totalF) ?></small>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
 
                                         <td class="text-center" id="lnkt_orderBadgeCell_<?= $oid ?>">
@@ -310,9 +366,9 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                             <div class="input-group input-group-sm mb-1">
                                                 <select id="lnkt_statusSelect_<?= $oid ?>" class="custom-select font-weight-bold" <?= $isLocked ? 'disabled' : '' ?>>
                                                     <option value="cho_duyet" <?= $st === 'cho_duyet' ? 'selected' : '' ?>>Chờ duyệt</option>
-                                                    <option value="da_xac_nhan" <?= $st === 'da_xac_nhan' ? 'selected' : '' ?>>Đã xác nhận</option>
-                                                    <option value="dang_giao" <?= $st === 'dang_giao' ? 'selected' : '' ?>>Đang giao</option>
-                                                    <option value="hoan_tat" <?= $st === 'hoan_tat' ? 'selected' : '' ?>>Hoàn tất</option>
+                                                    <option value="da_xac_nhan" <?= $st === 'da_xac_nhan' ? 'selected' : '' ?> <?= $lockConfirm ? 'disabled' : '' ?>>Đã xác nhận<?= $lockConfirm ? ' (Chờ TT)' : '' ?></option>
+                                                    <option value="dang_giao" <?= $st === 'dang_giao' ? 'selected' : '' ?> <?= $lockConfirm ? 'disabled' : '' ?>>Đang giao</option>
+                                                    <option value="hoan_tat" <?= $st === 'hoan_tat' ? 'selected' : '' ?> <?= $lockConfirm ? 'disabled' : '' ?>>Hoàn tất</option>
                                                     <option value="da_huy" <?= $st === 'da_huy' ? 'selected' : '' ?>>Đã hủy</option>
                                                 </select>
                                                 <div class="input-group-append">
@@ -327,28 +383,45 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                                 </div>
                                             </div>
                                             <div id="lnkt_quickActionCell_<?= $oid ?>">
-                                                <?php if ($st === 'cho_duyet'): ?>
+                                                <?php if ($st === 'cho_duyet' && $pm === 'vietqr' && !$isPaid): ?>
                                                     <button type="button"
-                                                            class="btn btn-outline-info btn-sm btn-block rounded-pill py-0 small font-weight-bold"
+                                                            class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
+                                                            onclick="lnktStaffVerifyOrderPayment(<?= $oid ?>, this)">
+                                                        <i class="fa-solid fa-rotate mr-1"></i>Kiểm tra Casso MB
+                                                    </button>
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
+                                                            disabled
+                                                            title="Đơn VietQR chưa nhận đủ tiền qua MB Bank — Shop tự động không xác nhận">
+                                                        <i class="fa-solid fa-lock mr-1"></i>Chờ CK để xác nhận
+                                                    </button>
+                                                <?php elseif ($st === 'cho_duyet'): ?>
+                                                    <button type="button"
+                                                            class="btn btn-outline-info btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
                                                             onclick="lnktUpdateStaffOrderStatus(<?= $oid ?>, '<?= htmlspecialchars($ocode, ENT_QUOTES) ?>', 'da_xac_nhan')">
                                                         <i class="fa-solid fa-box-open mr-1"></i>Tiếp nhận &amp; Xác nhận
                                                     </button>
                                                 <?php elseif ($st === 'da_xac_nhan'): ?>
                                                     <button type="button"
-                                                            class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold"
+                                                            class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
                                                             onclick="lnktUpdateStaffOrderStatus(<?= $oid ?>, '<?= htmlspecialchars($ocode, ENT_QUOTES) ?>', 'dang_giao')">
                                                         <i class="fa-solid fa-truck-fast mr-1"></i>Chuyển Giao Hàng
                                                     </button>
                                                 <?php elseif ($st === 'dang_giao'): ?>
                                                     <button type="button"
-                                                            class="btn btn-outline-success btn-sm btn-block rounded-pill py-0 small font-weight-bold"
+                                                            class="btn btn-outline-success btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
                                                             onclick="lnktUpdateStaffOrderStatus(<?= $oid ?>, '<?= htmlspecialchars($ocode, ENT_QUOTES) ?>', 'hoan_tat')">
                                                         <i class="fa-solid fa-circle-check mr-1"></i>Hoàn Tất &amp; Tích Điểm
                                                     </button>
                                                 <?php else: ?>
-                                                    <small class="text-muted-custom">Đã khóa chỉnh sửa</small>
+                                                    <small class="text-muted-custom d-block mb-1">Đã khóa chỉnh sửa</small>
                                                 <?php endif; ?>
                                             </div>
+                                            <button type="button"
+                                                    class="btn btn-light btn-sm btn-block border rounded-pill py-0 small font-weight-bold text-slate"
+                                                    onclick="lnktOpenShippingLabelModal(<?= $oid ?>)">
+                                                <i class="fa-solid fa-barcode text-peach mr-1"></i>In tem giao hàng
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -413,14 +486,21 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                             <span class="text-muted-custom">Giảm giá VIP:</span>
                             <strong class="text-success" id="lnkt_inspectDiscount"><?= htmlspecialchars($inspDiscount) ?></strong>
                         </div>
+                        <div class="d-flex justify-content-between pt-2 border-top mb-2">
+                            <span class="font-weight-bold text-slate">Tổng giá trị đơn:</span>
+                            <strong class="text-slate h6 mb-0" id="lnkt_inspectTotal"><?= htmlspecialchars($inspTotal) ?></strong>
+                        </div>
                         <div class="d-flex justify-content-between pt-2 border-top">
-                            <span class="font-weight-bold text-slate">Tổng thanh toán:</span>
-                            <strong class="text-peach h6 mb-0" id="lnkt_inspectTotal"><?= htmlspecialchars($inspTotal) ?></strong>
+                            <span class="font-weight-bold text-slate">Bưu tá cần thu hộ:</span>
+                            <strong class="<?= htmlspecialchars($inspCodClass) ?>" id="lnkt_inspectCodCollect"><?= htmlspecialchars($inspCodText) ?></strong>
                         </div>
                     </div>
 
-                    <button type="button" onclick="window.print()" class="btn btn-pastel-outline btn-block font-weight-bold py-2">
-                        <i class="fa-solid fa-print mr-1"></i> In Phiếu Giao Hàng &amp; Mã Vạch
+                    <button type="button" id="lnkt_btnOpenInspectLabel"
+                            data-order-id="<?= $inspOid ?>"
+                            onclick="lnktOpenShippingLabelModal(parseInt(this.getAttribute('data-order-id'), 10))"
+                            class="btn btn-pastel-primary btn-block font-weight-bold py-2">
+                        <i class="fa-solid fa-barcode mr-1"></i> Tạo Mã &amp; In Phiếu Giao Hàng
                     </button>
                 </div>
             </div>
@@ -428,4 +508,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
     </div>
 </div>
 
-<?php require_once __DIR__ . "/../layouts/footer.php"; ?>
+<?php
+require_once __DIR__ . "/../modals/modal-shipping-label.php";
+require_once __DIR__ . "/../layouts/footer.php";
+?>
