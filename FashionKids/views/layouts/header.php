@@ -11,6 +11,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../core/Csrf.php';
+require_once __DIR__ . '/../../core/Rbac.php';
+Rbac::enforceCurrentViewAccess();
 ?>
 <!DOCTYPE html>
 <html lang="vi">

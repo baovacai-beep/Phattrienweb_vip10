@@ -78,8 +78,14 @@ class OrderModel extends Model {
 
     /**
      * Nhân viên duyệt đơn qua sp_lnkt_cap_nhat_trang_thai_don_hang
+     * Bắt lỗi ngoại lệ SQLSTATE 45000 nếu đơn đã hoàn tất/đã hủy hoặc nhân viên không đủ quyền.
      */
     public function capNhatTrangThai(int $maDonHang, int $maNhanVien, string $trangThaiMoi): void {
+        $validStatuses = ['cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy'];
+        if (!in_array($trangThaiMoi, $validStatuses, true)) {
+            throw new InvalidArgumentException("Trạng thái đơn hàng mới không hợp lệ: {$trangThaiMoi}");
+        }
+
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare("CALL sp_lnkt_cap_nhat_trang_thai_don_hang(:ma_don, :ma_nv, :trang_thai)");
@@ -90,6 +96,10 @@ class OrderModel extends Model {
                 ]);
                 $stmt->closeCursor();
             } catch (PDOException $e) {
+                if (($e->errorInfo[0] ?? '') === '45000') {
+                    $cleanMsg = preg_replace('/^SQLSTATE\[45000\]:.*?:\s*\d+\s*/u', '', (string)($e->errorInfo[2] ?? $e->getMessage()));
+                    throw new DomainException(trim($cleanMsg ?: 'Không thể cập nhật trạng thái đơn hàng!'), 0, $e);
+                }
                 error_log("Lỗi cập nhật trạng thái đơn: " . $e->getMessage());
             }
         }

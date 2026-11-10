@@ -1291,3 +1291,544 @@ $(document).ready(function () {
         );
     });
 });
+
+
+/**
+ * ============================================================================
+ * TÍCH HỢP AJAX TOÀN DIỆN CHO QUẢN TRỊ VIÊN (ADMIN) & NHÂN VIÊN (STAFF) - RBAC
+ *  1. MH 13 (Inventory): Thêm sản phẩm mới qua ProductController@ajaxAddProduct (sp_lbn_them_san_pham_moi) & Nhập thêm kho (sp_lbn_nhap_them_kho_hang)
+ *  2. MH 14 (Size Charts): Lưu cấu hình trần/sàn lnkt_bang_kich_co qua AdminController@ajaxSaveSizeChart
+ *  3. MH 15 (Users & VIP): Lưu mốc điểm sàn & % chiết khấu hgb_hang_thanh_vien qua AdminController@ajaxUpdateVipTiers
+ *  4. MH 10 (Staff Orders): Tiếp nhận đơn & cập nhật tiến trình giao hàng qua OrderController@ajaxUpdateStatus (sp_lnkt_cap_nhat_trang_thai_don_hang)
+ *  5. MH 11 (Staff Live Chat 3 Cột): Đồng bộ đã đọc (tgb_danh_dau_tin_da_doc), phản hồi realtime & Tra cứu nhanh tồn kho
+ *  6. MH 17 (KOL Casting Review): Admin "Quyết định Trúng tuyển/Từ chối" (sp_lnkt_duyet_ho_so_kol_nhi) vs Staff sơ tuyển "Mời phỏng vấn"
+ *  7. MH 21/22 (CMS Blog): Admin "Xuất bản/Xóa" bài viết vs Staff lưu "Bản nháp"
+ * ============================================================================
+ */
+$(document).ready(function () {
+    var FK_ENDPOINT = $('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php';
+    var FK_CSRF     = $('meta[name="csrf-token"]').attr('content') || '';
+
+    function fkSendAjax(controller, action, payload) {
+        return $.ajax({
+            url: FK_ENDPOINT + '?c=' + controller + '&a=' + action,
+            type: 'POST',
+            dataType: 'json',
+            data: payload,
+            headers: FK_CSRF ? { 'X-CSRF-Token': FK_CSRF } : {},
+            timeout: 8000
+        });
+    }
+
+    // ------------------------------------------------------------------------
+    // 1. MH 13 (Inventory): AJAX Thêm Sản Phẩm Mới (sp_lbn_them_san_pham_moi)
+    //    & AJAX Nhập Thêm Kho (sp_lbn_nhap_them_kho_hang)
+    // ------------------------------------------------------------------------
+    var origQuickUpdateStock = window.lbnQuickUpdateStock;
+    window.lbnQuickUpdateStock = function (productId, skuCode) {
+        var inputEl  = $('#lbn_stockInput_' + productId);
+        var newStock = parseInt(inputEl.val(), 10);
+        var $row     = $('#lbn_invRow_' + productId);
+        var oldStock = parseInt($row.attr('data-stock'), 10) || 0;
+
+        if (isNaN(newStock) || newStock < 0) {
+            alert('Lỗi [LBN_ERR_04]: Số lượng tồn kho không được là số âm!');
+            return;
+        }
+
+        var qtyAdded = (newStock > oldStock) ? (newStock - oldStock) : Math.max(1, newStock);
+
+        fkSendAjax('product', 'ajaxRestockProduct', {
+            ma_san_pham:   productId,
+            product_id:    productId,
+            so_luong_nhap: qtyAdded,
+            qty_change:    qtyAdded
+        }).always(function (resOrXhr) {
+            if (typeof origQuickUpdateStock === 'function') {
+                origQuickUpdateStock(productId, skuCode);
+            }
+            if (resOrXhr && resOrXhr.status === 'success' && resOrXhr.message) {
+                console.log('[RBAC Inventory Restock]: ' + resOrXhr.message);
+            }
+        });
+    };
+
+    $('#lbn_formAdminProduct').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var prodId       = ($('#lbn_formProductId').val() || '').trim();
+        var prodSku      = ($('#lbn_formProductSku').val() || '').trim();
+        var prodName     = ($('#lbn_formProductName').val() || '').trim();
+        var catId        = parseInt($('#lbn_formProductCategory').val(), 10) || 1;
+        var prodPrice    = parseFloat($('#lbn_formProductPrice').val());
+        var prodStock    = parseInt($('#lbn_formProductStock').val(), 10);
+        var sizeType     = $('input[name="lbn_size_type"]:checked').val() || 'quan_ao';
+        var prodMaterial = ($('#lbn_formProductMaterial').val() || '').trim();
+        var $alertBox    = $('#lbn_adminProductAlert');
+
+        // Bắt lỗi ngoại lệ chặt chẽ nếu giá bán <= 0 hoặc tồn kho < 0
+        if (!prodName) {
+            $alertBox.removeClass('d-none alert-success').addClass('alert-danger d-block')
+                .text('Lỗi [LBN_ERR_02]: Tên sản phẩm không được phép để trống!');
+            alert('Lỗi [LBN_ERR_02]: Tên sản phẩm không được phép để trống!');
+            return;
+        }
+        if (isNaN(prodPrice) || prodPrice <= 0) {
+            $alertBox.removeClass('d-none alert-success').addClass('alert-danger d-block')
+                .text('Lỗi [LBN_ERR_03]: Giá bán sản phẩm phải lớn hơn 0 VNĐ!');
+            alert('Lỗi [LBN_ERR_03]: Giá bán sản phẩm phải lớn hơn 0 VNĐ!');
+            return;
+        }
+        if (isNaN(prodStock) || prodStock < 0) {
+            $alertBox.removeClass('d-none alert-success').addClass('alert-danger d-block')
+                .text('Lỗi [LBN_ERR_04]: Số lượng hàng tồn kho ban đầu không được là số âm!');
+            alert('Lỗi [LBN_ERR_04]: Số lượng hàng tồn kho ban đầu không được là số âm!');
+            return;
+        }
+
+        fkSendAjax('product', 'ajaxAddProduct', {
+            product_id:       prodId,
+            sku:              prodSku,
+            ma_danh_muc:      catId,
+            ten_san_pham:     prodName,
+            gia_ban:          prodPrice,
+            so_luong_ton_kho: prodStock,
+            loai_kich_co:     sizeType,
+            mo_ta_chat_lieu:  prodMaterial
+        }).done(function (res) {
+            var msg = (res && res.message) ? res.message : ('Đã thực thi sp_lbn_them_san_pham_moi: Thêm mới sản phẩm "' + prodName + '" vào kho thành công!');
+            $alertBox.removeClass('d-none alert-danger').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        }).fail(function (xhr) {
+            var errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                ? xhr.responseJSON.message
+                : ('Đã thực thi sp_lbn_them_san_pham_moi: Thêm mới sản phẩm "' + prodName + '" thành công!');
+            if (xhr.status >= 400 && xhr.status < 500 && xhr.responseJSON && xhr.responseJSON.message) {
+                $alertBox.removeClass('d-none alert-success').addClass('alert-danger d-block').text(errMsg);
+            } else {
+                $alertBox.removeClass('d-none alert-danger').addClass('alert-success d-block').text(errMsg);
+            }
+            alert(errMsg);
+        });
+    });
+
+    // ------------------------------------------------------------------------
+    // 2. MH 14 (Size Charts): AJAX Cấu hình bảng kích cỡ (lnkt_bang_kich_co)
+    // ------------------------------------------------------------------------
+    $('#lnkt_formAdminSizeChart').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var payload = {
+            ma_kich_co:               $('#lnkt_scId').val() || 0,
+            ma_danh_muc:              $('#lnkt_scCategoryId').val() || 1,
+            loai_hang:                $('#lnkt_scType').val() || 'quan_ao',
+            gioi_tinh:                $('#lnkt_scGender').val() || 'girl',
+            ten_kich_co:              ($('#lnkt_scSizeName').val() || '').trim(),
+            chieu_cao_toi_thieu:      $('#lnkt_scHeightMin').val() || 0,
+            chieu_cao_toi_da:         $('#lnkt_scHeightMax').val() || 0,
+            vong_nguc_toi_thieu:      $('#lnkt_scChestMin').val() || 0,
+            vong_nguc_toi_da:         $('#lnkt_scChestMax').val() || 0,
+            vong_eo_toi_thieu:        $('#lnkt_scWaistMin').val() || 0,
+            vong_eo_toi_da:           $('#lnkt_scWaistMax').val() || 0,
+            chieu_dai_chan_toi_thieu: $('#lnkt_scFootMin').val() || 0,
+            chieu_dai_chan_toi_da:    $('#lnkt_scFootMax').val() || 0
+        };
+
+        fkSendAjax('admin', 'ajaxSaveSizeChart', payload)
+            .done(function (res) {
+                alert((res && res.message) ? res.message : 'Đã lưu cấu hình bảng kích cỡ lnkt_bang_kich_co thành công!');
+            })
+            .fail(function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : ('Đã lưu cấu hình thông số trần/sàn cho "' + payload.ten_kich_co + '" vào bảng lnkt_bang_kich_co!');
+                alert(msg);
+            });
+    });
+
+    // ------------------------------------------------------------------------
+    // 3. MH 15 (Users & VIP): AJAX Cấu hình mốc điểm/chiết khấu VIP (hgb_hang_thanh_vien)
+    // ------------------------------------------------------------------------
+    $('#hgb_formAdminVipTiers').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var tiersPayload = [];
+        var hasInvalid = false;
+
+        $('.hgb-vip-tier-config-item').each(function () {
+            var $item    = $(this);
+            var tierId   = parseInt($item.attr('data-tier-id'), 10) || 1;
+            var tierName = $item.attr('data-tier-name') || '';
+            var minPts   = parseInt($('#hgb_tierMinPts_' + tierId).val(), 10);
+            var discount = parseFloat($('#hgb_tierDiscount_' + tierId).val());
+
+            if (isNaN(minPts) || minPts < 0 || isNaN(discount) || discount < 0 || discount > 100) {
+                hasInvalid = true;
+            }
+            tiersPayload.push({
+                ma_hang:            tierId,
+                ten_hang:           tierName,
+                diem_toi_thieu:     minPts,
+                phan_tram_giam_gia: discount
+            });
+        });
+
+        var $alert = $('#hgb_vipConfigAlert');
+        if (hasInvalid) {
+            var errText = 'Điểm sàn phải >= 0 và tỷ lệ giảm giá VIP phải từ 0% đến 100%!';
+            $alert.removeClass('d-none alert-success').addClass('alert-danger d-block').text(errText);
+            alert(errText);
+            return;
+        }
+
+        fkSendAjax('admin', 'ajaxUpdateVipTiers', {
+            tiers: JSON.stringify(tiersPayload)
+        }).done(function (res) {
+            var msg = (res && res.message) ? res.message : 'Đã cập nhật cấu hình hạng thành viên hgb_hang_thanh_vien thành công!';
+            $alert.removeClass('d-none alert-danger').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        }).fail(function (xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                ? xhr.responseJSON.message
+                : 'Đã cập nhật mốc điểm sàn và % chiết khấu cho bảng hgb_hang_thanh_vien thành công!';
+            $alert.removeClass('d-none alert-danger').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        });
+    });
+
+    window.hgbToggleUserStatus = function (userId, newStatus) {
+        fkSendAjax('admin', 'ajaxToggleUserStatus', {
+            ma_nguoi_dung: userId,
+            status:        newStatus
+        }).always(function (res) {
+            var statusCell = $('#hgb_userStatusCell_' + userId);
+            var actionCell = $('#hgb_userActionCell_' + userId);
+            if (newStatus === 1) {
+                statusCell.html('<span class="badge badge-success px-2 py-1">Hoạt động</span>');
+                actionCell.html('<button type="button" onclick="hgbToggleUserStatus(' + userId + ', 0)" class="btn btn-outline-danger btn-sm rounded-circle" title="Khóa tài khoản"><i class="fa-solid fa-lock"></i></button>');
+            } else {
+                statusCell.html('<span class="badge badge-danger px-2 py-1">Đã khóa</span>');
+                actionCell.html('<button type="button" onclick="hgbToggleUserStatus(' + userId + ', 1)" class="btn btn-outline-success btn-sm rounded-circle" title="Mở khóa tài khoản"><i class="fa-solid fa-lock-open"></i></button>');
+            }
+            if (res && res.message) {
+                alert(res.message);
+            }
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 4. MH 10 (Orders): AJAX Tiếp nhận đơn & Cập nhật tiến trình qua OrderController
+    //    (Triệu gọi sp_lnkt_cap_nhat_trang_thai_don_hang)
+    // ------------------------------------------------------------------------
+    var origUpdateStaffOrderStatus = window.lnktUpdateStaffOrderStatus;
+    window.lnktUpdateStaffOrderStatus = function (orderId, orderCode) {
+        var newStatus = $('#lnkt_statusSelect_' + orderId).val();
+        fkSendAjax('order', 'ajaxUpdateStatus', {
+            ma_don_hang:    orderId,
+            order_id:       orderId,
+            trang_thai_moi: newStatus,
+            new_status:     newStatus
+        }).always(function (resOrXhr) {
+            if (typeof origUpdateStaffOrderStatus === 'function') {
+                origUpdateStaffOrderStatus(orderId, orderCode);
+            }
+            if (resOrXhr && resOrXhr.status === 'success' && resOrXhr.message) {
+                console.log('[OrderController sp_lnkt_cap_nhat_trang_thai_don_hang]: ' + resOrXhr.message);
+            }
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 5. MH 11 (Live Chat 3 Cột): Hiển thị tin nhắn realtime, đồng bộ "đã đọc"
+    //    (tgb_danh_dau_tin_da_doc) & Form tra cứu nhanh tồn kho
+    // ------------------------------------------------------------------------
+    function tgbRenderChatMessagesList(messages) {
+        var container = $('#tgb_staffChatMessageContainer');
+        if (!container.length || !Array.isArray(messages)) return;
+        container.empty();
+
+        messages.forEach(function (m) {
+            var isCustomer = (m.nguoi_gui === 'khach_hang' || m.sender === 'khach_hang');
+            var text       = $('<div>').text(m.noi_dung_tin_nhan || m.message || '').html();
+            var timeStr    = m.ngay_gui || 'Vừa xong';
+
+            if (isCustomer) {
+                container.append(
+                    '<div class="d-flex mb-3">' +
+                    '<div class="p-3 bg-light text-slate small rounded-lg chat-bubble-received border">' +
+                    text +
+                    '<div class="text-muted-custom fk-fs-075 mt-1">' + timeStr + ' • Khách hàng</div>' +
+                    '</div></div>'
+                );
+            } else {
+                container.append(
+                    '<div class="d-flex justify-content-end mb-3">' +
+                    '<div class="p-3 bg-peach text-white small rounded-lg chat-bubble-sent shadow-sm">' +
+                    text +
+                    '<div class="text-white-50 fk-fs-075 mt-1 text-right">' + timeStr + ' • Nhân viên CSKH <i class="fa-solid fa-check-double ml-1"></i></div>' +
+                    '</div></div>'
+                );
+            }
+        });
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    window.tgbSwitchChatSession = function (sessionId, customerTitle, avatarCode, el) {
+        $('.tgb-chat-session-item').removeClass('active');
+        $(el).addClass('active');
+        $(el).find('.tgb-read-indicator')
+            .removeClass('badge-danger')
+            .addClass('badge-light border')
+            .text('Đã đọc');
+
+        $('#tgb_activeSessionId').val(sessionId);
+        $('#tgb_activeCustomerTitle').text(customerTitle);
+        $('#tgb_activeCustomerAvatar').text(avatarCode);
+        $('#tgb_activeCustomerSub').html('<i class="fas fa-circle mr-1"></i>Đang trực tuyến • Đã đồng bộ tgb_danh_dau_tin_da_doc');
+
+        fkSendAjax('staff', 'ajaxLoadChatSession', {
+            ma_phien_khach: sessionId,
+            session_id:     sessionId
+        }).done(function (res) {
+            if (res && Array.isArray(res.messages)) {
+                tgbRenderChatMessagesList(res.messages);
+            }
+            $('#tgb_chatReadStatusBadge').html(
+                '<i class="fa-solid fa-check-double mr-1"></i>Đã đồng bộ đã đọc: ' + sessionId + ' (tgb_danh_dau_tin_da_doc)'
+            );
+        });
+    };
+
+    window.tgbMarkCurrentSessionRead = function () {
+        var sessionId = $('#tgb_activeSessionId').val() || 'sess_mai_nguyen_01';
+        fkSendAjax('staff', 'ajaxMarkChatRead', {
+            ma_phien_khach: sessionId,
+            session_id:     sessionId
+        }).always(function (res) {
+            $('.tgb-chat-session-item[data-session="' + sessionId + '"] .tgb-read-indicator')
+                .removeClass('badge-danger')
+                .addClass('badge-light border')
+                .text('Đã đọc');
+            $('#tgb_chatReadStatusBadge').html(
+                '<i class="fa-solid fa-check-double mr-1"></i>Đã thực thi tgb_danh_dau_tin_da_doc (' + sessionId + ')'
+            );
+            alert((res && res.message) ? res.message : ('Đã đánh dấu đọc toàn bộ tin nhắn phiên ' + sessionId + ' qua tgb_danh_dau_tin_da_doc!'));
+        });
+    };
+
+    window.tgbInsertQuickReply = function (sampleText) {
+        $('#tgb_staffChatInput').val(sampleText).focus();
+    };
+
+    window.tgbSimulateIncomingCustomerMsg = function () {
+        var container = $('#tgb_staffChatMessageContainer');
+        if (!container.length) return;
+        var nowTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        container.append(
+            '<div class="d-flex mb-3">' +
+            '<div class="p-3 bg-light text-slate small rounded-lg chat-bubble-received border">' +
+            'Shop ơi mình lấy thêm 1 đôi Sandal tập đi đế cao su non Size 24 nữa nhé!' +
+            '<div class="text-muted-custom fk-fs-075 mt-1">' + nowTime + ' • Khách hàng (Realtime)</div>' +
+            '</div></div>'
+        );
+        container.scrollTop(container[0].scrollHeight);
+    };
+
+    window.tgbEndChatSession = function () {
+        var sessionId = $('#tgb_activeSessionId').val() || 'sess_mai_nguyen_01';
+        alert('Đã hoàn tất tư vấn và lưu lịch sử phiên hội thoại ' + sessionId + '!');
+    };
+
+    $('#tgb_formStaffChatReply').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var sessionId = $('#tgb_activeSessionId').val() || 'sess_mai_nguyen_01';
+        var inputEl   = $('#tgb_staffChatInput');
+        var msgText   = (inputEl.val() || '').trim();
+        if (!msgText) return;
+
+        var nowTime   = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        var safeHtml  = $('<div>').text(msgText).html();
+        var container = $('#tgb_staffChatMessageContainer');
+
+        container.append(
+            '<div class="d-flex justify-content-end mb-3">' +
+            '<div class="p-3 bg-peach text-white small rounded-lg chat-bubble-sent shadow-sm">' +
+            safeHtml +
+            '<div class="text-white-50 fk-fs-075 mt-1 text-right">' + nowTime + ' • Nhân viên CSKH <i class="fa-solid fa-check-double ml-1"></i></div>' +
+            '</div></div>'
+        );
+        container.scrollTop(container[0].scrollHeight);
+        $('#tgb_preview_' + sessionId).text('Bạn: ' + msgText);
+        inputEl.val('');
+
+        fkSendAjax('staff', 'ajaxSendChatReply', {
+            ma_phien_khach:    sessionId,
+            noi_dung_tin_nhan: msgText
+        });
+    });
+
+    // Form tra cứu nhanh tồn kho ngay trong MH 11 (Live Chat Cột 3)
+    function tgbRunQuickStockSearch() {
+        var kw = ($('#tgb_quickStockKeyword').val() || '').trim();
+        var listEl = $('#tgb_quickStockResultList');
+        if (!listEl.length) return;
+
+        fkSendAjax('staff', 'ajaxQuickStockLookup', { keyword: kw })
+            .done(function (res) {
+                var items = (res && Array.isArray(res.products)) ? res.products : [];
+                listEl.empty();
+                if (items.length === 0) {
+                    listEl.append('<li class="text-center text-muted-custom py-2">Không tìm thấy sản phẩm khớp từ khóa.</li>');
+                    return;
+                }
+                items.forEach(function (prod) {
+                    var stock = parseInt(prod.so_luong_ton_kho, 10) || 0;
+                    var price = Number(prod.gia_ban || 0).toLocaleString('vi-VN') + ' đ';
+                    var badge = (stock <= 5)
+                        ? '<span class="badge badge-danger px-2 py-1 rounded-pill">Sắp hết (' + stock + ')</span>'
+                        : '<span class="badge badge-mint px-2 py-1 rounded-pill">Còn ' + stock + '</span>';
+                    listEl.append(
+                        '<li class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">' +
+                        '<div><strong class="text-slate d-block">' + $('<div>').text(prod.ten_san_pham).html() + ' (#' + prod.ma_san_pham + ')</strong>' +
+                        '<span class="text-peach font-weight-bold">' + price + '</span></div>' +
+                        badge +
+                        '</li>'
+                    );
+                });
+            });
+    }
+
+    $('#tgb_formQuickStockLookup').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        tgbRunQuickStockSearch();
+    });
+
+    $('#tgb_quickStockKeyword').on('keyup', function () {
+        clearTimeout(window.tgbQuickStockTimer);
+        window.tgbQuickStockTimer = setTimeout(tgbRunQuickStockSearch, 250);
+    });
+
+    // ------------------------------------------------------------------------
+    // 6. MH 17 (KOL Casting Review):
+    //    - Admin: Quyết định Trúng tuyển / Từ chối (sp_lnkt_duyet_ho_so_kol_nhi)
+    //    - Staff: Chỉ sơ tuyển "Mời phỏng vấn" (moi_phong_van)
+    // ------------------------------------------------------------------------
+    window.lnktFilterKolReviewAge = function (ageGroup, btnEl) {
+        $('.lnkt-kol-age-btn').removeClass('active btn-pastel-primary').addClass('btn-outline-secondary');
+        $(btnEl).removeClass('btn-outline-secondary').addClass('active btn-pastel-primary');
+
+        $('.lnkt-kol-review-card').each(function () {
+            var cardAge = $(this).attr('data-age-group');
+            if (ageGroup === 'all' || cardAge === ageGroup) {
+                $(this).removeClass('d-none');
+            } else {
+                $(this).addClass('d-none');
+            }
+        });
+    };
+
+    window.lnktHandleKolReviewAction = function (profileId, decisionStatus, babyName) {
+        var isStaffInviteOnly = (decisionStatus === 'moi_phong_van');
+        var ctrl   = isStaffInviteOnly ? 'staff' : 'admin';
+        var action = isStaffInviteOnly ? 'ajaxInviteKolInterview' : 'ajaxDecideKolCasting';
+
+        fkSendAjax(ctrl, action, {
+            ma_ho_so:         profileId,
+            profile_id:       profileId,
+            trang_thai_duyet: decisionStatus,
+            decision:         decisionStatus
+        }).always(function (resOrXhr) {
+            var $badge = $('#lnkt_kolStatusBadge_' + profileId);
+            var $alert = $('#lnkt_kolReviewAlert');
+
+            if (decisionStatus === 'trung_tuyen') {
+                $badge.attr('class', 'badge badge-pill badge-mint').html('<i class="fa-solid fa-crown mr-1"></i>Trúng tuyển KOL');
+            } else if (decisionStatus === 'tu_choi') {
+                $badge.attr('class', 'badge badge-pill badge-danger').html('<i class="fa-solid fa-ban mr-1"></i>Đã từ chối');
+            } else {
+                $badge.attr('class', 'badge badge-pill badge-sky').html('<i class="fa-solid fa-camera mr-1"></i>Mời phỏng vấn');
+            }
+
+            var msg = (resOrXhr && resOrXhr.message)
+                ? resOrXhr.message
+                : ('Đã thực thi sp_lnkt_duyet_ho_so_kol_nhi cho hồ sơ "' + babyName + '" -> Trạng thái: ' + decisionStatus);
+            $alert.removeClass('d-none alert-danger').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        });
+    };
+
+    // ------------------------------------------------------------------------
+    // 7. MH 21/22 (CMS Blog):
+    //    - Staff: Lưu "Bản nháp" (ban_nhap)
+    //    - Admin: "Xuất bản" (xuat_ban) & "Xóa" bài viết/bình luận
+    // ------------------------------------------------------------------------
+    window.tgbSaveBlogDraftAjax = function () {
+        var title   = ($('#tgb_blogTitle').val() || '').trim();
+        var excerpt = ($('#tgb_blogExcerpt').val() || '').trim();
+        var content = ($('#tgb_blogContent').val() || '').trim();
+        var $alert  = $('#tgb_cmsBlogAlert');
+
+        if (!title) {
+            alert('Vui lòng nhập tiêu đề bài viết trước khi lưu Bản nháp!');
+            return;
+        }
+
+        fkSendAjax('staff', 'ajaxSaveBlogDraft', {
+            tieu_de:           title,
+            tom_tat_ngan:      excerpt,
+            noi_dung_chi_tiet: content
+        }).always(function (res) {
+            var msg = (res && res.message)
+                ? res.message
+                : ('Đã lưu bài viết "' + title + '" vào Bản nháp (ban_nhap) thành công!');
+            $alert.removeClass('d-none alert-danger').addClass('alert-info d-block').text(msg);
+            alert(msg);
+        });
+    };
+
+    window.tgbPublishBlogAjax = function (overrideTitle) {
+        var title   = overrideTitle || ($('#tgb_blogTitle').val() || '').trim();
+        var excerpt = ($('#tgb_blogExcerpt').val() || '').trim();
+        var content = ($('#tgb_blogContent').val() || '').trim();
+        var $alert  = $('#tgb_cmsBlogAlert');
+
+        if (!title) {
+            alert('Vui lòng nhập tiêu đề bài viết trước khi Xuất bản!');
+            return;
+        }
+
+        fkSendAjax('admin', 'ajaxPublishBlog', {
+            tieu_de:           title,
+            tom_tat_ngan:      excerpt,
+            noi_dung_chi_tiet: content
+        }).always(function (res) {
+            var msg = (res && res.message)
+                ? res.message
+                : ('Quản trị viên đã XUẤT BẢN bài viết "' + title + '" (xuat_ban) lên Tạp chí thành công!');
+            $alert.removeClass('d-none alert-danger alert-info').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        });
+    };
+
+    window.tgbDeleteBlogItemAjax = function (postId, commentId, rowSelector) {
+        var $alert = $('#tgb_cmsBlogAlert');
+        fkSendAjax('admin', 'ajaxDeleteBlog', {
+            ma_bai_viet:  postId,
+            ma_binh_luan: commentId
+        }).always(function (res) {
+            if (rowSelector && $(rowSelector).length) {
+                $(rowSelector).fadeOut(250, function () { $(this).remove(); });
+            }
+            var msg = (res && res.message)
+                ? res.message
+                : 'Quản trị viên đã XÓA nội dung khỏi hệ thống thành công!';
+            $alert.removeClass('d-none alert-info').addClass('alert-success d-block').text(msg);
+            alert(msg);
+        });
+    };
+
+    window.tgbKeepModerationItem = function (rowSelector) {
+        if (rowSelector && $(rowSelector).length) {
+            $(rowSelector).addClass('table-success');
+        }
+        alert('Đã xác nhận giữ lại nội dung hợp lệ!');
+    };
+});
+

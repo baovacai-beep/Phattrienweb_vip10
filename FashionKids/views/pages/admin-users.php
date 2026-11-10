@@ -1,5 +1,7 @@
 
 <?php
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess('admin-users.php');
 $page_title = "Quản Trị Người Dùng & Cấu Hình Hạng VIP (MH 15)";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
@@ -81,21 +83,21 @@ $tiers = [
                                             <strong><?= $u['tier'] ?></strong>
                                         </td>
                                         <td class="text-right text-primary font-weight-bold"><?= number_format($u['points']) ?></td>
-                                        <td class="text-center">
+                                        <td class="text-center" id="hgb_userStatusCell_<?= $u['id'] ?>">
                                             <?php if ($u['status'] == 1): ?>
                                                 <span class="badge badge-success px-2 py-1">Hoạt động</span>
                                             <?php else: ?>
                                                 <span class="badge badge-danger px-2 py-1">Đã khóa</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center" id="hgb_userActionCell_<?= $u['id'] ?>">
                                             <?php if ($u['role'] !== 'quan_tri'): ?>
                                                 <?php if ($u['status'] == 1): ?>
-                                                    <button class="btn btn-outline-danger btn-sm rounded-circle" title="Khóa tài khoản">
+                                                    <button type="button" onclick="hgbToggleUserStatus(<?= $u['id'] ?>, 0)" class="btn btn-outline-danger btn-sm rounded-circle" title="Khóa tài khoản">
                                                         <i class="fa-solid fa-lock"></i>
                                                     </button>
                                                 <?php else: ?>
-                                                    <button class="btn btn-outline-success btn-sm rounded-circle" title="Mở khóa tài khoản">
+                                                    <button type="button" onclick="hgbToggleUserStatus(<?= $u['id'] ?>, 1)" class="btn btn-outline-success btn-sm rounded-circle" title="Mở khóa tài khoản">
                                                         <i class="fa-solid fa-lock-open"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -117,9 +119,10 @@ $tiers = [
                     <h6 class="font-weight-bold mb-0 text-slate">Cấu Hình Điểm Sàn & % Giảm Giá VIP</h6>
                 </div>
                 <div class="card-body p-4 pt-0">
-                    <form>
+                    <div id="hgb_vipConfigAlert" class="alert d-none small font-weight-bold mb-3" role="alert"></div>
+                    <form id="hgb_formAdminVipTiers">
                         <?php foreach ($tiers as $t): ?>
-                            <div class="p-3 mb-3 rounded bg-milk-cream border">
+                            <div class="p-3 mb-3 rounded bg-milk-cream border hgb-vip-tier-config-item" data-tier-id="<?= $t['id'] ?>" data-tier-name="<?= htmlspecialchars($t['name']) ?>">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="font-weight-bold text-slate">
                                         <i class="fa-solid fa-medal mr-1 text-peach"></i> Hạng <?= $t['name'] ?>
@@ -129,12 +132,12 @@ $tiers = [
                                 <div class="form-row">
                                     <div class="col-6">
                                         <label class="small text-muted-custom mb-1 font-weight-bold">Điểm sàn (pts):</label>
-                                        <input type="number" class="form-control form-control-sm" value="<?= $t['min'] ?>" required>
+                                        <input type="number" id="hgb_tierMinPts_<?= $t['id'] ?>" class="form-control form-control-sm hgb-input-min-pts" value="<?= $t['min'] ?>" min="0" required>
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-muted-custom mb-1 font-weight-bold">Giảm giá (%):</label>
                                         <div class="input-group input-group-sm">
-                                            <input type="number" class="form-control" value="<?= $t['discount'] ?>" required>
+                                            <input type="number" id="hgb_tierDiscount_<?= $t['id'] ?>" class="form-control hgb-input-discount" value="<?= $t['discount'] ?>" min="0" max="100" step="0.5" required>
                                             <div class="input-group-append">
                                                 <span class="input-group-text">%</span>
                                             </div>
@@ -144,7 +147,7 @@ $tiers = [
                             </div>
                         <?php endforeach; ?>
 
-                        <button type="button" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
+                        <button type="submit" id="hgb_btnSaveVipTiers" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm">
                             <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Cấu Hình Hạng Thẻ
                         </button>
                     </form>

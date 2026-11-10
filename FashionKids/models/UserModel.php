@@ -293,6 +293,73 @@ class UserModel extends Model {
         }
     }
 
+    /**
+     * Cập nhật cấu hình điểm sàn (diem_toi_thieu) và % chiết khấu (phan_tram_giam_gia) cho bảng hgb_hang_thanh_vien (MH 15 - Admin)
+     */
+    public function capNhatCauHinhHangVip(array $tiers): bool {
+        if (empty($tiers)) {
+            throw new InvalidArgumentException('Dữ liệu cấu hình hạng thành viên VIP không được để trống!');
+        }
+
+        foreach ($tiers as $tier) {
+            $minPts   = (int)($tier['diem_toi_thieu'] ?? $tier['min_points'] ?? 0);
+            $discount = (float)($tier['phan_tram_giam_gia'] ?? $tier['discount_percent'] ?? 0);
+            if ($minPts < 0) {
+                throw new InvalidArgumentException('Điểm sàn tối thiểu của hạng thẻ VIP không được là số âm!');
+            }
+            if ($discount < 0 || $discount > 100) {
+                throw new InvalidArgumentException('Phần trăm chiết khấu VIP phải nằm trong khoảng từ 0% đến 100%!');
+            }
+        }
+
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare(
+                    "UPDATE hgb_hang_thanh_vien
+                        SET diem_toi_thieu = :diem,
+                            phan_tram_giam_gia = :giam
+                      WHERE ma_hang = :id"
+                );
+                foreach ($tiers as $tier) {
+                    $id       = (int)($tier['ma_hang'] ?? $tier['id'] ?? 0);
+                    $minPts   = (int)($tier['diem_toi_thieu'] ?? $tier['min_points'] ?? 0);
+                    $discount = (float)($tier['phan_tram_giam_gia'] ?? $tier['discount_percent'] ?? 0);
+                    if ($id > 0) {
+                        $stmt->execute([
+                            ':diem' => $minPts,
+                            ':giam' => $discount,
+                            ':id'   => $id,
+                        ]);
+                    }
+                }
+                return true;
+            } catch (PDOException $e) {
+                error_log('[hgb] capNhatCauHinhHangVip: ' . $e->getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Cập nhật trạng thái khóa/mở khóa hoặc phân quyền tài khoản người dùng (MH 15 - Admin)
+     */
+    public function capNhatTrangThaiNguoiDung(int $maNguoiDung, int $trangThaiOtp): bool {
+        if ($maNguoiDung <= 0) {
+            return false;
+        }
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("UPDATE hgb_nguoi_dung SET da_xac_thuc_otp = :st WHERE ma_nguoi_dung = :id");
+                return $stmt->execute([':st' => $trangThaiOtp ? 1 : 0, ':id' => $maNguoiDung]);
+            } catch (PDOException $e) {
+                error_log('[hgb] capNhatTrangThaiNguoiDung: ' . $e->getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
     // ========================================================================
     // HÀM TIỆN ÍCH NỘI BỘ
     // ========================================================================

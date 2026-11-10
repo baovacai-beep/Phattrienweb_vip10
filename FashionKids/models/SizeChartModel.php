@@ -90,4 +90,113 @@ class SizeChartModel extends Model {
         }
         return [];
     }
+
+    /**
+     * Lưu hoặc cập nhật cấu hình trần/sàn kích cỡ trong bảng lnkt_bang_kich_co (MH 14 - Admin)
+     */
+    public function saveSizeChart(array $data): int {
+        $maKichCo   = (int)($data['ma_kich_co'] ?? $data['id'] ?? 0);
+        $maDanhMuc  = (int)($data['ma_danh_muc'] ?? $data['category_id'] ?? 1);
+        $loaiHang   = trim((string)($data['loai_hang'] ?? $data['type'] ?? 'quan_ao'));
+        $gioiTinh   = trim((string)($data['gioi_tinh'] ?? $data['gender'] ?? 'chung'));
+        $tenKichCo  = trim((string)($data['ten_kich_co'] ?? $data['size_name'] ?? ''));
+
+        if ($tenKichCo === '') {
+            throw new InvalidArgumentException('Ký hiệu kích cỡ (ten_kich_co) không được để trống!');
+        }
+        if ($gioiTinh === 'girl') $gioiTinh = 'be_gai';
+        elseif ($gioiTinh === 'boy') $gioiTinh = 'be_trai';
+        elseif (!in_array($gioiTinh, ['be_trai', 'be_gai', 'chung'], true)) $gioiTinh = 'chung';
+
+        if (!in_array($loaiHang, ['quan_ao', 'giay_dep'], true)) {
+            $loaiHang = ($maDanhMuc === 4) ? 'giay_dep' : 'quan_ao';
+        }
+
+        $hMin = ($loaiHang === 'quan_ao') ? (float)($data['chieu_cao_toi_thieu'] ?? $data['height_min'] ?? 0) : null;
+        $hMax = ($loaiHang === 'quan_ao') ? (float)($data['chieu_cao_toi_da'] ?? $data['height_max'] ?? 0) : null;
+        $cMin = ($loaiHang === 'quan_ao') ? (float)($data['vong_nguc_toi_thieu'] ?? $data['chest_min'] ?? 0) : null;
+        $cMax = ($loaiHang === 'quan_ao') ? (float)($data['vong_nguc_toi_da'] ?? $data['chest_max'] ?? 0) : null;
+        $wMin = ($loaiHang === 'quan_ao') ? (float)($data['vong_eo_toi_thieu'] ?? $data['waist_min'] ?? 0) : null;
+        $wMax = ($loaiHang === 'quan_ao') ? (float)($data['vong_eo_toi_da'] ?? $data['waist_max'] ?? 0) : null;
+        $fMin = ($loaiHang === 'giay_dep') ? (float)($data['chieu_dai_chan_toi_thieu'] ?? $data['foot_length_min'] ?? 0) : null;
+        $fMax = ($loaiHang === 'giay_dep') ? (float)($data['chieu_dai_chan_toi_da'] ?? $data['foot_length_max'] ?? 0) : null;
+
+        if ($loaiHang === 'quan_ao' && ($hMin <= 0 || $hMax < $hMin)) {
+            throw new InvalidArgumentException('Thông số chiều cao trần/sàn không hợp lệ (Chiều cao sàn phải > 0 và <= Chiều cao trần)!');
+        }
+        if ($loaiHang === 'giay_dep' && ($fMin <= 0 || $fMax < $fMin)) {
+            throw new InvalidArgumentException('Thông số chiều dài bàn chân trần/sàn không hợp lệ (Dài chân sàn phải > 0 và <= Dài chân trần)!');
+        }
+
+        if ($this->hasConnection()) {
+            try {
+                if ($maKichCo > 0) {
+                    $stmt = $this->db->prepare(
+                        "UPDATE lnkt_bang_kich_co
+                            SET ma_danh_muc = :ma_dm,
+                                loai_hang = :loai,
+                                gioi_tinh = :gt,
+                                ten_kich_co = :ten,
+                                chieu_cao_toi_thieu = :hmin,
+                                chieu_cao_toi_da = :hmax,
+                                vong_nguc_toi_thieu = :cmin,
+                                vong_nguc_toi_da = :cmax,
+                                vong_eo_toi_thieu = :wmin,
+                                vong_eo_toi_da = :wmax,
+                                chieu_dai_chan_toi_thieu = :fmin,
+                                chieu_dai_chan_toi_da = :fmax
+                          WHERE ma_kich_co = :id"
+                    );
+                    $stmt->execute([
+                        ':ma_dm' => $maDanhMuc,
+                        ':loai'  => $loaiHang,
+                        ':gt'    => $gioiTinh,
+                        ':ten'   => $tenKichCo,
+                        ':hmin'  => $hMin,
+                        ':hmax'  => $hMax,
+                        ':cmin'  => $cMin,
+                        ':cmax'  => $cMax,
+                        ':wmin'  => $wMin,
+                        ':wmax'  => $wMax,
+                        ':fmin'  => $fMin,
+                        ':fmax'  => $fMax,
+                        ':id'    => $maKichCo,
+                    ]);
+                    return $maKichCo;
+                } else {
+                    $stmt = $this->db->prepare(
+                        "INSERT INTO lnkt_bang_kich_co (
+                            ma_danh_muc, loai_hang, gioi_tinh, ten_kich_co,
+                            chieu_cao_toi_thieu, chieu_cao_toi_da,
+                            vong_nguc_toi_thieu, vong_nguc_toi_da,
+                            vong_eo_toi_thieu, vong_eo_toi_da,
+                            chieu_dai_chan_toi_thieu, chieu_dai_chan_toi_da
+                         ) VALUES (
+                            :ma_dm, :loai, :gt, :ten,
+                            :hmin, :hmax, :cmin, :cmax, :wmin, :wmax, :fmin, :fmax
+                         )"
+                    );
+                    $stmt->execute([
+                        ':ma_dm' => $maDanhMuc,
+                        ':loai'  => $loaiHang,
+                        ':gt'    => $gioiTinh,
+                        ':ten'   => $tenKichCo,
+                        ':hmin'  => $hMin,
+                        ':hmax'  => $hMax,
+                        ':cmin'  => $cMin,
+                        ':cmax'  => $cMax,
+                        ':wmin'  => $wMin,
+                        ':wmax'  => $wMax,
+                        ':fmin'  => $fMin,
+                        ':fmax'  => $fMax,
+                    ]);
+                    return (int)$this->db->lastInsertId();
+                }
+            } catch (PDOException $e) {
+                error_log("[lnkt] saveSizeChart error: " . $e->getMessage());
+            }
+        }
+
+        return $maKichCo > 0 ? $maKichCo : random_int(11, 99);
+    }
 }

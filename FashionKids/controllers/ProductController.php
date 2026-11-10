@@ -171,4 +171,121 @@ class ProductController extends Controller {
             ], 400);
         }
     }
+
+    /**
+     * API AJAX: Thêm sản phẩm mới vào kho (MH 13 - chỉ Quản trị viên Admin)
+     * Triệu gọi Stored Procedure sp_lbn_them_san_pham_moi.
+     * Bắt lỗi ngoại lệ nếu giá bán <= 0 hoặc tồn kho < 0.
+     */
+    public function ajaxAddProduct(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        Rbac::requireAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ (Chỉ chấp nhận POST)'], 405);
+        }
+
+        try {
+            $maDanhMuc     = (int)($_POST['ma_danh_muc'] ?? $_POST['category_id'] ?? 1);
+            $tenSanPham    = trim((string)($_POST['ten_san_pham'] ?? $_POST['name'] ?? ''));
+            $giaBan        = (float)($_POST['gia_ban'] ?? $_POST['price'] ?? 0);
+            $soLuongTonKho = (int)($_POST['so_luong_ton_kho'] ?? $_POST['stock_quantity'] ?? 0);
+            $duongDanAnh   = trim((string)($_POST['duong_dan_anh'] ?? $_POST['image_url'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'));
+            $moTaChatLieu  = trim((string)($_POST['mo_ta_chat_lieu'] ?? $_POST['description'] ?? '100% sợi tre hữu cơ kháng khuẩn tự nhiên'));
+            $loaiKichCo    = trim((string)($_POST['loai_kich_co'] ?? $_POST['lbn_size_type'] ?? 'quan_ao'));
+
+            if ($giaBan <= 0) {
+                throw new InvalidArgumentException('Lỗi [LBN_ERR_03]: Giá bán sản phẩm phải lớn hơn 0 VNĐ!');
+            }
+            if ($soLuongTonKho < 0) {
+                throw new InvalidArgumentException('Lỗi [LBN_ERR_04]: Số lượng hàng tồn kho ban đầu không được là số âm!');
+            }
+            if ($tenSanPham === '') {
+                throw new InvalidArgumentException('Lỗi [LBN_ERR_02]: Tên sản phẩm không được phép để trống!');
+            }
+
+            $maSpMoi = $this->productModel->themSanPhamMoi(
+                $maDanhMuc,
+                $tenSanPham,
+                $giaBan,
+                $soLuongTonKho,
+                $duongDanAnh,
+                $moTaChatLieu,
+                $loaiKichCo
+            );
+
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+
+            $this->jsonResponse([
+                'status'     => 'success',
+                'product_id' => $maSpMoi,
+                'message'    => "Đã thực thi sp_lbn_them_san_pham_moi: Thêm sản phẩm \"{$tenSanPham}\" (#{$maSpMoi}) thành công!"
+            ], 200);
+        } catch (Exception $e) {
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+            $this->jsonResponse([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * API AJAX: Nhập thêm kho hàng bổ sung (MH 13 - cho phépทั้ง Admin và Nhân viên Staff)
+     * Triệu gọi Stored Procedure sp_lbn_nhap_them_kho_hang.
+     */
+    public function ajaxRestockProduct(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        Rbac::requireStaffOrAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ (Chỉ chấp nhận POST)'], 405);
+        }
+
+        try {
+            $maSanPham   = (int)($_POST['ma_san_pham'] ?? $_POST['product_id'] ?? 0);
+            $soLuongNhap = (int)($_POST['so_luong_nhap'] ?? $_POST['qty_change'] ?? 0);
+
+            if ($maSanPham <= 0) {
+                throw new InvalidArgumentException('Mã sản phẩm cần nhập kho không hợp lệ!');
+            }
+            if ($soLuongNhap <= 0) {
+                throw new InvalidArgumentException('Lỗi [LBN_ERR_05]: Số lượng nhập hàng bổ sung phải lớn hơn 0!');
+            }
+
+            $ok = $this->productModel->updateStock($maSanPham, $soLuongNhap);
+            if (!$ok) {
+                throw new RuntimeException('Không thể cập nhật tồn kho lúc này, vui lòng kiểm tra lại!');
+            }
+
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+
+            $this->jsonResponse([
+                'status'     => 'success',
+                'product_id' => $maSanPham,
+                'added_qty'  => $soLuongNhap,
+                'message'    => "Đã thực thi sp_lbn_nhap_them_kho_hang: Nhập thêm +{$soLuongNhap} sản phẩm cho mã #{$maSanPham} thành công!"
+            ], 200);
+        } catch (Exception $e) {
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+            $this->jsonResponse([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
 }

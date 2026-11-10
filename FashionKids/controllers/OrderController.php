@@ -126,4 +126,55 @@ class OrderController extends Controller {
             'message'  => 'Đơn hàng đã được khởi tạo thành công qua Stored Procedure!'
         ]);
     }
+
+    /**
+     * API AJAX: Nhân viên tiếp nhận đơn và cập nhật tiến trình giao hàng (MH 10)
+     * Triệu gọi Stored Procedure sp_lnkt_cap_nhat_trang_thai_don_hang.
+     */
+    public function ajaxUpdateStatus(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        Rbac::requireStaffOrAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ (Chỉ chấp nhận POST)'], 405);
+        }
+
+        try {
+            $maDonHang    = (int)($_POST['ma_don_hang'] ?? $_POST['order_id'] ?? 0);
+            $trangThaiMoi = trim((string)($_POST['trang_thai_moi'] ?? $_POST['new_status'] ?? ''));
+            $maNhanVien   = Rbac::currentUserId();
+
+            if ($maDonHang <= 0) {
+                throw new InvalidArgumentException('Mã đơn hàng cần xử lý không hợp lệ!');
+            }
+            if ($trangThaiMoi === '') {
+                throw new InvalidArgumentException('Vui lòng chọn trạng thái đơn hàng mới!');
+            }
+
+            $this->orderModel->capNhatTrangThai($maDonHang, $maNhanVien, $trangThaiMoi);
+
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+
+            $this->jsonResponse([
+                'status'     => 'success',
+                'order_id'   => $maDonHang,
+                'new_status' => $trangThaiMoi,
+                'staff_id'   => $maNhanVien,
+                'message'    => "Đã thực thi sp_lnkt_cap_nhat_trang_thai_don_hang cho đơn #{$maDonHang} -> Trạng thái mới: {$trangThaiMoi}"
+            ], 200);
+        } catch (Exception $e) {
+            if (ob_get_level() > 0) {
+                ob_clean();
+            }
+            $this->jsonResponse([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
 }

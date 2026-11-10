@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess('staff-orders.php');
 $page_title = "Bàn Làm Việc Quản Trị & Duyệt Đơn Hàng (MH 10)";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";

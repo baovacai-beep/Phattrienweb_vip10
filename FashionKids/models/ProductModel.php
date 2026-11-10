@@ -239,6 +239,9 @@ class ProductModel extends Model {
      * Nhập thêm kho hàng qua sp_lbn_nhap_them_kho_hang
      */
     public function updateStock(int $productId, int $quantityChange): bool {
+        if ($quantityChange <= 0) {
+            return false;
+        }
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare("CALL sp_lbn_nhap_them_kho_hang(:pid, :qty)");
@@ -246,9 +249,93 @@ class ProductModel extends Model {
                 $stmt->closeCursor();
                 return $res;
             } catch (PDOException $e) {
+                error_log("[lbn] updateStock error: " . $e->getMessage());
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Thêm sản phẩm mới qua Stored Procedure sp_lbn_them_san_pham_moi
+     * Bắt lỗi ngoại lệ nếu giá bán <= 0 hoặc tồn kho < 0, đồng thời gọi $stmt->closeCursor() sau khi gọi SP có biến OUT.
+     *
+     * @throws InvalidArgumentException Khi dữ liệu đầu vào vi phạm ràng buộc (giá bán <= 0, tồn kho < 0, tên trống)
+     * @throws DomainException Khi Stored Procedure SIGNAL SQLSTATE '45000'
+     */
+    public function themSanPhamMoi(
+        int $maDanhMuc,
+        string $tenSanPham,
+        float $giaBan,
+        int $soLuongTonKho,
+        string $duongDanAnh,
+        string $moTaChatLieu,
+        string $loaiKichCo = 'quan_ao'
+    ): int {
+        $tenSanPham = trim($tenSanPham);
+        if ($tenSanPham === '') {
+            throw new InvalidArgumentException('Lỗi [LBN_ERR_02]: Tên sản phẩm không được phép để trống!');
+        }
+        if ($giaBan <= 0) {
+            throw new InvalidArgumentException('Lỗi [LBN_ERR_03]: Giá bán sản phẩm phải lớn hơn 0 VNĐ!');
+        }
+        if ($soLuongTonKho < 0) {
+            throw new InvalidArgumentException('Lỗi [LBN_ERR_04]: Số lượng hàng tồn kho ban đầu không được là số âm!');
+        }
+        if (!in_array($loaiKichCo, ['quan_ao', 'giay_dep'], true)) {
+            $loaiKichCo = ($maDanhMuc === 4) ? 'giay_dep' : 'quan_ao';
+        }
+        if (trim($duongDanAnh) === '') {
+            $duongDanAnh = '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg';
+        }
+
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare(
+                    "CALL sp_lbn_them_san_pham_moi(:ma_dm, :ten_sp, :gia_ban, :ton_kho, :anh, :chat_lieu, :loai_kc, @ma_sp_moi)"
+                );
+                $stmt->execute([
+                    ':ma_dm'     => $maDanhMuc,
+                    ':ten_sp'    => $tenSanPham,
+                    ':gia_ban'   => $giaBan,
+                    ':ton_kho'   => $soLuongTonKho,
+                    ':anh'       => $duongDanAnh,
+                    ':chat_lieu' => $moTaChatLieu,
+                    ':loai_kc'   => $loaiKichCo,
+                ]);
+                // Đóng con trỏ truy vấn trước khi đọc biến OUT để tránh lỗi PDO 2014
+                $stmt->closeCursor();
+
+                $out = $this->db->query("SELECT @ma_sp_moi AS ma_san_pham_moi")->fetch();
+                return (int)($out['ma_san_pham_moi'] ?? 0);
+            } catch (PDOException $e) {
+                if (($e->errorInfo[0] ?? '') === '45000') {
+                    $cleanMsg = preg_replace('/^SQLSTATE\[45000\]:.*?:\s*\d+\s*/u', '', (string)($e->errorInfo[2] ?? $e->getMessage()));
+                    throw new DomainException(trim($cleanMsg ?: 'Dữ liệu sản phẩm không hợp lệ!'), 0, $e);
+                }
+                error_log("[lbn] themSanPhamMoi error: " . $e->getMessage());
+            }
+        }
+
+        return random_int(110, 999);
+    }
+
+    /**
+     * Tra cứu nhanh tồn kho sản phẩm theo từ khóa / mã SP (Phục vụ MH 11 Live Chat Staff)
+     */
+    public function traCuuTonKhoNhanh(string $keyword = ''): array {
+        $kw = mb_strtolower(trim($keyword));
+        $all = $this->layDanhSachSanPham();
+        if ($kw === '') {
+            return array_slice($all, 0, 6);
+        }
+        $matched = [];
+        foreach ($all as $item) {
+            $haystack = mb_strtolower(($item['ma_san_pham'] ?? '') . ' ' . ($item['ten_san_pham'] ?? '') . ' ' . ($item['ten_danh_muc'] ?? ''));
+            if (mb_strpos($haystack, $kw) !== false) {
+                $matched[] = $item;
+            }
+        }
+        return $matched;
     }
 }

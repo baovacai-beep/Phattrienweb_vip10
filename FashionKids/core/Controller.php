@@ -9,6 +9,8 @@
  *  4. Tương thích ngược toàn diện với các khóa phẳng (exists, demo_debug, demo_otp, v.v.).
  */
 
+require_once __DIR__ . '/Rbac.php';
+
 abstract class Controller {
     /**
      * Nạp và khởi tạo một đối tượng Model
@@ -29,13 +31,14 @@ abstract class Controller {
     }
 
     /**
-     * Render view kèm trích xuất biến truyền vào
+     * Render view kèm trích xuất biến truyền vào và thực thi Middleware RBAC
      *
      * @param string $viewPath Đường dẫn tương đối trong views/ (ví dụ 'pages/shop-catalog' hoặc 'home')
      * @param array $data Mảng biến số truyền sang View
      * @return void
      */
     protected function view(string $viewPath, array $data = []): void {
+        Rbac::enforceCurrentViewAccess($viewPath);
         extract($data);
 
         // 1. Thử tìm đường dẫn trực tiếp trong views/

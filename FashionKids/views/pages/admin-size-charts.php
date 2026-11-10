@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . "/../../core/Rbac.php";
+Rbac::enforceCurrentViewAccess('admin-size-charts.php');
 $page_title = "Quản Trị Bảng Quy Chuẩn Size & Ràng Buộc Danh Mục (MH 14)";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
