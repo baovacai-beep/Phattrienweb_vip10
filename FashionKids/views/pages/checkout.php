@@ -1,68 +1,75 @@
 <?php
-$page_title = "Giỏ Hàng & Thanh Toán Đặt Hàng (MH 05)";
+$page_title = "Giỏ Hàng & Thanh Toán - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
-// Danh sách món đồ trong giỏ hàng mẫu (liên kết tgb_order_items & lbn_products)
-$lnkt_cart_items = [
-    [
-        'item_id'       => 1,
-        'product_id'    => 101,
-        'sku'           => 'FK-LBN-01',
-        'image'         => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
-        'name'          => 'Váy Công Chúa Sợi Tre Phối Ren Hoa Cúc Họa Mi',
-        'category_name' => 'Váy công chúa',
-        'size'          => 'Size 2 (2-3T)',
-        'price'         => 285000,
-        'quantity'      => 1,
-        'icon'          => 'fa-person-dress text-peach'
-    ],
-    [
-        'item_id'       => 2,
-        'product_id'    => 102,
-        'sku'           => 'FK-LBN-02',
-        'image'         => '/FashionKids/images/bo-thun-khung-long.jpg',
-        'name'          => 'Bộ Thun Sợi Tre Làm Mát Khủng Long Nhí Năng Động',
-        'category_name' => 'Bộ thun',
-        'size'          => 'Size 3 (2-3T)',
-        'price'         => 225000,
-        'quantity'      => 2,
-        'icon'          => 'fa-shirt text-info'
-    ],
-    [
-        'item_id'       => 3,
-        'product_id'    => 103,
-        'sku'           => 'FK-LBN-03',
-        'image'         => '/FashionKids/images/giay-sandal-tap-di.jpg',
-        'name'          => 'Giày Sandal Tập Đi Đế Cao Su Non Lót Sợi Tre Êm Chân',
-        'category_name' => 'Giày sandal',
-        'size'          => 'Size 22 (13cm)',
-        'price'         => 210000,
-        'quantity'      => 1,
-        'icon'          => 'fa-shoe-prints text-warning'
-    ]
-];
+$lnkt_cart_items = [];
+$sessCart = (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) ? $_SESSION['cart'] : [];
+$seqId = 1;
+foreach ($sessCart as $cItem) {
+    $qty = max(1, (int)($cItem['quantity'] ?? 1));
+    $price = max(0, (int)($cItem['price'] ?? 0));
+    $lnkt_cart_items[] = [
+        'item_id'    => $seqId++,
+        'product_id' => (int)($cItem['product_id'] ?? 101),
+        'sku'        => (string)($cItem['sku'] ?? 'FK-LBN-01'),
+        'image'      => (string)($cItem['image'] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'),
+        'name'       => (string)($cItem['product_name'] ?? $cItem['name'] ?? 'Sản phẩm FashionKids'),
+        'size'       => (string)($cItem['size'] ?? 'Size 2 (2-3T)'),
+        'price'      => $price,
+        'quantity'   => $qty,
+    ];
+}
 
-// Tính toán chi phí khởi tạo (Mặc định Hạng Vàng - Giảm 10%)
+$sessUser = (!empty($_SESSION['user']) && is_array($_SESSION['user'])) ? $_SESSION['user'] : null;
+$recvName  = $sessUser ? (string)($sessUser['ho_va_ten'] ?? '') : '';
+$recvPhone = $sessUser ? (string)($sessUser['so_dien_thoai'] ?? '') : '';
+$recvAddr  = $sessUser ? (string)($sessUser['dia_chi_nha'] ?? '') : '';
+$recvEmail = $sessUser ? (string)($sessUser['thu_dien_tu'] ?? '') : '';
+
+$vipDiem = $sessUser ? (int)($sessUser['diem_tich_luy'] ?? 0) : 0;
+if ($vipDiem >= 3000) {
+    $init_vip_percent  = 15;
+    $vipTierTitle      = 'Kim Cương (-15%)';
+    $vipTierBadgeClass = 'badge-primary';
+} elseif ($vipDiem >= 1500) {
+    $init_vip_percent  = 10;
+    $vipTierTitle      = 'Hạng Vàng (-10%)';
+    $vipTierBadgeClass = 'badge-gold';
+} elseif ($vipDiem >= 500) {
+    $init_vip_percent  = 5;
+    $vipTierTitle      = 'Hạng Bạc (-5%)';
+    $vipTierBadgeClass = 'badge-sky';
+} else {
+    $init_vip_percent  = 0;
+    $vipTierTitle      = 'Hạng Đồng (0%)';
+    $vipTierBadgeClass = 'badge-secondary';
+}
+
+$firstCartProductId = !empty($lnkt_cart_items) ? (int)$lnkt_cart_items[0]['product_id'] : 101;
+$firstCartSize      = !empty($lnkt_cart_items) ? (string)$lnkt_cart_items[0]['size'] : 'Size 2 (2-3T)';
+$firstCartQty       = !empty($lnkt_cart_items) ? (int)$lnkt_cart_items[0]['quantity'] : 1;
+
+// Tính toán chi phí khởi tạo từ giỏ hàng & hạng thẻ thực tế
 $init_subtotal = 0;
 foreach ($lnkt_cart_items as $item) {
     $init_subtotal += $item['price'] * $item['quantity'];
 }
-$init_vip_percent = 10;
 $init_discount_amount = round(($init_subtotal * $init_vip_percent) / 100);
-$init_total_amount = $init_subtotal - $init_discount_amount;
-$init_reward_points = floor($init_total_amount / 10000);
+$init_shipping_fee = ($init_subtotal > 0 && $init_subtotal < 300000) ? 25000 : 0;
+$init_total_amount = max(0, $init_subtotal - $init_discount_amount + $init_shipping_fee);
+$init_reward_points = (int)floor($init_total_amount / 10000);
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_checkout_section">
-    <!-- Breadcrumb & Tiêu đề trang MH 05 -->
+    <!-- Breadcrumb & Tiêu đề trang -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent p-0 mb-1 small">
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/shop-catalog.php" class="text-muted-custom">Cửa hàng</a></li>
-                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Giỏ hàng &amp; Thanh toán (MH 05)</li>
+                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Giỏ hàng &amp; Thanh toán</li>
                 </ol>
             </nav>
             <h3 class="font-weight-bold text-slate mb-0">
@@ -72,7 +79,7 @@ $init_reward_points = floor($init_total_amount / 10000);
         <div class="mt-2 mt-md-0">
             <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm mr-2"
                     data-toggle="modal" data-target="#modalSuggestSize">
-                <i class="fa-solid fa-ruler-horizontal text-peach mr-1"></i> Kiểm Tra Lại Size (MH 04)
+                <i class="fa-solid fa-ruler-horizontal text-peach mr-1"></i> Kiểm Tra Lại Size
             </button>
             <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold">
                 <i class="fa-solid fa-plus mr-1"></i> Mua Thêm Đồ Cho Bé
@@ -85,14 +92,14 @@ $init_reward_points = floor($init_total_amount / 10000);
              CỘT TRÁI (7 CỘT): BẢNG TÓM TẮT ĐƠN HÀNG & FORM THÔNG TIN GIAO HÀNG
              ================================================================ -->
         <div class="col-12 col-lg-7 mb-4">
-            <!-- 1. BẢNG TÓM TẮT ĐƠN HÀNG (DANH SÁCH MÓN ĐỒ, SỐ LƯỢNG ĐIỀU CHỈNH, ĐƠN GIÁ CHỐT) -->
+            <!-- 1. BẢNG TÓM TẮT ĐƠN HÀNG -->
             <div class="card card-pastel shadow-sm mb-4">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-bag-shopping text-peach mr-2"></i>1. Bảng Tóm Tắt Đơn Hàng
                         </h5>
-                        <small class="text-muted-custom">Điều chỉnh số lượng, kích cỡ và kiểm tra đơn giá chốt cuối cùng (<code>tgb_order_items</code>)</small>
+                        <small class="text-muted-custom">Điều chỉnh số lượng, kích cỡ và kiểm tra đơn giá sản phẩm</small>
                     </div>
                     <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1 font-weight-bold">
                         <span id="lnkt_cartItemCountBadge"><?= count($lnkt_cart_items) ?></span> dòng SP
@@ -130,7 +137,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                                         <span class="badge badge-pill badge-sky px-2 py-1 mr-2">
                                                             <?= htmlspecialchars($item['size']) ?>
                                                         </span>
-                                                        <small class="text-muted-custom">Mã: <code><?= htmlspecialchars($item['sku']) ?></code></small>
+                                                        <small class="text-muted-custom">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong></small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -181,7 +188,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                     </div>
 
                     <!-- Thông báo khi giỏ hàng trống -->
-                    <div id="lnkt_emptyCartNotice" class="p-4 text-center d-none">
+                    <div id="lnkt_emptyCartNotice" class="p-4 text-center <?= empty($lnkt_cart_items) ? '' : 'd-none' ?>">
                         <i class="fa-solid fa-basket-shopping text-muted display-4 mb-2"></i>
                         <h6 class="font-weight-bold text-slate">Giỏ hàng của phụ huynh đang trống</h6>
                         <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary btn-sm mt-2">
@@ -191,17 +198,17 @@ $init_reward_points = floor($init_total_amount / 10000);
                 </div>
             </div>
 
-            <!-- 2. FORM THÔNG TIN GIAO HÀNG (PROVINCES OPEN API READY) -->
+            <!-- 2. FORM THÔNG TIN GIAO HÀNG -->
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="font-weight-bold text-slate mb-0">
-                            <i class="fa-solid fa-truck-fast text-peach mr-2"></i>2. Form Thông Tin Giao Hàng
+                            <i class="fa-solid fa-truck-fast text-peach mr-2"></i>2. Thông Tin Giao Hàng
                         </h5>
-                        <small class="text-muted-custom">Chuẩn hóa địa chỉ nhận hàng tích hợp Provinces Open API (<code>lnkt_orders</code>)</small>
+                        <small class="text-muted-custom">Điền thông tin người nhận và chọn địa chỉ giao hàng tận nơi</small>
                     </div>
                     <button type="button" onclick="lnktSyncProvincesOpenApi()" class="btn btn-light btn-sm border rounded-pill small font-weight-bold text-slate">
-                        <i class="fa-solid fa-cloud-arrow-down text-info mr-1"></i>Đồng bộ Provinces API
+                        <i class="fa-solid fa-cloud-arrow-down text-info mr-1"></i>Làm mới địa giới hành chính
                     </button>
                 </div>
 
@@ -217,7 +224,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                                         <span class="input-group-text bg-white"><i class="fa-solid fa-user text-peach"></i></span>
                                     </div>
                                     <input type="text" id="lnkt_receiverName" name="ten_nguoi_nhan" class="form-control"
-                                           value="Võ Thị Thanh Thảo" placeholder="Nhập họ tên phụ huynh..." required>
+                                           value="<?= htmlspecialchars($recvName) ?>" placeholder="Nhập họ tên phụ huynh..." required>
                                 </div>
                             </div>
 
@@ -230,29 +237,29 @@ $init_reward_points = floor($init_total_amount / 10000);
                                         <span class="input-group-text bg-white"><i class="fa-solid fa-phone text-peach"></i></span>
                                     </div>
                                     <input type="tel" id="lnkt_receiverPhone" name="so_dien_thoai_nhan" class="form-control"
-                                           value="0918889999" placeholder="VD: 0918889999" pattern="[0-9]{10,11}" required>
+                                           value="<?= htmlspecialchars($recvPhone) ?>" placeholder="VD: 0918889999" pattern="[0-9]{10,11}" required>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Hệ thống Dropdown chọn Tỉnh/Thành phố và Quận/Huyện (Provinces Open API) -->
+                        <!-- Hệ thống Dropdown chọn Tỉnh/Thành phố và Quận/Huyện -->
                         <div class="form-row">
                             <div class="form-group col-12 col-md-6">
                                 <label class="small font-weight-bold text-slate" for="tgb_select_province">
-                                    Tỉnh / Thành phố (<code>tinh_thanh_pho</code>) (<span class="text-danger">*</span>):
+                                    Tỉnh / Thành phố (<span class="text-danger">*</span>):
                                 </label>
                                 <select id="tgb_select_province" name="tinh_thanh_pho" class="custom-select form-control"
                                         required disabled>
                                     <option value="">Đang tải Tỉnh / Thành phố...</option>
                                 </select>
                                 <small id="lnkt_apiStatusText" class="text-muted-custom d-block mt-1">
-                                    <i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải dữ liệu từ Provinces Open API...
+                                    <i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải danh sách Tỉnh / Thành phố...
                                 </small>
                             </div>
 
                             <div class="form-group col-12 col-md-6">
                                 <label class="small font-weight-bold text-slate" for="tgb_select_district">
-                                    Quận / Huyện (<code>quan_huyen</code>) (<span class="text-danger">*</span>):
+                                    Quận / Huyện (<span class="text-danger">*</span>):
                                 </label>
                                 <select id="tgb_select_district" name="quan_huyen" class="custom-select form-control"
                                         required disabled>
@@ -266,16 +273,21 @@ $init_reward_points = floor($init_total_amount / 10000);
                                 Địa chỉ giao hàng chi tiết (Số nhà, Tên đường, Phường/Xã) (<span class="text-danger">*</span>):
                             </label>
                             <input type="text" id="lnkt_shippingAddress" name="dia_chi_giao_hang" class="form-control"
-                                   value="Số 120 Điện Biên Phủ, Phường 17" placeholder="Nhập số nhà, tên đường, phường/xã..." required>
+                                   value="<?= htmlspecialchars($recvAddr) ?>" placeholder="Nhập số nhà, tên đường, phường/xã..." required>
                         </div>
-                        <input type="hidden" name="thu_dien_tu_nhan" value="">
+                        <input type="hidden" name="thu_dien_tu_nhan" id="tgb_receiver_email" value="<?= htmlspecialchars($recvEmail) ?>">
+                        <input type="hidden" id="tgb_full_address" name="dia_chi_day_du" value="<?= htmlspecialchars($recvAddr) ?>">
+                        <input type="hidden" id="tgb_checkout_product_id" name="ma_san_pham" value="<?= $firstCartProductId ?>">
+                        <input type="hidden" id="tgb_checkout_size" name="kich_co_chon" value="<?= htmlspecialchars($firstCartSize) ?>">
+                        <input type="hidden" id="tgb_checkout_qty" name="so_luong" value="<?= $firstCartQty ?>">
+                        <input type="hidden" id="tgb_checkout_total" name="tong_tien_sau_giam" value="<?= $init_total_amount ?>">
 
                         <div class="form-group mb-0">
                             <label class="small font-weight-bold text-slate" for="lnkt_orderNote">
                                 Ghi chú cho nhân viên đóng gói &amp; bưu tá:
                             </label>
                             <textarea id="lnkt_orderNote" rows="2" class="form-control"
-                                      placeholder="VD: Giao giờ hành chính, gọi trước cho mẹ bé 15 phút...">Giao giờ hành chính, đóng gói hộp quà pastel giúp mẹ bé nhé!</textarea>
+                                      placeholder="VD: Giao giờ hành chính, gọi trước cho mẹ bé 15 phút..."></textarea>
                         </div>
                     </form>
                 </div>
@@ -289,9 +301,9 @@ $init_reward_points = floor($init_total_amount / 10000);
             <div class="card card-pastel shadow-sm sticky-top fk-sticky-85">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="font-weight-bold text-slate mb-0">
-                        <i class="fa-solid fa-calculator text-peach mr-2"></i>3. Bảng Tổng Hợp Dòng Tiền Tự Động
+                        <i class="fa-solid fa-calculator text-peach mr-2"></i>3. Chi Tiết Thanh Toán
                     </h5>
-                    <small class="text-muted-custom">Tự động khấu trừ chiết khấu VIP (<code>hgb_get_discount_percent</code>)</small>
+                    <small class="text-muted-custom">Tự động áp dụng ưu đãi theo hạng thẻ thành viên</small>
                 </div>
 
                 <div class="card-body p-4 pt-2">
@@ -301,27 +313,27 @@ $init_reward_points = floor($init_total_amount / 10000);
                             <span class="small font-weight-bold text-slate">
                                 <i class="fa-solid fa-crown text-warning mr-1"></i>Hạng thẻ VIP áp dụng:
                             </span>
-                            <span id="lnkt_checkoutVipBadge" class="badge badge-gold px-2 py-1 rounded-pill">
-                                Hạng Vàng (-10%)
+                            <span id="lnkt_checkoutVipBadge" class="badge <?= htmlspecialchars($vipTierBadgeClass) ?> px-2 py-1 rounded-pill">
+                                <?= htmlspecialchars($vipTierTitle) ?>
                             </span>
                         </div>
                         <div class="btn-group btn-group-sm btn-block" role="group">
-                            <button type="button" class="btn btn-outline-secondary font-weight-bold lnkt-vip-tier-btn"
+                            <button type="button" class="btn <?= $init_vip_percent === 0 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
                                     onclick="lnktSetCheckoutVipDiscount(0, 'Hạng Đồng (0%)', this)">Đồng 0%</button>
-                            <button type="button" class="btn btn-outline-secondary font-weight-bold lnkt-vip-tier-btn"
+                            <button type="button" class="btn <?= $init_vip_percent === 5 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
                                     onclick="lnktSetCheckoutVipDiscount(5, 'Hạng Bạc (-5%)', this)">Bạc -5%</button>
-                            <button type="button" class="btn btn-pastel-primary active font-weight-bold lnkt-vip-tier-btn"
+                            <button type="button" class="btn <?= $init_vip_percent === 10 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
                                     onclick="lnktSetCheckoutVipDiscount(10, 'Hạng Vàng (-10%)', this)">Vàng -10%</button>
-                            <button type="button" class="btn btn-outline-secondary font-weight-bold lnkt-vip-tier-btn"
+                            <button type="button" class="btn <?= $init_vip_percent === 15 ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lnkt-vip-tier-btn"
                                     onclick="lnktSetCheckoutVipDiscount(15, 'Kim Cương (-15%)', this)">K.Cương -15%</button>
                         </div>
                         <input type="hidden" id="lnkt_checkoutDiscountPercent" value="<?= $init_vip_percent ?>">
                     </div>
 
-                    <!-- Bảng tổng hợp dòng tiền: Tiền tạm tính, Số tiền giảm giá VIP, Tổng tiền thu thực tế -->
+                    <!-- Bảng tổng hợp dòng tiền -->
                     <div class="border rounded p-3 bg-milk-cream mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted-custom font-weight-bold">1. Tiền tạm tính (<code>subtotal</code>):</span>
+                            <span class="text-muted-custom font-weight-bold">1. Tiền hàng tạm tính:</span>
                             <span id="lnkt_summarySubtotal" class="font-weight-bold text-slate h6 mb-0">
                                 <?= number_format($init_subtotal, 0, ',', '.') ?> đ
                             </span>
@@ -329,24 +341,24 @@ $init_reward_points = floor($init_total_amount / 10000);
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted-custom font-weight-bold">
-                                2. Số tiền giảm giá VIP (<code>discount_amount</code>):
+                                2. Ưu đãi thành viên VIP:
                             </span>
                             <span id="lnkt_summaryDiscount" class="font-weight-bold text-success h6 mb-0">
-                                -<?= number_format($init_discount_amount, 0, ',', '.') ?> đ
+                                <?= $init_discount_amount > 0 ? ('-' . number_format($init_discount_amount, 0, ',', '.') . ' đ') : '0 đ' ?>
                             </span>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                             <span class="text-muted-custom font-weight-bold">Phí vận chuyển tiêu chuẩn:</span>
-                            <span id="lnkt_summaryShipping" class="badge badge-mint px-2 py-1 rounded-pill">
-                                Miễn phí (0 đ)
+                            <span id="lnkt_summaryShipping" class="badge <?= $init_shipping_fee > 0 ? 'badge-warning' : 'badge-mint' ?> px-2 py-1 rounded-pill">
+                                <?= $init_shipping_fee > 0 ? number_format($init_shipping_fee, 0, ',', '.') . ' đ' : 'Miễn phí (0 đ)' ?>
                             </span>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center pt-1">
                             <div>
-                                <span class="font-weight-bold text-slate h6 mb-0 d-block">3. Tổng tiền thu thực tế:</span>
-                                <small class="text-muted-custom">(<code>total_amount</code> đã gồm VAT)</small>
+                                <span class="font-weight-bold text-slate h6 mb-0 d-block">3. Tổng thanh toán:</span>
+                                <small class="text-muted-custom">(Đã bao gồm VAT)</small>
                             </div>
                             <span id="lnkt_summaryTotalAmount" class="h4 font-weight-bold text-peach mb-0">
                                 <?= number_format($init_total_amount, 0, ',', '.') ?> đ
@@ -357,7 +369,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                     <!-- Điểm thưởng tích lũy sau đơn hàng -->
                     <div class="d-flex justify-content-between align-items-center p-2 px-3 rounded bg-buttercup-soft mb-3 small">
                         <span class="font-weight-bold text-slate">
-                            <i class="fa-solid fa-coins text-warning mr-1"></i>Điểm thưởng tích lũy (<code>hgb_update_user_points</code>):
+                            <i class="fa-solid fa-coins text-warning mr-1"></i>Điểm thưởng tích lũy sau đơn hàng:
                         </span>
                         <span id="lnkt_summaryRewardPoints" class="font-weight-bold text-slate">
                             +<?= number_format($init_reward_points) ?> điểm VIP
@@ -384,7 +396,7 @@ $init_reward_points = floor($init_total_amount / 10000);
                     <!-- Nút Chốt Đặt Hàng -->
                     <button type="submit" id="lnkt_btnSubmitCheckout" form="lnkt_formCheckoutOrder"
                             class="btn btn-pastel-primary btn-block font-weight-bold py-3 shadow">
-                        <i class="fa-solid fa-paper-plane mr-2"></i>Xác Nhận Đặt Hàng Ngay (<code>lnkt_create_order</code>)
+                        <i class="fa-solid fa-paper-plane mr-2"></i>Xác Nhận Đặt Hàng Ngay
                     </button>
 
                     <div class="text-center mt-3">

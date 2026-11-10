@@ -1,5 +1,5 @@
 <?php
-$page_title = "Bàn Làm Việc Quản Trị Hệ Thống (MH 12)";
+$page_title = "Bàn Làm Việc Quản Trị Hệ Thống";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -100,7 +100,7 @@ $low_stock_products = [
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h3 class="font-weight-bold text-slate mb-1">
-                <i class="fa-solid fa-gauge-high text-peach mr-2"></i>Bàn Làm Việc Quản Trị Hệ Thống (MH 12)
+                <i class="fa-solid fa-gauge-high text-peach mr-2"></i>Bàn Làm Việc Quản Trị Hệ Thống
             </h3>
             <small class="text-muted-custom">
                 Thống kê dòng tiền, điều phối vận đơn, cảnh báo ngưỡng tồn kho tự động &amp; phân quyền người dùng
@@ -108,10 +108,10 @@ $low_stock_products = [
         </div>
         <div class="mt-2 mt-md-0">
             <span class="badge badge-pill badge-mint px-3 py-2 mr-2 font-weight-bold">
-                <i class="fa-solid fa-shield-halved mr-1"></i>Phiên Quản Trị: Hồ Gia Bảo (Admin)
+                <i class="fa-solid fa-shield-halved mr-1"></i>Phiên Quản Trị: <?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Quản trị viên') ?>
             </span>
             <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-pastel-primary btn-sm font-weight-bold">
-                <i class="fa-solid fa-boxes-stacked mr-1"></i> Nhập Kho Ngay (MH 13)
+                <i class="fa-solid fa-boxes-stacked mr-1"></i> Nhập Kho Ngay
             </a>
         </div>
     </div>
@@ -123,22 +123,22 @@ $low_stock_products = [
                 <i class="fa-solid fa-chart-pie mr-1"></i> Tổng Quan
             </a>
             <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Quản Lý Kho &amp; SP (MH 13)
+                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Quản Lý Kho &amp; SP
             </a>
             <a href="/FashionKids/views/pages/admin-size-charts.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-ruler-combined text-info mr-1"></i> Bảng Quy Chuẩn Size (MH 14)
+                <i class="fa-solid fa-ruler-combined text-info mr-1"></i> Bảng Quy Chuẩn Size
             </a>
             <a href="/FashionKids/views/pages/admin-users.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-users text-success mr-1"></i> Người Dùng &amp; Hạng VIP (MH 15)
+                <i class="fa-solid fa-users text-success mr-1"></i> Người Dùng &amp; Hạng VIP
             </a>
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Xử Lý Đơn Hàng (MH 10)
+                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Xử Lý Đơn Hàng
             </a>
             <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến (MH 11)
+                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
-                <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Carousel (MH 23)
+                <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Carousel
             </a>
             <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mb-1 border">
                 <i class="fa-solid fa-newspaper text-primary mr-1"></i> Tạp Chí Bài Viết
@@ -231,7 +231,7 @@ $low_stock_products = [
                         <h6 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-chart-column text-peach mr-2"></i>Biểu Đồ Doanh Thu Tuần Hiện Tại (VNĐ)
                         </h6>
-                        <small class="text-muted-custom">Theo dõi tốc độ tăng trưởng doanh số bán hàng D2C hàng ngày</small>
+                        <small class="text-muted-custom">Theo dõi tốc độ tăng trưởng doanh số bán hàng hàng ngày</small>
                     </div>
                     <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold">Đạt 112% Chỉ Tiêu</span>
                 </div>
@@ -350,9 +350,9 @@ $low_stock_products = [
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="font-weight-bold text-slate mb-0">
-                            <i class="fa-solid fa-receipt text-peach mr-2"></i>Đơn Hàng Mới Chờ Xử Lý (lnkt_orders)
+                            <i class="fa-solid fa-receipt text-peach mr-2"></i>Đơn Hàng Mới Chờ Xử Lý
                         </h6>
-                        <small class="text-muted-custom">Tiếp nhận đơn hàng đặt trực tiếp qua giỏ hàng MH 05</small>
+                        <small class="text-muted-custom">Tiếp nhận đơn hàng đặt trực tiếp qua giỏ hàng trực tuyến</small>
                     </div>
                     <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
                         Xem Tất Cả Đơn <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -420,7 +420,7 @@ $low_stock_products = [
                         <h6 class="font-weight-bold text-danger mb-0">
                             <i class="fa-solid fa-triangle-exclamation mr-2"></i>Cảnh Báo Tồn Kho (≤ 5 Cái)
                         </h6>
-                        <small class="text-muted-custom">Kích hoạt quy trình nhập bổ sung hàng hóa D2C</small>
+                        <small class="text-muted-custom">Kích hoạt quy trình nhập bổ sung hàng hóa tại kho</small>
                     </div>
                     <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-peach">
                         Kho hàng <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -433,7 +433,7 @@ $low_stock_products = [
                                 <div>
                                     <div class="font-weight-bold text-slate small"><?= htmlspecialchars($lsp['name']) ?></div>
                                     <small class="text-muted-custom">
-                                        Mã: <code><?= htmlspecialchars($lsp['sku']) ?></code> • Giá: <?= number_format($lsp['price'], 0, ',', '.') ?> đ
+                                        Mã: <strong class="text-slate"><?= htmlspecialchars($lsp['sku']) ?></strong> • Giá: <?= number_format($lsp['price'], 0, ',', '.') ?> đ
                                     </small>
                                 </div>
                                 <div class="text-right">
@@ -450,7 +450,7 @@ $low_stock_products = [
                 </div>
                 <div class="card-footer bg-white border-0 text-center py-3">
                     <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-outline-danger btn-sm btn-block font-weight-bold rounded-pill">
-                        <i class="fa-solid fa-boxes-packing mr-1"></i> Mở Bảng Quản Lý Tồn Kho Chi Tiết (MH 13)
+                        <i class="fa-solid fa-boxes-packing mr-1"></i> Mở Bảng Quản Lý Tồn Kho Chi Tiết
                     </a>
                 </div>
             </div>

@@ -1,118 +1,278 @@
-<!-- views/pages/admin-cms-blog.php -->
-<section class="admin-cms-section py-4 bg-light">
-  <div class="container-fluid">
-    <div class="row mb-4">
-      <div class="col-12">
-        <h3 class="font-weight-bold text-dark mb-1">Quản Trị CMS & Kiểm Duyệt Nội Dung</h3>
-        <p class="text-muted small">Soạn thảo bài viết Tạp chí mới và kiểm duyệt bình luận/đánh giá từ cộng đồng</p>
-      </div>
+<?php
+$page_title = "Quản Trị Nội Dung Tạp Chí & Báo Chí";
+require_once __DIR__ . "/../layouts/header.php";
+require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+
+$rtModel  = new RealtimeContentModel();
+$articles = $rtModel->getArticles('all', '', 'newest', true);
+$comments = $rtModel->getCommentsByArticle(1);
+$isAdminUser = Rbac::isAdmin();
+?>
+
+<div class="container-fluid my-4 px-lg-5" id="fk_admin_cms_blog_section">
+    <!-- Header Bàn Làm Việc CMS Tạp Chí -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="font-weight-bold text-slate mb-1">
+                <i class="fa-solid fa-newspaper text-peach mr-2"></i><?= $isAdminUser ? 'Quản Trị Nội Dung Tạp Chí &amp; Điểm Tin Báo Chí' : 'Bàn Soạn Thảo Bản Nháp Tạp Chí Nhân Viên' ?>
+            </h3>
+            <small class="text-muted-custom">Phân quyền hiện tại: <strong><?= htmlspecialchars(Rbac::roleLabel()) ?></strong>
+            </small>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
+                <i class="fa-solid fa-eye mr-1"></i> Xem Trang Tạp Chí
+            </a>
+            <?php if ($isAdminUser): ?>
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
+                    <i class="fa-solid fa-gauge-high mr-1"></i> Bàn Làm Việc Admin
+                </a>
+            <?php else: ?>
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
+                    <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
-    <!-- Hàng chuyển Tab chức năng -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <ul class="nav nav-pills" id="cmsTab" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active font-weight-bold rounded-pill px-4" id="write-tab" data-toggle="pill" href="#tabWriteArticle" role="tab">
-              <i class="fas fa-feather-alt mr-2"></i>Soạn Thảo Bài Viết Mới
+    <!-- Thanh Điều Hướng Quản Trị Hệ Thống (Lọc theo Vai trò RBAC) -->
+    <div class="card card-pastel border-0 shadow-sm mb-4">
+        <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
+            <?php if ($isAdminUser): ?>
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                    <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan
+                </a>
+            <?php endif; ?>
+            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng
             </a>
-          </li>
-          <li class="nav-item ml-2">
-            <a class="nav-link font-weight-bold rounded-pill px-4" id="moderation-tab" data-toggle="pill" href="#tabModeration" role="tab">
-              <i class="fas fa-shield-alt mr-2"></i>Kiểm Duyệt Bình Luận & Đánh Giá
-              <span class="badge badge-danger ml-2">3 Vi phạm</span>
+            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn
             </a>
-          </li>
-        </ul>
-      </div>
+            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
+            </a>
+            <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
+            </a>
+            <?php if ($isAdminUser): ?>
+                <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                    <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner
+                </a>
+            <?php endif; ?>
+            <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mb-1">
+                <i class="fa-solid fa-newspaper mr-1"></i> Quản Lý Tạp Chí
+            </a>
+        </div>
     </div>
 
-    <div class="tab-content" id="cmsTabContent">
-      <!-- Tab 1: Soạn thảo bài viết mới -->
-      <div class="tab-pane fade show active" id="tabWriteArticle" role="tabpanel">
-        <div class="card border-0 shadow-sm rounded-lg p-4 bg-white">
-          <form action="/controllers/BlogController.php?action=create" method="POST" enctype="multipart/form-data">
-            <div class="row">
-              <div class="col-12 col-md-8">
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Tiêu đề bài viết</label>
-                  <input type="text" class="form-control rounded-lg" name="post_title" placeholder="Nhập tiêu đề hấp dẫn...">
+    <div class="row">
+        <!-- ================================================================
+             CỘT TRÁI (5 CỘT): FORM SOẠN THẢO & XUẤT BẢN BÀI VIẾT MỚI REALTIME
+             ================================================================ -->
+        <div class="col-12 col-xl-5 mb-4">
+            <div class="card card-pastel border-0 shadow-sm bg-white">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold text-slate mb-0" id="fk_cmsFormTitle">
+                        <i class="fa-solid fa-pen-to-square text-peach mr-2"></i><?= $isAdminUser ? 'Soạn Thảo &amp; Xuất Bản Bài Viết' : 'Soạn Bản Nháp Bài Viết' ?>
+                    </h6>
+                    <span class="badge badge-pill badge-mint px-2 py-1">Đồng bộ hệ thống</span>
                 </div>
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Tóm tắt ngắn (Excerpt)</label>
-                  <textarea class="form-control rounded-lg" name="post_excerpt" rows="2" placeholder="Hiển thị ở lưới thẻ bài viết ngoài trang chủ..."></textarea>
-                </div>
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Nội dung chi tiết (Rich-Text)</label>
-                  <textarea class="form-control rounded-lg" name="post_content" rows="10" placeholder="Viết nội dung bài viết tại đây..."></textarea>
-                </div>
-              </div>
+                <div class="card-body p-4">
+                    <?php if (!$isAdminUser): ?>
+                        <div class="alert alert-info small py-2 mb-3">
+                            <i class="fa-solid fa-circle-info mr-1"></i><strong>Phân quyền Nhân viên:</strong> Bạn được phép tạo bài viết ở trạng thái <strong>Bản nháp</strong>. Quyền Xuất bản chính thức và Xóa bài viết thuộc về Quản trị viên.
+                        </div>
+                    <?php endif; ?>
+                    <form id="fk_formCmsBlog">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate" for="fk_cmsTitle">Tiêu đề bài viết / Điểm tin báo chí (<span class="text-danger">*</span>):</label>
+                            <input type="text" id="fk_cmsTitle" name="title" class="form-control"
+                                   value="Gợi Ý 4 Set Đồ Sợi Tre Đi Học Mầm Non Siêu Thoáng Mát Cho Bé"
+                                   placeholder="Nhập tiêu đề bài viết..." required>
+                        </div>
 
-              <div class="col-12 col-md-4">
-                <div class="form-group mb-3">
-                  <label class="font-weight-bold small text-secondary">Chuyên mục</label>
-                  <select class="form-control rounded-pill" name="post_category">
-                    <option value="tips">Mẹo phối đồ</option>
-                    <option value="backstage">Hậu trường mẫu nhí</option>
-                    <option value="fabric">Chất liệu an toàn</option>
-                  </select>
+                        <div class="form-row">
+                            <div class="form-group col-12 col-md-6">
+                                <label class="small font-weight-bold text-slate" for="fk_cmsCategory">Chuyên mục tạp chí:</label>
+                                <select id="fk_cmsCategory" name="category_key" class="custom-select form-control">
+                                    <option value="meo_phoi_do">Mẹo phối đồ</option>
+                                    <option value="hau_truong">Hậu trường mẫu nhí</option>
+                                    <option value="cham_soc_be">Chăm sóc bé</option>
+                                    <option value="bao_chi">Báo chí &amp; Sự kiện</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-12 col-md-6">
+                                <label class="small font-weight-bold text-slate" for="fk_cmsStatus">Trạng thái xuất bản:</label>
+                                <select id="fk_cmsStatus" name="status" class="custom-select form-control">
+                                    <?php if ($isAdminUser): ?>
+                                        <option value="xuat_ban" selected>Xuất bản ngay</option>
+                                        <option value="ban_nhap">Lưu bản nháp</option>
+                                    <?php else: ?>
+                                        <option value="ban_nhap" selected>Lưu bản nháp</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate" for="fk_cmsImageSelect">Chọn ảnh bìa tạp chí:</label>
+                            <select id="fk_cmsImageSelect" name="image" class="custom-select form-control">
+                                <option value="/FashionKids/images/magazine/mag-set-do-di-hoc-mam-non.jpg">Set đồ sợi tre đi học mầm non</option>
+                                <option value="/FashionKids/images/magazine/mag-phoi-do-du-tiec.jpg">Đầm dự tiệc bé gái Pastel</option>
+                                <option value="/FashionKids/images/magazine/mag-studio-kol-nhi.jpg">Hậu trường Studio KOL Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-soi-tre-khang-khuan.jpg">Vải sợi tre kháng khuẩn tự nhiên</option>
+                                <option value="/FashionKids/images/magazine/mag-chung-nhan-oekotex.jpg">Chứng nhận quốc tế OEKO-TEX® 100</option>
+                                <option value="/FashionKids/images/magazine/mag-chon-sandal-tap-di.jpg">Chọn sandal tập đi chống trượt</option>
+                                <option value="/FashionKids/images/magazine/mag-giat-bao-quan-soi-tre.jpg">Bảo quản đồ sợi tre bền đẹp</option>
+                                <option value="/FashionKids/images/magazine/mag-chong-nang-uv-mua-he.jpg">Chống nắng UV mùa hè cho bé</option>
+                                <option value="/FashionKids/images/magazine/mag-catwalk-tuan-le-thoi-trang.jpg">Catwalk Tuần lễ Thời trang Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-phong-ngua-rom-say-be.jpg">Phòng ngừa rôm sảy mùa hè cho bé</option>
+                                <option value="/FashionKids/images/magazine/mag-phoi-do-anh-em-unisex.jpg">Phối đồ đôi Anh Em Pastel</option>
+                                <option value="/FashionKids/images/magazine/mag-bao-chi-thuong-hieu-xanh.jpg">Báo chí Thương hiệu Thời trang Xanh</option>
+                                <option value="/FashionKids/images/magazine/mag-bi-quyet-anh-casting-kol.jpg">Mẹo chụp ảnh Casting KOL Nhí</option>
+                                <option value="/FashionKids/images/magazine/mag-phu-lieu-cuc-go-an-toan.jpg">Phụ liệu cúc gỗ tự nhiên an toàn</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate" for="fk_cmsSummary">Tóm tắt ngắn hiển thị trên thẻ bài viết (<span class="text-danger">*</span>):</label>
+                            <textarea id="fk_cmsSummary" name="summary" class="form-control" rows="2" required>Tổng hợp những bộ trang phục sợi tre co giãn 4 chiều giúp bé vận động thoải mái suốt cả ngày ở trường mầm non.</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate" for="fk_cmsContent">Nội dung chi tiết bài viết (<span class="text-danger">*</span>):</label>
+                            <textarea id="fk_cmsContent" name="content" class="form-control" rows="5" required>Khi bé bắt đầu đi học mầm non, ba mẹ nên ưu tiên chuẩn bị từ 3 đến 4 bộ quần áo thun sợi tre mỏng nhẹ, thấm hút mồ hôi nhanh và có cạp chun mềm co giãn để bé dễ dàng tự thay đồ và ngủ trưa thoải mái.</textarea>
+                        </div>
+
+                        <button type="submit" id="fk_btnSaveCmsBlog" class="btn btn-pastel-primary btn-block py-2 font-weight-bold shadow-sm">
+                            <i class="fa-solid fa-paper-plane mr-1"></i> <?= $isAdminUser ? 'Xuất Bản Bài Viết Lên Tạp Chí Ngay' : 'Lưu Bản Nháp Trình Admin Duyệt' ?>
+                        </button>
+                    </form>
                 </div>
-                <div class="form-group mb-4">
-                  <label class="font-weight-bold small text-secondary">Ảnh bìa bài viết</label>
-                  <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="blogThumbnailFile" name="post_thumbnail">
-                    <label class="custom-file-label rounded-pill" for="blogThumbnailFile">Chọn ảnh bìa...</label>
-                  </div>
-                </div>
-                <button type="submit" class="btn btn-warning btn-block rounded-pill font-weight-bold py-2 shadow-sm">
-                  <i class="fas fa-paper-plane mr-2"></i>Đăng Bài Viết
-                </button>
-              </div>
             </div>
-          </form>
         </div>
-      </div>
 
-      <!-- Tab 2: Kiểm duyệt bình luận & Đánh giá vi phạm -->
-      <div class="tab-pane fade" id="tabModeration" role="tabpanel">
-        <div class="card border-0 shadow-sm rounded-lg p-3 bg-white">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th>Thời gian</th>
-                  <th>Người dùng</th>
-                  <th>Loại nội dung</th>
-                  <th>Nội dung bị báo cáo</th>
-                  <th class="text-center">Hành động</th>
-                </tr>
-              </thead>
-              <tbody class="small">
-                <tr>
-                  <td>06/11 08:30</td>
-                  <td><strong>user_spam_99</strong></td>
-                  <td><span class="badge badge-pill badge-secondary">Bình luận Blog</span></td>
-                  <td>Vào ngay trang web abc-link-lua-dao.com để nhận voucher 500k...</td>
-                  <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-success rounded-pill mr-1 font-weight-bold">Giữ lại</button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill font-weight-bold">Xóa vi phạm</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>06/11 09:15</td>
-                  <td><strong>Khách hàng ẩn danh</strong></td>
-                  <td><span class="badge badge-pill badge-warning">Đánh giá 1 Sao</span></td>
-                  <td>Giao hàng quá lâu, dịch vụ tệ bạc không chấp nhận được...</td>
-                  <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-success rounded-pill mr-1 font-weight-bold">Giữ lại</button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill font-weight-bold">Xóa vi phạm</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- ================================================================
+             CỘT PHẢI (7 CỘT): DANH SÁCH BÀI VIẾT ĐÃ ĐĂNG & KIỂM DUYỆT BÌNH LUẬN
+             ================================================================ -->
+        <div class="col-12 col-xl-7">
+            <!-- Bảng 1: Danh sách bài viết trong CSDL tgb_bai_viet_tin_tuc -->
+            <div class="card card-pastel border-0 shadow-sm mb-4 bg-white">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold text-slate mb-0">
+                        <i class="fa-solid fa-list-check text-peach mr-2"></i>Danh Sách Bài Viết Đã Lưu (<span id="fk_cmsTotalArticles"><?= count($articles) ?></span> bài)
+                    </h6>
+                    <span class="badge badge-pill badge-sky px-3 py-1">Đồng bộ trực tiếp</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Bài Viết &amp; Chuyên Mục</th>
+                                    <th class="text-center">Lượt Đọc / Tim</th>
+                                    <th class="text-center">Trạng Thái</th>
+                                    <th class="text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fk_cmsArticlesTableBody">
+                                <?php foreach ($articles as $art): ?>
+                                    <tr id="fk_cmsArticleRow_<?= $art['id'] ?>">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="lbn-inv-thumb mr-3 flex-shrink-0">
+                                                    <img src="<?= htmlspecialchars($art['image']) ?>" alt="Thumb" class="lbn-thumb-img">
+                                                </span>
+                                                <div>
+                                                    <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $art['id'] ?>" class="font-weight-bold text-slate d-block text-decoration-none">
+                                                        <?= htmlspecialchars($art['title']) ?>
+                                                    </a>
+                                                    <span class="badge <?= htmlspecialchars($art['badge_class']) ?> mr-1"><?= htmlspecialchars($art['category_name']) ?></span>
+                                                    <small class="text-muted-custom"><?= htmlspecialchars($art['published_at']) ?></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center text-nowrap small font-weight-bold">
+                                            <span class="text-info mr-2"><i class="fa-regular fa-eye mr-1"></i><?= number_format($art['views']) ?></span>
+                                            <span class="text-danger"><i class="fa-solid fa-heart mr-1"></i><?= number_format($art['likes']) ?></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php if (($art['status'] ?? 'xuat_ban') === 'xuat_ban'): ?>
+                                                <span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-gold px-2 py-1 rounded-pill">Bản nháp</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $art['id'] ?>" class="btn btn-outline-info btn-sm rounded-pill px-2 mr-1" title="Xem bài viết">
+                                                <i class="fa-regular fa-eye"></i>
+                                            </a>
+                                            <?php if ($isAdminUser): ?>
+                                                <button type="button" onclick="fkDeleteCmsArticleRow(<?= $art['id'] ?>)" class="btn btn-outline-danger btn-sm rounded-circle" title="Xóa/Ẩn bài viết">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng 2: Kiểm duyệt bình luận mới nhất từ bảng tgb_binh_luan_bai_viet -->
+            <div class="card card-pastel border-0 shadow-sm bg-white">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold text-slate mb-0">
+                        <i class="fa-solid fa-comments text-peach mr-2"></i>Kiểm Duyệt Bình Luận Mới Nhất
+                    </h6>
+                    <span class="badge badge-pill badge-mint px-3 py-1">Tự động lọc từ khóa</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Phụ Huynh</th>
+                                    <th>Nội Dung Bình Luận</th>
+                                    <th>Thời Gian</th>
+                                    <th class="text-center">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($comments as $cm): ?>
+                                    <tr id="fk_cmsCommentRow_<?= $cm['id'] ?>">
+                                        <td class="font-weight-bold text-slate text-nowrap">
+                                            <?= htmlspecialchars($cm['author_name']) ?>
+                                        </td>
+                                        <td class="small text-slate">
+                                            <?= htmlspecialchars($cm['content']) ?>
+                                        </td>
+                                        <td class="small text-muted-custom text-nowrap">
+                                            <?= htmlspecialchars($cm['created_at']) ?>
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            <a href="/FashionKids/views/pages/blog-detail.php?id=1#fk_commentsSection" class="btn btn-outline-primary btn-sm rounded-pill px-2 mr-1">
+                                                Trả lời
+                                            </a>
+                                            <?php if ($isAdminUser): ?>
+                                                <button type="button" onclick="$('#fk_cmsCommentRow_<?= $cm['id'] ?>').fadeOut()" class="btn btn-outline-danger btn-sm rounded-pill px-2">
+                                                    Xóa
+                                                </button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</section>
+</div>
+
+<?php require_once __DIR__ . "/../layouts/footer.php"; ?>

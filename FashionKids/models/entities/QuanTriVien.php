@@ -17,7 +17,7 @@ class QuanTriVien extends NguoiDung {
         string $diaChiNha = ''
     ) {
         parent::__construct(
-            $maNguoiDung, $tenDangNhap, $matKhau, $hoVaTen, $thuDienTu, $soDienThoai, $diaChiNha, 'quan_tri_vien'
+            $maNguoiDung, $tenDangNhap, $matKhau, $hoVaTen, $thuDienTu, $soDienThoai, $diaChiNha, 'quan_tri'
         );
     }
 

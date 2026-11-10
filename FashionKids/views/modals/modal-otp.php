@@ -1,4 +1,4 @@
-<!-- MODAL XÁC THỰC OTP 6 SỐ - MH 20 (Đảm nhiệm: Hồ Gia Bảo - hgb_)
+<!-- MODAL XÁC THỰC OTP 6 SỐ - MH 20 ( - hgb_)
      Logic xử lý nằm trong public/js/auth-ajax.js (AJAX tới AuthController::ajaxSendOtp / ajaxVerifyOtp) -->
 <div class="modal fade" id="hgb_modal_otp" tabindex="-1" role="dialog" aria-labelledby="modalOtpLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" role="document">

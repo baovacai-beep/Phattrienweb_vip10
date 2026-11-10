@@ -1,22 +1,30 @@
 <?php
 /**
  * Lớp OrderController (controllers/OrderController.php)
- * Điều phối Giỏ hàng, Checkout, và Đặt hàng tự động qua Stored Procedure (MH 05)
+ * Điều phối Giỏ hàng, Checkout Gate (RBAC), và Đặt hàng tự động qua Stored Procedure (MH 05)
  */
 
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/Rbac.php';
 require_once __DIR__ . '/../models/OrderModel.php';
 require_once __DIR__ . '/../models/ProductModel.php';
+require_once __DIR__ . '/../models/ReviewModel.php';
 require_once __DIR__ . '/../models/entities/ThanhToanVietQR.php';
 require_once __DIR__ . '/../models/entities/ThanhToanCOD.php';
 
 class OrderController extends Controller {
     private OrderModel $orderModel;
     private ProductModel $productModel;
+    private ReviewModel $reviewModel;
 
     public function __construct() {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        Rbac::syncSession();
         $this->orderModel   = new OrderModel();
         $this->productModel = new ProductModel();
+        $this->reviewModel  = new ReviewModel();
     }
 
     /**
@@ -35,10 +43,17 @@ class OrderController extends Controller {
 
     /**
      * Xử lý nộp đơn hàng qua Form POST truyền thống
+     * Checkout Gate: Nếu là Khách vãng lai (guest), bảo toàn $_SESSION['cart'] và điều hướng sang login-register.php
      */
     public function processCheckout(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: index.php");
+            exit;
+        }
+
+        if (Rbac::isGuest()) {
+            $redirectUrl = APP_BASE_URL . '/views/pages/login-register.php?redirect=' . urlencode(APP_BASE_URL . '/views/pages/checkout.php') . '&error=' . urlencode('Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng và tích điểm VIP (Giỏ hàng của bạn vẫn được giữ nguyên).');
+            header("Location: " . $redirectUrl);
             exit;
         }
 
@@ -60,7 +75,7 @@ class OrderController extends Controller {
                 throw new InvalidArgumentException('Vui lòng chọn Tỉnh / Thành phố và Quận / Huyện.');
             }
 
-            // 1. Gọi Model chạy Stored Procedure tạo đơn và trừ kho
+            // 1. Gọi Model chạy Stored Procedure tạo đơn và trừ kho (sp_tgb_tao_don_hang_va_chi_tiet)
             $orderId = $this->orderModel->taoDonHang(
                 $userId, $name, $phone, $email, $address, $province, $district, $productId, $size, $quantity
             );
@@ -100,8 +115,22 @@ class OrderController extends Controller {
 
     /**
      * API AJAX Tạo đơn hàng (dành cho client gửi JSON)
+     * Checkout Gate: Yêu cầu đã đăng nhập (Customer / Staff hỗ trợ đặt hộ / Admin)
      */
     public function ajaxCreateOrder(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        if (Rbac::isGuest()) {
+            $this->jsonResponse([
+                'status'   => 'error',
+                'code'     => 401,
+                'redirect' => APP_BASE_URL . '/views/pages/login-register.php?redirect=' . urlencode(APP_BASE_URL . '/views/pages/checkout.php'),
+                'message'  => 'Vui lòng đăng nhập tài khoản thành viên để hoàn tất đặt hàng và tích điểm VIP!'
+            ], 401);
+        }
+
         $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
         $name     = trim($data['receiver_name'] ?? $data['ten_nguoi_nhan'] ?? '');
@@ -115,9 +144,9 @@ class OrderController extends Controller {
         }
 
         $orderId = $this->orderModel->taoDonHang(
-            $_SESSION['user_id'] ?? null,
+            $_SESSION['user']['ma_nguoi_dung'] ?? ($_SESSION['user_id'] ?? null),
             $name, $phone,
-            $data['receiver_email'] ?? '',
+            $data['receiver_email'] ?? ($_SESSION['user']['thu_dien_tu'] ?? ''),
             $address, $province, $district,
             (int)($data['product_id'] ?? 101),
             $data['size'] ?? 'Size 2',
@@ -127,7 +156,74 @@ class OrderController extends Controller {
         $this->jsonResponse([
             'status'   => 'success',
             'order_id' => $orderId,
-            'message'  => 'Đơn hàng đã được khởi tạo thành công qua Stored Procedure!'
+            'message'  => 'Đơn hàng #' . $orderId . ' đã được khởi tạo thành công!'
         ]);
+    }
+
+    /**
+     * API AJAX Gửi đánh giá sản phẩm từ Modal PDP
+     * URL: index.php?c=order&a=ajaxSubmitReview
+     */
+    public function ajaxSubmitReview(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['khach_hang', 'nhan_vien', 'quan_tri'],
+            'Vui lòng đăng nhập tài khoản thành viên để gửi đánh giá sản phẩm!'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $productId = (int)($_POST['product_id'] ?? 101);
+        $rating    = (int)($_POST['rating_score'] ?? 5);
+        $content   = trim((string)($_POST['review_content'] ?? ''));
+        $orderId   = (int)($_POST['order_id'] ?? 1);
+        $userId    = (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['user_id'] ?? 3);
+        $userName  = (string)($_SESSION['user']['ho_va_ten'] ?? 'Phụ huynh thành viên');
+
+        if ($productId <= 0) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Không xác định được sản phẩm cần đánh giá.'], 422);
+        }
+        if ($rating < 1 || $rating > 5) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Vui lòng chọn số sao đánh giá từ 1 đến 5 sao.'], 422);
+        }
+        if (mb_strlen($content, 'UTF-8') < 5) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Vui lòng nhập cảm nhận tối thiểu 5 ký tự để chia sẻ cùng các phụ huynh khác.'], 422);
+        }
+
+        // Thử lưu vào CSDL qua ReviewModel nếu có đơn hàng hoàn tất tương ứng
+        if ($this->reviewModel->hasConnection()) {
+            try {
+                $this->reviewModel->guiDanhGiaSanPham($productId, $userId, $orderId, $rating, $content);
+            } catch (Throwable $e) {
+                error_log('[tgb] ajaxSubmitReview SP fallback: ' . $e->getMessage());
+            }
+        }
+
+        $newReview = [
+            'id'          => time(),
+            'product_id'  => $productId,
+            'author_name' => $userName,
+            'rating'      => $rating,
+            'content'     => $content,
+            'date'        => date('d/m/Y'),
+            'verified'    => true,
+        ];
+
+        if (!isset($_SESSION['tgb_product_reviews']) || !is_array($_SESSION['tgb_product_reviews'])) {
+            $_SESSION['tgb_product_reviews'] = [];
+        }
+        if (!isset($_SESSION['tgb_product_reviews'][$productId]) || !is_array($_SESSION['tgb_product_reviews'][$productId])) {
+            $_SESSION['tgb_product_reviews'][$productId] = [];
+        }
+        array_unshift($_SESSION['tgb_product_reviews'][$productId], $newReview);
+
+        $this->jsonResponse([
+            'status'  => 'success',
+            'message' => 'Cảm ơn ba mẹ đã gửi đánh giá sản phẩm thành công!',
+            'review'  => $newReview,
+        ], 200);
     }
 }

@@ -1,5 +1,5 @@
 <?php
-$page_title = "Cửa Hàng & Bộ Lọc Đa Tiêu Chí (MH 02)";
+$page_title = "Cửa Hàng Thời Trang Sợi Tre - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -232,7 +232,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent p-0 mb-1 small">
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
-                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Danh mục sản phẩm (MH 02)</li>
+                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Cửa hàng sản phẩm</li>
                 </ol>
             </nav>
             <h3 class="font-weight-bold text-slate mb-0">
@@ -274,14 +274,14 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                 <div class="mb-4 pb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="lbn-filter-group-title mb-0">Danh Mục Sản Phẩm</label>
-                        <small class="text-muted-custom" title="Stored Function: lbn_count_products_by_category">SL</small>
+                        <small class="text-muted-custom">SL</small>
                     </div>
                     <input type="hidden" id="lbn_selectedCategory" value="<?= $init_cat ?>">
 
                     <div class="lbn-cat-filter-item d-flex justify-content-between align-items-center mb-1 <?= $init_cat === 'all' ? 'active' : '' ?>"
                          data-cat="all" onclick="lbnSelectCategoryFilter('all', this)">
                         <span class="small"><i class="fa-solid fa-border-all mr-2 text-muted"></i>Tất cả danh mục</span>
-                        <span class="badge badge-pill badge-light border"><?= lbnCountByCatSlug($lbn_products, 'all') ?></span>
+                        <span class="badge badge-pill badge-light border" id="lbn_catCount_all"><?= lbnCountByCatSlug($lbn_products, 'all') ?></span>
                     </div>
 
                     <?php foreach ($lbn_categories as $cat): ?>
@@ -291,7 +291,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                             <span class="small">
                                 <i class="fa-solid <?= $cat['icon'] ?> mr-2"></i><?= htmlspecialchars($cat['name']) ?>
                             </span>
-                            <span class="badge badge-pill badge-light border"><?= $catCount ?></span>
+                            <span class="badge badge-pill badge-light border" id="lbn_catCount_<?= $cat['slug'] ?>"><?= $catCount ?></span>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -379,7 +379,7 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
             </div>
 
             <!-- Lưới sản phẩm 3 cột trên Desktop (col-lg-4) -->
-            <div class="row" id="lbn_catalogGrid">
+            <div class="row product-grid" id="lbn_catalogGrid">
                 <?php foreach ($lbn_products as $prod): ?>
                     <div class="col-12 col-sm-6 col-lg-4 mb-4 lbn-catalog-col"
                          data-id="<?= $prod['id'] ?>"
@@ -457,11 +457,11 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
 
                                     <div class="d-flex">
                                         <a href="/FashionKids/views/pages/product-detail.php?id=<?= $prod['id'] ?>"
-                                           class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết PDP">
+                                           class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
                                         <button type="button"
-                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>)"
+                                                onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>, <?= (int)$prod['id'] ?>)"
                                                 class="btn btn-pastel-primary btn-sm px-3 py-1">
                                             <i class="fa-solid fa-cart-plus mr-1"></i> Thêm
                                         </button>

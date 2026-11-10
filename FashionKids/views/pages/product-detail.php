@@ -1,5 +1,5 @@
 <?php
-$page_title = "Chi Tiết Sản Phẩm & Đánh Giá Thực Tế (MH 03)";
+$page_title = "Chi Tiết Sản Phẩm & Đánh Giá Thực Tế";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 
@@ -311,8 +311,23 @@ if (!isset($lbn_products[$product_id])) {
 }
 $prod = $lbn_products[$product_id];
 
-// Tính toán chiết khấu thẻ VIP mẫu (Mặc định Hạng Vàng - Giảm 10%)
-$init_discount_percent = 10;
+// Tính toán chiết khấu thẻ VIP theo phiên đăng nhập (Mặc định Hạng Đồng - 0% cho khách vãng lai)
+$sessUser = $_SESSION['user'] ?? null;
+$init_discount_percent = (is_array($sessUser) && !empty($sessUser['ten_dang_nhap'])) ? (int)($sessUser['phan_tram_giam_gia'] ?? 0) : 0;
+if ($init_discount_percent >= 15) {
+    $vipTierTitle = 'Hạng Kim Cương';
+    $vipTierBtnKey = 'diamond';
+} elseif ($init_discount_percent >= 10) {
+    $vipTierTitle = 'Hạng Vàng';
+    $vipTierBtnKey = 'gold';
+} elseif ($init_discount_percent >= 5) {
+    $vipTierTitle = 'Hạng Bạc';
+    $vipTierBtnKey = 'silver';
+} else {
+    $init_discount_percent = 0;
+    $vipTierTitle = 'Hạng Đồng';
+    $vipTierBtnKey = 'bronze';
+}
 $init_discount_amount = round(($prod['price'] * $init_discount_percent) / 100);
 $init_vip_price = $prod['price'] - $init_discount_amount;
 ?>
@@ -329,8 +344,8 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
     </nav>
 
     <!-- ======================================================================
-         KHỐI TRÊN PDP: HÌNH ẢNH, CHI TIẾT SẢN PHẨM & TƯƠNG TÁC (MH 03)
-         Đảm nhiệm: Lê Bảo Ngọc (lbn_) - Giai đoạn 2 Bootstrap 4 Responsive
+         KHỐI TRÊN PDP: HÌNH ẢNH, CHI TIẾT SẢN PHẨM & TƯƠNG TÁC
+          (lbn_) - Giai đoạn 2 Bootstrap 4 Responsive
          ====================================================================== -->
     <div class="card card-pastel border-0 shadow-sm mb-5">
         <div class="card-body p-4 p-md-5">
@@ -452,7 +467,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                 <div class="col-12 col-lg-6 pl-lg-4">
                     <div class="d-flex align-items-center mb-2">
                         <span class="badge badge-pill badge-light border mr-2 font-weight-bold text-slate">
-                            Mã SP: <code><?= htmlspecialchars($prod['sku']) ?></code>
+                            Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong>
                         </span>
                         <span class="badge badge-pill badge-light border text-muted-custom">
                             Danh mục: <?= htmlspecialchars($prod['category_name']) ?>
@@ -500,7 +515,7 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                         <div class="p-3 rounded lbn-vip-price-box">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="small font-weight-bold text-slate" id="lbn_pdpVipBadgeLabel">
-                                    <i class="fa-solid fa-crown text-warning mr-1"></i>Đặc quyền VIP Hạng Vàng: Giảm tự động 10%
+                                    <i class="fa-solid fa-crown text-warning mr-1"></i>Đặc quyền VIP <?= htmlspecialchars($vipTierTitle) ?>: <?= $init_discount_percent > 0 ? ('Giảm tự động ' . $init_discount_percent . '%') : 'Chưa áp dụng chiết khấu (0%)' ?>
                                 </span>
                                 <span class="h5 font-weight-bold text-success mb-0" id="lbn_pdpFinalVipPrice">
                                     <?= number_format($init_vip_price, 0, ',', '.') ?> đ
@@ -515,13 +530,13 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
 
                             <!-- Nút chọn nhanh hạng thẻ để xem mức giảm trực quan -->
                             <div class="btn-group btn-group-sm btn-block" role="group">
-                                <button type="button" class="btn btn-outline-secondary font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_bronze"
+                                <button type="button" class="btn <?= $vipTierBtnKey === 'bronze' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_bronze"
                                         onclick="lbnSwitchVipTierDiscount('bronze', 0, 'Đồng')">Đồng 0%</button>
-                                <button type="button" class="btn btn-outline-secondary font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_silver"
+                                <button type="button" class="btn <?= $vipTierBtnKey === 'silver' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_silver"
                                         onclick="lbnSwitchVipTierDiscount('silver', 5, 'Bạc')">Bạc -5%</button>
-                                <button type="button" class="btn btn-pastel-primary active font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_gold"
+                                <button type="button" class="btn <?= $vipTierBtnKey === 'gold' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_gold"
                                         onclick="lbnSwitchVipTierDiscount('gold', 10, 'Vàng')">Vàng -10%</button>
-                                <button type="button" class="btn btn-outline-secondary font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_diamond"
+                                <button type="button" class="btn <?= $vipTierBtnKey === 'diamond' ? 'btn-pastel-primary active' : 'btn-outline-secondary' ?> font-weight-bold lbn-vip-tier-btn" id="lbn_vipBtn_diamond"
                                         onclick="lbnSwitchVipTierDiscount('diamond', 15, 'Kim Cương')">K.Cương -15%</button>
                             </div>
                         </div>
@@ -548,10 +563,10 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                             <label class="small font-weight-bold text-slate mb-0">
                                 Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold"><?= htmlspecialchars($prod['default_size']) ?></span>
                             </label>
-                            <!-- NÚT MỞ MODAL THƯỚC DÂY (MH 04) -->
+                            <!-- NÚT MỞ MODAL THƯỚC DÂY -->
                             <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm"
                                     data-toggle="modal" data-target="#modalSuggestSize">
-                                <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size (MH 04)
+                                <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size
                             </button>
                         </div>
 
@@ -565,15 +580,16 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                 </button>
                             <?php endforeach; ?>
                         </div>
+                        <input type="hidden" id="lbn_pdpProductId" name="ma_san_pham" value="<?= (int)$prod['id'] ?>">
                         <input type="hidden" id="lbn_selectedSizeInput" name="size" value="<?= htmlspecialchars($prod['default_size']) ?>">
                     </div>
 
-                    <!-- Chọn Số Lượng & Tồn Kho (lbn_products.stock_quantity) -->
-                    <div class="mb-4">
+                    <!-- Chọn Số Lượng & Tồn Kho (lbn_products.stock_quantity - fn_lbn_kiem_tra_ton_kho) -->
+                    <div class="mb-3">
                         <label class="small font-weight-bold text-slate mb-2 d-block">
                             Số lượng đặt mua:
                         </label>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center flex-wrap">
                             <div class="input-group input-group-sm mr-3 fk-w-120">
                                 <div class="input-group-prepend">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(-1)">
@@ -581,29 +597,32 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
                                     </button>
                                 </div>
                                 <input type="number" id="lbn_pdpQuantity" name="quantity" class="form-control text-center font-weight-bold"
-                                       value="1" min="1" max="<?= $prod['stock_quantity'] ?>" data-max="<?= $prod['stock_quantity'] ?>" readonly>
+                                       value="1" min="1" max="<?= $prod['stock_quantity'] ?>" data-max="<?= $prod['stock_quantity'] ?>">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-light border font-weight-bold" onclick="lbnChangePdpQty(1)">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
-                            <span class="small text-muted-custom">
-                                Còn <strong class="text-slate"><?= $prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho D2C
+                            <span class="small text-muted-custom" id="lbn_pdpStockLabelWrap">
+                                Còn <strong class="text-slate" id="lbn_pdpStockCount"><?= $prod['stock_quantity'] ?></strong> sản phẩm sẵn tại kho hàng
                             </span>
                         </div>
                     </div>
 
+                    <!-- Thông báo kiểm tra tồn kho Realtime AJAX (fn_lbn_kiem_tra_ton_kho) -->
+                    <div id="lbn_pdpStockAlert" class="alert small py-2 px-3 mb-3 d-none" role="alert"></div>
+
                     <!-- Cụm Nút Hành Động: Thêm Vào Giỏ & Mua Ngay -->
                     <div class="form-row mb-3">
                         <div class="col-12 col-sm-6 mb-2 mb-sm-0">
-                            <button type="button" class="btn btn-pastel-outline btn-block py-3 font-weight-bold" onclick="lbnAddToCartPdp()">
-                                <i class="fa-solid fa-cart-plus mr-2"></i>Thêm Vào Giỏ Hàng
+                            <button type="button" id="lbn_btnAddToCartPdp" class="btn btn-pastel-outline btn-block py-3 font-weight-bold" onclick="lbnAddToCartPdp()">
+                                <i class="fa-solid fa-cart-plus mr-2"></i><span id="lbn_btnAddToCartText">Thêm Vào Giỏ Hàng</span>
                             </button>
                         </div>
                         <div class="col-12 col-sm-6">
-                            <button type="button" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow" onclick="lbnBuyNowPdp()">
-                                <i class="fa-solid fa-bolt mr-2"></i>Mua Ngay Cho Bé
+                            <button type="button" id="lbn_btnBuyNowPdp" class="btn btn-pastel-primary btn-block py-3 font-weight-bold shadow" onclick="lbnBuyNowPdp()">
+                                <i class="fa-solid fa-bolt mr-2"></i><span id="lbn_btnBuyNowText">Mua Ngay Cho Bé</span>
                             </button>
                         </div>
                     </div>
@@ -674,8 +693,8 @@ $init_vip_price = $prod['price'] - $init_discount_amount;
     </div>
 
     <!-- ======================================================================
-         KHỐI DƯỚI PDP: HỆ THỐNG ĐÁNH GIÁ THỰC TẾ & BÌNH LUẬN (MH 03)
-         Đảm nhiệm: Trần Gia Bảo (tgb_) - Tích hợp Đánh giá sao, Lọc ảnh, Modal Review
+         KHỐI DƯỚI PDP: HỆ THỐNG ĐÁNH GIÁ THỰC TẾ & BÌNH LUẬN
+          (tgb_) - Tích hợp Đánh giá sao, Lọc ảnh, Modal Review
          ====================================================================== -->
     <section class="reviews-section bg-milk-cream py-4 rounded-lg border shadow-sm mb-5" id="pdp_review_section">
         <div class="container-fluid px-3 px-md-4">

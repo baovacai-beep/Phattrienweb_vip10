@@ -54,10 +54,20 @@ abstract class NguoiDung {
     public function setVaiTro(string $val): void { $this->vaiTro = $val; }
 
     /**
-     * Xác thực thông tin đăng nhập với mật khẩu mã hóa
+     * Xác thực thông tin đăng nhập với mật khẩu mã hóa MD5
      */
     public function dangNhap(string $tenDn, string $matKhau): bool {
-        if ($this->tenDangNhap === $tenDn && password_verify($matKhau, $this->matKhau)) {
+        $tenClean = trim($tenDn);
+        $stored   = trim($this->matKhau);
+        $md5Pass  = md5($matKhau);
+        $matchUser = (strcasecmp($this->tenDangNhap, $tenClean) === 0 || ($this->thuDienTu !== '' && strcasecmp($this->thuDienTu, $tenClean) === 0));
+        $matchPass = ($stored !== '') && (
+            strcasecmp($stored, $md5Pass) === 0 ||
+            strcasecmp($stored, md5($md5Pass)) === 0 ||
+            password_verify($matKhau, $stored)
+        );
+
+        if ($matchUser && $matchPass) {
             $_SESSION['user_id']   = $this->maNguoiDung;
             $_SESSION['username']  = $this->tenDangNhap;
             $_SESSION['full_name'] = $this->hoVaTen;

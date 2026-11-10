@@ -1,7 +1,11 @@
 <?php
-$page_title = "Trang Chủ & Banner Carousel 4 Giây (MH 01)";
+$page_title = "Trang Chủ - FashionKids Thời Trang Sợi Tre Cho Bé";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+
+$rtHomeModel  = new RealtimeContentModel();
+$homeArticles = array_slice($rtHomeModel->getArticles('all', '', 'newest'), 0, 3);
 
 // Danh sách sản phẩm nổi bật BST Mùa Hè 2026 trên Trang chủ (liên kết trực tiếp sang MH 02, MH 03, MH 05)
 $lnkt_featured_products = [
@@ -66,8 +70,37 @@ $lnkt_featured_products = [
 
 <div class="container my-4 my-md-5" id="lnkt_home_section">
     <!-- ====================================================================
-         1. BANNER CAROUSEL TỰ ĐỘNG CHUYỂN SLIDE MỖI 4 GIÂY (MH 01)
-         Cấu hình kỹ thuật: data-ride="carousel" và data-interval="4000"
+         0. DẢI LỊCH SỰ KIỆN & ĐẾM NGƯỢC CHIẾN DỊCH REALTIME (lnkt_banner_su_kien)
+         ==================================================================== -->
+    <div class="fk-press-ticker-bar d-flex flex-wrap justify-content-between align-items-center mb-4 shadow-sm">
+        <div class="d-flex align-items-center py-1">
+            <span class="fk-live-pulse-dot mr-2"></span>
+            <span class="badge badge-pill badge-peach px-3 py-1 mr-2">
+                <i class="fa-solid fa-calendar-check mr-1"></i>LỊCH SỰ KIỆN NỔI BẬT
+            </span>
+            <span class="small font-weight-bold text-slate">
+                Chiến dịch Casting Siêu Sao Nhí KOL 2026 &amp; Flash Sale BST Sợi Tre đang diễn ra!
+            </span>
+        </div>
+        <div class="d-flex align-items-center mt-2 mt-md-0">
+            <span class="small text-muted-custom font-weight-bold mr-2">Kết thúc đợt 1 sau:</span>
+            <span class="badge badge-pill badge-gold px-3 py-1 font-weight-bold mr-2" id="fk_homeLiveCountdown">
+                05 Ngày : 14 Giờ : 28 Phút : 45 Giây
+            </span>
+            <?php if (Rbac::isAdmin()): ?>
+                <a href="/FashionKids/views/pages/admin-banners.php" class="small font-weight-bold text-peach text-decoration-none">
+                    <i class="fa-solid fa-sliders mr-1"></i>Quản lý Banner
+                </a>
+            <?php else: ?>
+                <a href="/FashionKids/views/pages/kol-casting.php" class="small font-weight-bold text-peach text-decoration-none">
+                    <i class="fa-solid fa-crown mr-1"></i>Thể lệ sự kiện
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         1. BANNER CAROUSEL TỰ ĐỘNG CHUYỂN SLIDE MỖI 4 GIÂY
          ==================================================================== -->
     <div id="lnkt_homeBannerCarousel" class="carousel slide lnkt-hero-carousel shadow-sm mb-5" data-ride="carousel" data-interval="4000">
         <!-- Dấu chấm chỉ báo Slide -->
@@ -97,7 +130,7 @@ $lnkt_featured_products = [
                                 </a>
                                 <button type="button" class="btn btn-pastel-sky px-4 py-2 mb-2 shadow-sm"
                                         data-toggle="modal" data-target="#modalSuggestSize">
-                                    <i class="fa-solid fa-ruler-horizontal mr-1 text-peach"></i>Đo Size Cho Bé (MH 04)
+                                    <i class="fa-solid fa-ruler-horizontal mr-1 text-peach"></i>Đo Size Cho Bé
                                 </button>
                             </div>
                         </div>
@@ -120,13 +153,13 @@ $lnkt_featured_products = [
                 </div>
             </div>
 
-            <!-- SLIDE 2: Sự kiện tuyển chọn Siêu sao nhí KOL (CTA cam đào #FF9E93 -> MH 16) -->
+            <!-- SLIDE 2: Sự kiện tuyển chọn Siêu sao nhí KOL -->
             <div class="carousel-item">
                 <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5">
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-7 mb-4 mb-lg-0">
                             <div class="d-inline-flex align-items-center badge badge-gold px-3 py-2 rounded-pill mb-3 shadow-sm">
-                                <i class="fa-solid fa-crown mr-2"></i>Chiến Dịch Truyền Thông Đặc Biệt • Cổng Casting MH 16
+                                <i class="fa-solid fa-crown mr-2"></i>Chiến Dịch Truyền Thông Đặc Biệt • Casting Đại Sứ Nhí
                             </div>
                             <h2 class="font-weight-bold text-slate mb-3 lnkt-hero-title">
                                 Sự Kiện Tuyển Chọn <span class="text-peach">Siêu Sao Nhí KOL</span> FashionKids 2026
@@ -139,10 +172,12 @@ $lnkt_featured_products = [
                                    class="btn lnkt-btn-cta-peach px-4 py-2 mr-3 mb-2 shadow">
                                     Đăng ký cho bé tham gia ngay &raquo;
                                 </a>
-                                <a href="/FashionKids/views/pages/admin-banners.php"
-                                   class="btn btn-light border rounded-pill px-3 py-2 mb-2 small font-weight-bold text-slate">
-                                    <i class="fa-solid fa-sliders mr-1 text-peach"></i>Quản trị Banner (MH 23)
-                                </a>
+                                <?php if (Rbac::isAdmin()): ?>
+                                    <a href="/FashionKids/views/pages/admin-banners.php"
+                                       class="btn btn-light border rounded-pill px-3 py-2 mb-2 small font-weight-bold text-slate">
+                                        <i class="fa-solid fa-sliders mr-1 text-peach"></i>Quản lý Banner
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -230,7 +265,7 @@ $lnkt_featured_products = [
     </div>
 
     <!-- ====================================================================
-         3. DẢI TIỆN ÍCH THÔNG MINH & GỢI Ý SIZE THƯỚC DÂY (MH 04)
+         3. DẢI TIỆN ÍCH THÔNG MINH & GỢI Ý SIZE THƯỚC DÂY
          ==================================================================== -->
     <div class="card card-pastel p-4 mb-5 shadow-sm border-0 lnkt-measure-banner">
         <div class="row align-items-center">
@@ -239,7 +274,7 @@ $lnkt_featured_products = [
                     <span class="badge badge-mint px-3 py-1 rounded-pill mr-2">
                         <i class="fa-solid fa-ruler-combined mr-1"></i>Công Nghệ Chọn Size Chuẩn 99%
                     </span>
-                    <small class="font-weight-bold text-slate">Stored Function: <code>lnkt_suggest_size</code></small>
+                    <small class="font-weight-bold text-slate">Trợ lý đo kích cỡ theo chiều cao &amp; bàn chân</small>
                 </div>
                 <h4 class="font-weight-bold text-slate mb-1">
                     Phụ Huynh Phân Vân Bé Mặc Size Nào Vừa Vặn Nhất?
@@ -251,7 +286,7 @@ $lnkt_featured_products = [
             <div class="col-12 col-lg-4 text-lg-right">
                 <button type="button" class="btn btn-pastel-primary px-4 py-2 shadow-sm font-weight-bold"
                         data-toggle="modal" data-target="#modalSuggestSize">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Mở Thước Dây Gợi Ý Size (MH 04)
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Mở Thước Dây Gợi Ý Size
                 </button>
             </div>
         </div>
@@ -269,7 +304,7 @@ $lnkt_featured_products = [
                 <h3 class="font-weight-bold text-slate mb-0">Sản Phẩm Vải Sợi Tre Được Yêu Thích Nhất</h3>
             </div>
             <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold mt-2 mt-sm-0">
-                Xem toàn bộ cửa hàng (MH 02) <i class="fa-solid fa-arrow-right ml-1"></i>
+                Xem toàn bộ cửa hàng <i class="fa-solid fa-arrow-right ml-1"></i>
             </a>
         </div>
 
@@ -304,7 +339,7 @@ $lnkt_featured_products = [
                             </h6>
 
                             <div class="d-flex justify-content-between align-items-center small text-muted-custom mb-3">
-                                <span>Mã: <code><?= htmlspecialchars($prod['sku']) ?></code></span>
+                                <span>Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong></span>
                                 <a href="javascript:void(0)" data-toggle="modal" data-target="#modalSuggestSize" class="text-peach font-weight-bold text-decoration-none">
                                     <i class="fa-solid fa-ruler-horizontal mr-1"></i><?= htmlspecialchars($prod['size_hint']) ?>
                                 </a>
@@ -316,7 +351,7 @@ $lnkt_featured_products = [
                                 </span>
                                 <div>
                                     <button type="button"
-                                            onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>)"
+                                            onclick="lbnQuickAddToCart('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= $prod['price'] ?>, <?= $prod['id'] ?>)"
                                             class="btn btn-light btn-sm rounded-circle border mr-1" title="Thêm nhanh vào giỏ">
                                         <i class="fa-solid fa-cart-plus text-peach"></i>
                                     </button>
@@ -334,61 +369,125 @@ $lnkt_featured_products = [
     </div>
 
     <!-- ====================================================================
-         5. ĐIỀU HƯỚNG NHANH PHÂN HỆ LÊ NGUYỄN KHÁNH TRÌNH (lnkt_)
+         5. TIÊU ĐIỂM TẠP CHÍ MẪU NHÍ & ĐIỂM TIN BÁO CHÍ REALTIME
+         ==================================================================== -->
+    <div class="mb-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge badge-pill badge-mint px-3 py-1 mb-1">
+                    <i class="fa-solid fa-newspaper mr-1"></i>Tạp Chí &amp; Báo Chí FashionKids
+                </span>
+                <h3 class="font-weight-bold text-slate mb-0">Cẩm Nang Phối Đồ &amp; Chăm Sóc Làn Da Bé</h3>
+            </div>
+            <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-pastel-outline btn-sm font-weight-bold mt-2 mt-sm-0">
+                Xem toàn bộ tạp chí <i class="fa-solid fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="row">
+            <?php foreach ($homeArticles as $hArt): ?>
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card fk-blog-card h-100 shadow-sm d-flex flex-column">
+                        <div class="fk-blog-img-wrap">
+                            <span class="badge <?= htmlspecialchars($hArt['badge_class']) ?> fk-blog-cat-overlay">
+                                <?= htmlspecialchars($hArt['category_name']) ?>
+                            </span>
+                            <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $hArt['id'] ?>">
+                                <img src="<?= htmlspecialchars($hArt['image']) ?>" alt="<?= htmlspecialchars($hArt['title']) ?>" class="blog-card-img">
+                            </a>
+                        </div>
+                        <div class="card-body d-flex flex-column p-3">
+                            <small class="text-muted-custom mb-1">
+                                <i class="fa-regular fa-calendar text-peach mr-1"></i><?= htmlspecialchars($hArt['published_at']) ?> • <?= htmlspecialchars($hArt['read_time']) ?>
+                            </small>
+                            <h6 class="font-weight-bold text-slate mb-2">
+                                <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $hArt['id'] ?>" class="text-slate text-decoration-none">
+                                    <?= htmlspecialchars($hArt['title']) ?>
+                                </a>
+                            </h6>
+                            <p class="small text-muted-custom mb-3"><?= htmlspecialchars($hArt['summary']) ?></p>
+                            <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                <button type="button"
+                                        onclick="fkToggleLikeArticle(<?= $hArt['id'] ?>, this)"
+                                        class="btn btn-light btn-sm border fk-btn-like-blog px-2 py-0 <?= !empty($hArt['is_liked']) ? 'liked' : '' ?>">
+                                    <i class="fa-solid fa-heart text-danger mr-1"></i>
+                                    <span class="fk-like-count-<?= $hArt['id'] ?>"><?= number_format($hArt['likes']) ?></span>
+                                </button>
+                                <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $hArt['id'] ?>" class="small font-weight-bold text-peach text-decoration-none">
+                                    Đọc bài viết &raquo;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         6. TIỆN ÍCH MUA SẮM NHANH DÀNH CHO PHỤ HUYNH
          ==================================================================== -->
     <div class="card card-pastel p-4 shadow-sm bg-white">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div>
                 <h6 class="font-weight-bold text-slate mb-0">
-                    <i class="fa-solid fa-compass text-peach mr-2"></i>Lối Tắt Điều Hướng Nhanh Phân Hệ Orders, Size Chart &amp; KOL Casting (<code>lnkt_</code>)
+                    <i class="fa-solid fa-compass text-peach mr-2"></i>Tiện Ích Trực Tuyến FashionKids
                 </h6>
-                <small class="text-muted-custom">Truy cập trực tiếp các màn hình nghiệp vụ khách hàng, nhân viên vận hành và quản trị viên</small>
+                <small class="text-muted-custom">Truy cập nhanh các dịch vụ chăm sóc khách hàng và tra cứu thông tin</small>
             </div>
-            <span class="badge badge-pill badge-mint px-3 py-1">Nhánh: feature/lnkt-orders-kol</span>
+            <span class="badge badge-pill badge-mint px-3 py-1">Hỗ trợ phụ huynh 24/7</span>
         </div>
         <div class="row">
             <div class="col-6 col-md-3 mb-2">
                 <a href="javascript:void(0)" data-toggle="modal" data-target="#modalSuggestSize"
                    class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> MH 04: Modal Gợi Ý Size
+                    <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size
                 </a>
             </div>
             <div class="col-6 col-md-3 mb-2">
                 <a href="/FashionKids/views/pages/checkout.php"
                    class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-basket-shopping text-peach mr-1"></i> MH 05: Giỏ Hàng &amp; Đặt Hàng
+                    <i class="fa-solid fa-basket-shopping text-peach mr-1"></i> Giỏ Hàng &amp; Đặt Hàng
                 </a>
             </div>
             <div class="col-6 col-md-3 mb-2">
                 <a href="/FashionKids/views/pages/order-tracking.php"
                    class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-truck-fast text-info mr-1"></i> MH 06: Tiến Trình Đơn Hàng
+                    <i class="fa-solid fa-truck-fast text-info mr-1"></i> Tra Cứu Đơn Hàng
                 </a>
             </div>
             <div class="col-6 col-md-3 mb-2">
                 <a href="/FashionKids/views/pages/kol-casting.php"
                    class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-crown text-warning mr-1"></i> MH 16: Cổng Casting KOL Nhí
+                    <i class="fa-solid fa-crown text-warning mr-1"></i> Ứng Tuyển KOL Nhí
                 </a>
             </div>
-            <div class="col-6 col-md-4 mb-2 mb-md-0">
-                <a href="/FashionKids/views/pages/staff-orders.php"
-                   class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-clipboard-check text-success mr-1"></i> MH 10: Nhân Viên Duyệt Đơn
-                </a>
-            </div>
-            <div class="col-6 col-md-4 mb-2 mb-md-0">
-                <a href="/FashionKids/views/pages/admin-size-charts.php"
-                   class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-table-cells text-primary mr-1"></i> MH 14: Quản Trị Bảng Size
-                </a>
-            </div>
-            <div class="col-12 col-md-4">
-                <a href="/FashionKids/views/pages/admin-banners.php"
-                   class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
-                    <i class="fa-solid fa-images text-danger mr-1"></i> MH 23: Quản Trị Banner Slider
-                </a>
-            </div>
+            <?php if (Rbac::isStaffOrAdmin()): ?>
+                <div class="col-6 col-md-3 mb-2 mb-md-0">
+                    <a href="/FashionKids/views/pages/staff-orders.php"
+                       class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-clipboard-check text-success mr-1"></i> Duyệt Đơn Hàng
+                    </a>
+                </div>
+                <div class="col-6 col-md-3 mb-2 mb-md-0">
+                    <a href="/FashionKids/views/pages/staff-chat.php"
+                       class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="/FashionKids/views/pages/staff-casting-review.php"
+                       class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-star text-warning mr-1"></i> Sơ Tuyển KOL Nhí
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="/FashionKids/views/pages/admin-cms-blog.php"
+                       class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-newspaper text-primary mr-1"></i> Biên Tập Tạp Chí
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -397,4 +496,3 @@ $lnkt_featured_products = [
 require_once __DIR__ . "/../modals/modal-suggest-size.php";
 require_once __DIR__ . "/../layouts/footer.php";
 ?>
-
