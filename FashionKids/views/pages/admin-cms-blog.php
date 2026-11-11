@@ -13,24 +13,24 @@ $isAdminUser = Rbac::isAdmin();
 
 <div class="container-fluid my-4 px-lg-5" id="fk_admin_cms_blog_section">
     <!-- Header Bàn Làm Việc CMS Tạp Chí -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4 pb-2 border-bottom">
+        <div class="fk-header-title-grow">
             <h3 class="font-weight-bold text-slate mb-1">
                 <i class="fa-solid fa-newspaper text-peach mr-2"></i><?= $isAdminUser ? 'Quản Trị Nội Dung Tạp Chí &amp; Điểm Tin Báo Chí' : 'Bàn Soạn Thảo Bản Nháp Tạp Chí Nhân Viên' ?>
             </h3>
             <small class="text-muted-custom">Phân quyền hiện tại: <strong><?= htmlspecialchars(Rbac::roleLabel()) ?></strong>
             </small>
         </div>
-        <div class="mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
+        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+            <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-eye mr-1"></i> Xem Trang Tạp Chí
             </a>
             <?php if ($isAdminUser): ?>
-                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-gauge-high mr-1"></i> Bàn Làm Việc Admin
                 </a>
             <?php else: ?>
-                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên
                 </a>
             <?php endif; ?>
@@ -39,30 +39,30 @@ $isAdminUser = Rbac::isAdmin();
 
     <!-- Thanh Điều Hướng Quản Trị Hệ Thống (Lọc theo Vai trò RBAC) -->
     <div class="card card-pastel border-0 shadow-sm mb-4">
-        <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
+        <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center fk-btn-toolbar">
             <?php if ($isAdminUser): ?>
-                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                     <i class="fa-solid fa-chart-pie text-peach mr-1"></i> Tổng Quan
                 </a>
             <?php endif; ?>
-            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                 <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Kho Hàng
             </a>
-            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                 <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Duyệt Đơn
             </a>
-            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                 <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
-            <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                 <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
             </a>
             <?php if ($isAdminUser): ?>
-                <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+                <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate border text-nowrap">
                     <i class="fa-solid fa-images text-info mr-1"></i> Lịch Sự Kiện Banner
                 </a>
             <?php endif; ?>
-            <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mb-1">
+            <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold text-nowrap">
                 <i class="fa-solid fa-newspaper mr-1"></i> Quản Lý Tạp Chí
             </a>
         </div>
@@ -74,11 +74,11 @@ $isAdminUser = Rbac::isAdmin();
              ================================================================ -->
         <div class="col-12 col-xl-5 mb-4">
             <div class="card card-pastel border-0 shadow-sm bg-white">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0" id="fk_cmsFormTitle">
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow" id="fk_cmsFormTitle">
                         <i class="fa-solid fa-pen-to-square text-peach mr-2"></i><?= $isAdminUser ? 'Soạn Thảo &amp; Xuất Bản Bài Viết' : 'Soạn Bản Nháp Bài Viết' ?>
                     </h6>
-                    <span class="badge badge-pill badge-mint px-2 py-1">Đồng bộ hệ thống</span>
+                    <span class="badge badge-pill badge-mint px-2 py-1 text-nowrap flex-shrink-0">Đồng bộ hệ thống</span>
                 </div>
                 <div class="card-body p-4">
                     <?php if (!$isAdminUser): ?>
@@ -161,11 +161,11 @@ $isAdminUser = Rbac::isAdmin();
         <div class="col-12 col-xl-7">
             <!-- Bảng 1: Danh sách bài viết trong CSDL tgb_bai_viet_tin_tuc -->
             <div class="card card-pastel border-0 shadow-sm mb-4 bg-white">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0">
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                         <i class="fa-solid fa-list-check text-peach mr-2"></i>Danh Sách Bài Viết Đã Lưu (<span id="fk_cmsTotalArticles"><?= count($articles) ?></span> bài)
                     </h6>
-                    <span class="badge badge-pill badge-sky px-3 py-1">Đồng bộ trực tiếp</span>
+                    <span class="badge badge-pill badge-sky px-3 py-1 text-nowrap flex-shrink-0">Đồng bộ trực tiếp</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -186,12 +186,12 @@ $isAdminUser = Rbac::isAdmin();
                                                 <span class="lbn-inv-thumb mr-3 flex-shrink-0">
                                                     <img src="<?= htmlspecialchars($art['image']) ?>" alt="Thumb" class="lbn-thumb-img">
                                                 </span>
-                                                <div>
+                                                <div class="min-w-0">
                                                     <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $art['id'] ?>" class="font-weight-bold text-slate d-block text-decoration-none">
                                                         <?= htmlspecialchars($art['title']) ?>
                                                     </a>
-                                                    <span class="badge <?= htmlspecialchars($art['badge_class']) ?> mr-1"><?= htmlspecialchars($art['category_name']) ?></span>
-                                                    <small class="text-muted-custom"><?= htmlspecialchars($art['published_at']) ?></small>
+                                                    <span class="badge <?= htmlspecialchars($art['badge_class']) ?> mr-1 text-nowrap"><?= htmlspecialchars($art['category_name']) ?></span>
+                                                    <small class="text-muted-custom text-nowrap"><?= htmlspecialchars($art['published_at']) ?></small>
                                                 </div>
                                             </div>
                                         </td>
@@ -199,11 +199,11 @@ $isAdminUser = Rbac::isAdmin();
                                             <span class="text-info mr-2"><i class="fa-regular fa-eye mr-1"></i><?= number_format($art['views']) ?></span>
                                             <span class="text-danger"><i class="fa-solid fa-heart mr-1"></i><?= number_format($art['likes']) ?></span>
                                         </td>
-                                        <td class="text-center" id="fk_cmsStatusCell_<?= $art['id'] ?>">
+                                        <td class="text-center text-nowrap" id="fk_cmsStatusCell_<?= $art['id'] ?>">
                                             <?php if (($art['status'] ?? 'xuat_ban') === 'xuat_ban'): ?>
-                                                <span class="badge badge-mint px-2 py-1 rounded-pill">Đã xuất bản</span>
+                                                <span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap">Đã xuất bản</span>
                                             <?php else: ?>
-                                                <span class="badge badge-gold px-2 py-1 rounded-pill">Bản nháp</span>
+                                                <span class="badge badge-gold px-2 py-1 rounded-pill text-nowrap">Bản nháp</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center text-nowrap">
@@ -231,11 +231,11 @@ $isAdminUser = Rbac::isAdmin();
 
             <!-- Bảng 2: Kiểm duyệt bình luận mới nhất từ bảng tgb_binh_luan_bai_viet -->
             <div class="card card-pastel border-0 shadow-sm bg-white">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0">
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                         <i class="fa-solid fa-comments text-peach mr-2"></i>Kiểm Duyệt Bình Luận Mới Nhất
                     </h6>
-                    <span class="badge badge-pill badge-mint px-3 py-1">Tự động lọc từ khóa</span>
+                    <span class="badge badge-pill badge-mint px-3 py-1 text-nowrap flex-shrink-0">Tự động lọc từ khóa</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">

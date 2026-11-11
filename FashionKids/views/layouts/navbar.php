@@ -26,9 +26,9 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 }
 ?>
 <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top shadow-sm py-2">
-    <div class="container">
+    <div class="container fk-navbar-container">
         <!-- Logo Thương Hiệu -->
-        <a class="navbar-brand brand-logo d-flex align-items-center flex-shrink-0" href="/FashionKids/views/pages/home.php">
+        <a class="navbar-brand brand-logo d-flex align-items-center flex-shrink-0 mr-2 mr-xl-3" href="/FashionKids/views/pages/home.php">
             <img src="/FashionKids/images/logo-fashionkids.jpg" alt="FashionKids Logo" class="fk-brand-logo mr-2"><span>Fashion<span class="text-slate">Kids</span></span>
         </a>
 
@@ -38,12 +38,12 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         </button>
 
         <div class="collapse navbar-collapse" id="navbarFashionKids">
-            <!-- Thanh Tìm Kiếm Co Giãn -->
-            <form class="form-inline my-3 my-lg-0 mx-lg-3 fk-nav-search px-0" action="/FashionKids/views/pages/shop-catalog.php" method="GET">
-                <div class="input-group w-100">
+            <!-- Thanh Tìm Kiếm Co Giãn (Không dùng form-inline để không bị xuống dòng/vỡ nút trên màn hình hẹp) -->
+            <form class="my-2 my-lg-0 mx-lg-2 fk-nav-search px-0" action="/FashionKids/views/pages/shop-catalog.php" method="GET">
+                <div class="input-group fk-search-group w-100">
                     <input class="form-control search-input-custom" type="search" name="keyword" placeholder="Tìm đầm bé gái, bộ thun bé trai, sandal..." aria-label="Search">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary search-btn-custom px-3" type="submit">
+                    <div class="input-group-append fk-search-append">
+                        <button class="btn search-btn-custom" type="submit" aria-label="Tìm kiếm">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </button>
                     </div>
@@ -53,20 +53,20 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
             <!-- Menu Điều Hướng Chính -->
             <ul class="navbar-nav ml-auto align-items-lg-center flex-shrink-0">
                 <li class="nav-item">
-                    <a class="nav-link fk-nav-link font-weight-bold px-2 px-xl-3 text-slate" href="/FashionKids/views/pages/shop-catalog.php">Cửa Hàng</a>
+                    <a class="nav-link fk-nav-link font-weight-bold px-2 text-slate" href="/FashionKids/views/pages/shop-catalog.php">Cửa Hàng</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fk-nav-link font-weight-bold px-2 px-xl-3 text-peach" href="/FashionKids/views/pages/kol-casting.php">
+                    <a class="nav-link fk-nav-link font-weight-bold px-2 text-peach" href="/FashionKids/views/pages/kol-casting.php">
                         <i class="fa-solid fa-crown mr-1"></i>Tuyển KOL Nhí
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fk-nav-link font-weight-bold px-2 px-xl-3 text-slate" href="/FashionKids/views/pages/blog-feeds.php">Tạp Chí</a>
+                    <a class="nav-link fk-nav-link font-weight-bold px-2 text-slate" href="/FashionKids/views/pages/blog-feeds.php">Tạp Chí</a>
                 </li>
                 
                 <!-- Tiện Ích Giỏ Hàng -->
-                <li class="nav-item mx-lg-2 my-2 my-lg-0">
-                    <a href="/FashionKids/views/pages/checkout.php" class="btn btn-light fk-btn-cart position-relative rounded-pill px-3 py-2 shadow-sm bg-milk-cream border">
+                <li class="nav-item mx-lg-1 mx-xl-2 my-2 my-lg-0">
+                    <a href="/FashionKids/views/pages/checkout.php" class="btn btn-light fk-btn-cart position-relative rounded-pill px-3 py-2 shadow-sm bg-milk-cream border d-inline-flex align-items-center">
                         <i class="fa-solid fa-basket-shopping text-slate mr-1"></i>
                         <span class="small font-weight-bold">Giỏ Hàng</span>
                         <span class="badge badge-pill cart-badge-custom ml-1">
@@ -80,11 +80,11 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                     <?php if (isset($_SESSION['user'])): ?>
                         <?php $vipDiscount = (float)($_SESSION['user']['phan_tram_chiet_khau'] ?? $_SESSION['user']['phan_tram_giam_gia'] ?? 0); ?>
                         <div class="dropdown">
-                            <button class="btn btn-light fk-btn-user dropdown-toggle rounded-pill shadow-sm py-2 px-3 border d-flex align-items-center" type="button" id="userMenuDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-light fk-btn-user dropdown-toggle rounded-pill shadow-sm py-2 px-3 border d-inline-flex align-items-center" type="button" id="userMenuDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa-solid fa-circle-user mr-1 text-peach"></i>
                                 <span class="font-weight-bold text-slate fk-user-name-truncate mr-1"><?= htmlspecialchars($_SESSION['user']['ho_va_ten']) ?></span>
                                 <?php if (in_array($currentRole, ['quan_tri', 'nhan_vien'], true)): ?>
-                                    <span class="badge <?= $roleBadgeClass ?> badge-pill small"><?= htmlspecialchars($roleShortLabel) ?></span>
+                                    <span class="badge <?= $roleBadgeClass ?> badge-pill small flex-shrink-0"><?= htmlspecialchars($roleShortLabel) ?></span>
                                 <?php endif; ?>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right dropdown-menu-custom py-2 mt-2" aria-labelledby="userMenuDropdown">
@@ -162,7 +162,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <a href="/FashionKids/views/pages/login-register.php" class="btn btn-pastel-primary btn-sm px-4 py-2 rounded-pill font-weight-bold shadow-sm">
+                        <a href="/FashionKids/views/pages/login-register.php" class="btn btn-pastel-primary btn-sm px-4 py-2 rounded-pill font-weight-bold shadow-sm text-nowrap flex-shrink-0">
                             <i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng Nhập
                         </a>
                     <?php endif; ?>
@@ -202,11 +202,11 @@ if ((isset($fk_rbac_access_granted) && !$fk_rbac_access_granted) || !Rbac::enfor
                         </div>
                     </div>
 
-                    <div class="border-top pt-3 d-flex justify-content-center flex-wrap">
-                        <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 m-1 font-weight-bold text-slate">
+                    <div class="border-top pt-3 d-flex justify-content-center flex-wrap fk-btn-toolbar">
+                        <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 font-weight-bold text-slate text-nowrap">
                             <i class="fa-solid fa-house mr-1"></i>Về Trang Chủ
                         </a>
-                        <a href="/FashionKids/views/pages/login-register.php" class="btn btn-pastel-primary rounded-pill px-4 m-1 font-weight-bold">
+                        <a href="/FashionKids/views/pages/login-register.php" class="btn btn-pastel-primary rounded-pill px-4 font-weight-bold text-nowrap">
                             <i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng Nhập Tài Khoản Khác
                         </a>
                     </div>

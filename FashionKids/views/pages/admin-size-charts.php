@@ -189,8 +189,8 @@ $lnkt_size_charts = [
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_admin_size_charts_section">
     <!-- Header Quản Trị Bảng Size -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="fk-header-title-grow">
             <h4 class="font-weight-bold text-slate mb-1">
                 <i class="fa-solid fa-ruler-combined text-peach mr-2"></i>Quản Trị Bảng Quy Chuẩn Size &amp; Thông Số Chuẩn
             </h4>
@@ -198,12 +198,12 @@ $lnkt_size_charts = [
                 Thiết lập bảng quy chuẩn kích cỡ quần áo và giày dép theo từng danh mục
             </small>
         </div>
-        <div class="mt-2 mt-md-0">
-            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold rounded-pill px-3 mr-2 shadow-sm"
+        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold rounded-pill px-3 shadow-sm text-nowrap"
                     data-toggle="modal" data-target="#modalSuggestSize">
                 <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i> Dùng Thử Thước Dây Gợi Ý Size
             </button>
-            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-clipboard-check mr-1"></i> Duyệt Đơn Hàng
             </a>
         </div>
@@ -216,8 +216,8 @@ $lnkt_size_charts = [
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                        <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                        <div class="fk-header-title-grow">
                             <h6 class="font-weight-bold text-slate mb-0">
                                 Danh Sách Quy Chuẩn Kích Cỡ Theo Danh Mục
                             </h6>
@@ -225,7 +225,7 @@ $lnkt_size_charts = [
                                 Dữ liệu chuẩn phục vụ gợi ý kích cỡ cho phụ huynh
                             </small>
                         </div>
-                        <button type="button" onclick="lnktResetSizeChartForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
+                        <button type="button" onclick="lnktResetSizeChartForm()" class="btn btn-pastel-primary btn-sm px-3 text-nowrap flex-shrink-0">
                             <i class="fa-solid fa-plus mr-1"></i> Thêm Cấu Hình Size Mới
                         </button>
                     </div>
@@ -363,12 +363,12 @@ $lnkt_size_charts = [
              ================================================================ -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm" id="lnkt_sizeChartFormCard">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0" id="lnkt_sizeFormTitle">
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow" id="lnkt_sizeFormTitle">
                         <i class="fa-solid fa-sliders text-peach mr-1"></i> Cấu Hình Thông Số Kích Cỡ
                     </h6>
                     <button type="button" id="lnkt_btnCancelSizeEdit" onclick="lnktResetSizeChartForm()"
-                            class="btn btn-light btn-sm rounded-pill border d-none">
+                            class="btn btn-light btn-sm rounded-pill border d-none text-nowrap flex-shrink-0">
                         Hủy sửa
                     </button>
                 </div>
@@ -391,23 +391,23 @@ $lnkt_size_charts = [
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-5">
-                                <label class="small font-weight-bold text-slate mb-1">Phân nhóm:</label>
+                            <div class="form-group col-12 col-sm-6">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Phân nhóm:</label>
                                 <select id="lnkt_scType" class="custom-select form-control-sm" onchange="lnktToggleSizeChartInputs(this.value)">
                                     <option value="quan_ao">Quần áo</option>
                                     <option value="giay_dep">Giày dép</option>
                                 </select>
                             </div>
-                            <div class="form-group col-3">
-                                <label class="small font-weight-bold text-slate mb-1">Giới tính:</label>
+                            <div class="form-group col-12 col-sm-6">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Giới tính:</label>
                                 <select id="lnkt_scGender" class="custom-select form-control-sm">
                                     <option value="girl">Bé gái</option>
                                     <option value="boy">Bé trai</option>
                                     <option value="unisex">Unisex</option>
                                 </select>
                             </div>
-                            <div class="form-group col-4">
-                                <label class="small font-weight-bold text-slate mb-1">Ký hiệu Size:</label>
+                            <div class="form-group col-12">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Ký hiệu Size:</label>
                                 <input type="text" id="lnkt_scSizeName" class="form-control form-control-sm font-weight-bold"
                                        placeholder="VD: Size 2 (2-3T)" value="Size 2 (2-3T)" required>
                             </div>

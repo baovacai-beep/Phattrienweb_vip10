@@ -7,12 +7,12 @@
         <div class="modal-content border-0 shadow-lg card-pastel">
             <!-- Modal Header -->
             <div class="modal-header border-0 pb-0 pt-4 px-4 px-md-5 d-flex justify-content-between align-items-start">
-                <div class="d-flex align-items-center">
-                    <span class="lnkt-modal-icon-circle mr-3 shadow-sm">
+                <div class="d-flex align-items-center min-w-0">
+                    <span class="lnkt-modal-icon-circle mr-3 shadow-sm flex-shrink-0">
                         <i class="fa-solid fa-ruler-combined text-peach h4 mb-0"></i>
                     </span>
-                    <div>
-                        <span class="badge badge-pill badge-sky px-2 py-1 small mb-1">
+                    <div class="min-w-0">
+                        <span class="badge badge-pill badge-sky px-2 py-1 small mb-1 text-nowrap">
                             <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Tư Vấn Thông Minh
                         </span>
                         <h5 class="modal-title font-weight-bold text-slate mb-0" id="lnkt_modalSuggestSizeTitle">
@@ -20,7 +20,7 @@
                         </h5>
                     </div>
                 </div>
-                <button type="button" class="close text-slate" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-slate flex-shrink-0" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -53,11 +53,11 @@
 
                 <!-- Minh họa Thước Dây Ảo Trực Quan (Virtual Tape Measure - Giai đoạn 4) -->
                 <div class="lnkt-virtual-tape-box p-3 mb-3 rounded border shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small font-weight-bold text-slate">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
+                        <span class="small font-weight-bold text-slate min-w-0">
                             <i class="fa-solid fa-tape text-peach mr-1"></i> Thước dây ảo đo tự động (50 cm &ndash; 160 cm):
                         </span>
-                        <span id="lnkt_tapeValueBadge" class="badge badge-pill badge-peach px-3 py-1 font-weight-bold">
+                        <span id="lnkt_tapeValueBadge" class="badge badge-pill badge-peach px-3 py-1 font-weight-bold text-nowrap flex-shrink-0">
                             88 cm
                         </span>
                     </div>
@@ -183,11 +183,11 @@
 
                 <!-- KHUNG THÔNG BÁO KẾT QUẢ NỔI BẬT TRÊN NỀN XANH MINT (#B8E0D2) -->
                 <div id="lnkt_sizeResultContainer" class="lnkt-size-result-mint p-3 p-md-4 mb-4 shadow-sm">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-                        <span class="badge badge-light px-3 py-1 rounded-pill font-weight-bold text-mint-dark shadow-sm">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                        <span class="badge badge-light px-3 py-1 rounded-pill font-weight-bold text-mint-dark shadow-sm text-nowrap">
                             <i class="fa-solid fa-circle-check text-success mr-1"></i> Kết quả gợi ý chuẩn từ hệ thống
                         </span>
-                        <span id="lnkt_resultInputSummary" class="small font-weight-bold text-mint-dark">
+                        <span id="lnkt_resultInputSummary" class="small font-weight-bold text-mint-dark text-nowrap">
                             Số đo: Chiều cao 88 cm
                         </span>
                     </div>
@@ -208,7 +208,7 @@
 
                         <div class="col-12 col-md-5 text-md-right">
                             <button type="button" onclick="lnktApplySuggestedSizeToPdp()"
-                                    class="btn btn-light font-weight-bold rounded-pill px-4 py-2 shadow-sm border text-mint-dark">
+                                    class="btn btn-light font-weight-bold rounded-pill px-4 py-2 shadow-sm border text-mint-dark text-nowrap">
                                 <i class="fa-solid fa-check-double text-success mr-1"></i> Chọn Size Này
                             </button>
                         </div>
@@ -217,12 +217,12 @@
 
                 <!-- Bảng tham chiếu nhanh trần/sàn lnkt_size_charts -->
                 <div class="border rounded p-3 bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small font-weight-bold text-slate">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                        <span class="small font-weight-bold text-slate min-w-0">
                             <i class="fa-solid fa-table-list text-peach mr-1"></i> Bảng đối chiếu thông số kích cỡ
                         </span>
                         <?php if (Rbac::isAdmin()): ?>
-                        <a href="/FashionKids/views/pages/admin-size-charts.php" class="small font-weight-bold text-peach text-decoration-none">
+                        <a href="/FashionKids/views/pages/admin-size-charts.php" class="small font-weight-bold text-peach text-decoration-none text-nowrap flex-shrink-0">
                             Quản trị Bảng Size &raquo;
                         </a>
                         <?php endif; ?>

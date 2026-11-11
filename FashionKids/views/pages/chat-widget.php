@@ -11,11 +11,11 @@ require_once __DIR__ . "/../layouts/navbar.php";
         <p class="text-muted-custom mb-4">
             Widget chat trực tuyến đã được tích hợp toàn cục ở góc dưới bên phải mọi trang web và đồng bộ trực tiếp với bàn làm việc CSKH.
         </p>
-        <div>
-            <button type="button" onclick="$('#customerChatWidget').collapse('show');" class="btn btn-pastel-primary px-4 py-2 font-weight-bold mr-2">
+        <div class="d-flex flex-wrap justify-content-center fk-btn-toolbar">
+            <button type="button" onclick="$('#customerChatWidget').collapse('show');" class="btn btn-pastel-primary px-4 py-2 font-weight-bold text-nowrap">
                 <i class="fa-solid fa-comments mr-1"></i>Mở Hộp Thoại Chat Ngay
             </button>
-            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-pastel-sky px-4 py-2 font-weight-bold">
+            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-pastel-sky px-4 py-2 font-weight-bold text-nowrap">
                 <i class="fa-solid fa-headset mr-1"></i>Mở Bàn Làm Việc CSKH
             </a>
         </div>

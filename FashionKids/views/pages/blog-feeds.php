@@ -36,22 +36,24 @@ foreach ($articles as $a) {
     <!-- ====================================================================
          1. THANH ĐIỂM TIN BÁO CHÍ & SỰ KIỆN REALTIME (LIVE PRESS TICKER)
          ==================================================================== -->
-    <div class="fk-press-ticker-bar d-flex flex-wrap justify-content-between align-items-center mb-4 shadow-sm">
-        <div class="d-flex align-items-center py-1">
-            <span class="fk-live-pulse-dot mr-2"></span>
-            <span class="badge badge-pill badge-peach px-3 py-1 mr-2">
-                <i class="fa-solid fa-bolt mr-1"></i>ĐIỂM TIN MỚI
+    <div class="fk-press-ticker-bar d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4 shadow-sm">
+        <div class="d-flex flex-wrap align-items-center fk-card-header-row min-w-0 py-1">
+            <span class="d-inline-flex align-items-center flex-shrink-0">
+                <span class="fk-live-pulse-dot mr-2 flex-shrink-0"></span>
+                <span class="badge badge-pill badge-peach px-3 py-1 text-nowrap flex-shrink-0">
+                    <i class="fa-solid fa-bolt mr-1"></i>ĐIỂM TIN MỚI
+                </span>
             </span>
-            <span id="fk_livePressTickerText" class="small font-weight-bold text-slate">
+            <span id="fk_livePressTickerText" class="small font-weight-bold text-slate min-w-0">
                 [Mới cập nhật] FashionKids chính thức nhận Chứng nhận Quốc tế OEKO-TEX® Standard 100 Hạng I cho dòng Vải Sợi Tre Mùa Hè 2026!
             </span>
         </div>
-        <div class="d-flex align-items-center mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/kol-casting.php" class="badge badge-pill badge-mint px-3 py-1 mr-2 text-decoration-none">
+        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mt-2 mt-md-0">
+            <a href="/FashionKids/views/pages/kol-casting.php" class="badge badge-pill badge-mint px-3 py-1 text-decoration-none text-nowrap flex-shrink-0">
                 <i class="fa-solid fa-calendar-star mr-1"></i>Sự kiện Casting KOL Nhí: Đang mở
             </a>
             <?php if (Rbac::isStaffOrAdmin()): ?>
-                <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill border px-3 py-1 small font-weight-bold text-slate">
+                <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill border px-3 py-1 small font-weight-bold text-slate text-nowrap flex-shrink-0">
                     <i class="fa-solid fa-pen-nib text-peach mr-1"></i><?= Rbac::isAdmin() ? 'Quản lý bài viết' : 'Soạn bản nháp' ?>
                 </a>
             <?php endif; ?>
@@ -75,13 +77,13 @@ foreach ($articles as $a) {
                 </p>
             </div>
             <div class="col-12 col-lg-4 text-lg-right">
-                <div class="d-inline-flex flex-wrap justify-content-lg-end">
+                <div class="d-inline-flex flex-wrap justify-content-lg-end fk-btn-toolbar">
                     <?php if (Rbac::isStaffOrAdmin()): ?>
-                        <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary px-4 py-2 mr-2 mb-2 shadow-sm font-weight-bold">
+                        <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary px-4 py-2 shadow-sm font-weight-bold text-nowrap">
                             <i class="fa-solid fa-feather-pointed mr-1"></i><?= Rbac::isAdmin() ? 'Đăng Bài Viết Mới' : 'Tạo Bản Nháp Bài Viết' ?>
                         </a>
                     <?php endif; ?>
-                    <button type="button" onclick="fkFilterSavedBookmarks()" id="fk_btnShowBookmarks" class="btn btn-light border rounded-pill px-3 py-2 mb-2 font-weight-bold text-slate shadow-sm">
+                    <button type="button" onclick="fkFilterSavedBookmarks()" id="fk_btnShowBookmarks" class="btn btn-light border rounded-pill px-3 py-2 font-weight-bold text-slate shadow-sm text-nowrap">
                         <i class="fa-solid fa-bookmark text-warning mr-1"></i>Đã lưu (<span id="fk_savedCountBadge"><?= count($_SESSION['fk_bookmarked_articles'] ?? []) ?></span>)
                     </button>
                 </div>
@@ -166,14 +168,14 @@ foreach ($articles as $a) {
     </div>
 
     <!-- Thông báo số lượng bài viết hiển thị & Trang hiện tại -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 px-1">
-        <small class="text-muted-custom font-weight-bold mb-1 mb-sm-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3 px-1">
+        <small class="text-muted-custom font-weight-bold min-w-0">
             <i class="fa-solid fa-book-open text-peach mr-1"></i>
             Đang hiển thị <strong id="fk_blogPageRangeText" class="text-slate"><?= ($totalArticles > 0 ? ($startIndex + 1) : 0) ?>–<?= $endIndex ?></strong>
             trên tổng số <strong id="fk_blogVisibleCount" class="text-peach"><?= $totalArticles ?></strong> chuyên đề tạp chí
             (<span id="fk_blogPageIndicator" class="text-info">Trang <?= $currentPage ?> / <?= $totalPages ?> • 6 bài/trang</span>)
         </small>
-        <button type="button" onclick="fkResetBlogFilters()" class="btn btn-link btn-sm p-0 text-peach font-weight-bold text-decoration-none">
+        <button type="button" onclick="fkResetBlogFilters()" class="btn btn-link btn-sm p-0 text-peach font-weight-bold text-decoration-none text-nowrap flex-shrink-0">
             <i class="fa-solid fa-rotate-left mr-1"></i>Xem tất cả chuyên mục
         </button>
     </div>
@@ -206,10 +208,10 @@ foreach ($articles as $a) {
                         </a>
                     </div>
 
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2 small text-muted-custom">
-                            <span><i class="fa-regular fa-calendar mr-1 text-peach"></i><?= htmlspecialchars($art['published_at']) ?></span>
-                            <span><i class="fa-solid fa-user-check mr-1 text-info"></i><?= htmlspecialchars($art['author']) ?></span>
+                    <div class="card-body d-flex flex-column p-3 p-xl-4 min-w-0">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2 small text-muted-custom">
+                            <span class="text-nowrap"><i class="fa-regular fa-calendar mr-1 text-peach"></i><?= htmlspecialchars($art['published_at']) ?></span>
+                            <span class="text-nowrap"><i class="fa-solid fa-user-check mr-1 text-info"></i><?= htmlspecialchars($art['author']) ?></span>
                         </div>
 
                         <h5 class="font-weight-bold text-slate mb-2">
@@ -230,11 +232,11 @@ foreach ($articles as $a) {
                         </div>
 
                         <!-- Cụm nút tương tác Realtime ở chân Card -->
-                        <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
+                        <div class="mt-auto pt-3 border-top d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                            <div class="d-flex align-items-center flex-shrink-0">
                                 <button type="button"
                                         onclick="fkToggleLikeArticle(<?= $art['id'] ?>, this)"
-                                        class="btn btn-light btn-sm border fk-btn-like-blog mr-1 px-2 py-1 <?= !empty($art['is_liked']) ? 'liked' : '' ?>"
+                                        class="btn btn-light btn-sm border fk-btn-like-blog mr-1 px-2 py-1 text-nowrap <?= !empty($art['is_liked']) ? 'liked' : '' ?>"
                                         data-article-id="<?= $art['id'] ?>"
                                         title="Thả tim bài viết">
                                     <i class="fa-solid fa-heart text-danger mr-1"></i>
@@ -255,15 +257,15 @@ foreach ($articles as $a) {
                                 </button>
                             </div>
 
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center flex-shrink-0">
                                 <button type="button"
                                         onclick="fkOpenQuickReadModal(<?= $art['id'] ?>)"
-                                        class="btn btn-light btn-sm rounded-pill border px-2 py-1 mr-1 text-slate small font-weight-bold"
+                                        class="btn btn-light btn-sm rounded-pill border px-2 py-1 mr-1 text-slate small font-weight-bold flex-shrink-0"
                                         title="Đọc nhanh tại chỗ">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
                                 <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $art['id'] ?>"
-                                   class="btn btn-pastel-primary btn-sm px-3 py-1 font-weight-bold">
+                                   class="btn btn-pastel-primary btn-sm px-3 py-1 font-weight-bold text-nowrap flex-shrink-0">
                                     Đọc tiếp <i class="fa-solid fa-arrow-right ml-1"></i>
                                 </a>
                             </div>
@@ -288,8 +290,8 @@ foreach ($articles as $a) {
          5. THANH PHÂN TRANG TẠP CHÍ (6 BÀI / TRANG -> TRANG 1, 2, 3...)
          ==================================================================== -->
     <div id="fk_blogPaginationWrapper" class="card card-pastel p-3 my-3 shadow-sm border-0 <?= $totalPages <= 1 ? 'd-none' : '' ?>">
-        <div class="d-flex flex-wrap justify-content-between align-items-center">
-            <div class="small font-weight-bold text-slate mb-2 mb-md-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+            <div class="small font-weight-bold text-slate min-w-0">
                 <i class="fa-solid fa-layer-group text-peach mr-1"></i>
                 Phân trang Tạp chí: <span id="fk_blogPaginationSummaryText">Trang <?= $currentPage ?> / <?= $totalPages ?> (Hiển thị 6 bài viết mỗi trang)</span>
             </div>
@@ -364,27 +366,27 @@ foreach ($articles as $a) {
                             <span class="badge badge-pill badge-light border text-muted-custom mr-1 mb-1 px-2 py-1"><?= htmlspecialchars($tag) ?></span>
                         <?php endforeach; ?>
                     </div>
-                    <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top mt-auto">
-                        <div class="d-flex align-items-center mb-2 mb-sm-0">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pt-3 border-top mt-auto">
+                        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
                             <button type="button"
                                     onclick="fkToggleLikeArticle(<?= $featured['id'] ?>, this)"
-                                    class="btn btn-sm btn-light border fk-btn-like-blog mr-2 px-3 py-1 <?= !empty($featured['is_liked']) ? 'liked' : '' ?>"
+                                    class="btn btn-sm btn-light border fk-btn-like-blog px-3 py-1 text-nowrap <?= !empty($featured['is_liked']) ? 'liked' : '' ?>"
                                     data-article-id="<?= $featured['id'] ?>">
                                 <i class="fa-solid fa-heart text-danger mr-1"></i>
                                 <span class="fk-like-count-<?= $featured['id'] ?>"><?= number_format($featured['likes']) ?></span> Yêu thích
                             </button>
-                            <span class="small text-muted-custom font-weight-bold">
+                            <span class="small text-muted-custom font-weight-bold text-nowrap">
                                 <i class="fa-regular fa-eye mr-1"></i><?= number_format($featured['views']) ?> lượt đọc
                             </span>
                         </div>
-                        <div>
+                        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
                             <button type="button"
                                     onclick="fkOpenQuickReadModal(<?= $featured['id'] ?>)"
-                                    class="btn btn-light btn-sm rounded-pill border px-3 py-2 mr-1 font-weight-bold text-slate">
+                                    class="btn btn-light btn-sm rounded-pill border px-3 py-2 font-weight-bold text-slate text-nowrap">
                                 <i class="fa-solid fa-expand text-peach mr-1"></i>Đọc nhanh
                             </button>
                             <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $featured['id'] ?>"
-                               class="btn btn-pastel-primary btn-sm px-4 py-2 font-weight-bold shadow-sm">
+                               class="btn btn-pastel-primary btn-sm px-4 py-2 font-weight-bold shadow-sm text-nowrap">
                                 Đọc chi tiết <i class="fa-solid fa-arrow-right ml-1"></i>
                             </a>
                         </div>

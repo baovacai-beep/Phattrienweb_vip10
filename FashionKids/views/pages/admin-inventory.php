@@ -34,16 +34,16 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                 Quản trị danh mục, sản phẩm và cảnh báo tồn kho tự động (&le; 5)
             </small>
         </div>
-        <div class="mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap fk-btn-toolbar">
+            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-store mr-1"></i> Xem Cửa Hàng
             </a>
             <?php if ($isAdminUser): ?>
-                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
                 </a>
             <?php else: ?>
-                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-boxes-packing mr-1"></i> Bàn Nhân Viên
                 </a>
             <?php endif; ?>
@@ -55,7 +55,7 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-sm-6 col-xl-3 mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">Tổng Mã Sản Phẩm</small>
                         <h3 class="font-weight-bold text-slate mb-0"><?= $total_sku ?> SKU</h3>
                         <small class="text-success font-weight-bold">4 danh mục hoạt động</small>
@@ -70,7 +70,7 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-sm-6 col-xl-3 mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">Tổng Tồn Kho Sẵn Sàng</small>
                         <h3 class="font-weight-bold text-slate mb-0"><?= number_format($total_units) ?> SP</h3>
                         <small class="text-muted-custom">Đang có sẵn trong kho</small>
@@ -85,7 +85,7 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-sm-6 col-xl-3 mb-3 mb-sm-0">
             <div class="card card-pastel p-3 shadow-sm h-100 border-danger">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-danger font-weight-bold text-uppercase">Cảnh Báo Sắp Hết Hàng (&le; 5)</small>
                         <h3 class="font-weight-bold text-danger mb-0">
                             <span id="lbn_lowStockCounter"><?= $low_stock_count ?></span> mã SP
@@ -102,7 +102,7 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">Thống Kê Theo Danh Mục</small>
                         <div class="small font-weight-bold text-slate mt-1">
                             <?= htmlspecialchars($summary_text) ?>
@@ -122,8 +122,8 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                        <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                        <div class="fk-header-title-grow">
                             <h6 class="font-weight-bold mb-0 text-slate">
                                 Bảng Thống Kê Sản Phẩm &amp; Kiểm Soát Tồn Kho
                             </h6>
@@ -132,11 +132,11 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                             </small>
                         </div>
                         <?php if ($isAdminUser): ?>
-                            <button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
+                            <button type="button" onclick="lbnResetProductForm()" class="btn btn-pastel-primary btn-sm px-3 text-nowrap flex-shrink-0">
                                 <i class="fa-solid fa-plus mr-1"></i> Thêm SP Mới
                             </button>
                         <?php else: ?>
-                            <span class="badge badge-sky px-3 py-2 rounded-pill mt-2 mt-sm-0">
+                            <span class="badge badge-sky px-3 py-2 rounded-pill text-nowrap flex-shrink-0">
                                 <i class="fa-solid fa-boxes-packing mr-1"></i>Chế độ Nhân viên: Chỉ Nhập thêm kho
                             </span>
                         <?php endif; ?>
@@ -220,11 +220,11 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                                         <td class="text-center fk-minw-170">
                                             <div id="lbn_stockBadgeCell_<?= $prod['id'] ?>" class="mb-2">
                                                 <?php if ($prod['stock_quantity'] <= 5): ?>
-                                                    <span class="badge badge-danger lbn-badge-low-stock px-2 py-1">
+                                                    <span class="badge badge-danger lbn-badge-low-stock px-2 py-1 text-nowrap">
                                                         <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hàng (<?= $prod['stock_quantity'] ?>)
                                                     </span>
                                                 <?php else: ?>
-                                                    <span class="badge badge-mint px-2 py-1 rounded-pill">
+                                                    <span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap">
                                                         <i class="fa-solid fa-circle-check mr-1"></i>Còn hàng (<?= $prod['stock_quantity'] ?>)
                                                     </span>
                                                 <?php endif; ?>
@@ -283,12 +283,12 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
         <div class="col-12 col-xl-4 mb-4">
             <?php if ($isAdminUser): ?>
             <div class="card card-pastel shadow-sm" id="lbn_adminProductFormCard">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold mb-0 text-slate" id="lbn_formModeTitle">
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold mb-0 text-slate fk-header-title-grow" id="lbn_formModeTitle">
                         <i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới
                     </h6>
                     <button type="button" id="lbn_btnResetForm" onclick="lbnResetProductForm()"
-                            class="btn btn-light btn-sm rounded-pill border d-none">
+                            class="btn btn-light btn-sm rounded-pill border d-none text-nowrap flex-shrink-0">
                         Hủy sửa
                     </button>
                 </div>
@@ -298,13 +298,13 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                         <input type="hidden" id="lbn_formProductId" name="product_id" value="">
 
                         <div class="form-row">
-                            <div class="form-group col-5">
-                                <label class="small font-weight-bold text-slate mb-1">Mã SKU:</label>
+                            <div class="form-group col-12 col-sm-5">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Mã SKU:</label>
                                 <input type="text" id="lbn_formProductSku" name="sku" class="form-control form-control-sm"
                                        placeholder="VD: FK-LBN-10" required>
                             </div>
-                            <div class="form-group col-7">
-                                <label class="small font-weight-bold text-slate mb-1">Danh mục:</label>
+                            <div class="form-group col-12 col-sm-7">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Danh mục:</label>
                                 <select id="lbn_formProductCategory" name="category_id" class="custom-select custom-select-sm" required>
                                     <option value="1">Váy công chúa</option>
                                     <option value="2">Bộ thun</option>
@@ -321,21 +321,21 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-4">
-                                <label class="small font-weight-bold text-slate mb-1">Giới tính:</label>
+                            <div class="form-group col-12 col-sm-4">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Giới tính:</label>
                                 <select id="lbn_formProductGender" name="gender" class="custom-select custom-select-sm">
                                     <option value="girl">Bé gái</option>
                                     <option value="boy">Bé trai</option>
                                     <option value="unisex">Unisex</option>
                                 </select>
                             </div>
-                            <div class="form-group col-4">
-                                <label class="small font-weight-bold text-slate mb-1">Đơn giá (VNĐ):</label>
+                            <div class="form-group col-12 col-sm-4">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Đơn giá (VNĐ):</label>
                                 <input type="number" id="lbn_formProductPrice" name="price" class="form-control form-control-sm"
                                        placeholder="250000" min="10000" step="5000" required>
                             </div>
-                            <div class="form-group col-4">
-                                <label class="small font-weight-bold text-slate mb-1">Tồn kho:</label>
+                            <div class="form-group col-12 col-sm-4">
+                                <label class="small font-weight-bold text-slate mb-1 text-nowrap">Tồn kho:</label>
                                 <input type="number" id="lbn_formProductStock" name="stock_quantity" class="form-control form-control-sm"
                                        placeholder="20" min="0" required>
                             </div>
@@ -390,26 +390,26 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                         </div>
 
                         <div class="form-group mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="small font-weight-bold text-slate mb-0" for="lbn_formProductMaterial">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
+                                <label class="small font-weight-bold text-slate mb-0 min-w-0" for="lbn_formProductMaterial">
                                     Mô tả chất liệu an toàn cho bé:
                                 </label>
-                                <span class="badge lbn-badge-bamboo py-0 px-2">OEKO-TEX® 100</span>
+                                <span class="badge lbn-badge-bamboo py-0 px-2 text-nowrap flex-shrink-0">OEKO-TEX® 100</span>
                             </div>
                             <textarea id="lbn_formProductMaterial" name="description" rows="3" class="form-control form-control-sm mb-2"
                                       placeholder="Mô tả thành phần sợi tre kháng khuẩn, độ co giãn, phụ liệu cúc bấm an toàn..." required>100% sợi tre hữu cơ kháng khuẩn tự nhiên 99.8%, thấm hút mồ hôi gấp 2 lần cotton.</textarea>
 
-                            <div class="d-flex flex-wrap">
+                            <div class="d-flex flex-wrap fk-btn-toolbar">
                                 <button type="button" onclick="lbnAppendSafeMaterialTag('100% Sợi tre kháng khuẩn')"
-                                        class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small text-mint-dark">
+                                        class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-mint-dark text-nowrap">
                                     + Sợi tre kháng khuẩn
                                 </button>
                                 <button type="button" onclick="lbnAppendSafeMaterialTag('Không chứa Formaldehyde & BPA')"
-                                        class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small text-slate">
+                                        class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate text-nowrap">
                                     + Không BPA
                                 </button>
                                 <button type="button" onclick="lbnAppendSafeMaterialTag('Đế cao su non chống trượt')"
-                                        class="btn btn-light btn-sm border rounded-pill mb-1 py-0 px-2 small text-slate">
+                                        class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate text-nowrap">
                                     + Đế cao su non
                                 </button>
                             </div>
@@ -423,11 +423,11 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
             </div>
             <?php else: ?>
             <div class="card card-pastel shadow-sm border-0 bg-white">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold mb-0 text-slate">
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold mb-0 text-slate fk-header-title-grow">
                         <i class="fa-solid fa-boxes-packing text-peach mr-2"></i>Nhập Thêm Kho Hàng
                     </h6>
-                    <span class="badge badge-sky px-2 py-1 rounded-pill">Nhân viên kho</span>
+                    <span class="badge badge-sky px-2 py-1 rounded-pill text-nowrap flex-shrink-0">Nhân viên kho</span>
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-info small py-2 mb-3">

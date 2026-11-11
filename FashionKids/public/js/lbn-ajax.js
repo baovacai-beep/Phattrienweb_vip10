@@ -106,11 +106,11 @@ $(document).ready(function () {
             : 'Size 2 (2-3T)';
         var safeNameJs = String(prod.name || '').replace(/'/g, "\\'");
         var addBtnHtml = (stockQty > 0)
-            ? '<button type="button" onclick="lbnQuickAddToCart(\'' + lbnEscapeHtml(safeNameJs) + '\', ' + prod.price + ', ' + prod.id + ', \'' + lbnEscapeHtml(defaultSize) + '\')" class="btn btn-pastel-primary btn-sm px-3 py-1"><i class="fa-solid fa-cart-plus mr-1"></i> Thêm</button>'
-            : '<button type="button" class="btn btn-secondary btn-sm px-3 py-1" disabled>Hết hàng</button>';
+            ? '<button type="button" onclick="lbnQuickAddToCart(\'' + lbnEscapeHtml(safeNameJs) + '\', ' + prod.price + ', ' + prod.id + ', \'' + lbnEscapeHtml(defaultSize) + '\')" class="btn btn-pastel-primary btn-sm px-3 py-1 text-nowrap flex-shrink-0"><i class="fa-solid fa-cart-plus mr-1"></i> Thêm</button>'
+            : '<button type="button" class="btn btn-secondary btn-sm px-3 py-1 text-nowrap flex-shrink-0" disabled>Hết hàng</button>';
 
         return (
-            '<div class="col-12 col-sm-6 col-lg-4 mb-4 lbn-catalog-col" ' +
+            '<div class="col-12 col-sm-6 col-xl-4 mb-4 lbn-catalog-col" ' +
             'data-id="' + prod.id + '" ' +
             'data-category="' + lbnEscapeHtml(prod.category_slug) + '" ' +
             'data-gender="' + lbnEscapeHtml(prod.gender) + '" ' +
@@ -127,10 +127,10 @@ $(document).ready(function () {
                             '<img src="' + lbnEscapeHtml(prod.image) + '" alt="' + lbnEscapeHtml(prod.name) + '" class="lbn-product-img">' +
                         '</a>' +
                     '</div>' +
-                    '<div class="card-body d-flex flex-column p-3">' +
-                        '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<div class="card-body d-flex flex-column p-3 min-w-0">' +
+                        '<div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">' +
                             '<span class="small font-weight-bold text-muted-custom">' + lbnEscapeHtml(prod.category_name) + '</span>' +
-                            '<span class="small text-warning font-weight-bold">' +
+                            '<span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">' +
                                 '<i class="fa-solid fa-star"></i> ' + Number(prod.rating || 4.9).toFixed(1) +
                                 ' <span class="text-muted-custom font-weight-normal">(' + (prod.reviews || 25) + ')</span>' +
                             '</span>' +
@@ -140,17 +140,17 @@ $(document).ready(function () {
                                 lbnEscapeHtml(prod.name) +
                             '</a>' +
                         '</h6>' +
-                        '<div class="d-flex justify-content-between align-items-center small text-muted-custom mb-3">' +
-                            '<span><i class="fa-solid fa-barcode mr-1"></i>' + lbnEscapeHtml(prod.sku) + '</span>' +
-                            '<span><i class="fa-solid fa-ruler-combined mr-1"></i>' + lbnEscapeHtml(prod.size_range) + '</span>' +
+                        '<div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-3">' +
+                            '<span class="text-nowrap"><i class="fa-solid fa-barcode mr-1"></i>' + lbnEscapeHtml(prod.sku) + '</span>' +
+                            '<span class="text-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i>' + lbnEscapeHtml(prod.size_range) + '</span>' +
                         '</div>' +
-                        '<div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">' +
-                            '<div>' +
-                                '<div class="h5 font-weight-bold text-peach mb-0">' + lbnFormatVnd(prod.price) + '</div>' +
+                        '<div class="mt-auto pt-3 border-top d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">' +
+                            '<div class="min-w-0">' +
+                                '<div class="h5 font-weight-bold text-peach mb-0 text-nowrap">' + lbnFormatVnd(prod.price) + '</div>' +
                                 stockHtml +
                             '</div>' +
-                            '<div class="d-flex">' +
-                                '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">' +
+                            '<div class="d-flex align-items-center flex-shrink-0">' +
+                                '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate flex-shrink-0" title="Xem chi tiết sản phẩm">' +
                                     '<i class="fa-regular fa-eye"></i>' +
                                 '</a>' +
                                 addBtnHtml +

@@ -96,8 +96,8 @@ unset($_SESSION['checkout_flash_error']);
 
 <div class="container my-4 my-md-5" id="lnkt_checkout_section">
     <!-- Breadcrumb & Tiêu đề trang -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="min-w-0">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent p-0 mb-1 small">
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
@@ -109,12 +109,12 @@ unset($_SESSION['checkout_flash_error']);
                 <i class="fa-solid fa-basket-shopping text-peach mr-2"></i>Giỏ Hàng &amp; Thanh Toán Đặt Hàng
             </h3>
         </div>
-        <div class="mt-2 mt-md-0">
-            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm mr-2"
+        <div class="mt-2 mt-md-0 d-flex flex-wrap fk-btn-toolbar">
+            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm text-nowrap"
                     data-toggle="modal" data-target="#modalSuggestSize">
                 <i class="fa-solid fa-ruler-horizontal text-peach mr-1"></i> Kiểm Tra Lại Size
             </button>
-            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold">
+            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-outline btn-sm font-weight-bold text-nowrap">
                 <i class="fa-solid fa-plus mr-1"></i> Mua Thêm Đồ Cho Bé
             </a>
         </div>
@@ -127,14 +127,14 @@ unset($_SESSION['checkout_flash_error']);
         <div class="col-12 col-lg-7 mb-4">
             <!-- 1. BẢNG TÓM TẮT ĐƠN HÀNG -->
             <div class="card card-pastel shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-bag-shopping text-peach mr-2"></i>1. Bảng Tóm Tắt Đơn Hàng
                         </h5>
                         <small class="text-muted-custom">Điều chỉnh số lượng, kích cỡ và kiểm tra đơn giá sản phẩm</small>
                     </div>
-                    <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1 font-weight-bold">
+                    <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1 font-weight-bold text-nowrap flex-shrink-0">
                         <span id="lnkt_cartItemCountBadge"><?= count($lnkt_cart_items) ?></span> dòng SP
                     </span>
                 </div>
@@ -164,16 +164,16 @@ unset($_SESSION['checkout_flash_error']);
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <span class="lbn-inv-thumb mr-3 flex-shrink-0"><img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="lbn-thumb-img"></span>
-                                                <div>
+                                                <div class="min-w-0">
                                                     <a href="/FashionKids/views/pages/product-detail.php?id=<?= $item['product_id'] ?>"
                                                        class="font-weight-bold text-slate text-decoration-none d-block">
                                                         <?= htmlspecialchars($item['name']) ?>
                                                     </a>
-                                                    <div class="mt-1 d-flex flex-wrap align-items-center">
-                                                        <span class="badge badge-pill badge-sky px-2 py-1 mr-2">
+                                                    <div class="mt-1 d-flex flex-wrap align-items-center fk-btn-toolbar">
+                                                        <span class="badge badge-pill badge-sky px-2 py-1 text-nowrap">
                                                             <?= htmlspecialchars($item['size']) ?>
                                                         </span>
-                                                        <small class="text-muted-custom">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong> • Kho còn <strong class="text-slate"><?= (int)$item['stock'] ?></strong></small>
+                                                        <small class="text-muted-custom text-nowrap">Mã SP: <strong class="text-slate"><?= htmlspecialchars($item['sku']) ?></strong> • Kho còn <strong class="text-slate"><?= (int)$item['stock'] ?></strong></small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -237,14 +237,14 @@ unset($_SESSION['checkout_flash_error']);
 
             <!-- 2. FORM THÔNG TIN GIAO HÀNG -->
             <div class="card card-pastel shadow-sm">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-truck-fast text-peach mr-2"></i>2. Thông Tin Giao Hàng
                         </h5>
                         <small class="text-muted-custom">Điền thông tin người nhận và chọn địa chỉ giao hàng tận nơi</small>
                     </div>
-                    <button type="button" onclick="lnktSyncProvincesOpenApi()" class="btn btn-light btn-sm border rounded-pill small font-weight-bold text-slate">
+                    <button type="button" onclick="lnktSyncProvincesOpenApi()" class="btn btn-light btn-sm border rounded-pill small font-weight-bold text-slate text-nowrap flex-shrink-0">
                         <i class="fa-solid fa-cloud-arrow-down text-info mr-1"></i>Làm mới địa giới hành chính
                     </button>
                 </div>
@@ -357,23 +357,23 @@ unset($_SESSION['checkout_flash_error']);
 
                     <!-- Thông tin Hạng thẻ VIP tự động theo tài khoản (Chỉ đọc - Bảo mật Server-side) -->
                     <div class="p-3 rounded mb-3 lbn-vip-price-box">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
                             <span class="small font-weight-bold text-slate">
                                 <i class="fa-solid fa-crown text-warning mr-1"></i>Hạng thẻ VIP áp dụng:
                             </span>
-                            <span id="lnkt_checkoutVipBadge" class="badge <?= htmlspecialchars($vipTierBadgeClass) ?> px-3 py-1 rounded-pill font-weight-bold">
+                            <span id="lnkt_checkoutVipBadge" class="badge <?= htmlspecialchars($vipTierBadgeClass) ?> px-3 py-1 rounded-pill font-weight-bold text-nowrap flex-shrink-0">
                                 <?= htmlspecialchars($vipTierTitle) ?>
                             </span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center small text-muted-custom">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom">
                             <span>
                                 <?php if ($vipIsGuest): ?>
                                     Áp dụng mặc định khi chưa đăng nhập
                                 <?php else: ?>
-                                    Điểm tích lũy hiện có: <strong class="text-slate"><?= number_format($vipPoints) ?> điểm</strong>
+                                    Điểm tích lũy hiện có: <strong class="text-slate text-nowrap"><?= number_format($vipPoints) ?> điểm</strong>
                                 <?php endif; ?>
                             </span>
-                            <span class="font-weight-bold text-success">
+                            <span class="font-weight-bold text-success text-nowrap flex-shrink-0">
                                 Giảm tự động <?= (int)$init_vip_percent ?>%
                             </span>
                         </div>
@@ -391,46 +391,46 @@ unset($_SESSION['checkout_flash_error']);
 
                     <!-- Bảng tổng hợp dòng tiền -->
                     <div class="border rounded p-3 bg-milk-cream mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
                             <span class="text-muted-custom font-weight-bold">1. Tiền hàng tạm tính:</span>
-                            <span id="lnkt_summarySubtotal" class="font-weight-bold text-slate h6 mb-0">
+                            <span id="lnkt_summarySubtotal" class="font-weight-bold text-slate h6 mb-0 text-nowrap">
                                 <?= number_format($init_subtotal, 0, ',', '.') ?> đ
                             </span>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
                             <span class="text-muted-custom font-weight-bold">
                                 2. Ưu đãi thành viên VIP:
                             </span>
-                            <span id="lnkt_summaryDiscount" class="font-weight-bold text-success h6 mb-0">
+                            <span id="lnkt_summaryDiscount" class="font-weight-bold text-success h6 mb-0 text-nowrap">
                                 <?= $init_discount_amount > 0 ? ('-' . number_format($init_discount_amount, 0, ',', '.') . ' đ') : '0 đ' ?>
                             </span>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2 pb-2 border-bottom">
                             <span class="text-muted-custom font-weight-bold">Phí vận chuyển tiêu chuẩn:</span>
-                            <span id="lnkt_summaryShipping" class="badge badge-mint px-2 py-1 rounded-pill">
+                            <span id="lnkt_summaryShipping" class="badge badge-mint px-2 py-1 rounded-pill text-nowrap flex-shrink-0">
                                 Miễn phí (0 đ)
                             </span>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-1">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pt-1">
                             <div>
                                 <span class="font-weight-bold text-slate h6 mb-0 d-block">3. Tổng thanh toán:</span>
                                 <small class="text-muted-custom">(Đã bao gồm VAT)</small>
                             </div>
-                            <span id="lnkt_summaryTotalAmount" class="h4 font-weight-bold text-peach mb-0">
+                            <span id="lnkt_summaryTotalAmount" class="h4 font-weight-bold text-peach mb-0 text-nowrap">
                                 <?= number_format($init_total_amount, 0, ',', '.') ?> đ
                             </span>
                         </div>
                     </div>
 
                     <!-- Điểm thưởng tích lũy sau đơn hàng -->
-                    <div class="d-flex justify-content-between align-items-center p-2 px-3 rounded bg-buttercup-soft mb-3 small">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row p-2 px-3 rounded bg-buttercup-soft mb-3 small">
                         <span class="font-weight-bold text-slate">
                             <i class="fa-solid fa-coins text-warning mr-1"></i>Điểm thưởng tích lũy sau đơn hàng:
                         </span>
-                        <span id="lnkt_summaryRewardPoints" class="font-weight-bold text-slate">
+                        <span id="lnkt_summaryRewardPoints" class="font-weight-bold text-slate text-nowrap flex-shrink-0">
                             +<?= number_format($init_reward_points) ?> điểm VIP
                         </span>
                     </div>

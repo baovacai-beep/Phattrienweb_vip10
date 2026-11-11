@@ -69,14 +69,14 @@ $lnkt_kol_stars = [
              ================================================================ -->
         <div class="col-12 col-lg-7 mb-4">
             <div class="card card-pastel shadow-sm">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h5 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-id-card-clip text-peach mr-2"></i>Biểu Mẫu Đăng Ký Hồ Sơ KOL Nhí
                         </h5>
                         <small class="text-muted-custom">Lưu hồ sơ trực tiếp vào tài khoản thành viên của phụ huynh</small>
                     </div>
-                    <span class="badge badge-pill badge-mint px-3 py-1">Đang mở nhận hồ sơ</span>
+                    <span class="badge badge-pill badge-mint px-3 py-1 text-nowrap flex-shrink-0">Đang mở nhận hồ sơ</span>
                 </div>
 
                 <div class="card-body p-4 pt-2">
@@ -112,11 +112,11 @@ $lnkt_kol_stars = [
                             </div>
 
                             <div class="form-group col-12 col-md-6">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
                                     <label class="small font-weight-bold text-slate mb-0" for="lnkt_kolBirthDate">
                                         Ngày sinh của bé (<span class="text-danger">*</span>):
                                     </label>
-                                    <span id="lnkt_kolAutoAgeBadge" class="badge badge-pill badge-sky px-2 py-1">
+                                    <span id="lnkt_kolAutoAgeBadge" class="badge badge-pill badge-sky px-2 py-1 text-nowrap flex-shrink-0">
                                         Tuổi tự động: 2 tuổi 8 tháng
                                     </span>
                                 </div>
@@ -208,12 +208,12 @@ $lnkt_kol_stars = [
 
                         <!-- 5. BỘ TẢI LÊN TỆP TIN MEDIA (HỖ TRỢ ĐÍNH KÈM TỪ 2 ĐẾN 5 ẢNH CHÂN DUNG & TOÀN THÂN) -->
                         <div class="form-group">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
-                                <label class="small font-weight-bold text-slate mb-0">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
+                                <label class="small font-weight-bold text-slate mb-0 min-w-0">
                                     Bộ ảnh Media ứng tuyển (Từ <strong>2 đến 5 ảnh</strong> chân dung &amp; toàn thân) (<span class="text-danger">*</span>):
                                 </label>
                                 <button type="button" onclick="lnktUseDemoKolPhotos()"
-                                        class="btn btn-link btn-sm p-0 small font-weight-bold text-peach">
+                                        class="btn btn-link btn-sm p-0 small font-weight-bold text-peach text-nowrap flex-shrink-0">
                                     <i class="fa-solid fa-images mr-1"></i>Đính kèm nhanh 3 ảnh mẫu
                                 </button>
                             </div>
@@ -317,10 +317,10 @@ $lnkt_kol_stars = [
                         <span class="lbn-inv-thumb mr-3 flex-shrink-0">
                             <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
                         </span>
-                        <div>
-                            <div class="d-flex flex-wrap align-items-center mb-1">
-                                <strong class="text-slate mr-2"><?= htmlspecialchars($star['name']) ?></strong>
-                                <span class="badge badge-pill badge-gold small"><?= htmlspecialchars($star['badge']) ?></span>
+                        <div class="min-w-0">
+                            <div class="d-flex flex-wrap align-items-center fk-card-header-row mb-1">
+                                <strong class="text-slate"><?= htmlspecialchars($star['name']) ?></strong>
+                                <span class="badge badge-pill badge-gold small text-nowrap flex-shrink-0"><?= htmlspecialchars($star['badge']) ?></span>
                             </div>
                             <div class="small font-weight-bold text-peach"><?= htmlspecialchars($star['age']) ?> • <?= htmlspecialchars($star['spec']) ?></div>
                             <small class="text-muted-custom d-block"><?= htmlspecialchars($star['talent']) ?></small>

@@ -536,12 +536,12 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                 </div>
 
                 <!-- CỘT PHẢI (6 CỘT): THÔNG TIN GIÁ, SIZE & ĐẶT MUA -->
-                <div class="col-12 col-lg-6 pl-lg-4">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge badge-pill badge-light border mr-2 font-weight-bold text-slate">
+                <div class="col-12 col-lg-6 pl-lg-4 min-w-0">
+                    <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mb-2">
+                        <span class="badge badge-pill badge-light border font-weight-bold text-slate text-nowrap">
                             Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong>
                         </span>
-                        <span class="badge badge-pill badge-light border text-muted-custom">
+                        <span class="badge badge-pill badge-light border text-muted-custom text-nowrap">
                             Danh mục: <?= htmlspecialchars($prod['category_name']) ?>
                         </span>
                     </div>
@@ -552,8 +552,8 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     </h1>
 
                     <!-- Đánh Giá Sao & Lượt Bán -->
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="text-warning mr-2">
+                    <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mb-3">
+                        <div class="text-warning text-nowrap">
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
@@ -561,33 +561,33 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                             <i class="fa-solid fa-star"></i>
                             <span class="font-weight-bold text-slate ml-1" id="pdp_avg_rating_top"><?= number_format($avgRating, 1) ?></span>
                         </div>
-                        <span class="text-muted-custom small border-left pl-2 mr-2">
+                        <span class="text-muted-custom small border-left pl-2 text-nowrap">
                             <a href="#pdp_review_section" class="text-muted-custom text-decoration-none">
                                 <strong id="pdp_review_count_top"><?= $reviewCount ?></strong> đánh giá thực tế
                             </a>
                         </span>
-                        <span class="text-muted-custom small border-left pl-2">
+                        <span class="text-muted-custom small border-left pl-2 text-nowrap">
                             Đã bán <strong><?= $prod['sold_count'] ?></strong> món
                         </span>
                     </div>
 
                     <!-- Khung Giá & Chiết Khấu VIP Tự Động Theo Tài Khoản (Chỉ đọc) -->
                     <div class="p-3 rounded mb-3 bg-milk-cream border">
-                        <div class="d-flex align-items-baseline mb-2">
-                            <span class="h2 font-weight-bold text-peach mb-0 mr-3" id="lbn_pdpBasePrice" data-base-price="<?= (int)$prod['price'] ?>">
+                        <div class="d-flex flex-wrap align-items-baseline fk-btn-toolbar mb-2">
+                            <span class="h2 font-weight-bold text-peach mb-0 text-nowrap" id="lbn_pdpBasePrice" data-base-price="<?= (int)$prod['price'] ?>">
                                 <?= number_format($prod['price'], 0, ',', '.') ?> đ
                             </span>
-                            <span class="text-muted-custom text-decoration-line-through small mr-2">
+                            <span class="text-muted-custom text-decoration-line-through small text-nowrap">
                                 <?= number_format($prod['original_price'], 0, ',', '.') ?> đ
                             </span>
-                            <span class="badge badge-pill badge-danger small font-weight-bold">
+                            <span class="badge badge-pill badge-danger small font-weight-bold text-nowrap">
                                 -<?= max(5, round((($prod['original_price'] - $prod['price']) / max(1, $prod['original_price'])) * 100)) ?>%
                             </span>
                         </div>
 
                         <div class="p-3 rounded lbn-vip-price-box">
-                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
-                                <span class="small font-weight-bold text-slate" id="lbn_pdpVipBadgeLabel">
+                            <div class="d-flex justify-content-between align-items-center fk-card-header-row mb-1 flex-wrap">
+                                <span class="small font-weight-bold text-slate min-w-0" id="lbn_pdpVipBadgeLabel">
                                     <i class="fa-solid fa-crown text-warning mr-1"></i>
                                     <?php if ($vipIsGuest): ?>
                                         Khách vãng lai (Giảm 0%)
@@ -595,12 +595,12 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                         Hạng thẻ của bạn: <strong><?= htmlspecialchars($vipTierTitle) ?></strong> (Giảm <?= (int)$init_discount_percent ?>%)
                                     <?php endif; ?>
                                 </span>
-                                <span class="h5 font-weight-bold text-success mb-0" id="lbn_pdpFinalVipPrice">
+                                <span class="h5 font-weight-bold text-success mb-0 text-nowrap flex-shrink-0" id="lbn_pdpFinalVipPrice">
                                     <?= number_format($init_vip_price, 0, ',', '.') ?> đ
                                 </span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center small">
-                                <span class="text-muted-custom" id="lbn_pdpSavedAmount">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small">
+                                <span class="text-muted-custom min-w-0" id="lbn_pdpSavedAmount">
                                     <?php if ($init_discount_amount > 0): ?>
                                         Tiết kiệm ngay <strong class="text-success"><?= number_format($init_discount_amount, 0, ',', '.') ?> đ</strong> với thẻ VIP
                                     <?php elseif ($vipIsGuest): ?>
@@ -613,7 +613,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </span>
-                                <span class="text-slate font-weight-bold">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</span>
+                                <span class="text-slate font-weight-bold text-nowrap flex-shrink-0">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</span>
                             </div>
                         </div>
                     </div>
@@ -625,7 +625,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                         </label>
                         <div class="d-flex align-items-center flex-wrap">
                             <?php foreach ($prod['colors'] as $c): ?>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate <?= $c['active'] ? 'border-primary' : '' ?>">
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate text-nowrap <?= $c['active'] ? 'border-primary' : '' ?>">
                                     <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($c['code']) ?>"></span>
                                     <?= htmlspecialchars($c['name']) ?>
                                 </button>
@@ -635,11 +635,11 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
 
                     <!-- Chọn Kích Cỡ & Nút Gợi Ý Size Thước Dây -->
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
                             <label class="small font-weight-bold text-slate mb-0">
-                                Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold"><?= htmlspecialchars($prod['default_size']) ?></span>
+                                Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold text-nowrap"><?= htmlspecialchars($prod['default_size']) ?></span>
                             </label>
-                            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm"
+                            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm text-nowrap flex-shrink-0"
                                     data-toggle="modal" data-target="#modalSuggestSize">
                                 <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size
                             </button>
@@ -776,8 +776,8 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
     <section class="reviews-section bg-milk-cream py-4 rounded-lg border shadow-sm mb-5" id="pdp_review_section">
         <div class="container-fluid px-3 px-md-4">
             <div class="row mb-4">
-                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap">
-                    <div>
+                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h4 class="font-weight-bold text-slate mb-1">
                             <i class="fa-solid fa-comments text-peach mr-2"></i>Đánh Giá Từ Phụ Huynh Đã Mua Hàng
                         </h4>
@@ -785,17 +785,17 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     </div>
                     <?php if (!empty($reviewEligibility['eligible'])): ?>
                         <button type="button"
-                                class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm mt-2 mt-md-0"
+                                class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm text-nowrap flex-shrink-0"
                                 data-toggle="modal" data-target="#modalReview"
                                 onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= (int)$prod['id'] ?>, <?= (int)$reviewEligibility['eligible_order_id'] ?>)">
                             <i class="fa-solid fa-pen-to-square mr-2"></i>Viết Đánh Giá
                         </button>
                     <?php elseif (!empty($reviewEligibility['already_reviewed'])): ?>
-                        <span class="badge badge-pill badge-mint px-3 py-2 mt-2 mt-md-0 font-weight-bold">
+                        <span class="badge badge-pill badge-mint px-3 py-2 font-weight-bold badge-wrap-safe flex-shrink-0">
                             <i class="fa-solid fa-circle-check mr-1"></i>Bạn đã gửi đánh giá sản phẩm này
                         </span>
                     <?php else: ?>
-                        <span class="badge badge-pill badge-light border text-muted-custom px-3 py-2 mt-2 mt-md-0">
+                        <span class="badge badge-pill badge-light border text-muted-custom px-3 py-2 badge-wrap-safe flex-shrink-0">
                             <i class="fa-solid fa-lock mr-1"></i>Đánh giá khả dụng sau khi đơn hàng Hoàn tất
                         </span>
                     <?php endif; ?>
@@ -843,15 +843,15 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     ?>
                         <div class="col-12 mb-3">
                             <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start fk-card-header-row mb-2">
+                                    <div class="d-flex align-items-center min-w-0">
+                                        <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 flex-shrink-0 avatar-44">
                                             <?= htmlspecialchars($initials) ?>
                                         </div>
-                                        <div>
+                                        <div class="min-w-0">
                                             <div class="font-weight-bold text-slate">
                                                 <?= htmlspecialchars($author) ?>
-                                                <span class="badge badge-pill badge-mint ml-2">
+                                                <span class="badge badge-pill badge-mint ml-2 text-nowrap">
                                                     <i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids
                                                 </span>
                                             </div>
@@ -865,7 +865,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="text-muted-custom small"><?= htmlspecialchars($dateFormatted) ?></span>
+                                    <span class="text-muted-custom small text-nowrap flex-shrink-0"><?= htmlspecialchars($dateFormatted) ?></span>
                                 </div>
                                 <p class="text-slate small mb-2">
                                     <?= nl2br(htmlspecialchars((string)($rev['noi_dung_danh_gia'] ?? ''))) ?>
@@ -890,11 +890,11 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
          SẢN PHẨM LIÊN QUAN CÙNG BỘ SƯU TẬP
          ====================================================================== -->
     <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="font-weight-bold text-slate mb-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+            <h4 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                 <i class="fa-solid fa-sparkles text-peach mr-2"></i>Bé Cũng Sẽ Thích Những Món Này
             </h4>
-            <a href="/FashionKids/views/pages/shop-catalog.php" class="small font-weight-bold text-peach">
+            <a href="/FashionKids/views/pages/shop-catalog.php" class="small font-weight-bold text-peach text-nowrap flex-shrink-0">
                 Xem tất cả cửa hàng <i class="fa-solid fa-arrow-right ml-1"></i>
             </a>
         </div>

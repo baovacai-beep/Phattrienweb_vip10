@@ -70,8 +70,8 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
      id="lnkt_staff_orders_section"
      data-max-order-id="<?= $maxOrderId ?>">
     <!-- Header Bàn Làm Việc Nhân Viên Vận Hành -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="min-w-0">
             <h4 class="font-weight-bold text-slate mb-1">
                 <i class="fa-solid fa-clipboard-check text-peach mr-2"></i>Bàn Làm Việc Nhân Viên &amp; Điều Phối Đơn Hàng
             </h4>
@@ -79,33 +79,33 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                 Tiếp nhận đơn mới thời gian thực, duyệt đóng gói, giao vận và tự động tích điểm VIP khi hoàn tất
             </small>
         </div>
-        <div class="mt-2 mt-md-0 d-flex flex-wrap align-items-center">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap align-items-center fk-btn-toolbar">
             <span id="new_order_badge"
-                  class="badge badge-pill badge-danger px-3 py-2 mr-2 d-none lnkt-new-order-pulse"
+                  class="badge badge-pill badge-danger px-3 py-2 d-none lnkt-new-order-pulse text-nowrap"
                   role="button"
                   onclick="lnktAcknowledgeNewOrders()">
                 <i class="fa-solid fa-bell mr-1"></i>Đơn mới: <span id="new_order_count">0</span>
             </span>
 
             <button type="button" id="lnkt_btnSyncAllCasso" onclick="lnktStaffSyncAllPendingCasso(this)"
-                    class="btn btn-pastel-sky btn-sm rounded-pill px-3 mr-2 font-weight-bold text-slate">
+                    class="btn btn-pastel-sky btn-sm rounded-pill px-3 font-weight-bold text-slate text-nowrap">
                 <i class="fa-solid fa-building-columns text-info mr-1"></i>Đối soát Casso MB
             </button>
 
             <button type="button" id="lnkt_btnToggleSound" onclick="lnktToggleOrderSound()"
-                    class="btn btn-light btn-sm border rounded-pill px-3 mr-2 font-weight-bold text-slate">
+                    class="btn btn-light btn-sm border rounded-pill px-3 font-weight-bold text-slate text-nowrap">
                 <i class="fa-solid fa-volume-high text-peach mr-1"></i>Âm báo: Bật
             </button>
 
-            <a href="/FashionKids/views/pages/order-tracking.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
+            <a href="/FashionKids/views/pages/order-tracking.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-route mr-1"></i> Xem Tiến Trình Khách Hàng
             </a>
             <?php if (Rbac::isAdmin()): ?>
-                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-gauge-high mr-1"></i> Bảng Điều Khiển
                 </a>
             <?php else: ?>
-                <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-boxes-stacked mr-1"></i> Nhập Thêm Kho
                 </a>
             <?php endif; ?>
@@ -119,7 +119,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-6 col-md-4 col-xl mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100 border-warning">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">1. Chờ Duyệt</small>
                         <h3 class="font-weight-bold text-warning mb-0" id="lnkt_count_cho_duyet"><?= (int)($statusCounts['cho_duyet'] ?? 0) ?></h3>
                         <small class="text-slate">Cần xác nhận ngay</small>
@@ -132,7 +132,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-6 col-md-4 col-xl mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">2. Đã Xác Nhận</small>
                         <h3 class="font-weight-bold text-info mb-0" id="lnkt_count_da_xac_nhan"><?= (int)($statusCounts['da_xac_nhan'] ?? 0) ?></h3>
                         <small class="text-slate">Đang đóng gói</small>
@@ -145,7 +145,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-6 col-md-4 col-xl mb-3 mb-xl-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">3. Đang Giao</small>
                         <h3 class="font-weight-bold text-primary mb-0" id="lnkt_count_dang_giao"><?= (int)($statusCounts['dang_giao'] ?? 0) ?></h3>
                         <small class="text-slate">Đã bàn giao bưu cục</small>
@@ -158,7 +158,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-6 col-md-6 col-xl mb-3 mb-md-0">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">4. Hoàn Tất</small>
                         <h3 class="font-weight-bold text-success mb-0" id="lnkt_count_hoan_tat"><?= (int)($statusCounts['hoan_tat'] ?? 0) ?></h3>
                         <small class="text-mint-dark font-weight-bold">Đã đối soát &amp; cộng điểm</small>
@@ -171,7 +171,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-12 col-md-6 col-xl">
             <div class="card card-pastel p-3 shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold text-uppercase">5. Đã Hủy</small>
                         <h3 class="font-weight-bold text-danger mb-0" id="lnkt_count_da_huy"><?= (int)($statusCounts['da_huy'] ?? 0) ?></h3>
                         <small class="text-slate">Hoàn kho tự động</small>
@@ -187,8 +187,8 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                        <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                        <div class="fk-header-title-grow">
                             <h6 class="font-weight-bold text-slate mb-0">
                                 Danh Sách Đơn Đặt Hàng &amp; Điều Phối Vận Chuyển Thời Gian Thực
                             </h6>
@@ -196,7 +196,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                 Hệ thống tự động kiểm tra đơn hàng mới mỗi 4 giây • Chọn trạng thái mới và nhấn <strong>Lưu</strong> hoặc nút xử lý nhanh
                             </small>
                         </div>
-                        <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1 mt-2 mt-sm-0">
+                        <span class="badge badge-pill badge-peach bg-peach text-white px-3 py-1 text-nowrap flex-shrink-0">
                             Nhân viên trực: <?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Nhân viên FashionKids') ?>
                         </span>
                     </div>
@@ -311,24 +311,24 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                                 <i class="fa-solid fa-phone mr-1"></i><?= htmlspecialchars((string)$ord['so_dien_thoai_nhan']) ?>
                                             </small>
                                             <div id="lnkt_payBadgeWrap_<?= $oid ?>" class="mt-1">
-                                                <span class="badge <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small py-0 px-2 rounded-pill">
+                                                <span class="badge <?= $pm === 'vietqr' ? 'badge-sky' : 'badge-light border' ?> small py-0 px-2 rounded-pill text-nowrap mb-1 mr-1">
                                                     <?= $pm === 'vietqr' ? 'VietQR MB' : 'COD' ?>
                                                 </span>
                                                 <?php if ($isPaid): ?>
-                                                    <span class="badge badge-mint small py-0 px-2 rounded-pill">
+                                                    <span class="badge badge-mint small py-0 px-2 rounded-pill text-nowrap mb-1">
                                                         <i class="fa-solid fa-circle-check mr-1"></i>Đã TT • Thu 0 đ
                                                     </span>
                                                     <?php if ($txCode !== ''): ?>
                                                         <small class="d-block text-success font-weight-bold">GD: <?= htmlspecialchars($txCode) ?></small>
                                                     <?php endif; ?>
                                                 <?php elseif ($st === 'da_huy' && $isExpired): ?>
-                                                    <span class="badge badge-danger small py-0 px-2 rounded-pill">Quá hạn 24h</span>
+                                                    <span class="badge badge-danger small py-0 px-2 rounded-pill text-nowrap mb-1">Quá hạn 24h</span>
                                                 <?php elseif ($pm === 'vietqr'): ?>
-                                                    <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">
+                                                    <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill text-nowrap mb-1">
                                                         Chờ CK (còn ~<?= $remHrs ?>h)
                                                     </span>
                                                 <?php else: ?>
-                                                    <span class="badge badge-butter small py-0 px-2 rounded-pill">Thu tiền mặt</span>
+                                                    <span class="badge badge-butter small py-0 px-2 rounded-pill text-nowrap mb-1">Thu tiền mặt</span>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -435,22 +435,22 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
         <!-- CỘT PHẢI (4 CỘT): PHIẾU KIỂM ĐƠN & ĐIỀU PHỐI NHANH -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm sticky-top fk-sticky-85">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0">
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                         <i class="fa-solid fa-file-invoice text-peach mr-1"></i> Phiếu Chi Tiết Vận Đơn Đang Chọn
                     </h6>
-                    <span class="badge badge-pill badge-sky px-2 py-1" id="lnkt_inspectCode"><?= htmlspecialchars($inspCode) ?></span>
+                    <span class="badge badge-pill badge-sky px-2 py-1 text-nowrap flex-shrink-0" id="lnkt_inspectCode"><?= htmlspecialchars($inspCode) ?></span>
                 </div>
 
                 <div class="card-body p-4 pt-2">
                     <div class="p-3 rounded bg-milk-cream border mb-3 small">
-                        <div class="mb-2">
-                            <span class="text-muted-custom">Khách hàng nhận:</span>
-                            <strong class="text-slate float-right" id="lnkt_inspectReceiver"><?= htmlspecialchars($inspReceiver) ?></strong>
+                        <div class="d-flex justify-content-between align-items-start fk-card-header-row mb-2">
+                            <span class="text-muted-custom text-nowrap flex-shrink-0">Khách hàng nhận:</span>
+                            <strong class="text-slate text-right min-w-0" id="lnkt_inspectReceiver"><?= htmlspecialchars($inspReceiver) ?></strong>
                         </div>
-                        <div class="mb-2">
-                            <span class="text-muted-custom">Số điện thoại:</span>
-                            <strong class="text-peach float-right" id="lnkt_inspectPhone"><?= htmlspecialchars($inspPhone) ?></strong>
+                        <div class="d-flex justify-content-between align-items-start fk-card-header-row mb-2">
+                            <span class="text-muted-custom text-nowrap flex-shrink-0">Số điện thoại:</span>
+                            <strong class="text-peach text-right text-nowrap" id="lnkt_inspectPhone"><?= htmlspecialchars($inspPhone) ?></strong>
                         </div>
                         <div class="mb-2">
                             <span class="text-muted-custom d-block">Địa chỉ giao vận:</span>
@@ -478,21 +478,21 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                     </div>
 
                     <div class="border rounded p-3 bg-white mb-3 small">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted-custom">Tiền tạm tính:</span>
-                            <strong id="lnkt_inspectSubtotal"><?= htmlspecialchars($inspSubtotal) ?></strong>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted-custom mr-2 flex-shrink-0">Tiền tạm tính:</span>
+                            <strong class="text-right text-nowrap" id="lnkt_inspectSubtotal"><?= htmlspecialchars($inspSubtotal) ?></strong>
                         </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted-custom">Giảm giá VIP:</span>
-                            <strong class="text-success" id="lnkt_inspectDiscount"><?= htmlspecialchars($inspDiscount) ?></strong>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted-custom mr-2 flex-shrink-0">Giảm giá VIP:</span>
+                            <strong class="text-success text-right text-nowrap" id="lnkt_inspectDiscount"><?= htmlspecialchars($inspDiscount) ?></strong>
                         </div>
-                        <div class="d-flex justify-content-between pt-2 border-top mb-2">
-                            <span class="font-weight-bold text-slate">Tổng giá trị đơn:</span>
-                            <strong class="text-slate h6 mb-0" id="lnkt_inspectTotal"><?= htmlspecialchars($inspTotal) ?></strong>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mb-2">
+                            <span class="font-weight-bold text-slate mr-2 flex-shrink-0">Tổng giá trị đơn:</span>
+                            <strong class="text-slate h6 mb-0 text-right text-nowrap" id="lnkt_inspectTotal"><?= htmlspecialchars($inspTotal) ?></strong>
                         </div>
-                        <div class="d-flex justify-content-between pt-2 border-top">
-                            <span class="font-weight-bold text-slate">Bưu tá cần thu hộ:</span>
-                            <strong class="<?= htmlspecialchars($inspCodClass) ?>" id="lnkt_inspectCodCollect"><?= htmlspecialchars($inspCodText) ?></strong>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="font-weight-bold text-slate mr-2 flex-shrink-0">Bưu tá cần thu hộ:</span>
+                            <strong class="<?= htmlspecialchars($inspCodClass) ?> text-right text-nowrap" id="lnkt_inspectCodCollect"><?= htmlspecialchars($inspCodText) ?></strong>
                         </div>
                     </div>
 

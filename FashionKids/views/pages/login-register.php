@@ -25,12 +25,12 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
                     <!-- Nav Tabs Pill Bootstrap -->
                     <ul class="nav nav-pills nav-fill nav-pills-custom mb-4" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="tab-login" data-toggle="pill" href="#pane-login" role="tab" aria-controls="pane-login" aria-selected="true">
+                            <a class="nav-link active text-nowrap" id="tab-login" data-toggle="pill" href="#pane-login" role="tab" aria-controls="pane-login" aria-selected="true">
                                 ĐĂNG NHẬP
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="tab-register" data-toggle="pill" href="#pane-register" role="tab" aria-controls="pane-register" aria-selected="false">
+                            <a class="nav-link text-nowrap" id="tab-register" data-toggle="pill" href="#pane-register" role="tab" aria-controls="pane-register" aria-selected="false">
                                 ĐĂNG KÝ
                             </a>
                         </li>
@@ -103,7 +103,7 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
                                     <div class="input-group">
                                         <input type="email" class="form-control" id="hgb_reg_email" name="thu_dien_tu" placeholder="email@gmail.com" autocomplete="off" required>
                                         <div class="input-group-append" id="hgb_otp_action">
-                                            <button type="button" class="btn btn-pastel-sky btn-sm px-3" id="hgb_btn_request_otp">
+                                            <button type="button" class="btn btn-pastel-sky btn-sm px-3 text-nowrap" id="hgb_btn_request_otp">
                                                 Lấy mã OTP
                                             </button>
                                         </div>

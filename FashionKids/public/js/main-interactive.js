@@ -74,7 +74,7 @@ $(document).ready(function () {
         let reviewsCount = parseInt(prod.reviews, 10) || 25;
 
         return (
-            '<div class="col-12 col-sm-6 col-lg-4 mb-4 lbn-catalog-col" ' +
+            '<div class="col-12 col-sm-6 col-xl-4 mb-4 lbn-catalog-col" ' +
                 'data-id="' + prod.id + '" ' +
                 'data-category="' + lbnEscapeHtml(prod.category_slug) + '" ' +
                 'data-gender="' + lbnEscapeHtml(prod.gender) + '" ' +
@@ -91,10 +91,10 @@ $(document).ready(function () {
                             '<img src="' + safeImg + '" alt="' + safeName + '" class="lbn-product-img">' +
                         '</a>' +
                     '</div>' +
-                    '<div class="card-body d-flex flex-column p-3">' +
-                        '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<div class="card-body d-flex flex-column p-3 min-w-0">' +
+                        '<div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">' +
                             '<span class="small font-weight-bold text-muted-custom">' + safeCatName + '</span>' +
-                            '<span class="small text-warning font-weight-bold">' +
+                            '<span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">' +
                                 '<i class="fa-solid fa-star"></i> ' + ratingStr + ' ' +
                                 '<span class="text-muted-custom font-weight-normal">(' + reviewsCount + ')</span>' +
                             '</span>' +
@@ -104,23 +104,23 @@ $(document).ready(function () {
                                 safeName +
                             '</a>' +
                         '</h6>' +
-                        '<div class="d-flex justify-content-between align-items-center small text-muted-custom mb-3">' +
-                            '<span><i class="fa-solid fa-barcode mr-1"></i>' + safeSku + '</span>' +
-                            '<span><i class="fa-solid fa-ruler-combined mr-1"></i>' + safeSizeRange + '</span>' +
+                        '<div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-3">' +
+                            '<span class="text-nowrap"><i class="fa-solid fa-barcode mr-1"></i>' + safeSku + '</span>' +
+                            '<span class="text-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i>' + safeSizeRange + '</span>' +
                         '</div>' +
-                        '<div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">' +
-                            '<div>' +
-                                '<div class="h5 font-weight-bold text-peach mb-0">' + priceFormatted + '</div>' +
+                        '<div class="mt-auto pt-3 border-top d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">' +
+                            '<div class="min-w-0">' +
+                                '<div class="h5 font-weight-bold text-peach mb-0 text-nowrap">' + priceFormatted + '</div>' +
                                 stockHtml +
                             '</div>' +
-                            '<div class="d-flex">' +
+                            '<div class="d-flex align-items-center flex-shrink-0">' +
                                 '<a href="/FashionKids/views/pages/product-detail.php?id=' + prod.id + '" ' +
-                                   'class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate" title="Xem chi tiết sản phẩm">' +
+                                   'class="btn btn-light btn-sm rounded-pill border mr-1 px-2 text-slate flex-shrink-0" title="Xem chi tiết sản phẩm">' +
                                     '<i class="fa-regular fa-eye"></i>' +
                                 '</a>' +
                                 '<button type="button" ' +
                                         'onclick="lbnQuickAddToCart(\'' + safeName.replace(/'/g, "\\'") + '\', ' + prod.price + ', ' + prod.id + ')" ' +
-                                        'class="btn btn-pastel-primary btn-sm px-3 py-1" ' + (stockQty <= 0 ? 'disabled' : '') + '>' +
+                                        'class="btn btn-pastel-primary btn-sm px-3 py-1 text-nowrap flex-shrink-0" ' + (stockQty <= 0 ? 'disabled' : '') + '>' +
                                     '<i class="fa-solid fa-cart-plus mr-1"></i> ' + (stockQty <= 0 ? 'Hết hàng' : 'Thêm') +
                                 '</button>' +
                             '</div>' +
@@ -2142,21 +2142,21 @@ $(document).ready(function () {
 
     function lnktBuildStaffStatusBadgeHtml(uiStatus) {
         if (uiStatus === 'cho_duyet') {
-            return '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
+            return '<span class="badge badge-warning text-dark px-2 py-1 rounded-pill text-nowrap"><i class="fa-solid fa-clock mr-1"></i>Chờ duyệt</span>';
         }
         if (uiStatus === 'da_xac_nhan') {
-            return '<span class="badge badge-sky px-2 py-1 rounded-pill"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
+            return '<span class="badge badge-sky px-2 py-1 rounded-pill text-nowrap"><i class="fa-solid fa-box-open mr-1"></i>Đã xác nhận</span>';
         }
         if (uiStatus === 'dang_giao') {
-            return '<span class="badge badge-primary px-2 py-1 rounded-pill"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
+            return '<span class="badge badge-primary px-2 py-1 rounded-pill text-nowrap"><i class="fa-solid fa-truck-fast mr-1"></i>Đang giao</span>';
         }
         if (uiStatus === 'hoan_tat') {
-            return '<span class="badge badge-mint px-2 py-1 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
+            return '<span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn tất</span>';
         }
         if (uiStatus === 'da_huy') {
-            return '<span class="badge badge-danger px-2 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
+            return '<span class="badge badge-danger px-2 py-1 rounded-pill text-nowrap"><i class="fa-solid fa-ban mr-1"></i>Đã hủy</span>';
         }
-        return '<span class="badge badge-secondary px-2 py-1 rounded-pill">' + lnktEscapeHtml(uiStatus) + '</span>';
+        return '<span class="badge badge-secondary px-2 py-1 rounded-pill text-nowrap">' + lnktEscapeHtml(uiStatus) + '</span>';
     }
 
     function lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid) {
@@ -2188,18 +2188,18 @@ $(document).ready(function () {
         let remHrs = remSec > 0 ? Math.ceil(remSec / 3600) : 0;
         let txCode = ord.ma_giao_dich_ngan_hang || '';
 
-        let html = '<span class="badge ' + (pm === 'vietqr' ? 'badge-sky' : 'badge-light border') + ' small py-0 px-2 rounded-pill">' + (pm === 'vietqr' ? 'VietQR MB' : 'COD') + '</span> ';
+        let html = '<span class="badge ' + (pm === 'vietqr' ? 'badge-sky' : 'badge-light border') + ' small py-1 px-2 rounded-pill text-nowrap">' + (pm === 'vietqr' ? 'VietQR MB' : 'COD') + '</span> ';
         if (isPaid) {
-            html += '<span class="badge badge-mint small py-0 px-2 rounded-pill"><i class="fa-solid fa-circle-check mr-1"></i>Đã TT • Thu 0 đ</span>';
+            html += '<span class="badge badge-mint small py-1 px-2 rounded-pill text-nowrap"><i class="fa-solid fa-circle-check mr-1"></i>Đã TT • Thu 0 đ</span>';
             if (txCode) {
-                html += '<small class="d-block text-success font-weight-bold">GD: ' + lnktEscapeHtml(txCode) + '</small>';
+                html += '<small class="d-block text-success font-weight-bold text-nowrap">GD: ' + lnktEscapeHtml(txCode) + '</small>';
             }
         } else if (st === 'da_huy' && isExpired) {
-            html += '<span class="badge badge-danger small py-0 px-2 rounded-pill">Quá hạn 24h</span>';
+            html += '<span class="badge badge-danger small py-1 px-2 rounded-pill text-nowrap">Quá hạn 24h</span>';
         } else if (pm === 'vietqr') {
-            html += '<span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">Chờ CK (còn ~' + remHrs + 'h)</span>';
+            html += '<span class="badge badge-warning text-dark small py-1 px-2 rounded-pill text-nowrap">Chờ CK (còn ~' + remHrs + 'h)</span>';
         } else {
-            html += '<span class="badge badge-butter small py-0 px-2 rounded-pill">Thu tiền mặt</span>';
+            html += '<span class="badge badge-butter small py-1 px-2 rounded-pill text-nowrap">Thu tiền mặt</span>';
         }
         return html;
     }

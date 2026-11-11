@@ -16,35 +16,35 @@ $chatIdentityText = Rbac::isGuest()
     <div class="card h-100 border-0 d-flex flex-column">
         <!-- Header Bright Pastel -->
         <div class="card-header chat-widget-header-pastel d-flex justify-content-between align-items-center py-3 border-0">
-            <div class="d-flex align-items-center">
-                <span class="badge badge-pill badge-light mr-2 p-2 shadow-sm">
+            <div class="d-flex align-items-center min-w-0">
+                <span class="badge badge-pill badge-light mr-2 p-2 shadow-sm flex-shrink-0">
                     <i class="fa-solid fa-headset text-peach"></i>
                 </span>
-                <div>
+                <div class="min-w-0">
                     <div class="font-weight-bold small d-flex align-items-center">
                         <span>Tư Vấn FashionKids</span>
-                        <span class="fk-live-pulse-dot ml-2"></span>
+                        <span class="fk-live-pulse-dot ml-2 flex-shrink-0"></span>
                     </div>
-                    <div class="small text-light"><?= htmlspecialchars($chatIdentityText) ?></div>
+                    <div class="small text-light text-truncate"><?= htmlspecialchars($chatIdentityText) ?></div>
                 </div>
             </div>
-            <button type="button" class="close text-white" data-toggle="collapse" data-target="#customerChatWidget">
+            <button type="button" class="close text-white flex-shrink-0" data-toggle="collapse" data-target="#customerChatWidget">
                 <span>&times;</span>
             </button>
         </div>
 
         <!-- Thanh câu hỏi gợi ý nhanh -->
-        <div class="px-2 py-2 bg-white border-bottom d-flex flex-wrap">
+        <div class="px-2 py-2 bg-white border-bottom d-flex flex-wrap fk-btn-toolbar">
             <button type="button" onclick="fkSendQuickClientChat('Bé cao 95cm nặng 14kg mặc size mấy ạ?')"
-                    class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small text-slate">
+                    class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate text-nowrap">
                 📏 Tư vấn size 14kg
             </button>
             <button type="button" onclick="fkSendQuickClientChat('Vải sợi tre của shop có mát cho bé sơ sinh không?')"
-                    class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 small text-slate">
+                    class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate text-nowrap">
                 🌿 Vải sợi tre
             </button>
             <button type="button" onclick="fkSendQuickClientChat('Làm sao đăng ký thi KOL Nhí 2026 ạ?')"
-                    class="btn btn-light btn-sm border rounded-pill mb-1 py-0 px-2 small text-slate">
+                    class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate text-nowrap">
                 👑 Thi KOL Nhí
             </button>
         </div>

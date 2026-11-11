@@ -63,11 +63,11 @@ $catColors = [
                 Thống kê doanh thu thực tế, điều phối vận đơn, cảnh báo tồn kho (&le; 5) &amp; quản trị thành viên
             </small>
         </div>
-        <div class="mt-2 mt-md-0">
-            <span class="badge badge-pill badge-mint px-3 py-2 mr-2 font-weight-bold">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap align-items-center fk-btn-toolbar">
+            <span class="badge badge-pill badge-mint px-3 py-2 font-weight-bold text-nowrap">
                 <i class="fa-solid fa-shield-halved mr-1"></i>Phiên Quản Trị: <?= htmlspecialchars($_SESSION['user']['ho_va_ten'] ?? 'Quản trị viên') ?>
             </span>
-            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-pastel-primary btn-sm font-weight-bold">
+            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-pastel-primary btn-sm font-weight-bold text-nowrap">
                 <i class="fa-solid fa-boxes-stacked mr-1"></i> Nhập Kho Ngay
             </a>
         </div>
@@ -75,29 +75,29 @@ $catColors = [
 
     <!-- Thanh Điều Hướng Các Phân Hệ Quản Trị -->
     <div class="card card-pastel border-0 shadow-sm mb-4">
-        <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center">
-            <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold mr-2 mb-1">
+        <div class="card-body p-2 d-flex flex-wrap justify-content-start align-items-center fk-btn-toolbar">
+            <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-pastel-primary btn-sm rounded-pill font-weight-bold text-nowrap">
                 <i class="fa-solid fa-chart-pie mr-1"></i> Tổng Quan
             </a>
-            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/admin-inventory.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-boxes-stacked text-peach mr-1"></i> Quản Lý Kho &amp; SP
             </a>
-            <a href="/FashionKids/views/pages/admin-size-charts.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/admin-size-charts.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-ruler-combined text-info mr-1"></i> Bảng Quy Chuẩn Size
             </a>
-            <a href="/FashionKids/views/pages/admin-users.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/admin-users.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-users text-success mr-1"></i> Người Dùng &amp; Hạng VIP
             </a>
-            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Xử Lý Đơn Hàng
             </a>
-            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
-            <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mr-2 mb-1 border">
+            <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Chiến Dịch
             </a>
-            <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate mb-1 border">
+            <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-newspaper text-primary mr-1"></i> Tạp Chí Bài Viết
             </a>
         </div>
@@ -108,14 +108,14 @@ $catColors = [
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Doanh Thu Hoàn Tất</small>
                         <h4 class="font-weight-bold text-slate mb-1"><?= number_format($completedRevenue, 0, ',', '.') ?> đ</h4>
-                        <span class="badge badge-pill badge-mint small">
+                        <span class="badge badge-pill badge-mint small badge-wrap-safe">
                             <i class="fa-solid fa-coins mr-1"></i>Đơn hiệu lực: <?= number_format($pipelineRevenue, 0, ',', '.') ?> đ
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 bg-peach text-white d-flex align-items-center justify-content-center avatar-56">
+                    <div class="rounded-circle p-3 bg-peach text-white d-flex align-items-center justify-content-center avatar-56 flex-shrink-0">
                         <i class="fa-solid fa-sack-dollar h4 mb-0"></i>
                     </div>
                 </div>
@@ -125,14 +125,14 @@ $catColors = [
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Tổng Đơn Hàng</small>
                         <h4 class="font-weight-bold text-slate mb-1"><?= number_format($totalOrders) ?> đơn</h4>
-                        <span class="badge badge-pill badge-warning small text-dark">
+                        <span class="badge badge-pill badge-warning small text-dark badge-wrap-safe">
                             <i class="fa-solid fa-clock mr-1"></i><?= number_format($pendingOrders) ?> chờ duyệt • <?= number_format($completedOrders) ?> hoàn tất
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 bg-sky text-dark d-flex align-items-center justify-content-center avatar-56">
+                    <div class="rounded-circle p-3 bg-sky text-dark d-flex align-items-center justify-content-center avatar-56 flex-shrink-0">
                         <i class="fa-solid fa-cart-shopping h4 mb-0 text-info"></i>
                     </div>
                 </div>
@@ -142,14 +142,14 @@ $catColors = [
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Cảnh Báo Tồn Kho (&le; 5)</small>
                         <h4 class="font-weight-bold text-danger mb-1"><span id="admin_lowStockCount"><?= $lowStockCount ?></span> mã SP</h4>
                         <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-danger">
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>Xem danh sách thiếu hàng
                         </a>
                     </div>
-                    <div class="rounded-circle p-3 bg-danger text-white d-flex align-items-center justify-content-center avatar-56">
+                    <div class="rounded-circle p-3 bg-danger text-white d-flex align-items-center justify-content-center avatar-56 flex-shrink-0">
                         <i class="fa-solid fa-box-open h4 mb-0"></i>
                     </div>
                 </div>
@@ -159,14 +159,14 @@ $catColors = [
         <div class="col-12 col-sm-6 col-xl-3 mb-3">
             <div class="card card-pastel h-100 shadow-sm border-0">
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Khách Hàng Thành Viên</small>
                         <h4 class="font-weight-bold text-slate mb-1"><?= number_format($totalCustomers) ?> phụ huynh</h4>
-                        <span class="badge badge-pill badge-gold small">
+                        <span class="badge badge-pill badge-gold small badge-wrap-safe">
                             <i class="fa-solid fa-crown mr-1"></i><?= number_format($totalKolProfiles) ?> hồ sơ KOL Nhí
                         </span>
                     </div>
-                    <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center avatar-56">
+                    <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center avatar-56 flex-shrink-0">
                         <i class="fa-solid fa-award h4 mb-0 text-warning"></i>
                     </div>
                 </div>
@@ -178,14 +178,14 @@ $catColors = [
     <div class="row mb-4">
         <div class="col-12 col-xl-8 mb-4 mb-xl-0">
             <div class="card card-pastel shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h6 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-chart-column text-peach mr-2"></i>Biểu Đồ Doanh Thu 7 Ngày Gần Nhất (VNĐ)
                         </h6>
                         <small class="text-muted-custom">Tổng hợp giá trị đơn hàng hợp lệ phát sinh mỗi ngày</small>
                     </div>
-                    <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold">Đồng bộ trực tiếp</span>
+                    <span class="badge badge-pill badge-mint px-3 py-1 font-weight-bold text-nowrap flex-shrink-0">Đồng bộ trực tiếp</span>
                 </div>
                 <div class="card-body p-4 pt-2">
                     <div class="d-flex justify-content-between align-items-end pt-4 pb-2 text-center chart-container-220">
@@ -201,23 +201,23 @@ $catColors = [
                             $barColor  = $isToday ? 'bg-mint-soft' : ($isPeak ? 'bg-peach' : 'bg-sky');
                             $lblClass  = $isToday ? 'text-success' : ($isPeak ? 'text-peach' : 'text-muted-custom');
                         ?>
-                            <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center">
-                                <small class="font-weight-bold <?= $isPeak ? 'text-peach' : 'text-slate' ?> mb-1">
+                            <div class="flex-grow-1 mx-1 d-flex flex-column align-items-center min-w-0">
+                                <small class="font-weight-bold <?= $isPeak ? 'text-peach' : 'text-slate' ?> mb-1 text-nowrap">
                                     <?= htmlspecialchars(fkFormatCompactVnd($dayRev)) ?>
                                 </small>
                                 <div class="w-100 <?= $barColor ?> rounded-top"
                                      title="<?= htmlspecialchars($dayRow['label'] . ': ' . number_format($dayRev, 0, ',', '.') . ' đ (' . $dayOrders . ' đơn)') ?>"
                                      data-fk-height="<?= $barHeight ?>"></div>
-                                <small class="<?= $lblClass ?> mt-2 font-weight-bold">
+                                <small class="<?= $lblClass ?> mt-2 font-weight-bold text-nowrap">
                                     <?= htmlspecialchars($isToday ? ('Hôm nay') : $dayRow['label']) ?>
                                 </small>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 small text-muted-custom flex-wrap">
-                        <span><i class="fa-solid fa-circle text-sky mr-1"></i>Ngày trong tuần</span>
-                        <span><i class="fa-solid fa-circle text-peach mr-1"></i>Ngày doanh thu cao nhất</span>
-                        <span><i class="fa-solid fa-circle text-mint-dark mr-1"></i>Doanh thu hôm nay</span>
+                    <div class="d-flex justify-content-between align-items-center mt-3 small text-muted-custom flex-wrap fk-btn-toolbar">
+                        <span class="text-nowrap"><i class="fa-solid fa-circle text-sky mr-1"></i>Ngày trong tuần</span>
+                        <span class="text-nowrap"><i class="fa-solid fa-circle text-peach mr-1"></i>Ngày doanh thu cao nhất</span>
+                        <span class="text-nowrap"><i class="fa-solid fa-circle text-mint-dark mr-1"></i>Doanh thu hôm nay</span>
                     </div>
                 </div>
             </div>
@@ -239,9 +239,9 @@ $catColors = [
                         $styleMeta = $catColors[$cIdx % count($catColors)];
                     ?>
                         <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1 small font-weight-bold">
-                                <span><i class="fa-solid <?= $styleMeta['icon'] ?> mr-2"></i><?= htmlspecialchars((string)$catRow['ten_danh_muc']) ?></span>
-                                <span class="text-slate"><?= $pct ?>% (<?= htmlspecialchars(fkFormatCompactVnd($catRev)) ?> • <?= $catQty ?> SP)</span>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1 small font-weight-bold">
+                                <span class="min-w-0"><i class="fa-solid <?= $styleMeta['icon'] ?> mr-2"></i><?= htmlspecialchars((string)$catRow['ten_danh_muc']) ?></span>
+                                <span class="text-slate text-nowrap flex-shrink-0"><?= $pct ?>% (<?= htmlspecialchars(fkFormatCompactVnd($catRev)) ?> • <?= $catQty ?> SP)</span>
                             </div>
                             <div class="progress progress-sm">
                                 <div class="progress-bar <?= $styleMeta['bar'] ?>" role="progressbar" data-fk-width="<?= $pct ?>"></div>
@@ -262,14 +262,14 @@ $catColors = [
     <div class="row">
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm border-0">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h6 class="font-weight-bold text-slate mb-0">
                             <i class="fa-solid fa-receipt text-peach mr-2"></i>Đơn Hàng Mới Nhất Hệ Thống
                         </h6>
                         <small class="text-muted-custom">Theo dõi nhanh dòng tiền và chuyển sang xử lý chi tiết</small>
                     </div>
-                    <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+                    <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap flex-shrink-0">
                         Xem Tất Cả Đơn <i class="fa-solid fa-arrow-right ml-1"></i>
                     </a>
                 </div>
@@ -360,14 +360,14 @@ $catColors = [
         <!-- Bảng 2: Cảnh Báo Ngưỡng Tồn Kho Thấp -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm border-0">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h6 class="font-weight-bold text-danger mb-0">
                             <i class="fa-solid fa-triangle-exclamation mr-2"></i>Cảnh Báo Tồn Kho (&le; 5 Cái)
                         </h6>
                         <small class="text-muted-custom">Nhập bổ sung nhanh hoặc mở trang kho chi tiết</small>
                     </div>
-                    <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-peach">
+                    <a href="/FashionKids/views/pages/admin-inventory.php" class="small font-weight-bold text-peach text-nowrap flex-shrink-0">
                         Kho hàng <i class="fa-solid fa-arrow-right ml-1"></i>
                     </a>
                 </div>
@@ -385,14 +385,14 @@ $catColors = [
                             $sku    = 'FK-LBN-' . str_pad((string)$skuNum, 2, '0', STR_PAD_LEFT);
                             $qty    = (int)$lsp['so_luong_ton_kho'];
                         ?>
-                            <li class="list-group-item p-3 d-flex justify-content-between align-items-center" id="dash_lowStockRow_<?= $pid ?>">
-                                <div class="pr-2">
+                            <li class="list-group-item p-3 d-flex justify-content-between align-items-center fk-card-header-row" id="dash_lowStockRow_<?= $pid ?>">
+                                <div class="pr-2 min-w-0">
                                     <div class="font-weight-bold text-slate small"><?= htmlspecialchars((string)$lsp['ten_san_pham']) ?></div>
                                     <small class="text-muted-custom">
                                         Mã: <strong class="text-slate"><?= htmlspecialchars($sku) ?></strong> • Giá: <?= number_format((float)$lsp['gia_ban'], 0, ',', '.') ?> đ
                                     </small>
                                 </div>
-                                <div class="text-right text-nowrap">
+                                <div class="text-right text-nowrap flex-shrink-0">
                                     <span id="dash_stockBadge_<?= $pid ?>" class="badge lbn-badge-low-stock font-weight-bold px-2 py-1 d-block mb-1">
                                         Còn <?= $qty ?> cái
                                     </span>

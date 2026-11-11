@@ -29,12 +29,12 @@ foreach ($rawTiers as $rt) {
 ?>
 
 <div class="container-fluid my-4 px-lg-5" id="hgb_admin_users_section">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="fk-header-title-grow">
             <h4 class="font-weight-bold text-slate mb-1">Quản Trị Người Dùng &amp; Cấu Hình Hạng VIP</h4>
             <small class="text-muted-custom">Phân quyền vai trò hệ thống và thiết lập tỷ lệ chiết khấu thẻ thành viên</small>
         </div>
-        <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3">
+        <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap flex-shrink-0">
             <i class="fa-solid fa-arrow-left mr-1"></i> Bảng Điều Khiển
         </a>
     </div>
@@ -45,9 +45,9 @@ foreach ($rawTiers as $rt) {
         <!-- Cot 1: Danh Sach Tai Khoan Nguoi Dung -->
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold mb-0 text-slate">Danh Sách Tài Khoản Hệ Thống</h6>
-                    <span class="badge badge-pill badge-primary px-3 py-1"><?= count($users_list) ?> tài khoản</span>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold mb-0 text-slate fk-header-title-grow">Danh Sách Tài Khoản Hệ Thống</h6>
+                    <span class="badge badge-pill badge-primary px-3 py-1 text-nowrap flex-shrink-0"><?= count($users_list) ?> tài khoản</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -67,40 +67,40 @@ foreach ($rawTiers as $rt) {
                             <tbody>
                                 <?php foreach ($users_list as $u): ?>
                                     <tr>
-                                        <td class="font-weight-bold">#<?= $u['id'] ?></td>
+                                        <td class="font-weight-bold text-nowrap">#<?= $u['id'] ?></td>
                                         <td>
                                             <div class="font-weight-bold text-slate"><?= htmlspecialchars($u['name']) ?></div>
                                             <?php if (!empty($u['otp_verified'])): ?>
-                                                <span class="badge badge-mint small py-0 px-2 rounded-pill">Đã xác thực</span>
+                                                <span class="badge badge-mint small py-0 px-2 rounded-pill text-nowrap">Đã xác thực</span>
                                             <?php else: ?>
-                                                <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill">Chờ xác thực</span>
+                                                <span class="badge badge-warning text-dark small py-0 px-2 rounded-pill text-nowrap">Chờ xác thực</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <div class="small font-weight-bold"><?= htmlspecialchars($u['username']) ?></div>
                                             <small class="text-muted-custom"><?= htmlspecialchars($u['email']) ?></small>
                                         </td>
-                                        <td>
+                                        <td class="text-nowrap">
                                             <?php if ($u['role'] === 'quan_tri'): ?>
-                                                <span class="badge badge-danger px-2 py-1">Quản Trị</span>
+                                                <span class="badge badge-danger px-2 py-1 text-nowrap">Quản Trị</span>
                                             <?php elseif ($u['role'] === 'nhan_vien'): ?>
-                                                <span class="badge badge-info px-2 py-1">Nhân Viên</span>
+                                                <span class="badge badge-info px-2 py-1 text-nowrap">Nhân Viên</span>
                                             <?php else: ?>
-                                                <span class="badge badge-secondary px-2 py-1">Khách Hàng</span>
+                                                <span class="badge badge-secondary px-2 py-1 text-nowrap">Khách Hàng</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td>
+                                        <td class="text-nowrap">
                                             <strong><?= htmlspecialchars($u['tier']) ?></strong>
                                         </td>
-                                        <td class="text-right text-primary font-weight-bold"><?= number_format($u['points']) ?></td>
-                                        <td class="text-center" id="hgb_userStatusCell_<?= (int)$u['id'] ?>">
+                                        <td class="text-right text-primary font-weight-bold text-nowrap"><?= number_format($u['points']) ?></td>
+                                        <td class="text-center text-nowrap" id="hgb_userStatusCell_<?= (int)$u['id'] ?>">
                                             <?php if ($u['status'] == 1): ?>
-                                                <span class="badge badge-success badge-pill px-2 py-1">Hoạt động</span>
+                                                <span class="badge badge-success badge-pill px-2 py-1 text-nowrap">Hoạt động</span>
                                             <?php else: ?>
-                                                <span class="badge badge-danger badge-pill px-2 py-1">Đã khóa</span>
+                                                <span class="badge badge-danger badge-pill px-2 py-1 text-nowrap">Đã khóa</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center text-nowrap">
                                             <?php if ($u['role'] !== 'quan_tri'): ?>
                                                 <?php if ($u['status'] == 1): ?>
                                                     <button type="button"
@@ -140,11 +140,11 @@ foreach ($rawTiers as $rt) {
                     <form id="hgb_formVipTiers">
                         <?php foreach ($tiers as $t): ?>
                             <div class="p-3 mb-3 rounded bg-milk-cream border">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="font-weight-bold text-slate">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                                    <span class="font-weight-bold text-slate min-w-0">
                                         <i class="fa-solid fa-medal mr-1 text-peach"></i> Hạng <?= htmlspecialchars($t['name']) ?>
                                     </span>
-                                    <span class="badge <?= $t['badge'] ?> px-2 py-1">Cấp <?= (int)$t['id'] ?></span>
+                                    <span class="badge <?= $t['badge'] ?> px-2 py-1 text-nowrap flex-shrink-0">Cấp <?= (int)$t['id'] ?></span>
                                 </div>
                                 <div class="form-row">
                                     <div class="col-6">
