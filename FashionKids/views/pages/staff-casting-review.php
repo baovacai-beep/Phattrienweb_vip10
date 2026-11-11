@@ -165,7 +165,7 @@ foreach ($kolList as $k) {
                 $statusBadgeHtml = '<span class="badge badge-danger px-3 py-1 rounded-pill"><i class="fa-solid fa-ban mr-1"></i>Từ chối</span>';
             }
             ?>
-            <div class="col-12 col-md-6 col-lg-3 mb-4 fk-kol-card-col"
+            <div class="col-12 col-md-6 col-lg-4 mb-4 fk-kol-card-col"
                  id="fk_kolCard_<?= $kol['id'] ?>"
                  data-age="<?= htmlspecialchars($kol['age_group']) ?>"
                  data-status="<?= htmlspecialchars($kol['status']) ?>">

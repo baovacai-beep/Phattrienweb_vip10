@@ -12,7 +12,7 @@ $lnkt_kol_stars = [
         'talent' => 'Tạo dáng Lookbook, Biểu cảm tự nhiên trước ống kính',
         'badge'  => 'Quán Quân Mùa Xuân',
         'icon'   => 'fa-crown text-warning',
-        'image'  => '/FashionKids/images/banner-mua-he-2026.jpg'
+        'image'  => '/FashionKids/images/kol/kol-bao-an-sua.jpg'
     ],
     [
         'name'   => 'Bé Trần Minh Khôi (Bơ)',
@@ -21,16 +21,16 @@ $lnkt_kol_stars = [
         'talent' => 'Catwalk năng động, Nhảy hiện đại thiếu nhi',
         'badge'  => 'Gương Mặt Ấn Tượng',
         'icon'   => 'fa-star text-peach',
-        'image'  => '/FashionKids/images/banner-kol-nhi-2026.jpg'
+        'image'  => '/FashionKids/images/kol/kol-minh-khoi-bo.jpg'
     ],
     [
         'name'   => 'Bé Lê Hà My (Bông)',
-        'age'    => '2 tuổi 6 tháng',
-        'spec'   => 'Cao 89 cm • Nặng 12.8 kg',
-        'talent' => 'Cười tỏa nắng, Phối đồ Váy công chúa sợi tre',
+        'age'    => '5 tuổi',
+        'spec'   => 'Cao 112 cm • Nặng 19.2 kg',
+        'talent' => 'Cười tỏa nắng, Phối đồ bộ sợi tre thanh lịch',
         'badge'  => 'Thiên Thần Sợi Tre',
         'icon'   => 'fa-heart text-danger',
-        'image'  => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg'
+        'image'  => '/FashionKids/images/kol/kol-ha-my-bong.jpg'
     ]
 ];
 ?>
@@ -40,7 +40,7 @@ $lnkt_kol_stars = [
     <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5 mb-5 shadow-sm rounded-lg">
         <div class="row align-items-center">
             <div class="col-12 col-lg-8 mb-3 mb-lg-0">
-                <span class="badge badge-gold px-3 py-2 rounded-pill mb-2 shadow-sm">
+                <span class="badge badge-gold px-3 py-2 rounded-pill mb-2 shadow-sm badge-wrap-safe">
                     <i class="fa-solid fa-crown mr-1"></i>Chiến Dịch Tuyển Chọn Đại Sứ Thương Hiệu Nhí 2026
                 </span>
                 <h2 class="font-weight-bold text-slate mb-2">
@@ -232,21 +232,21 @@ $lnkt_kol_stars = [
                             <div id="lnkt_kolMediaPreviewList" class="row mx-n1 mt-2">
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Chân dung bé Sam" class="img-fluid rounded mb-1">
+                                        <img src="/FashionKids/images/kol/kol-bao-sam.jpg" alt="Chân dung bé Sam" class="img-fluid rounded mb-1 fk-kol-preview-img">
                                         <span class="font-weight-bold text-slate d-block text-truncate">1. Ảnh chân dung bé</span>
                                         <small class="text-success">Ảnh chân dung</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <img src="/FashionKids/images/vay-cong-chua-hoa-cuc.jpg" alt="Toàn thân váy sợi tre" class="img-fluid rounded mb-1">
+                                        <img src="/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg" alt="Toàn thân váy hoa cúc" class="img-fluid rounded mb-1 fk-kol-preview-img">
                                         <span class="font-weight-bold text-slate d-block text-truncate">2. Ảnh toàn thân trang phục</span>
                                         <small class="text-success">Ảnh toàn thân</small>
                                     </div>
                                 </div>
                                 <div class="col-4 px-1 mb-2">
                                     <div class="p-2 rounded border bg-milk-cream text-center small">
-                                        <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" alt="Góc nghiêng studio" class="img-fluid rounded mb-1">
+                                        <img src="/FashionKids/images/kol/kol-casting-studio-demo.jpg" alt="Góc nghiêng studio" class="img-fluid rounded mb-1 fk-kol-preview-img">
                                         <span class="font-weight-bold text-slate d-block text-truncate">3. Ảnh góc nghiêng tự nhiên</span>
                                         <small class="text-success">Góc tự nhiên</small>
                                     </div>
@@ -314,7 +314,7 @@ $lnkt_kol_stars = [
                 </h6>
                 <?php foreach ($lnkt_kol_stars as $star): ?>
                     <div class="p-3 rounded bg-milk-cream border mb-3 d-flex align-items-center">
-                        <span class="lbn-inv-thumb mr-3 flex-shrink-0">
+                        <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
                             <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
                         </span>
                         <div class="min-w-0">

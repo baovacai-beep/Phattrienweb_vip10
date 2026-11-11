@@ -1857,3 +1857,15 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.fk-kol-star-thumb img.lbn-thumb-img {
+    object-position: center top !important;
+}
+
+.fk-kol-preview-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}

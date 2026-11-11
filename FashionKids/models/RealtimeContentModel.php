@@ -442,6 +442,36 @@ class RealtimeContentModel extends BaseModel {
                     ]);
                 }
             }
+
+            $kolCount = (int)$this->db->query("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi`")->fetchColumn();
+            $kolLegacyCount = (int)$this->db->query("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi` WHERE `ma_ho_so` <= 6 AND (`danh_sach_anh` IS NULL OR `danh_sach_anh` LIKE '%uploads/casting/%' OR `danh_sach_anh` NOT LIKE '%/FashionKids/images/kol/%')")->fetchColumn();
+            if ($kolCount < 6 || $kolLegacyCount > 0) {
+                $kolDefaults = $this->getDefaultKolCandidates();
+                $kolStmt = $this->db->prepare("
+                    INSERT INTO `lnkt_dang_ky_kol_nhi`
+                        (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`)
+                    VALUES
+                        (:id, 3, :parent, :phone, :email, :baby, :dob, :gender, :h, :w, :photos, :talent, :status)
+                    ON DUPLICATE KEY UPDATE
+                        `danh_sach_anh` = IF(`danh_sach_anh` IS NULL OR `danh_sach_anh` LIKE '%uploads/casting/%' OR `danh_sach_anh` NOT LIKE '%/FashionKids/images/kol/%', VALUES(`danh_sach_anh`), `danh_sach_anh`)
+                ");
+                foreach ($kolDefaults as $kol) {
+                    $kolStmt->execute([
+                        ':id'     => $kol['id'],
+                        ':parent' => $kol['guardian_name'],
+                        ':phone'  => $kol['phone'],
+                        ':email'  => 'kol' . $kol['id'] . '@fashionkids.vn',
+                        ':baby'   => $kol['baby_name'],
+                        ':dob'    => $kol['birth_date'],
+                        ':gender' => $kol['gender'],
+                        ':h'      => $kol['height_cm'],
+                        ':w'      => $kol['weight_kg'],
+                        ':photos' => json_encode($kol['photos'], JSON_UNESCAPED_SLASHES),
+                        ':talent' => $kol['talent'],
+                        ':status' => $kol['status']
+                    ]);
+                }
+            }
         } catch (PDOException $e) {
             // Bỏ qua nếu chưa có bảng
         }
@@ -1256,23 +1286,61 @@ class RealtimeContentModel extends BaseModel {
      * PHÂN HỆ 3: LỊCH SỰ KIỆN & TUYỂN CHỌN KOL NHÍ (lnkt_dang_ky_kol_nhi)
      * ========================================================================
      */
-    public function getKolApplications(): array {
-        $list = [
+    private function resolveKolImages(?string $danhSachAnhJson, int $id, string $gender, array $defaultMap): array {
+        $resolved = [];
+        $baseDir = dirname(__DIR__);
+        if (!empty($danhSachAnhJson)) {
+            $decoded = json_decode($danhSachAnhJson, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $rawPath) {
+                    $p = trim((string)$rawPath);
+                    if ($p === '') {
+                        continue;
+                    }
+                    if (preg_match('#^https?://#i', $p)) {
+                        $resolved[] = $p;
+                        continue;
+                    }
+                    $rel = preg_replace('#^/?FashionKids/#i', '', ltrim($p, '/'));
+                    $diskPath = $baseDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+                    if (is_file($diskPath)) {
+                        $resolved[] = '/FashionKids/' . $rel;
+                    }
+                }
+            }
+        }
+        if (!empty($resolved)) {
+            return $resolved;
+        }
+        if (!empty($defaultMap[$id]['image'])) {
+            return [$defaultMap[$id]['image']];
+        }
+        return [
+            $gender === 'be_trai'
+                ? '/FashionKids/images/kol/kol-minh-khoi-bo.jpg'
+                : '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg',
+            '/FashionKids/images/kol/kol-casting-studio-demo.jpg'
+        ];
+    }
+
+    public function getDefaultKolCandidates(): array {
+        return [
             1 => [
                 'id'            => 1,
                 'code'          => 'KOL-2026-01',
-                'baby_name'     => 'Bé Nguyễn Bảo An (Sữa)',
-                'birth_date'    => '2022-07-15',
+                'baby_name'     => 'Bé Hồ Bảo Sam (Sam)',
+                'birth_date'    => '2022-05-15',
                 'age_label'     => '4 tuổi',
                 'age_group'     => '3_4',
                 'gender'        => 'be_gai',
-                'height_cm'     => 102,
-                'weight_kg'     => 16.0,
-                'guardian_name' => 'Chị Minh Thư',
-                'phone'         => '0908112233',
-                'talent'        => 'Biểu cảm tự nhiên trước ống kính, yêu thích đầm công chúa sợi tre',
-                'image'         => '/FashionKids/images/vay-cong-chua-no-pastel.jpg',
-                'status'        => 'cho_duyet'
+                'height_cm'     => 96.5,
+                'weight_kg'     => 14.2,
+                'guardian_name' => 'Võ Thị Thanh Thảo',
+                'phone'         => '0918889999',
+                'talent'        => 'Bé dạn dĩ trước máy ảnh, thích tạo dáng công chúa lookbook',
+                'image'         => '/FashionKids/images/kol/kol-bao-sam.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-bao-sam.jpg', '/FashionKids/images/kol/kol-casting-studio-demo.jpg'],
+                'status'        => 'moi_phong_van'
             ],
             2 => [
                 'id'            => 2,
@@ -1287,7 +1355,8 @@ class RealtimeContentModel extends BaseModel {
                 'guardian_name' => 'Anh Hoàng Nam',
                 'phone'         => '0912445566',
                 'talent'        => 'Cười tươi tỏa nắng, năng động trong trang phục bộ thun khủng long',
-                'image'         => '/FashionKids/images/bo-thun-khung-long.jpg',
+                'image'         => '/FashionKids/images/kol/kol-gia-huy-ken.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-gia-huy-ken.jpg'],
                 'status'        => 'moi_phong_van'
             ],
             3 => [
@@ -1303,30 +1372,70 @@ class RealtimeContentModel extends BaseModel {
                 'guardian_name' => 'Chị Thanh Hà',
                 'phone'         => '0989778899',
                 'talent'        => 'Catwalk thiếu nhi chuyên nghiệp, từng chụp Lookbook thời trang',
-                'image'         => '/FashionKids/images/banner-kol-nhi-2026.jpg',
+                'image'         => '/FashionKids/images/kol/kol-ha-my-bong.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-ha-my-bong.jpg'],
                 'status'        => 'trung_tuyen'
             ],
             4 => [
                 'id'            => 4,
                 'code'          => 'KOL-2026-04',
-                'baby_name'     => 'Bé Hồ Bảo Sam (Sam)',
+                'baby_name'     => 'Bé Nguyễn Bảo An (Sữa)',
                 'birth_date'    => '2023-05-15',
                 'age_label'     => '3 tuổi',
                 'age_group'     => '3_4',
                 'gender'        => 'be_gai',
-                'height_cm'     => 96.5,
-                'weight_kg'     => 14.2,
-                'guardian_name' => 'Võ Thị Thanh Thảo',
-                'phone'         => '0918889999',
-                'talent'        => 'Bé dạn dĩ trước máy ảnh, thích tạo dáng công chúa Lookbook',
-                'image'         => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
+                'height_cm'     => 96,
+                'weight_kg'     => 14.5,
+                'guardian_name' => 'Chị Minh Thư',
+                'phone'         => '0908112233',
+                'talent'        => 'Biểu cảm rạng rỡ tự nhiên, hợp các bộ sưu tập đầm hè sợi tre Bright Pastel',
+                'image'         => '/FashionKids/images/kol/kol-bao-an-sua.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-bao-an-sua.jpg'],
+                'status'        => 'cho_duyet'
+            ],
+            5 => [
+                'id'            => 5,
+                'code'          => 'KOL-2026-05',
+                'baby_name'     => 'Bé Trần Minh Khôi (Bơ)',
+                'birth_date'    => '2021-11-08',
+                'age_label'     => '5 tuổi',
+                'age_group'     => '5_6',
+                'gender'        => 'be_trai',
+                'height_cm'     => 108,
+                'weight_kg'     => 17.5,
+                'guardian_name' => 'Chị Lan Hương',
+                'phone'         => '0934556677',
+                'talent'        => 'Phong thái mini-runway tự tin, phối đồ áo cardigan sợi tre thanh lịch',
+                'image'         => '/FashionKids/images/kol/kol-minh-khoi-bo.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-minh-khoi-bo.jpg'],
+                'status'        => 'trung_tuyen'
+            ],
+            6 => [
+                'id'            => 6,
+                'code'          => 'KOL-2026-06',
+                'baby_name'     => 'Bé Phạm Thảo Chi (Mây)',
+                'birth_date'    => '2023-08-20',
+                'age_label'     => '3 tuổi',
+                'age_group'     => '3_4',
+                'gender'        => 'be_gai',
+                'height_cm'     => 94,
+                'weight_kg'     => 13.8,
+                'guardian_name' => 'Chị Thu Trang',
+                'phone'         => '0977223344',
+                'talent'        => 'Nét dịu dàng trong veo, hợp chụp Lookbook váy công chúa cổ sen hoa cúc',
+                'image'         => '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg'],
                 'status'        => 'cho_duyet'
             ]
         ];
+    }
+
+    public function getKolApplications(): array {
+        $list = $this->getDefaultKolCandidates();
 
         if ($this->hasConnection()) {
             try {
-                $rows = $this->db->query("SELECT * FROM `lnkt_dang_ky_kol_nhi` ORDER BY `ma_ho_so` DESC")->fetchAll();
+                $rows = $this->db->query("SELECT * FROM `lnkt_dang_ky_kol_nhi` ORDER BY `ma_ho_so` ASC")->fetchAll();
                 foreach ($rows as $r) {
                     $id = (int)$r['ma_ho_so'];
                     $years = 3;
@@ -1337,7 +1446,8 @@ class RealtimeContentModel extends BaseModel {
                     if ($years <= 2) $ageGroup = '1_2';
                     elseif ($years >= 5) $ageGroup = '5_6';
 
-                    $img = $list[$id]['image'] ?? '/FashionKids/images/banner-mua-he-2026.jpg';
+                    $gender = (string)($r['gioi_tinh_be'] ?? 'be_gai');
+                    $resolvedPhotos = $this->resolveKolImages($r['danh_sach_anh'] ?? null, $id, $gender, $list);
                     $list[$id] = [
                         'id'            => $id,
                         'code'          => 'KOL-2026-' . str_pad((string)$id, 2, '0', STR_PAD_LEFT),
@@ -1345,13 +1455,14 @@ class RealtimeContentModel extends BaseModel {
                         'birth_date'    => $r['ngay_sinh_be'],
                         'age_label'     => $years . ' tuổi',
                         'age_group'     => $ageGroup,
-                        'gender'        => $r['gioi_tinh_be'],
+                        'gender'        => $gender,
                         'height_cm'     => (float)$r['chieu_cao_be'],
                         'weight_kg'     => (float)$r['can_nang_be'],
                         'guardian_name' => $r['ho_ten_phu_huynh'],
                         'phone'         => $r['so_dien_thoai'],
                         'talent'        => $r['nang_khieu_kinh_nghiem'] ?: 'Tự tin tạo dáng trước ống kính',
-                        'image'         => $img,
+                        'image'         => $resolvedPhotos[0],
+                        'photos'        => $resolvedPhotos,
                         'status'        => $r['trang_thai_duyet']
                     ];
                 }
@@ -1429,6 +1540,40 @@ class RealtimeContentModel extends BaseModel {
         $talents      = trim($data['talents'] ?? 'Tự tin tạo dáng chụp Lookbook');
         $userId       = isset($_SESSION['user']['ma_nguoi_dung']) ? (int)$_SESSION['user']['ma_nguoi_dung'] : 3;
 
+        $photoList = [];
+        if (!empty($_FILES['kol_photos']['name']) && is_array($_FILES['kol_photos']['name'])) {
+            $uploadDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'kol' . DIRECTORY_SEPARATOR . 'uploads';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+            $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+            foreach ($_FILES['kol_photos']['name'] as $idx => $origName) {
+                $err = $_FILES['kol_photos']['error'][$idx] ?? UPLOAD_ERR_NO_FILE;
+                $tmp = $_FILES['kol_photos']['tmp_name'][$idx] ?? '';
+                $size = (int)($_FILES['kol_photos']['size'][$idx] ?? 0);
+                if ($err !== UPLOAD_ERR_OK || $tmp === '' || !is_uploaded_file($tmp) || $size <= 0 || $size > 5 * 1024 * 1024) {
+                    continue;
+                }
+                $ext = strtolower(pathinfo((string)$origName, PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowedExt, true) || @getimagesize($tmp) === false) {
+                    continue;
+                }
+                $safeFile = 'kol_upload_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+                if (@move_uploaded_file($tmp, $uploadDir . DIRECTORY_SEPARATOR . $safeFile)) {
+                    $photoList[] = '/FashionKids/images/kol/uploads/' . $safeFile;
+                }
+                if (count($photoList) >= 5) {
+                    break;
+                }
+            }
+        }
+
+        if (empty($photoList)) {
+            $photoList = ($gender === 'be_trai')
+                ? ['/FashionKids/images/kol/kol-minh-khoi-bo.jpg', '/FashionKids/images/kol/kol-gia-huy-ken.jpg', '/FashionKids/images/kol/kol-casting-studio-demo.jpg']
+                : ['/FashionKids/images/kol/kol-bao-sam.jpg', '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg', '/FashionKids/images/kol/kol-casting-studio-demo.jpg'];
+        }
+
         $newId = rand(10, 99);
         if ($this->hasConnection()) {
             try {
@@ -1448,7 +1593,7 @@ class RealtimeContentModel extends BaseModel {
                     ':gender' => $gender,
                     ':h'      => $heightCm,
                     ':w'      => $weightKg,
-                    ':photos' => json_encode(['/FashionKids/images/banner-mua-he-2026.jpg', '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg']),
+                    ':photos' => json_encode($photoList, JSON_UNESCAPED_SLASHES),
                     ':talent' => $talents
                 ]);
                 $newId = (int)$this->db->lastInsertId();
@@ -1461,6 +1606,8 @@ class RealtimeContentModel extends BaseModel {
             'baby_name' => $babyName,
             'height_cm' => $heightCm,
             'weight_kg' => $weightKg,
+            'image'     => $photoList[0],
+            'photos'    => $photoList,
             'talent'    => $talents,
             'status'    => 'cho_duyet'
         ];

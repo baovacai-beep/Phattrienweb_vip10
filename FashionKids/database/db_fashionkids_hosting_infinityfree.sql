@@ -317,8 +317,13 @@ INSERT INTO `lnkt_banner_su_kien` (`ma_banner`, `tieu_de`, `duong_dan_anh`, `duo
 ON DUPLICATE KEY UPDATE `tieu_de`=VALUES(`tieu_de`);
 
 INSERT INTO `lnkt_dang_ky_kol_nhi` (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`) VALUES
-(1, 3, 'Võ Thị Thanh Thảo', '0918889999', 'thanhthao@gmail.com', 'Hồ Bảo Sam', '2022-05-15', 'be_gai', 96.5, 14.2, '["uploads/casting/sam_1.jpg", "uploads/casting/sam_2.jpg"]', 'Bé dạn dĩ trước máy ảnh, thích tạo dáng công chúa lookbook', 'cho_duyet')
-ON DUPLICATE KEY UPDATE `ho_ten_phu_huynh`=VALUES(`ho_ten_phu_huynh`);
+(1, 3, 'Võ Thị Thanh Thảo', '0918889999', 'thanhthao@gmail.com', 'Bé Hồ Bảo Sam (Sam)', '2022-05-15', 'be_gai', 96.5, 14.2, '["/FashionKids/images/kol/kol-bao-sam.jpg", "/FashionKids/images/kol/kol-casting-studio-demo.jpg"]', 'Bé dạn dĩ trước máy ảnh, thích tạo dáng công chúa lookbook', 'cho_duyet'),
+(2, 3, 'Anh Hoàng Nam', '0912445566', 'hoangnam@gmail.com', 'Bé Trần Gia Huy (Ken)', '2024-02-10', 'be_trai', 88.0, 12.5, '["/FashionKids/images/kol/kol-gia-huy-ken.jpg"]', 'Cười tươi tỏa nắng, năng động trong trang phục bộ thun khủng long', 'moi_phong_van'),
+(3, 3, 'Chị Thanh Hà', '0989778899', 'thanhha@gmail.com', 'Bé Lê Hà My (Bông)', '2021-04-20', 'be_gai', 112.0, 19.2, '["/FashionKids/images/kol/kol-ha-my-bong.jpg"]', 'Catwalk thiếu nhi chuyên nghiệp, từng chụp Lookbook thời trang', 'trung_tuyen'),
+(4, 3, 'Chị Minh Thư', '0908112233', 'minhthu@gmail.com', 'Bé Nguyễn Bảo An (Sữa)', '2023-05-15', 'be_gai', 96.0, 14.5, '["/FashionKids/images/kol/kol-bao-an-sua.jpg"]', 'Biểu cảm rạng rỡ tự nhiên, hợp các bộ sưu tập đầm hè sợi tre Bright Pastel', 'cho_duyet'),
+(5, 3, 'Chị Lan Hương', '0934556677', 'lanhuong@gmail.com', 'Bé Trần Minh Khôi (Bơ)', '2021-11-08', 'be_trai', 108.0, 17.5, '["/FashionKids/images/kol/kol-minh-khoi-bo.jpg"]', 'Phong thái mini-runway tự tin, phối đồ áo cardigan sợi tre thanh lịch', 'trung_tuyen'),
+(6, 3, 'Chị Thu Trang', '0977223344', 'thutrang@gmail.com', 'Bé Phạm Thảo Chi (Mây)', '2023-08-20', 'be_gai', 94.0, 13.8, '["/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg"]', 'Nét dịu dàng trong veo, hợp chụp Lookbook váy công chúa cổ sen hoa cúc', 'cho_duyet')
+ON DUPLICATE KEY UPDATE `ho_ten_phu_huynh`=VALUES(`ho_ten_phu_huynh`), `danh_sach_anh`=VALUES(`danh_sach_anh`);
 
 INSERT INTO `tgb_tin_nhan_tu_van` (`ma_tin_nhan`, `ma_phien_khach`, `ma_nguoi_dung`, `nguoi_gui`, `noi_dung_tin_nhan`, `da_xem`) VALUES
 (1, 'sess_guest_123456', NULL, 'khach_hang', 'Shop ơi cho mình hỏi bé cao 92cm nặng 13kg mặc váy Elsa size mấy thì vừa ạ?', 1),

@@ -2998,22 +2998,61 @@ $(document).ready(function () {
 
         Array.from(fileList).slice(0, 5).forEach(function (file, idx) {
             let col = $('<div class="col-4 px-1 mb-2"></div>');
-            col.html(
-                '<div class="p-2 rounded border bg-milk-cream text-center small">' +
-                '<i class="fa-solid fa-image text-peach h4 mb-1 d-block"></i>' +
-                '<span class="font-weight-bold text-slate d-block text-truncate">' + (idx + 1) + '. ' + file.name + '</span>' +
-                '<small class="text-muted-custom">' + Math.round(file.size / 1024) + ' KB</small>' +
-                '</div>'
-            );
+            let card = $('<div class="p-2 rounded border bg-milk-cream text-center small"></div>');
+            let objectUrl = (window.URL && URL.createObjectURL && file.type && file.type.indexOf('image/') === 0)
+                ? URL.createObjectURL(file)
+                : '';
+
+            if (objectUrl) {
+                let imgEl = $('<img>')
+                    .attr('src', objectUrl)
+                    .attr('alt', file.name || ('Ảnh ứng tuyển ' + (idx + 1)))
+                    .addClass('img-fluid rounded mb-1 fk-kol-preview-img');
+                card.append(imgEl);
+            } else {
+                card.append('<i class="fa-solid fa-image text-peach h4 mb-1 d-block"></i>');
+            }
+
+            let nameEl = $('<span class="font-weight-bold text-slate d-block text-truncate"></span>')
+                .text((idx + 1) + '. ' + (file.name || 'Anh_be.jpg'));
+            let sizeEl = $('<small class="text-muted-custom"></small>')
+                .text(Math.round((file.size || 0) / 1024) + ' KB');
+
+            card.append(nameEl, sizeEl);
+            col.append(card);
             previewContainer.append(col);
         });
     };
 
     window.lnktUseDemoKolPhotos = function () {
+        let inputEl = document.getElementById('lnkt_kolMediaInput');
+        if (inputEl) {
+            inputEl.value = '';
+        }
         $('#lnkt_kolPhotoCount').val(3);
         $('#lnkt_kolMediaStatusTitle').html(
             '<span class="text-success"><i class="fa-solid fa-circle-check mr-1"></i>Đã đính kèm 3 ảnh mẫu chân dung & toàn thân hợp lệ (2 - 5 ảnh)</span>'
         );
+        const demoItems = [
+            { src: '/FashionKids/images/kol/kol-bao-sam.jpg', title: '1. Ảnh chân dung bé', tag: 'Ảnh chân dung', alt: 'Chân dung bé Sam' },
+            { src: '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg', title: '2. Ảnh toàn thân trang phục', tag: 'Ảnh toàn thân', alt: 'Toàn thân váy hoa cúc' },
+            { src: '/FashionKids/images/kol/kol-casting-studio-demo.jpg', title: '3. Ảnh góc nghiêng tự nhiên', tag: 'Góc tự nhiên', alt: 'Ảnh casting studio tự nhiên' }
+        ];
+        let previewContainer = $('#lnkt_kolMediaPreviewList');
+        if (previewContainer.length) {
+            previewContainer.empty();
+            demoItems.forEach(function (item) {
+                let col = $('<div class="col-4 px-1 mb-2"></div>');
+                col.html(
+                    '<div class="p-2 rounded border bg-milk-cream text-center small">' +
+                    '<img src="' + item.src + '" alt="' + item.alt + '" class="img-fluid rounded mb-1 fk-kol-preview-img">' +
+                    '<span class="font-weight-bold text-slate d-block text-truncate">' + item.title + '</span>' +
+                    '<small class="text-success">' + item.tag + '</small>' +
+                    '</div>'
+                );
+                previewContainer.append(col);
+            });
+        }
     };
 
     $('#lnkt_formKolCasting').off('submit').on('submit', function (e) {
@@ -3045,11 +3084,14 @@ $(document).ready(function () {
         let origBtnHtml = $btn.html();
         $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang gửi hồ sơ...');
 
+        let formData = new FormData(this);
         $.ajax({
             url: '/FashionKids/index.php?c=home&a=ajaxSubmitKolCasting',
             type: 'POST',
             dataType: 'json',
-            data: $form.serialize(),
+            data: formData,
+            processData: false,
+            contentType: false,
             complete: function () {
                 $btn.prop('disabled', false).html(origBtnHtml);
             },
