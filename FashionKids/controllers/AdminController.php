@@ -410,4 +410,38 @@ class AdminController extends Controller {
             'message'    => 'Đã xóa bài viết #' . $articleId . ' khỏi hệ thống Tạp chí thành công!'
         ]);
     }
+
+    /**
+     * AJAX Lấy danh sách yêu cầu hoàn hàng / trả hàng (MH 12 Tab Hoàn hàng) - Admin & Nhân viên
+     */
+    public function ajaxGetReturnRequests(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri', 'nhan_vien'],
+            'Chỉ Quản trị viên và Nhân viên vận hành mới được phép xem danh sách hoàn hàng!'
+        );
+
+        require_once __DIR__ . '/OrderController.php';
+        $orderCtrl = new OrderController();
+        $orderCtrl->ajaxGetReturnRequests();
+    }
+
+    /**
+     * AJAX Xử lý hoàn hàng / trả hàng (duyệt, từ chối, đang thu hồi, hoàn tất hoàn tiền & nhập kho)
+     */
+    public function ajaxProcessReturn(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['quan_tri', 'nhan_vien'],
+            'Chỉ Quản trị viên và Nhân viên vận hành mới được phép xử lý hoàn hàng!'
+        );
+
+        require_once __DIR__ . '/OrderController.php';
+        $orderCtrl = new OrderController();
+        $orderCtrl->ajaxProcessReturn();
+    }
 }

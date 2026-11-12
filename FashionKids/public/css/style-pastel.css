@@ -238,40 +238,40 @@ body {
 @media (min-width: 992px) and (max-width: 1199.98px) {
     .fk-navbar-container {
         max-width: 100%;
-        padding-left: 16px;
-        padding-right: 16px;
+        padding-left: 14px;
+        padding-right: 14px;
     }
     .navbar-custom .brand-logo {
-        font-size: 1.28rem;
+        font-size: 1.2rem;
     }
     .navbar-custom .fk-brand-logo {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
     }
     .fk-nav-search {
-        flex: 1 1 165px;
-        min-width: 150px;
+        flex: 1 1 175px;
+        min-width: 170px;
         max-width: 270px;
     }
     .fk-search-group .search-input-custom {
-        padding: 6px 8px 6px 13px;
-        font-size: 0.86rem;
+        padding: 6px 8px 6px 12px;
+        font-size: 0.85rem;
     }
     .fk-search-group .search-btn-custom {
-        padding: 0 11px !important;
+        padding: 0 10px !important;
     }
     .fk-nav-link {
-        font-size: 0.86rem;
-        padding-left: 0.42rem !important;
-        padding-right: 0.42rem !important;
+        font-size: 0.84rem;
+        padding-left: 0.34rem !important;
+        padding-right: 0.34rem !important;
     }
     .fk-btn-cart,
     .fk-btn-user {
-        padding: 0.36rem 0.68rem !important;
-        font-size: 0.83rem;
+        padding: 0.34rem 0.58rem !important;
+        font-size: 0.82rem;
     }
     .fk-user-name-truncate {
-        max-width: 82px;
+        max-width: 66px;
     }
 }
 @media (min-width: 1200px) {
@@ -810,6 +810,19 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.lnkt-hero-carousel .carousel-control-prev,
+.lnkt-hero-carousel .carousel-control-next {
+    width: 52px;
+    z-index: 6;
+}
+
+@media (min-width: 768px) {
+    .lnkt-hero-slide {
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
+    }
 }
 
 /* MH 01: Cum Nut Tron Chon Danh Muc BST (Be Gai, Be Trai, Giay dep) */
@@ -1868,4 +1881,189 @@ body {
     object-fit: cover;
     object-position: center top;
     display: block;
+}
+
+/* ==========================================================================
+   YÊU CẦU 1 - 4: NHÃN CHƯA CÓ ĐÁNH GIÁ, SỐ NGƯỜI MUA & LUỒNG HOÀN TRẢ HÀNG
+   ========================================================================== */
+.fk-compact-table th,
+.fk-compact-table td {
+    padding: 0.55rem 0.42rem;
+    font-size: 0.85rem;
+}
+
+.fk-ellipsis-150 {
+    max-width: 145px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fk-no-review-badge {
+    background-color: #F6F3EE;
+    color: #6B7280;
+    border: 1px solid #E8E1D7;
+    font-weight: 600;
+    font-size: 0.68rem;
+    padding: 0.16rem 0.45rem;
+}
+
+.fk-buyer-count-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #5A6275;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.lnkt-return-modal-hdr {
+    background: linear-gradient(135deg, #FFF0ED 0%, #EAF7F2 100%);
+}
+
+.lnkt-return-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EAE2D6;
+    border-left: 4px solid #FF8A7A;
+}
+
+.lnkt-return-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    gap: 8px;
+}
+
+.lnkt-return-step {
+    flex: 1 1 0;
+    text-align: center;
+    position: relative;
+    padding: 0 4px;
+    z-index: 1;
+}
+
+.lnkt-return-step::before {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: -50%;
+    width: 100%;
+    height: 3px;
+    background-color: #E5E7EB;
+    z-index: -1;
+}
+
+.lnkt-return-step:first-child::before {
+    display: none;
+}
+
+.lnkt-return-step-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F3F4F6;
+    color: #9CA3AF;
+    border: 2px solid #E5E7EB;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.lnkt-return-step.done::before,
+.lnkt-return-step.active::before {
+    background-color: #8CD3C5;
+}
+
+.lnkt-return-step.done .lnkt-return-step-dot {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border-color: #6EE7B7;
+}
+
+.lnkt-return-step.active .lnkt-return-step-dot {
+    background-color: #FF8A7A;
+    color: #FFFFFF;
+    border-color: #FF8A7A;
+    box-shadow: 0 0 0 4px rgba(255, 138, 122, 0.2);
+}
+
+.lnkt-return-step.rejected .lnkt-return-step-dot {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+    border-color: #FCA5A5;
+}
+
+.lnkt-return-reject-box {
+    background-color: #FFF5F5;
+    border: 1px solid #FED7D7;
+    border-left: 4px solid #E53E3E;
+    color: #742A2A;
+}
+
+.lnkt-return-thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.lnkt-return-thumb:hover {
+    transform: scale(1.06);
+}
+
+.lnkt-return-preview-item {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid #FFD6CF;
+}
+
+.lnkt-lightbox-img {
+    max-height: 75vh;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.fk-nav-pills-pastel .nav-link {
+    border-radius: 999px;
+    color: #4A5568;
+    background-color: #FFFFFF;
+    border: 1px solid #E8E1D7;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.45rem 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.fk-nav-pills-pastel .nav-link.active {
+    background-color: #FF8A7A;
+    border-color: #FF8A7A;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(255, 138, 122, 0.28);
+}
+
+@media (max-width: 575.98px) {
+    .lnkt-return-stepper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .lnkt-return-step {
+        width: 100%;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .lnkt-return-step::before {
+        display: none;
+    }
 }

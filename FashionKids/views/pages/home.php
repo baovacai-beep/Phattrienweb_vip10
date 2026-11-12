@@ -259,9 +259,15 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                         <div class="card-body d-flex flex-column p-3 min-w-0">
                             <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
                                 <small class="text-muted-custom font-weight-bold"><?= htmlspecialchars($prod['category_name']) ?></small>
-                                <span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">
-                                    <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?> (<?= (int)$prod['reviews'] ?>)
-                                </span>
+                                <?php if ((int)($prod['reviews'] ?? 0) > 0): ?>
+                                    <span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">
+                                        <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?> (<?= (int)$prod['reviews'] ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge badge-pill fk-no-review-badge text-nowrap flex-shrink-0">
+                                        Chưa có đánh giá
+                                    </span>
+                                <?php endif; ?>
                             </div>
 
                             <h6 class="font-weight-bold text-slate mb-2">
@@ -270,11 +276,16 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                                 </a>
                             </h6>
 
-                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-3">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-2">
                                 <span class="text-nowrap">Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong></span>
                                 <a href="javascript:void(0)" data-toggle="modal" data-target="#modalSuggestSize" class="text-peach font-weight-bold text-decoration-none text-nowrap">
                                     <i class="fa-solid fa-ruler-horizontal mr-1"></i><?= htmlspecialchars($prod['size_range']) ?>
                                 </a>
+                            </div>
+                            <div class="mb-3">
+                                <span class="fk-buyer-count-pill">
+                                    <i class="fa-solid fa-bag-shopping text-peach mr-1"></i><?= (int)($prod['buyer_count'] ?? 0) ?> người mua
+                                </span>
                             </div>
 
                             <div class="mt-auto pt-2 border-top d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">

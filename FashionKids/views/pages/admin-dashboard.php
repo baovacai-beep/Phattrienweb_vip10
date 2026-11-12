@@ -5,8 +5,12 @@ require_once __DIR__ . "/../layouts/navbar.php";
 Rbac::enforceCurrentViewAccess();
 require_once __DIR__ . "/../../models/OrderModel.php";
 
-$dashOrderModel = new OrderModel();
-$dashData       = $dashOrderModel->getAdminDashboardData();
+$dashOrderModel       = new OrderModel();
+$dashData             = $dashOrderModel->getAdminDashboardData();
+$lnkt_return_requests = $dashOrderModel->getAllReturnRequests('all', '');
+$returnCounts         = $dashData['return_counts'] ?? $dashOrderModel->getReturnStatusCounts();
+$pendingReturnCount   = (int)($returnCounts['cho_duyet_hoan'] ?? 0);
+$initTabReturns       = (($_GET['tab'] ?? '') === 'returns');
 
 $completedRevenue  = (float)($dashData['completed_revenue'] ?? 0);
 $pipelineRevenue   = (float)($dashData['pipeline_revenue'] ?? 0);
@@ -102,6 +106,36 @@ $catColors = [
             </a>
         </div>
     </div>
+
+    <!-- Thanh chuyển Tab: Tổng quan hệ thống & Quản lý hoàn hàng -->
+    <ul class="nav nav-pills fk-nav-pills-pastel mb-3" id="admin_dashTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link <?= $initTabReturns ? '' : 'active' ?>"
+               id="admin_tabOverviewLink"
+               data-toggle="pill"
+               href="#tab-overview"
+               role="tab"
+               aria-controls="tab-overview"
+               aria-selected="<?= $initTabReturns ? 'false' : 'true' ?>">
+                <i class="fa-solid fa-chart-line mr-1"></i>Tổng Quan Kinh Doanh &amp; Kho
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link <?= $initTabReturns ? 'active' : '' ?>"
+               id="admin_tabReturnsLink"
+               data-toggle="pill"
+               href="#tab-return-requests"
+               role="tab"
+               aria-controls="tab-return-requests"
+               aria-selected="<?= $initTabReturns ? 'true' : 'false' ?>">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Quản lý Hoàn hàng &amp; Trả hàng
+                <span id="lnkt_pendingReturnBadge" class="badge badge-pill badge-danger ml-1 <?= $pendingReturnCount > 0 ? '' : 'd-none' ?>"><?= $pendingReturnCount ?></span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="admin_dashTabContent">
+        <div class="tab-pane fade <?= $initTabReturns ? '' : 'show active' ?>" id="tab-overview" role="tabpanel" aria-labelledby="admin_tabOverviewLink">
 
     <!-- Hàng 4 Card KPI Thực Tế Từ CSDL -->
     <div class="row mb-4">
@@ -412,6 +446,12 @@ $catColors = [
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+        </div>
+
+        <div class="tab-pane fade <?= $initTabReturns ? 'show active' : '' ?>" id="tab-return-requests" role="tabpanel" aria-labelledby="admin_tabReturnsLink">
+            <?php require __DIR__ . "/../partials/return-management-panel.php"; ?>
         </div>
     </div>
 </div>

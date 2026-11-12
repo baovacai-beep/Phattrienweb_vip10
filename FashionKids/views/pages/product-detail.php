@@ -39,9 +39,9 @@ $lbn_products = [
         'price'          => 285000,
         'original_price' => 340000,
         'stock_quantity' => 18,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 420,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Tự Nhiên',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -72,9 +72,9 @@ $lbn_products = [
         'price'          => 225000,
         'original_price' => 280000,
         'stock_quantity' => 24,
-        'rating'         => 4.8,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 560,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Bamboo Thoáng Khí Làm Mát -3°C',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -105,9 +105,9 @@ $lbn_products = [
         'price'          => 210000,
         'original_price' => 260000,
         'stock_quantity' => 14,
-        'rating'         => 5.0,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 310,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Khử Mùi & Đế Uốn Gập 360°',
         'size_range'     => ['Size 21 (12cm)', 'Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)'],
@@ -138,9 +138,9 @@ $lbn_products = [
         'price'          => 320000,
         'original_price' => 380000,
         'stock_quantity' => 5,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 185,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Dệt Kim UPF 50+ Chống Tia Cực Tím',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -170,9 +170,9 @@ $lbn_products = [
         'price'          => 365000,
         'original_price' => 420000,
         'stock_quantity' => 11,
-        'rating'         => 5.0,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 290,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Hữu Cơ & Voan Tùng Xòe Cao Cấp',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -202,9 +202,9 @@ $lbn_products = [
         'price'          => 195000,
         'original_price' => 240000,
         'stock_quantity' => 32,
-        'rating'         => 4.8,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 410,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Thoáng Khí',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)'],
@@ -234,9 +234,9 @@ $lbn_products = [
         'price'          => 340000,
         'original_price' => 395000,
         'stock_quantity' => 4,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 145,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Nỉ Bông Sợi Tre Giữ Ấm & Chống Nắng',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -266,9 +266,9 @@ $lbn_products = [
         'price'          => 245000,
         'original_price' => 295000,
         'stock_quantity' => 16,
-        'rating'         => 4.7,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 210,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Êm Chân & Quai Dán Linh Hoạt',
         'size_range'     => ['Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)', 'Size 30 (17.5cm)'],
@@ -297,9 +297,9 @@ $lbn_products = [
         'price'          => 350000,
         'original_price' => 410000,
         'stock_quantity' => 9,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 175,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre 2 Lớp Cản Gió & Thoáng Khí',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -316,7 +316,7 @@ $lbn_products = [
     ]
 ];
 
-// Đồng bộ dữ liệu giá, tồn kho, tên, ảnh từ CSDL thực tế
+// Đồng bộ dữ liệu giá, tồn kho, tên, ảnh, đánh giá thực và số người mua từ CSDL thực tế
 $liveCatalog = $pdpProductModel->layTatCaSanPhamChuanHoa();
 foreach ($liveCatalog as $liveRow) {
     $lid = (int)$liveRow['id'];
@@ -330,6 +330,10 @@ foreach ($liveCatalog as $liveRow) {
         $lbn_products[$lid]['category_id']    = (int)$liveRow['category_id'];
         $lbn_products[$lid]['category_slug']  = $liveRow['category_slug'];
         $lbn_products[$lid]['category_name']  = $liveRow['category_name'];
+        $lbn_products[$lid]['rating']         = (float)($liveRow['rating'] ?? 0.0);
+        $lbn_products[$lid]['reviews']        = (int)($liveRow['reviews'] ?? 0);
+        $lbn_products[$lid]['buyer_count']    = (int)($liveRow['buyer_count'] ?? 0);
+        $lbn_products[$lid]['sold_count']     = (int)($liveRow['buyer_count'] ?? 0);
     } else {
         $isShoes = ($liveRow['type'] === 'giay_dep');
         $lbn_products[$lid] = [
@@ -346,9 +350,10 @@ foreach ($liveCatalog as $liveRow) {
             'price'          => (float)$liveRow['price'],
             'original_price' => round($liveRow['price'] * 1.18, -3),
             'stock_quantity' => (int)$liveRow['stock_quantity'],
-            'rating'         => (float)$liveRow['rating'],
-            'reviews'        => 0,
-            'sold_count'     => 35,
+            'rating'         => (float)($liveRow['rating'] ?? 0.0),
+            'reviews'        => (int)($liveRow['reviews'] ?? 0),
+            'buyer_count'    => (int)($liveRow['buyer_count'] ?? 0),
+            'sold_count'     => (int)($liveRow['buyer_count'] ?? 0),
             'is_bamboo'      => 1,
             'bamboo_label'   => '100% Vải Sợi Tre Kháng Khuẩn',
             'size_range'     => $isShoes
@@ -384,9 +389,10 @@ $vipPointsNeeded       = (int)($vipInfo['points_needed'] ?? 0);
 $init_discount_amount = round(($prod['price'] * $init_discount_percent) / 100);
 $init_vip_price       = max(0, $prod['price'] - $init_discount_amount);
 
-// Lấy đánh giá thực tế từ CSDL (tgb_danh_gia_san_pham)
+// Lấy đánh giá thực tế và số người mua thực tế từ CSDL
 $dbReviews   = $pdpReviewModel->layDanhGiaTheoSanPham($product_id);
 $reviewCount = count($dbReviews);
+$buyerCount  = $pdpReviewModel->demSoNguoiMua($product_id);
 $starCounts  = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
 if ($reviewCount > 0) {
     foreach ($dbReviews as $rev) {
@@ -395,7 +401,7 @@ if ($reviewCount > 0) {
     }
     $avgRating = round($pdpReviewModel->tinhSaoTrungBinh($product_id), 1);
 } else {
-    $avgRating = (float)$prod['rating'];
+    $avgRating = 0.0;
 }
 
 $reviewEligibility = $currentUid
@@ -551,9 +557,9 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                         <?= htmlspecialchars($prod['name']) ?>
                     </h1>
 
-                    <!-- Đánh Giá Sao & Lượt Bán -->
+                    <!-- Đánh Giá Sao & Số Người Mua Thực Tế -->
                     <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mb-3">
-                        <div class="text-warning text-nowrap">
+                        <div id="pdp_rating_stars_top" class="text-warning text-nowrap <?= $reviewCount > 0 ? '' : 'd-none' ?>">
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
@@ -561,13 +567,16 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                             <i class="fa-solid fa-star"></i>
                             <span class="font-weight-bold text-slate ml-1" id="pdp_avg_rating_top"><?= number_format($avgRating, 1) ?></span>
                         </div>
+                        <span id="pdp_no_review_badge_top" class="badge badge-pill fk-no-review-badge text-nowrap <?= $reviewCount > 0 ? 'd-none' : '' ?>">
+                            Chưa có đánh giá
+                        </span>
                         <span class="text-muted-custom small border-left pl-2 text-nowrap">
                             <a href="#pdp_review_section" class="text-muted-custom text-decoration-none">
                                 <strong id="pdp_review_count_top"><?= $reviewCount ?></strong> đánh giá thực tế
                             </a>
                         </span>
                         <span class="text-muted-custom small border-left pl-2 text-nowrap">
-                            Đã bán <strong><?= $prod['sold_count'] ?></strong> món
+                            <strong id="pdp_buyer_count_top"><?= (int)$buyerCount ?></strong> người mua
                         </span>
                     </div>
 
@@ -805,15 +814,22 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
             <!-- Hàng thống kê tổng quan và tỷ lệ sao thực tế -->
             <div class="row align-items-center mb-4 bg-white p-4 rounded-lg shadow-sm border">
                 <div class="col-12 col-md-4 text-center border-right mb-3 mb-md-0">
-                    <div class="display-4 font-weight-bold text-warning mb-1" id="pdp_avg_rating_card"><?= number_format($avgRating, 1) ?></div>
-                    <div class="mb-2 text-warning">
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
+                    <div class="<?= $reviewCount > 0 ? '' : 'd-none' ?>" id="pdp_rating_stars_card">
+                        <div class="display-4 font-weight-bold text-warning mb-1" id="pdp_avg_rating_card"><?= number_format($avgRating, 1) ?></div>
+                        <div class="mb-2 text-warning">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
                     </div>
-                    <span class="text-muted-custom small">Dựa trên <strong id="pdp_review_count_card"><?= $reviewCount ?></strong> nhận xét đã xác thực</span>
+                    <div class="mb-2 <?= $reviewCount > 0 ? 'd-none' : '' ?>" id="pdp_no_review_badge_card">
+                        <span class="badge badge-pill fk-no-review-badge px-3 py-2">
+                            Chưa có đánh giá
+                        </span>
+                    </div>
+                    <span class="text-muted-custom small">Dựa trên <strong id="pdp_review_count_card"><?= $reviewCount ?></strong> nhận xét đã xác thực • <strong id="pdp_buyer_count_card"><?= (int)$buyerCount ?></strong> người mua</span>
                 </div>
 
                 <div class="col-12 col-md-8 pl-md-4">
@@ -918,10 +934,24 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                             <?= htmlspecialchars($other_p['name']) ?>
                                         </a>
                                     </h6>
-                                    <div class="small text-warning mb-2">
-                                        <i class="fa-solid fa-star"></i> <?= number_format($other_p['rating'], 1) ?>
-                                        <span class="text-muted-custom ml-1">(Kho: <?= (int)$other_p['stock_quantity'] ?> SP)</span>
+                                    <?php
+                                        $relReviews = (int)($other_p['reviews'] ?? 0);
+                                        $relBuyers  = (int)($other_p['buyer_count'] ?? 0);
+                                    ?>
+                                    <div class="small mb-2 d-flex flex-wrap align-items-center justify-content-between fk-card-header-row">
+                                        <?php if ($relReviews > 0): ?>
+                                            <span class="text-warning font-weight-bold text-nowrap">
+                                                <i class="fa-solid fa-star"></i> <?= number_format((float)$other_p['rating'], 1) ?>
+                                                <span class="text-muted-custom font-weight-normal">(<?= $relReviews ?>)</span>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge badge-pill fk-no-review-badge text-nowrap">Chưa có đánh giá</span>
+                                        <?php endif; ?>
+                                        <span class="fk-buyer-count-pill">
+                                            <i class="fa-solid fa-bag-shopping text-peach mr-1"></i><?= $relBuyers ?> người mua
+                                        </span>
                                     </div>
+                                    <small class="text-muted-custom d-block mb-2">Kho: <?= (int)$other_p['stock_quantity'] ?> SP</small>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                                     <span class="font-weight-bold text-peach h6 mb-0"><?= number_format($other_p['price'], 0, ',', '.') ?> đ</span>

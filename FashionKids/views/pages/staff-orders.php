@@ -5,11 +5,15 @@ require_once __DIR__ . "/../layouts/navbar.php";
 Rbac::enforceCurrentViewAccess();
 require_once __DIR__ . "/../../models/OrderModel.php";
 
-$staffOrderModel = new OrderModel();
-$lnkt_staff_orders = $staffOrderModel->getAllOrdersForStaff('all', '');
-$statusCounts      = $staffOrderModel->getOrderStatusCounts();
-$pollMeta          = $staffOrderModel->getNewOrdersSince(0);
-$maxOrderId        = (int)($pollMeta['max_order_id'] ?? 0);
+$staffOrderModel      = new OrderModel();
+$lnkt_staff_orders    = $staffOrderModel->getAllOrdersForStaff('all', '');
+$statusCounts         = $staffOrderModel->getOrderStatusCounts();
+$pollMeta             = $staffOrderModel->getNewOrdersSince(0);
+$maxOrderId           = (int)($pollMeta['max_order_id'] ?? 0);
+$lnkt_return_requests = $staffOrderModel->getAllReturnRequests('all', '');
+$returnCounts         = $staffOrderModel->getReturnStatusCounts();
+$pendingReturnCount   = (int)($returnCounts['cho_duyet_hoan'] ?? 0);
+$initTabReturns       = (($_GET['tab'] ?? '') === 'returns');
 
 $highlightOrderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 $inspectOrder     = null;
@@ -113,6 +117,36 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
     </div>
 
     <div id="lnkt_staffOrderAlert" class="alert small py-2 mb-3 d-none" role="alert"></div>
+
+    <!-- Thanh chuyển Tab: Đơn hàng giao vận & Yêu cầu hoàn hàng -->
+    <ul class="nav nav-pills fk-nav-pills-pastel mb-3" id="lnkt_staffTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link <?= $initTabReturns ? '' : 'active' ?>"
+               id="lnkt_tabOrdersLink"
+               data-toggle="pill"
+               href="#tab-orders"
+               role="tab"
+               aria-controls="tab-orders"
+               aria-selected="<?= $initTabReturns ? 'false' : 'true' ?>">
+                <i class="fa-solid fa-truck-ramp-box mr-1"></i>Đơn Hàng Giao Vận (<span id="lnkt_staffTotalOrdersTab"><?= count($lnkt_staff_orders) ?></span>)
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link <?= $initTabReturns ? 'active' : '' ?>"
+               id="lnkt_tabReturnsLink"
+               data-toggle="pill"
+               href="#tab-return-requests"
+               role="tab"
+               aria-controls="tab-return-requests"
+               aria-selected="<?= $initTabReturns ? 'true' : 'false' ?>">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Quản lý Hoàn hàng &amp; Trả hàng
+                <span id="lnkt_pendingReturnBadge" class="badge badge-pill badge-danger ml-1 <?= $pendingReturnCount > 0 ? '' : 'd-none' ?>"><?= $pendingReturnCount ?></span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="lnkt_staffTabContent">
+        <div class="tab-pane fade <?= $initTabReturns ? '' : 'show active' ?>" id="tab-orders" role="tabpanel" aria-labelledby="lnkt_tabOrdersLink">
 
     <!-- 5 Thẻ Thống Kê Thời Gian Thực Theo Trạng Thái Đơn Hàng -->
     <div class="row mb-4">
@@ -224,15 +258,15 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
 
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0 fk-compact-table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Mã Đơn &amp; Ngày Đặt</th>
-                                    <th>Phụ Huynh Nhận Hàng</th>
-                                    <th>Khu Vực &amp; Ghi Chú</th>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Khu Vực</th>
                                     <th class="text-right">Thanh Toán</th>
-                                    <th class="text-center">Trạng Thái Hiện Tại</th>
-                                    <th class="text-center fk-minw-215">Cập Nhật Giao Vận</th>
+                                    <th class="text-center">Trạng Thái</th>
+                                    <th class="text-center fk-minw-170">Thao Tác</th>
                                 </tr>
                             </thead>
                             <tbody id="lnkt_staffOrdersBody">
@@ -337,7 +371,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                             <div class="small font-weight-bold text-slate"><?= htmlspecialchars((string)($ord['tinh_thanh_pho'] ?? '')) ?></div>
                                             <small class="text-muted-custom d-block"><?= htmlspecialchars((string)($ord['quan_huyen'] ?? '')) ?></small>
                                             <?php if ($noteStr !== ''): ?>
-                                                <small class="text-info d-block text-truncate fk-ellipsis-220" title="<?= htmlspecialchars($noteStr) ?>">
+                                                <small class="text-info d-block text-truncate fk-ellipsis-150" title="<?= htmlspecialchars($noteStr) ?>">
                                                     <i class="fa-regular fa-note-sticky mr-1"></i><?= htmlspecialchars($noteStr) ?>
                                                 </small>
                                             <?php endif; ?>
@@ -504,6 +538,12 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+        </div>
+
+        <div class="tab-pane fade <?= $initTabReturns ? 'show active' : '' ?>" id="tab-return-requests" role="tabpanel" aria-labelledby="lnkt_tabReturnsLink">
+            <?php require __DIR__ . "/../partials/return-management-panel.php"; ?>
         </div>
     </div>
 </div>

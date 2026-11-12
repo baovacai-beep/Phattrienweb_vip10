@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS `tgb_binh_luan_bai_viet`;
 DROP TABLE IF EXISTS `tgb_bai_viet_tin_tuc`;
 DROP TABLE IF EXISTS `tgb_tin_nhan_tu_van`;
 DROP TABLE IF EXISTS `tgb_chi_tiet_don_hang`;
+DROP TABLE IF EXISTS `lnkt_yeu_cau_hoan_hang`;
 DROP TABLE IF EXISTS `lnkt_dang_ky_kol_nhi`;
 DROP TABLE IF EXISTS `lnkt_don_hang`;
 DROP TABLE IF EXISTS `lnkt_banner_su_kien`;
@@ -127,6 +128,32 @@ CREATE TABLE `lnkt_don_hang` (
         ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT `kn_don_hang_nhan_vien` 
         FOREIGN KEY (`ma_nhan_vien_xu_ly`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`) 
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `lnkt_yeu_cau_hoan_hang` (
+    `ma_hoan_hang` INT AUTO_INCREMENT PRIMARY KEY,
+    `ma_don_hang` INT NOT NULL,
+    `ma_nguoi_dung` INT NOT NULL,
+    `ma_nhan_vien_xu_ly` INT NULL,
+    `ly_do_hoan` VARCHAR(255) NOT NULL,
+    `mo_ta_chi_tiet` TEXT NULL,
+    `hinh_anh_minh_chung` TEXT NULL,
+    `so_tien_hoan` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `thong_tin_nhan_tien` VARCHAR(255) NULL,
+    `trang_thai_hoan` ENUM('cho_duyet_hoan', 'da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan') NOT NULL DEFAULT 'cho_duyet_hoan',
+    `ghi_chu_xu_ly` TEXT NULL,
+    `ngay_yeu_cau` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_lnkt_hoan_don_hang` (`ma_don_hang`),
+    CONSTRAINT `kn_hoan_don_hang`
+        FOREIGN KEY (`ma_don_hang`) REFERENCES `lnkt_don_hang`(`ma_don_hang`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `kn_hoan_nguoi_dung`
+        FOREIGN KEY (`ma_nguoi_dung`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `kn_hoan_nhan_vien`
+        FOREIGN KEY (`ma_nhan_vien_xu_ly`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`)
         ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -810,7 +837,7 @@ CREATE FUNCTION `fn_tgb_tinh_sao_trung_binh_san_pham`(
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    DECLARE v_sao_tb DECIMAL(3,1) DEFAULT 5.0;
+    DECLARE v_sao_tb DECIMAL(3,1) DEFAULT 0.0;
     IF NOT EXISTS (SELECT 1 FROM `lbn_san_pham` WHERE `ma_san_pham` = p_ma_san_pham) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Lỗi [TGB_ERR_10]: Không tìm thấy mã sản phẩm cần tính sao trung bình!';
@@ -819,20 +846,212 @@ BEGIN
     FROM `tgb_danh_gia_san_pham`
     WHERE `ma_san_pham` = p_ma_san_pham;
     IF v_sao_tb IS NULL THEN
-        SET v_sao_tb = 5.0;
+        SET v_sao_tb = 0.0;
     END IF;
     RETURN v_sao_tb;
+END//
+
+-- 13. fn_tgb_dem_so_nguoi_mua
+DROP FUNCTION IF EXISTS `fn_tgb_dem_so_nguoi_mua`//
+CREATE FUNCTION `fn_tgb_dem_so_nguoi_mua`(
+    p_ma_san_pham INT
+) RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_so_nguoi_mua INT DEFAULT 0;
+    SELECT COUNT(DISTINCT CASE
+        WHEN dh.`ma_nguoi_dung` IS NOT NULL THEN CONCAT('U', dh.`ma_nguoi_dung`)
+        ELSE CONCAT('O', dh.`ma_don_hang`)
+    END) INTO v_so_nguoi_mua
+    FROM `tgb_chi_tiet_don_hang` ct
+    JOIN `lnkt_don_hang` dh ON ct.`ma_don_hang` = dh.`ma_don_hang`
+    WHERE ct.`ma_san_pham` = p_ma_san_pham
+      AND dh.`trang_thai_don_hang` = 'hoan_tat'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM `lnkt_yeu_cau_hoan_hang` hh
+          WHERE hh.`ma_don_hang` = dh.`ma_don_hang`
+            AND hh.`trang_thai_hoan` = 'hoan_tat_hoan'
+      );
+    RETURN COALESCE(v_so_nguoi_mua, 0);
+END//
+
+-- 14. sp_lnkt_tao_yeu_cau_hoan_hang
+DROP PROCEDURE IF EXISTS `sp_lnkt_tao_yeu_cau_hoan_hang`//
+CREATE PROCEDURE `sp_lnkt_tao_yeu_cau_hoan_hang`(
+    IN  p_ma_don_hang      INT,
+    IN  p_ma_nguoi_dung    INT,
+    IN  p_ly_do            VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    IN  p_mo_ta            TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    IN  p_hinh_anh         TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    IN  p_thong_tin_tien   VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    OUT p_ma_hoan_moi      INT
+)
+BEGIN
+    DECLARE v_trang_thai_don ENUM('cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy');
+    DECLARE v_tong_tien      DECIMAL(12,2) DEFAULT 0.00;
+    IF TRIM(COALESCE(p_ly_do, '')) = '' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_01]: Vui lòng chọn lý do hoàn hàng / trả hàng!';
+    END IF;
+    SELECT `trang_thai_don_hang`, `tong_tien_thanh_toan`
+    INTO v_trang_thai_don, v_tong_tien
+    FROM `lnkt_don_hang`
+    WHERE `ma_don_hang` = p_ma_don_hang
+      AND `ma_nguoi_dung` = p_ma_nguoi_dung
+    LIMIT 1;
+    IF v_trang_thai_don IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_02]: Bạn không sở hữu đơn hàng này hoặc đơn hàng không tồn tại!';
+    END IF;
+    IF v_trang_thai_don != 'hoan_tat' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_03]: Chỉ đơn hàng đã giao thành công (hoàn tất) mới được gửi yêu cầu hoàn hàng!';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM `lnkt_yeu_cau_hoan_hang`
+        WHERE `ma_don_hang` = p_ma_don_hang
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_04]: Đơn hàng này đã gửi yêu cầu hoàn hàng / trả hàng trước đó!';
+    END IF;
+    INSERT INTO `lnkt_yeu_cau_hoan_hang` (
+        `ma_don_hang`, `ma_nguoi_dung`, `ma_nhan_vien_xu_ly`,
+        `ly_do_hoan`, `mo_ta_chi_tiet`, `hinh_anh_minh_chung`,
+        `so_tien_hoan`, `thong_tin_nhan_tien`, `trang_thai_hoan`, `ngay_yeu_cau`
+    ) VALUES (
+        p_ma_don_hang, p_ma_nguoi_dung, NULL,
+        TRIM(p_ly_do), NULLIF(TRIM(COALESCE(p_mo_ta, '')), ''), NULLIF(TRIM(COALESCE(p_hinh_anh, '')), ''),
+        COALESCE(v_tong_tien, 0.00), NULLIF(TRIM(COALESCE(p_thong_tin_tien, '')), ''), 'cho_duyet_hoan', NOW()
+    );
+    SET p_ma_hoan_moi = LAST_INSERT_ID();
+END//
+
+-- 15. sp_lnkt_xu_ly_hoan_hang
+DROP PROCEDURE IF EXISTS `sp_lnkt_xu_ly_hoan_hang`//
+CREATE PROCEDURE `sp_lnkt_xu_ly_hoan_hang`(
+    IN p_ma_hoan_hang    INT,
+    IN p_ma_nhan_vien    INT,
+    IN p_trang_thai_moi  VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    IN p_ghi_chu         TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+)
+BEGIN
+    DECLARE v_vai_tro         ENUM('quan_tri', 'nhan_vien', 'khach_hang');
+    DECLARE v_ma_don_hang     INT;
+    DECLARE v_ma_nguoi_dung   INT;
+    DECLARE v_so_tien_hoan    DECIMAL(12,2) DEFAULT 0.00;
+    DECLARE v_trang_thai_cu   ENUM('cho_duyet_hoan', 'da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan');
+    DECLARE v_diem_tru        INT DEFAULT 0;
+    DECLARE v_diem_hien_tai   INT DEFAULT 0;
+    DECLARE v_diem_moi        INT DEFAULT 0;
+    DECLARE v_ma_hang_moi     INT DEFAULT NULL;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SELECT `vai_tro` INTO v_vai_tro
+    FROM `hgb_nguoi_dung`
+    WHERE `ma_nguoi_dung` = p_ma_nhan_vien
+    LIMIT 1;
+    IF v_vai_tro IS NULL OR v_vai_tro NOT IN ('quan_tri', 'nhan_vien') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_05]: Chỉ Nhân viên hoặc Quản trị viên mới được phép xử lý yêu cầu hoàn hàng!';
+    END IF;
+
+    IF p_trang_thai_moi NOT IN ('da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_06]: Trạng thái xử lý hoàn hàng không hợp lệ!';
+    END IF;
+
+    SELECT `ma_don_hang`, `ma_nguoi_dung`, `so_tien_hoan`, `trang_thai_hoan`
+    INTO v_ma_don_hang, v_ma_nguoi_dung, v_so_tien_hoan, v_trang_thai_cu
+    FROM `lnkt_yeu_cau_hoan_hang`
+    WHERE `ma_hoan_hang` = p_ma_hoan_hang
+    LIMIT 1;
+
+    IF v_trang_thai_cu IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_07]: Không tìm thấy yêu cầu hoàn hàng cần xử lý!';
+    END IF;
+
+    IF v_trang_thai_cu IN ('hoan_tat_hoan', 'tu_choi_hoan') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_08]: Yêu cầu hoàn hàng đã kết thúc, không thể thay đổi trạng thái!';
+    END IF;
+
+    IF p_trang_thai_moi = 'tu_choi_hoan' AND TRIM(COALESCE(p_ghi_chu, '')) = '' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_09]: Vui lòng nhập lý do/ghi chú xử lý khi từ chối yêu cầu hoàn hàng!';
+    END IF;
+
+    IF p_trang_thai_moi = 'dang_thu_hoi' AND v_trang_thai_cu != 'da_duyet_hoan' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_10]: Phải duyệt hoàn hàng trước khi chuyển sang bước đang thu hồi hàng!';
+    END IF;
+
+    IF p_trang_thai_moi = 'hoan_tat_hoan' AND v_trang_thai_cu NOT IN ('da_duyet_hoan', 'dang_thu_hoi') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi [LNKT_RET_11]: Chỉ có thể hoàn tất hoàn tiền sau khi đã duyệt và thu hồi hàng!';
+    END IF;
+
+    IF p_trang_thai_moi = 'hoan_tat_hoan' THEN
+        START TRANSACTION;
+            UPDATE `lnkt_yeu_cau_hoan_hang`
+            SET `trang_thai_hoan`    = 'hoan_tat_hoan',
+                `ma_nhan_vien_xu_ly` = p_ma_nhan_vien,
+                `ghi_chu_xu_ly`      = COALESCE(NULLIF(TRIM(COALESCE(p_ghi_chu, '')), ''), `ghi_chu_xu_ly`),
+                `ngay_cap_nhat`      = NOW()
+            WHERE `ma_hoan_hang` = p_ma_hoan_hang;
+
+            UPDATE `lbn_san_pham` sp
+            JOIN `tgb_chi_tiet_don_hang` ct ON sp.`ma_san_pham` = ct.`ma_san_pham`
+            SET sp.`so_luong_ton_kho` = sp.`so_luong_ton_kho` + ct.`so_luong`
+            WHERE ct.`ma_don_hang` = v_ma_don_hang;
+
+            SET v_diem_tru = FLOOR(COALESCE(v_so_tien_hoan, 0) / 10000);
+            IF v_ma_nguoi_dung IS NOT NULL AND v_diem_tru > 0 THEN
+                SELECT COALESCE(`diem_tich_luy`, 0) INTO v_diem_hien_tai
+                FROM `hgb_nguoi_dung`
+                WHERE `ma_nguoi_dung` = v_ma_nguoi_dung
+                FOR UPDATE;
+
+                SET v_diem_moi = GREATEST(0, COALESCE(v_diem_hien_tai, 0) - v_diem_tru);
+
+                SELECT `ma_hang` INTO v_ma_hang_moi
+                FROM `hgb_hang_thanh_vien`
+                WHERE `diem_toi_thieu` <= v_diem_moi
+                ORDER BY `diem_toi_thieu` DESC
+                LIMIT 1;
+
+                UPDATE `hgb_nguoi_dung`
+                SET `diem_tich_luy`      = v_diem_moi,
+                    `ma_hang_thanh_vien` = v_ma_hang_moi
+                WHERE `ma_nguoi_dung` = v_ma_nguoi_dung;
+            END IF;
+        COMMIT;
+    ELSE
+        UPDATE `lnkt_yeu_cau_hoan_hang`
+        SET `trang_thai_hoan`    = p_trang_thai_moi,
+            `ma_nhan_vien_xu_ly` = p_ma_nhan_vien,
+            `ghi_chu_xu_ly`      = COALESCE(NULLIF(TRIM(COALESCE(p_ghi_chu, '')), ''), `ghi_chu_xu_ly`),
+            `ngay_cap_nhat`      = NOW()
+        WHERE `ma_hoan_hang` = p_ma_hoan_hang;
+    END IF;
 END//
 
 DELIMITER ;
 
 
 -- =========================================================================
--- BƯỚC 3: KIỂM THỬ TẤT CẢ 12 ROUTINES (HAPPY PATH - KHÔNG ĐỤNG ĐỘ DỮ LIỆU)
+-- BƯỚC 3: KIỂM THỬ TẤT CẢ ROUTINES (HAPPY PATH - KHÔNG ĐỤNG ĐỘ DỮ LIỆU)
 -- Chạy khối lệnh này trên phpMyAdmin để nghiệm thu kết quả tự động
 -- =========================================================================
 
 -- Làm sạch dữ liệu kiểm thử cũ (đảm bảo chạy lại nhiều lần vẫn báo XANH 100%)
+DELETE FROM `lnkt_yeu_cau_hoan_hang` WHERE `ma_don_hang` = 1 AND `ma_nguoi_dung` = 3;
 DELETE FROM `tgb_danh_gia_san_pham` WHERE `ma_don_hang` = 1 AND `ma_san_pham` = 1 AND `ma_nguoi_dung` = 3;
 DELETE FROM `lnkt_don_hang` WHERE `thu_dien_tu_nhan` = 'hoa.nguyen@gmail.com';
 DELETE FROM `hgb_nguoi_dung` WHERE `ten_dang_nhap` = 'khach_hang_moi_1' OR `thu_dien_tu` = 'hoa.nguyen@gmail.com';

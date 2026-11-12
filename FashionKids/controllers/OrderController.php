@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Rbac.php';
+require_once __DIR__ . '/../core/Mailer.php';
 require_once __DIR__ . '/../models/OrderModel.php';
 require_once __DIR__ . '/../models/ProductModel.php';
 require_once __DIR__ . '/../models/ReviewModel.php';
@@ -316,7 +317,7 @@ class OrderController extends Controller {
             $this->userModel->dongBoSessionNguoiDung($uid);
         }
 
-        $orderId = (int)($_GET['order_id'] ?? ($_SESSION['recent_order']['order_id'] ?? 0));
+        $orderId = (int)($_GET['order_id'] ?? ($_GET['id'] ?? ($_SESSION['recent_order']['order_id'] ?? 0)));
         $code    = trim((string)($_GET['code'] ?? ''));
 
         $trackedOrder = null;
@@ -338,6 +339,13 @@ class OrderController extends Controller {
             'orderData'    => $_SESSION['recent_order'] ?? null,
             'trackedOrder' => $trackedOrder,
         ]);
+    }
+
+    /**
+     * Alias route ?c=order&a=tracking&id={maDonHang} cho email thư mời đánh giá & theo dõi hoàn hàng
+     */
+    public function tracking(): void {
+        $this->success();
     }
 
     /**
@@ -458,6 +466,8 @@ class OrderController extends Controller {
             'can_confirm_qr'     => (($isOwner || $isStaffAdm) && $payMethod === 'vietqr' && !$isPaid && $statusCode === 'cho_duyet' && !$isExpired),
             'can_switch_payment' => (($isOwner || $isStaffAdm) && !$isPaid && $statusCode === 'cho_duyet' && !$isExpired),
             'can_review'         => ($isOwner && $statusCode === 'hoan_tat'),
+            'return_request'     => $order['return_request'] ?? null,
+            'can_request_return' => ($isOwner && $statusCode === 'hoan_tat' && empty($order['return_request'])),
             'check_result'       => $checkResult,
             'user_points'        => $currentUid ? (int)($_SESSION['user']['diem_tich_luy'] ?? 0) : null,
             'user_tier'          => $currentUid ? (string)($_SESSION['user']['ten_hang'] ?? '') : null,
@@ -811,7 +821,9 @@ class OrderController extends Controller {
             }
         }
 
-        $avgRating = $this->reviewModel->tinhSaoTrungBinh($productId);
+        $avgRating   = $this->reviewModel->tinhSaoTrungBinh($productId);
+        $reviewCount = count($this->reviewModel->layDanhGiaTheoSanPham($productId));
+        $buyerCount  = $this->reviewModel->demSoNguoiMua($productId);
         $newReview = [
             'id'          => time(),
             'product_id'  => $productId,
@@ -824,12 +836,19 @@ class OrderController extends Controller {
         ];
 
         $this->jsonResponse([
-            'status'     => 'success',
-            'code'       => 200,
-            'message'    => 'Cảm ơn ba mẹ đã gửi đánh giá sản phẩm thành công!',
-            'review'     => $newReview,
-            'avg_rating' => $avgRating,
-            'data'       => ['review' => $newReview, 'avg_rating' => $avgRating],
+            'status'       => 'success',
+            'code'         => 200,
+            'message'      => 'Cảm ơn ba mẹ đã gửi đánh giá sản phẩm thành công!',
+            'review'       => $newReview,
+            'avg_rating'   => $avgRating,
+            'review_count' => $reviewCount,
+            'buyer_count'  => $buyerCount,
+            'data'         => [
+                'review'       => $newReview,
+                'avg_rating'   => $avgRating,
+                'review_count' => $reviewCount,
+                'buyer_count'  => $buyerCount,
+            ],
         ], 200);
     }
 
@@ -874,11 +893,34 @@ class OrderController extends Controller {
                 }
                 $vipMsg .= ')';
             }
+
+            $emailSent = false;
+            if ($result['new_status'] === 'hoan_tat') {
+                $ordData = is_array($result['order'] ?? null) ? $result['order'] : ($this->orderModel->getOrderById($orderId) ?? []);
+                $toEmail = trim((string)($ordData['thu_dien_tu_nhan'] ?? ''));
+                if ($toEmail === '') {
+                    $toEmail = trim((string)($ordData['khach_hang_email'] ?? ''));
+                }
+                $toName = trim((string)($ordData['ten_nguoi_nhan'] ?? 'Ba Mẹ'));
+                $items  = is_array($ordData['items'] ?? null) ? $ordData['items'] : [];
+                if ($toEmail !== '' && filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+                    try {
+                        $emailSent = Mailer::guiThuMoiDanhGia($toEmail, $toName, $orderId, $items);
+                        if (!$emailSent) {
+                            error_log('[tgb] guiThuMoiDanhGia returned false for order #' . $orderId . ': ' . Mailer::getLastError());
+                        }
+                    } catch (Throwable $mailErr) {
+                        error_log('[tgb] guiThuMoiDanhGia exception for order #' . $orderId . ': ' . $mailErr->getMessage());
+                    }
+                }
+            }
+
             $this->jsonResponse(array_merge($result, [
-                'status'  => 'success',
-                'code'    => 200,
-                'data'    => $result,
-                'message' => 'Đã cập nhật tiến trình đơn hàng #' . $orderId . ' sang trạng thái "' . $result['status_label'] . '" thành công!' . $vipMsg
+                'status'            => 'success',
+                'code'              => 200,
+                'review_email_sent' => $emailSent,
+                'data'              => $result,
+                'message'           => 'Đã cập nhật tiến trình đơn hàng #' . $orderId . ' sang trạng thái "' . $result['status_label'] . '" thành công!' . $vipMsg
             ]), 200);
         } catch (Throwable $e) {
             $this->jsonResponse([
@@ -892,5 +934,283 @@ class OrderController extends Controller {
 
     public function ajaxUpdateStatus(): void {
         $this->ajaxUpdateOrderStatus();
+    }
+
+    /**
+     * API AJAX Khách hàng gửi Yêu cầu Hoàn hàng / Trả hàng (upload 1-3 ảnh minh chứng)
+     * URL: index.php?c=order&a=ajaxSubmitReturn
+     */
+    public function ajaxSubmitReturn(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['khach_hang', 'nhan_vien', 'quan_tri'],
+            'Vui lòng đăng nhập tài khoản thành viên để gửi yêu cầu hoàn hàng!'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'code' => 405, 'data' => null, 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $userId      = (int)(Rbac::currentUserId() ?? 0);
+        $orderId     = (int)($_POST['order_id'] ?? $_POST['ma_don_hang'] ?? 0);
+        $reason      = trim((string)($_POST['ly_do_hoan'] ?? $_POST['reason'] ?? ''));
+        $description = trim((string)($_POST['mo_ta_chi_tiet'] ?? $_POST['description'] ?? ''));
+        $bankInfo    = trim((string)($_POST['thong_tin_nhan_tien'] ?? $_POST['bank_info'] ?? ''));
+
+        if ($orderId <= 0) {
+            $this->jsonResponse(['status' => 'error', 'code' => 422, 'data' => null, 'message' => 'Không xác định được đơn hàng cần hoàn trả!'], 422);
+        }
+        if ($reason === '') {
+            $this->jsonResponse(['status' => 'error', 'code' => 422, 'data' => null, 'message' => 'Vui lòng chọn lý do hoàn hàng / trả hàng!'], 422);
+        }
+        if (mb_strlen($description, 'UTF-8') < 5) {
+            $this->jsonResponse(['status' => 'error', 'code' => 422, 'data' => null, 'message' => 'Vui lòng mô tả chi tiết tình trạng sản phẩm tối thiểu 5 ký tự!'], 422);
+        }
+        if (mb_strlen($bankInfo, 'UTF-8') < 6) {
+            $this->jsonResponse(['status' => 'error', 'code' => 422, 'data' => null, 'message' => 'Vui lòng nhập đầy đủ thông tin Ngân hàng / Ví điện tử nhận tiền hoàn!'], 422);
+        }
+
+        $orderCheck = $this->orderModel->getOrderById($orderId);
+        if (!$orderCheck) {
+            $this->jsonResponse(['status' => 'error', 'code' => 404, 'data' => null, 'message' => 'Không tìm thấy đơn hàng cần hoàn trả!'], 404);
+        }
+        if ((int)($orderCheck['ma_nguoi_dung'] ?? 0) !== $userId) {
+            $this->jsonResponse(['status' => 'error', 'code' => 403, 'data' => null, 'message' => 'Chỉ chủ sở hữu đơn hàng mới được gửi yêu cầu hoàn hàng!'], 403);
+        }
+        if ((string)($orderCheck['trang_thai_don_hang'] ?? '') !== 'hoan_tat') {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Chỉ đơn hàng đã giao thành công (hoàn tất) mới có thể yêu cầu hoàn trả!'], 400);
+        }
+        if (!empty($orderCheck['return_request'])) {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Đơn hàng này đã có yêu cầu hoàn hàng trước đó!'], 400);
+        }
+
+        // Chuẩn hóa danh sách tệp tải lên
+        $rawFiles = $_FILES['evidence_images'] ?? $_FILES['images'] ?? null;
+        $normalizedFiles = [];
+        if (is_array($rawFiles) && isset($rawFiles['name'])) {
+            if (is_array($rawFiles['name'])) {
+                $cnt = count($rawFiles['name']);
+                for ($i = 0; $i < $cnt; $i++) {
+                    $err = (int)($rawFiles['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+                    if ($err === UPLOAD_ERR_NO_FILE) {
+                        continue;
+                    }
+                    $normalizedFiles[] = [
+                        'name'     => (string)($rawFiles['name'][$i] ?? ''),
+                        'tmp_name' => (string)($rawFiles['tmp_name'][$i] ?? ''),
+                        'error'    => $err,
+                        'size'     => (int)($rawFiles['size'][$i] ?? 0),
+                    ];
+                }
+            } elseif ((int)($rawFiles['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $normalizedFiles[] = [
+                    'name'     => (string)($rawFiles['name'] ?? ''),
+                    'tmp_name' => (string)($rawFiles['tmp_name'] ?? ''),
+                    'error'    => (int)($rawFiles['error'] ?? UPLOAD_ERR_NO_FILE),
+                    'size'     => (int)($rawFiles['size'] ?? 0),
+                ];
+            }
+        }
+
+        if (count($normalizedFiles) < 1 || count($normalizedFiles) > 3) {
+            $this->jsonResponse([
+                'status'  => 'error',
+                'code'    => 422,
+                'data'    => null,
+                'message' => 'Vui lòng tải lên từ 1 đến 3 ảnh minh chứng thực tế (JPG, PNG, WEBP)!'
+            ], 422);
+        }
+
+        $uploadDir = __DIR__ . '/../public/uploads/returns';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        $allowedExt  = ['jpg', 'jpeg', 'png', 'webp'];
+        $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
+        $finfo       = function_exists('finfo_open') ? @finfo_open(FILEINFO_MIME_TYPE) : false;
+
+        $savedAbsPaths = [];
+        $webPaths      = [];
+
+        try {
+            foreach ($normalizedFiles as $idx => $file) {
+                if ($file['error'] !== UPLOAD_ERR_OK) {
+                    throw new RuntimeException('Lỗi tải tệp minh chứng thứ ' . ($idx + 1) . ' lên máy chủ.');
+                }
+                if ($file['size'] <= 0 || $file['size'] > 5 * 1024 * 1024) {
+                    throw new RuntimeException('Mỗi ảnh minh chứng phải có dung lượng tối đa 5MB.');
+                }
+                $ext = strtolower((string)pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowedExt, true)) {
+                    throw new RuntimeException('Chỉ chấp nhận định dạng ảnh JPG, JPEG, PNG hoặc WEBP.');
+                }
+                $mime = $finfo ? (string)@finfo_file($finfo, $file['tmp_name']) : '';
+                if ($mime !== '' && !in_array($mime, $allowedMime, true)) {
+                    throw new RuntimeException('Tệp tải lên không phải là hình ảnh hợp lệ (' . $mime . ').');
+                }
+
+                $safeExt  = ($ext === 'jpeg') ? 'jpg' : $ext;
+                $fileName = sprintf('ret_%d_%s.%s', $orderId, bin2hex(random_bytes(5)), $safeExt);
+                $destPath = $uploadDir . '/' . $fileName;
+
+                if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
+                    if (!@copy($file['tmp_name'], $destPath)) {
+                        throw new RuntimeException('Không thể lưu ảnh minh chứng vào thư mục máy chủ.');
+                    }
+                }
+                $savedAbsPaths[] = $destPath;
+                $webPaths[]      = '/FashionKids/public/uploads/returns/' . $fileName;
+            }
+            if ($finfo) {
+                @finfo_close($finfo);
+            }
+
+            $returnReq = $this->orderModel->createReturnRequest(
+                $orderId,
+                $userId,
+                $reason,
+                $description,
+                $webPaths,
+                $bankInfo
+            );
+
+            $this->jsonResponse([
+                'status'         => 'success',
+                'code'           => 200,
+                'return_request' => $returnReq,
+                'data'           => ['return_request' => $returnReq],
+                'message'        => 'Đã gửi yêu cầu hoàn hàng #' . ($returnReq['ma_hoan_code'] ?? $orderId) . ' thành công! Nhân viên FashionKids sẽ kiểm tra sớm nhất.'
+            ], 200);
+        } catch (Throwable $e) {
+            if ($finfo) {
+                @finfo_close($finfo);
+            }
+            foreach ($savedAbsPaths as $abs) {
+                if (is_file($abs)) {
+                    @unlink($abs);
+                }
+            }
+            $this->jsonResponse([
+                'status'  => 'error',
+                'code'    => 400,
+                'data'    => null,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * API AJAX Polling tiến trình xử lý hoàn hàng theo đơn (4 giây/lần trên order-tracking.php)
+     * URL: index.php?c=order&a=ajaxGetReturnStatus&order_id=...
+     */
+    public function ajaxGetReturnStatus(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        $orderId = (int)($_GET['order_id'] ?? $_POST['order_id'] ?? 0);
+        if ($orderId <= 0) {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Mã đơn hàng không hợp lệ!'], 400);
+        }
+        $order = $this->orderModel->getOrderById($orderId);
+        if (!$order) {
+            $this->jsonResponse(['status' => 'error', 'code' => 404, 'data' => null, 'message' => 'Không tìm thấy đơn hàng!'], 404);
+        }
+        $retReq     = $order['return_request'] ?? null;
+        $currentUid = Rbac::currentUserId();
+        $isOwner    = ($currentUid !== null && (int)($order['ma_nguoi_dung'] ?? 0) === $currentUid);
+        $canReq     = ($isOwner && ($order['trang_thai_don_hang'] ?? '') === 'hoan_tat' && empty($retReq));
+
+        $this->jsonResponse([
+            'status'             => 'success',
+            'code'               => 200,
+            'return_request'     => $retReq,
+            'can_request_return' => $canReq,
+            'data'               => [
+                'return_request'     => $retReq,
+                'can_request_return' => $canReq,
+            ],
+            'message'            => 'Đã đồng bộ trạng thái hoàn hàng.'
+        ], 200);
+    }
+
+    /**
+     * API AJAX Lấy danh sách yêu cầu hoàn hàng cho Cổng Nhân viên & Admin
+     * URL: index.php?c=order&a=ajaxGetReturnRequests
+     */
+    public function ajaxGetReturnRequests(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép xem danh sách yêu cầu hoàn hàng!'
+        );
+        $statusFilter = trim((string)($_GET['status'] ?? $_POST['status'] ?? 'all'));
+        $keyword      = trim((string)($_GET['q'] ?? $_POST['q'] ?? ''));
+        $requests     = $this->orderModel->getAllReturnRequests($statusFilter, $keyword);
+        $counts       = $this->orderModel->getReturnStatusCounts();
+
+        $this->jsonResponse([
+            'status'   => 'success',
+            'code'     => 200,
+            'requests' => $requests,
+            'counts'   => $counts,
+            'data'     => ['requests' => $requests, 'counts' => $counts],
+            'message'  => 'Đã tải ' . count($requests) . ' yêu cầu hoàn hàng.'
+        ], 200);
+    }
+
+    /**
+     * API AJAX Duyệt / Từ chối / Đang thu hồi / Hoàn tất hoàn hàng & nhập kho
+     * URL: index.php?c=order&a=ajaxProcessReturn
+     */
+    public function ajaxProcessReturn(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép xử lý yêu cầu hoàn hàng!'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'code' => 405, 'data' => null, 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $data      = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $returnId  = (int)($data['return_id'] ?? $data['ma_hoan_hang'] ?? 0);
+        $newStatus = trim((string)($data['new_status'] ?? $data['trang_thai_moi'] ?? ''));
+        $note      = trim((string)($data['note'] ?? $data['ghi_chu_xu_ly'] ?? ''));
+        $staffId   = (int)(Rbac::currentUserId() ?? 0);
+
+        if ($returnId <= 0 || $newStatus === '') {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Mã yêu cầu hoàn hàng hoặc trạng thái xử lý không hợp lệ!'], 400);
+        }
+
+        try {
+            $res = $this->orderModel->processReturnRequest($returnId, $staffId, $newStatus, $note);
+            $ret = $res['return_request'] ?? [];
+            $rcode = $ret['ma_hoan_code'] ?? ('#' . $returnId);
+            $msgMap = [
+                'da_duyet_hoan' => 'Đã chấp nhận yêu cầu hoàn hàng #' . $rcode . ' — Vui lòng điều phối bưu tá thu hồi sản phẩm!',
+                'dang_thu_hoi'  => 'Đã chuyển yêu cầu #' . $rcode . ' sang trạng thái Đang thu hồi hàng!',
+                'hoan_tat_hoan' => 'Đã xác nhận hoàn tiền & nhập lại tồn kho cho #' . $rcode . ' (đã tự động cập nhật điểm VIP)!',
+                'tu_choi_hoan'  => 'Đã từ chối yêu cầu hoàn hàng #' . $rcode . ' và gửi lý do tới khách hàng!',
+            ];
+
+            $this->jsonResponse(array_merge($res, [
+                'status'  => 'success',
+                'code'    => 200,
+                'data'    => $res,
+                'message' => $msgMap[$newStatus] ?? ('Đã cập nhật trạng thái hoàn hàng #' . $rcode . '!')
+            ]), 200);
+        } catch (Throwable $e) {
+            $this->jsonResponse([
+                'status'  => 'error',
+                'code'    => 400,
+                'data'    => null,
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }

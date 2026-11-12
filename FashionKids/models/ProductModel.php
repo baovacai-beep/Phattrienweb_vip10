@@ -173,7 +173,10 @@ class ProductModel extends Model {
     public function layDanhSachSanPham(?int $maDanhMuc = null, float $minPrice = 0, float $maxPrice = 10000000): array {
         if ($this->hasConnection()) {
             try {
-                $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
+                $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                               COALESCE(fn_tgb_tinh_sao_trung_binh_san_pham(sp.ma_san_pham), 0.0) AS sao_trung_binh,
+                               (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                               COALESCE(fn_tgb_dem_so_nguoi_mua(sp.ma_san_pham), 0) AS so_nguoi_mua
                         FROM lbn_san_pham sp 
                         JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
                         WHERE sp.ma_san_pham >= 101 AND sp.gia_ban BETWEEN :minPrice AND :maxPrice";
@@ -206,7 +209,10 @@ class ProductModel extends Model {
     public function getFeaturedProducts(int $limit = 8): array {
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
+                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                   COALESCE(fn_tgb_tinh_sao_trung_binh_san_pham(sp.ma_san_pham), 0.0) AS sao_trung_binh,
+                                                   (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                   COALESCE(fn_tgb_dem_so_nguoi_mua(sp.ma_san_pham), 0) AS so_nguoi_mua
                                             FROM lbn_san_pham sp 
                                             JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
                                             WHERE sp.ma_san_pham >= 101 AND sp.so_luong_ton_kho > 0 
@@ -229,7 +235,10 @@ class ProductModel extends Model {
     public function layChiTietSanPham(int $id): ?array {
         if ($this->hasConnection()) {
             try {
-                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
+                $stmt = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                   COALESCE(fn_tgb_tinh_sao_trung_binh_san_pham(sp.ma_san_pham), 0.0) AS sao_trung_binh,
+                                                   (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                   COALESCE(fn_tgb_dem_so_nguoi_mua(sp.ma_san_pham), 0) AS so_nguoi_mua
                                             FROM lbn_san_pham sp 
                                             JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
                                             WHERE sp.ma_san_pham = :id 
@@ -411,8 +420,9 @@ class ProductModel extends Model {
         $desc   = (string)($row['mo_ta_chat_lieu'] ?? $row['material'] ?? $row['description'] ?? '100% sợi tre hữu cơ kháng khuẩn tự nhiên');
         $type   = (string)($row['loai_kich_co'] ?? $row['type'] ?? $catMeta['type']);
 
-        $defaultRatings = [101 => 4.9, 102 => 4.8, 103 => 5.0, 104 => 4.9, 105 => 5.0, 106 => 4.8, 107 => 4.9, 108 => 4.7, 109 => 4.9];
-        $defaultReviews = [101 => 42,  102 => 36,  103 => 58,  104 => 29,  105 => 64,  106 => 51,  107 => 19,  108 => 23,  109 => 31];
+        $reviewCount = max(0, (int)($row['tong_danh_gia'] ?? $row['reviews'] ?? 0));
+        $avgRating   = $reviewCount > 0 ? round((float)($row['sao_trung_binh'] ?? $row['rating'] ?? 0.0), 1) : 0.0;
+        $buyerCount  = max(0, (int)($row['so_nguoi_mua'] ?? $row['buyer_count'] ?? 0));
 
         return [
             // Các trường chuẩn CSDL
@@ -441,8 +451,13 @@ class ProductModel extends Model {
             'price_formatted'  => number_format($price, 0, ',', '.') . ' đ',
             'stock_quantity'   => $stock,
             'is_low_stock'     => ($stock <= 5),
-            'rating'           => (float)($row['rating'] ?? $defaultRatings[$id] ?? 4.9),
-            'reviews'          => (int)($row['reviews'] ?? $defaultReviews[$id] ?? 25),
+            'rating'           => $avgRating,
+            'sao_trung_binh'   => $avgRating,
+            'reviews'          => $reviewCount,
+            'tong_danh_gia'    => $reviewCount,
+            'buyer_count'      => $buyerCount,
+            'so_nguoi_mua'     => $buyerCount,
+            'sold_count'       => $buyerCount,
             'is_bamboo'        => (int)($row['is_bamboo'] ?? 1),
             'bamboo_label'     => (string)($row['bamboo_label'] ?? 'Vải Sợi Tre Kháng Khuẩn'),
             'size_range'       => (string)($row['size_range'] ?? ($type === 'giay_dep' ? 'Size 21 - Size 28' : $catMeta['size_range'])),
@@ -463,7 +478,10 @@ class ProductModel extends Model {
         // 1. Khi có kết nối CSDL, đồng bộ trực tiếp toàn bộ sản phẩm catalog (>= 101) từ bảng lbn_san_pham & lbn_danh_muc
         if ($this->hasConnection()) {
             try {
-                $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh 
+                $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                               COALESCE(fn_tgb_tinh_sao_trung_binh_san_pham(sp.ma_san_pham), 0.0) AS sao_trung_binh,
+                               (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                               COALESCE(fn_tgb_dem_so_nguoi_mua(sp.ma_san_pham), 0) AS so_nguoi_mua
                         FROM lbn_san_pham sp 
                         JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
                         WHERE sp.ma_san_pham >= 101

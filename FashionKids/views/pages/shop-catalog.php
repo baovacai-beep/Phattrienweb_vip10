@@ -213,10 +213,16 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                     <span class="small font-weight-bold text-muted-custom">
                                         <?= htmlspecialchars($prod['category_name']) ?>
                                     </span>
-                                    <span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">
-                                        <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?>
-                                        <span class="text-muted-custom font-weight-normal">(<?= (int)$prod['reviews'] ?>)</span>
-                                    </span>
+                                    <?php if ((int)($prod['reviews'] ?? 0) > 0): ?>
+                                        <span class="small text-warning font-weight-bold text-nowrap flex-shrink-0">
+                                            <i class="fa-solid fa-star"></i> <?= number_format((float)$prod['rating'], 1) ?>
+                                            <span class="text-muted-custom font-weight-normal">(<?= (int)$prod['reviews'] ?>)</span>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge badge-pill fk-no-review-badge text-nowrap flex-shrink-0">
+                                            Chưa có đánh giá
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
 
                                 <h6 class="font-weight-bold text-slate mb-2">
@@ -225,9 +231,14 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
                                     </a>
                                 </h6>
 
-                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small text-muted-custom mb-2">
                                     <span class="text-nowrap"><i class="fa-solid fa-barcode mr-1"></i><?= htmlspecialchars($prod['sku']) ?></span>
                                     <span class="text-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i><?= htmlspecialchars($prod['size_range']) ?></span>
+                                </div>
+                                <div class="mb-3">
+                                    <span class="fk-buyer-count-pill">
+                                        <i class="fa-solid fa-bag-shopping text-peach mr-1"></i><?= (int)($prod['buyer_count'] ?? 0) ?> người mua
+                                    </span>
                                 </div>
 
                                 <div class="mt-auto pt-3 border-top d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
