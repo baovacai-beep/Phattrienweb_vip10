@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/Rbac.php';
 require_once __DIR__ . '/../models/ProductModel.php';
 require_once __DIR__ . '/../models/SizeChartModel.php';
 
@@ -367,6 +368,11 @@ class ProductController extends Controller {
             ob_clean();
         }
 
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên kho và Quản trị viên mới được phép cập nhật tồn kho.'
+        );
+
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (Chỉ chấp nhận POST)!'], 405);
         }
@@ -417,6 +423,11 @@ class ProductController extends Controller {
         if (ob_get_level() > 0) {
             ob_clean();
         }
+
+        Rbac::requireRolesJson(
+            ['quan_tri'],
+            'Nhân viên chỉ được phép nhập thêm tồn kho. Quyền thêm mới hoặc chỉnh sửa sản phẩm chỉ dành cho Quản trị viên.'
+        );
 
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ (Chỉ chấp nhận POST)!'], 405);
@@ -476,15 +487,18 @@ class ProductController extends Controller {
                 ], 422);
             }
             $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($_FILES['image']['name'], PATHINFO_FILENAME));
-            $fileName = ($safeBase ?: 'sp_lbn') . '.' . $ext;
+            $fileName = time() . '_' . ($safeBase ?: 'sp_lbn') . '.' . $ext;
             $targetDir = __DIR__ . '/../images/products/';
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
             if (is_dir($targetDir) && is_writable($targetDir)) {
                 $destPath = $targetDir . $fileName;
                 if (@move_uploaded_file($_FILES['image']['tmp_name'], $destPath)) {
                     $uploadedImagePath = '/FashionKids/images/products/' . $fileName;
                 }
             }
-            if ($uploadedImagePath === '') {
+            if ($uploadedImagePath === '' && empty($productId)) {
                 $uploadedImagePath = '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg';
             }
         }

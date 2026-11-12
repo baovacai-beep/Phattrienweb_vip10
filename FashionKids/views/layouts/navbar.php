@@ -113,7 +113,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                                     <a class="dropdown-item py-2 font-weight-bold text-slate" href="/FashionKids/views/pages/staff-orders.php">
                                         <i class="fa-solid fa-boxes-packing mr-2 text-warning"></i>Xử lý đơn hàng
                                     </a>
-                                    <a class="dropdown-item py-2 text-slate" href="/FashionKids/views/pages/staff-chat.php">
+                                    <a class="dropdown-item py-2 text-slate" href="/FashionKids/views/pages/staff-support.php">
                                         <i class="fa-solid fa-headset mr-2 text-danger"></i>CSKH Trực tuyến
                                     </a>
                                     <a class="dropdown-item py-2 text-slate" href="/FashionKids/views/pages/staff-casting-review.php">

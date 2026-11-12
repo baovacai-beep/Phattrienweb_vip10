@@ -45,6 +45,9 @@
                             <div class="small text-muted-custom">
                                 Mã vận đơn: <strong class="text-slate" id="lnkt_labelWaybillCode">#FK-ORD-000001</strong>
                             </div>
+                            <div class="small text-info d-none" id="lnkt_labelCarrierRow">
+                                Vận đơn GHN: <strong id="lnkt_labelCarrierCode">--</strong>
+                            </div>
                         </div>
 
                         <div class="col-4 col-sm-3 text-right">
@@ -123,7 +126,11 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-muted-custom">Phí vận chuyển:</span>
-                                    <strong class="text-success">Miễn phí (0 đ)</strong>
+                                    <strong class="text-slate" id="lnkt_labelShippingFee">0 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 d-none" id="lnkt_labelVoucherRow">
+                                    <span class="text-muted-custom" id="lnkt_labelVoucherLabel">Voucher giảm giá:</span>
+                                    <strong class="text-success" id="lnkt_labelVoucherDiscount">0 đ</strong>
                                 </div>
                                 <div class="d-flex justify-content-between pt-2 mt-1 border-top">
                                     <span class="font-weight-bold text-slate">Tổng giá trị đơn:</span>

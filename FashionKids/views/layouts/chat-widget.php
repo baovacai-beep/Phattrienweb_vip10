@@ -1,9 +1,11 @@
 <?php
 require_once __DIR__ . '/../../core/Rbac.php';
+$appBase = defined('APP_BASE_URL') ? APP_BASE_URL : '/FashionKids';
 $chatSessId = Rbac::chatSessionId();
+$isStaffOrAdmin = Rbac::isStaffOrAdmin();
 $chatIdentityText = Rbac::isGuest()
     ? 'Khách ghé thăm'
-    : ('Tài khoản: ' . ($_SESSION['user']['ho_va_ten'] ?? 'Khách hàng'));
+    : (($isStaffOrAdmin ? 'Chế độ xem thử • ' : 'Tài khoản: ') . ($_SESSION['user']['ho_va_ten'] ?? 'Khách hàng'));
 ?>
 <!-- views/layouts/chat-widget.php - Hộp Thoại Tư Vấn Trực Tuyến Realtime (tgb_tin_nhan_tu_van) -->
 <button class="btn rounded-circle shadow-lg d-flex align-items-center justify-content-center chat-floating-button"
@@ -21,16 +23,26 @@ $chatIdentityText = Rbac::isGuest()
                     <i class="fa-solid fa-headset text-peach"></i>
                 </span>
                 <div class="min-w-0">
-                    <div class="font-weight-bold small d-flex align-items-center">
+                    <div class="font-weight-bold small d-flex align-items-center flex-wrap">
                         <span>Tư Vấn FashionKids</span>
+                        <span class="badge badge-light text-peach ml-2 px-2 py-0 rounded-pill text-nowrap flex-shrink-0">CSKH &amp; AI 24/7</span>
                         <span class="fk-live-pulse-dot ml-2 flex-shrink-0"></span>
                     </div>
                     <div class="small text-light text-truncate"><?= htmlspecialchars($chatIdentityText) ?></div>
                 </div>
             </div>
-            <button type="button" class="close text-white flex-shrink-0" data-toggle="collapse" data-target="#customerChatWidget">
-                <span>&times;</span>
-            </button>
+            <div class="d-flex align-items-center flex-shrink-0">
+                <?php if ($isStaffOrAdmin): ?>
+                    <a href="<?= $appBase ?>/views/pages/staff-support.php"
+                       class="btn btn-light btn-sm rounded-pill px-2 py-0 mr-2 font-weight-bold text-peach small text-nowrap shadow-sm"
+                       title="Mở Bàn Làm Việc CSKH trả lời khách hàng">
+                        <i class="fa-solid fa-headset mr-1"></i>Bàn CSKH
+                    </a>
+                <?php endif; ?>
+                <button type="button" class="close text-white flex-shrink-0" data-toggle="collapse" data-target="#customerChatWidget">
+                    <span>&times;</span>
+                </button>
+            </div>
         </div>
 
         <!-- Thanh câu hỏi gợi ý nhanh -->
@@ -53,17 +65,7 @@ $chatIdentityText = Rbac::isGuest()
         <div class="card-body chat-scroll-area p-3 d-flex flex-column" id="fk_clientChatMessagesArea" data-session-id="<?= htmlspecialchars($chatSessId) ?>">
             <div class="d-flex mb-3">
                 <div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">
-                    Xin chào ba mẹ! Em là Chuyên viên tư vấn thời trang sợi tre <strong>FashionKids</strong>. Em có thể hỗ trợ ba mẹ chọn size cho bé hay kiểm tra đơn hàng ạ?
-                </div>
-            </div>
-            <div class="d-flex justify-content-end mb-3">
-                <div class="p-3 small shadow-sm chat-bubble-sent">
-                    Shop ơi cho mình hỏi bé cao 92cm nặng 13kg mặc váy Elsa size mấy thì vừa ạ?
-                </div>
-            </div>
-            <div class="d-flex mb-2">
-                <div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">
-                    Dạ chào ba mẹ, với số đo 92cm bé mặc <strong>Size 2 (2-3T)</strong> là vừa vặn và thoải mái nhất ạ!
+                    Xin chào ba mẹ! Em là Chuyên viên tư vấn thời trang sợi tre <strong>FashionKids</strong>. Ba mẹ cần hỗ trợ chọn size cho bé hay kiểm tra đơn hàng cứ nhắn trực tiếp tại đây ạ!
                 </div>
             </div>
         </div>

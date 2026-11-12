@@ -195,7 +195,34 @@ class ProductModel extends Model {
                     return $rows;
                 }
             } catch (PDOException $e) {
-                error_log("Lỗi lấy danh sách sản phẩm: " . $e->getMessage());
+                // Dự phòng khi Shared Hosting chặn Stored Function (fn_tgb_*)
+                try {
+                    $fallbackSql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                           ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                           (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                           (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                            FROM tgb_chi_tiet_don_hang ct
+                                            JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                            WHERE ct.ma_san_pham = sp.ma_san_pham
+                                              AND dh.trang_thai_don_hang = 'hoan_tat'
+                                              AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                           ) AS so_nguoi_mua
+                                    FROM lbn_san_pham sp
+                                    JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                    WHERE sp.ma_san_pham >= 101 AND sp.gia_ban BETWEEN :minPrice AND :maxPrice";
+                    if ($maDanhMuc !== null && $maDanhMuc > 0) {
+                        $fallbackSql .= " AND sp.ma_danh_muc = :maDanhMuc";
+                    }
+                    $fallbackSql .= " ORDER BY sp.ma_san_pham DESC";
+                    $stmtFb = $this->db->prepare($fallbackSql);
+                    $stmtFb->execute($params);
+                    $rowsFb = $stmtFb->fetchAll();
+                    if (!empty($rowsFb)) {
+                        return $rowsFb;
+                    }
+                } catch (PDOException $e2) {
+                    error_log("Lỗi lấy danh sách sản phẩm: " . $e2->getMessage());
+                }
             }
         }
         return $this->mockProducts;
@@ -224,7 +251,31 @@ class ProductModel extends Model {
                 if (!empty($rows)) {
                     return $rows;
                 }
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                try {
+                    $stmtFb = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                         ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                                         (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                         (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                                          FROM tgb_chi_tiet_don_hang ct
+                                                          JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                                          WHERE ct.ma_san_pham = sp.ma_san_pham
+                                                            AND dh.trang_thai_don_hang = 'hoan_tat'
+                                                            AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                                         ) AS so_nguoi_mua
+                                                  FROM lbn_san_pham sp
+                                                  JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                                  WHERE sp.ma_san_pham >= 101 AND sp.so_luong_ton_kho > 0
+                                                  ORDER BY sp.ma_san_pham ASC
+                                                  LIMIT :limit");
+                    $stmtFb->bindValue(':limit', $limit, PDO::PARAM_INT);
+                    $stmtFb->execute();
+                    $rowsFb = $stmtFb->fetchAll();
+                    if (!empty($rowsFb)) {
+                        return $rowsFb;
+                    }
+                } catch (PDOException $e2) {}
+            }
         }
         return array_slice($this->mockProducts, 0, $limit);
     }
@@ -247,7 +298,27 @@ class ProductModel extends Model {
                 $product = $stmt->fetch();
                 return $product ?: null;
             } catch (PDOException $e) {
-                error_log("Lỗi chi tiết sản phẩm: " . $e->getMessage());
+                try {
+                    $stmtFb = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                         ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                                         (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                         (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                                          FROM tgb_chi_tiet_don_hang ct
+                                                          JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                                          WHERE ct.ma_san_pham = sp.ma_san_pham
+                                                            AND dh.trang_thai_don_hang = 'hoan_tat'
+                                                            AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                                         ) AS so_nguoi_mua
+                                                  FROM lbn_san_pham sp
+                                                  JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                                  WHERE sp.ma_san_pham = :id
+                                                  LIMIT 1");
+                    $stmtFb->execute([':id' => $id]);
+                    $productFb = $stmtFb->fetch();
+                    return $productFb ?: null;
+                } catch (PDOException $e2) {
+                    error_log("Lỗi chi tiết sản phẩm: " . $e2->getMessage());
+                }
             }
         }
 
@@ -296,7 +367,7 @@ class ProductModel extends Model {
     }
 
     /**
-     * Nhập thêm kho hàng qua sp_lbn_nhap_them_kho_hang
+     * Nhập thêm kho hàng qua sp_lbn_nhap_them_kho_hang (có fallback UPDATE trực tiếp cho Hosting)
      */
     public function updateStock(int $productId, int $quantityChange): bool {
         if ($this->hasConnection()) {
@@ -306,7 +377,27 @@ class ProductModel extends Model {
                 $stmt->closeCursor();
                 return $res;
             } catch (PDOException $e) {
-                return false;
+                if ((string)$e->getCode() === '45000' || strpos($e->getMessage(), '1644') !== false) {
+                    return false;
+                }
+                try {
+                    if ($quantityChange === 0) {
+                        return true;
+                    }
+                    if ($quantityChange > 0) {
+                        $fb = $this->db->prepare("UPDATE lbn_san_pham SET so_luong_ton_kho = so_luong_ton_kho + :qty WHERE ma_san_pham = :pid");
+                        return $fb->execute([':qty' => $quantityChange, ':pid' => $productId]);
+                    }
+                    $fb = $this->db->prepare(
+                        "UPDATE lbn_san_pham SET so_luong_ton_kho = so_luong_ton_kho + :qty
+                         WHERE ma_san_pham = :pid AND (so_luong_ton_kho + :qtyCheck) >= 0"
+                    );
+                    $fb->execute([':qty' => $quantityChange, ':qtyCheck' => $quantityChange, ':pid' => $productId]);
+                    return $fb->rowCount() > 0;
+                } catch (PDOException $e2) {
+                    error_log('[lbn] updateStock fallback error: ' . $e2->getMessage());
+                    return false;
+                }
             }
         }
         return true;
@@ -495,7 +586,32 @@ class ProductModel extends Model {
                     }
                 }
             } catch (PDOException $e) {
-                error_log("Lỗi đồng bộ lbn_san_pham: " . $e->getMessage());
+                try {
+                    $fallbackSql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                           ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                           (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                           (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                            FROM tgb_chi_tiet_don_hang ct
+                                            JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                            WHERE ct.ma_san_pham = sp.ma_san_pham
+                                              AND dh.trang_thai_don_hang = 'hoan_tat'
+                                              AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                           ) AS so_nguoi_mua
+                                    FROM lbn_san_pham sp
+                                    JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                    WHERE sp.ma_san_pham >= 101
+                                    ORDER BY sp.ma_san_pham ASC";
+                    $rowsFb = $this->db->query($fallbackSql)->fetchAll();
+                    if (!empty($rowsFb)) {
+                        $loadedFromDb = true;
+                        foreach ($rowsFb as $idx => $dbRow) {
+                            $norm = $this->normalizeProductRow($dbRow, $idx);
+                            $byId[$norm['id']] = $norm;
+                        }
+                    }
+                } catch (PDOException $e2) {
+                    error_log("Lỗi đồng bộ lbn_san_pham: " . $e2->getMessage());
+                }
             }
         }
 
@@ -513,7 +629,27 @@ class ProductModel extends Model {
             }
         }
 
-        return array_values($byId);
+        return $this->sortCatalogItemsForDisplay(array_values($byId));
+    }
+
+    /**
+     * Đưa các sản phẩm mới tạo (> 109) lên đầu theo thứ tự mới nhất trước, giữ nhóm 101..109 theo thứ tự chuẩn.
+     */
+    private function sortCatalogItemsForDisplay(array $items): array {
+        usort($items, static function (array $a, array $b): int {
+            $idA = (int)($a['id'] ?? $a['ma_san_pham'] ?? 0);
+            $idB = (int)($b['id'] ?? $b['ma_san_pham'] ?? 0);
+            $isNewA = $idA > 109;
+            $isNewB = $idB > 109;
+            if ($isNewA !== $isNewB) {
+                return $isNewA ? -1 : 1;
+            }
+            if ($isNewA && $isNewB) {
+                return $idB <=> $idA;
+            }
+            return $idA <=> $idB;
+        });
+        return $items;
     }
 
     /**
@@ -630,14 +766,19 @@ class ProductModel extends Model {
                     $foundProduct = $this->normalizeProductRow($dbRow);
                     $tonKhoHienTai = (int)$dbRow['so_luong_ton_kho'];
 
-                    $fnStmt = $this->db->prepare("SELECT fn_lbn_kiem_tra_ton_kho(:id, :sl) AS du_hang");
-                    $fnStmt->execute([':id' => $maSanPham, ':sl' => $soLuongCanMua]);
-                    $fnRes = $fnStmt->fetch();
-                    $fnStmt->closeCursor();
-                    if ($fnRes !== false && isset($fnRes['du_hang'])) {
-                        $duHang = (bool)$fnRes['du_hang'] && ($tonKhoHienTai >= $soLuongCanMua);
-                        $usedRoutine = true;
-                    } else {
+                    try {
+                        $fnStmt = $this->db->prepare("SELECT fn_lbn_kiem_tra_ton_kho(:id, :sl) AS du_hang");
+                        $fnStmt->execute([':id' => $maSanPham, ':sl' => $soLuongCanMua]);
+                        $fnRes = $fnStmt->fetch();
+                        $fnStmt->closeCursor();
+                        if ($fnRes !== false && isset($fnRes['du_hang'])) {
+                            $duHang = (bool)$fnRes['du_hang'] && ($tonKhoHienTai >= $soLuongCanMua);
+                            $usedRoutine = true;
+                        } else {
+                            $duHang = ($tonKhoHienTai >= $soLuongCanMua);
+                        }
+                    } catch (PDOException $fnEx) {
+                        // Dự phòng khi Shared Hosting không hỗ trợ Stored Function
                         $duHang = ($tonKhoHienTai >= $soLuongCanMua);
                     }
                 } else {
@@ -709,17 +850,29 @@ class ProductModel extends Model {
         if ($this->hasConnection()) {
             try {
                 if ($delta > 0) {
-                    $stmt = $this->db->prepare("CALL sp_lbn_nhap_them_kho_hang(:pid, :qty)");
-                    $stmt->execute([':pid' => $maSanPham, ':qty' => $delta]);
-                    $stmt->closeCursor();
+                    try {
+                        $stmt = $this->db->prepare("CALL sp_lbn_nhap_them_kho_hang(:pid, :qty)");
+                        $stmt->execute([':pid' => $maSanPham, ':qty' => $delta]);
+                        $stmt->closeCursor();
+                    } catch (PDOException $spEx) {
+                        if ((string)$spEx->getCode() === '45000' || strpos($spEx->getMessage(), '1644') !== false) {
+                            throw new InvalidArgumentException($spEx->getMessage());
+                        }
+                        // Dự phòng trực tiếp khi Hosting không có Stored Procedure sp_lbn_nhap_them_kho_hang
+                        $fbStmt = $this->db->prepare("UPDATE lbn_san_pham SET so_luong_ton_kho = :stock WHERE ma_san_pham = :pid");
+                        $fbStmt->execute([':stock' => $finalStock, ':pid' => $maSanPham]);
+                    }
                 } else {
                     $stmt = $this->db->prepare("UPDATE lbn_san_pham SET so_luong_ton_kho = :stock WHERE ma_san_pham = :pid");
                     $stmt->execute([':stock' => $finalStock, ':pid' => $maSanPham]);
                 }
                 $dbUpdated = true;
                 unset($_SESSION['lbn_stock_overrides'][$maSanPham]);
+            } catch (InvalidArgumentException $e) {
+                throw $e;
             } catch (PDOException $e) {
                 error_log("Lỗi cập nhật tồn kho sp_lbn_nhap_them_kho_hang: " . $e->getMessage());
+                throw new RuntimeException('Không thể lưu cập nhật tồn kho vào cơ sở dữ liệu: ' . $e->getMessage());
             }
         }
 
@@ -780,6 +933,19 @@ class ProductModel extends Model {
             $entity = new SanPhamQuanAo($productId, $catId, $name, $price, $stock, $imagePath);
         }
 
+        if ($imagePath === '' && $isEdit && $this->hasConnection()) {
+            try {
+                $imgStmt = $this->db->prepare("SELECT duong_dan_anh FROM lbn_san_pham WHERE ma_san_pham = :id LIMIT 1");
+                $imgStmt->execute([':id' => $productId]);
+                $imgRow = $imgStmt->fetch();
+                if (!empty($imgRow['duong_dan_anh'])) {
+                    $imagePath = (string)$imgRow['duong_dan_anh'];
+                }
+            } catch (PDOException $e) {
+                // Giữ nguyên fallback bên dưới nếu không đọc được ảnh cũ
+            }
+        }
+
         if ($imagePath === '') {
             $defaultImages = [
                 1 => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
@@ -790,6 +956,7 @@ class ProductModel extends Model {
             $imagePath = $defaultImages[$catId] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg';
         }
 
+        $usedRoutine = false;
         if (!$isEdit) {
             $newId = 0;
             if ($this->hasConnection()) {
@@ -810,12 +977,45 @@ class ProductModel extends Model {
 
                     $outRow = $this->db->query("SELECT @ma_sp_moi AS ma_san_pham_moi")->fetch();
                     $newId  = (int)($outRow['ma_san_pham_moi'] ?? 0);
+                    if ($newId > 0) {
+                        $usedRoutine = true;
+                    }
                 } catch (PDOException $e) {
-                    error_log("Lỗi gọi sp_lbn_them_san_pham_moi: " . $e->getMessage());
+                    if ((string)$e->getCode() === '45000' || strpos($e->getMessage(), '1644') !== false) {
+                        throw new InvalidArgumentException($e->getMessage());
+                    }
+                    error_log("Lỗi gọi sp_lbn_them_san_pham_moi (chuyển sang INSERT trực tiếp): " . $e->getMessage());
                 }
-            }
 
-            if ($newId <= 0) {
+                // Dự phòng khi Hosting (InfinityFree) không có Stored Procedure sp_lbn_them_san_pham_moi
+                if ($newId <= 0) {
+                    try {
+                        $insStmt = $this->db->prepare(
+                            "INSERT INTO lbn_san_pham
+                                (ma_danh_muc, ten_san_pham, gia_ban, so_luong_ton_kho, duong_dan_anh, mo_ta_chat_lieu, loai_kich_co, ngay_tao)
+                             VALUES
+                                (:cat, :name, :price, :stock, :img, :desc, :type, NOW())"
+                        );
+                        $insStmt->execute([
+                            ':cat'   => $entity->getMaDanhMuc(),
+                            ':name'  => $entity->getTenSanPham(),
+                            ':price' => $entity->getGiaBan(),
+                            ':stock' => $entity->getSoLuongTonKho(),
+                            ':img'   => $imagePath,
+                            ':desc'  => $material,
+                            ':type'  => $entity->getLoaiKichCo()
+                        ]);
+                        $newId = (int)$this->db->lastInsertId();
+                    } catch (PDOException $e2) {
+                        error_log("Lỗi INSERT trực tiếp lbn_san_pham: " . $e2->getMessage());
+                        throw new RuntimeException('Không thể lưu sản phẩm mới vào cơ sở dữ liệu: ' . $e2->getMessage());
+                    }
+                }
+
+                if ($newId <= 0) {
+                    throw new RuntimeException('Không thể lưu sản phẩm mới vào cơ sở dữ liệu (không lấy được mã sản phẩm).');
+                }
+            } else {
                 $all = $this->layTatCaSanPhamChuanHoa();
                 $maxId = 109;
                 foreach ($all as $item) {
@@ -848,6 +1048,7 @@ class ProductModel extends Model {
                     ]);
                 } catch (PDOException $e) {
                     error_log("Lỗi cập nhật sản phẩm: " . $e->getMessage());
+                    throw new RuntimeException('Không thể cập nhật sản phẩm vào cơ sở dữ liệu: ' . $e->getMessage());
                 }
             }
         }

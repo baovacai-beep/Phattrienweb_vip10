@@ -579,7 +579,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=staff&a=ajaxRestockInventory',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -737,7 +737,7 @@ $(document).ready(function () {
         $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu kho...');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=product&a=ajaxSaveProduct',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=product&a=ajaxSaveProduct',
             type: 'POST',
             data: formData,
             processData: false,
@@ -1131,11 +1131,12 @@ $(document).ready(function () {
     };
 
     // ------------------------------------------------------------------------
-    // 3. MH 05: Giỏ Hàng, Tỉnh/Thành Provinces Open API & Đặt Hàng (checkout.php)
+    // 3. MH 05: Giỏ Hàng, Tỉnh/Huyện/Xã Provinces Open API (depth=3), GHN & Voucher (checkout.php)
     // ------------------------------------------------------------------------
-    const lnktProvinceApiUrl = 'https://provinces.open-api.vn/api/?depth=2';
+    const lnktProvinceApiUrl = 'https://provinces.open-api.vn/api/?depth=3';
     const lnktProvinceSelect = $('#tgb_select_province');
     const lnktDistrictSelect = $('#tgb_select_district');
+    const lnktWardSelect = $('#tgb_select_ward');
     const lnktProvinceStatus = $('#lnkt_apiStatusText');
     let lnktProvinceData = [];
 
@@ -1150,6 +1151,13 @@ $(document).ready(function () {
 
     window.lnktOnProvinceChange = function (provinceKey) {
         if (!lnktDistrictSelect.length) return;
+
+        if (lnktWardSelect.length) {
+            lnktWardSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Phường / Xã --' }))
+                .prop('disabled', true);
+        }
 
         const selectedProvince = lnktProvinceData.find(function (province) {
             return String(province.code) === String(provinceKey) || province.name === provinceKey;
@@ -1188,7 +1196,41 @@ $(document).ready(function () {
         });
     };
 
-    // Chỉ tải API một lần; đổi tỉnh sử dụng dữ liệu districts đã nhận được.
+    window.lnktOnDistrictChange = function (districtKey) {
+        if (!lnktWardSelect.length) return;
+        const provKey = String(lnktProvinceSelect.val() || '');
+        const selectedProvince = lnktProvinceData.find(function (p) {
+            return String(p.code) === provKey || p.name === provKey;
+        });
+        const districts = selectedProvince && Array.isArray(selectedProvince.districts) ? selectedProvince.districts : [];
+        const selectedDistrict = districts.find(function (d) {
+            return String(d.code) === String(districtKey) || d.name === districtKey;
+        });
+
+        if (!districtKey || !selectedDistrict) {
+            lnktWardSelect
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Phường / Xã --' }))
+                .prop('disabled', true);
+            return;
+        }
+
+        const wards = Array.isArray(selectedDistrict.wards) ? selectedDistrict.wards : [];
+        lnktWardSelect
+            .empty()
+            .append($('<option>', { value: '', text: '-- Chọn Phường / Xã --' }));
+
+        if (wards.length > 0) {
+            wards.forEach(function (w) {
+                lnktWardSelect.append($('<option>', { value: w.name, text: w.name }));
+            });
+        } else {
+            lnktWardSelect.append($('<option>', { value: 'Trung tâm ' + selectedDistrict.name, text: 'Trung tâm ' + selectedDistrict.name }));
+        }
+        lnktWardSelect.prop('disabled', false);
+    };
+
+    // Chỉ tải API một lần; đổi tỉnh/huyện sử dụng dữ liệu 3 cấp đã nhận được.
     window.lnktSyncProvincesOpenApi = function () {
         if (!lnktProvinceSelect.length) return;
 
@@ -1196,12 +1238,18 @@ $(document).ready(function () {
         lnktProvinceSelect
             .prop('disabled', true)
             .empty()
-            .append($('<option>', { value: '', text: 'Đang tải Tỉnh / Thành phố...' }));
+            .append($('<option>', { value: '', text: 'Đang tải Tỉnh / TP...' }));
         lnktDistrictSelect
             .prop('disabled', true)
             .empty()
             .append($('<option>', { value: '', text: '-- Chọn Quận / Huyện --' }));
-        lnktSetProvinceStatus('Đang tải danh sách Tỉnh / Thành phố...', 'fa-spinner fa-spin text-info');
+        if (lnktWardSelect.length) {
+            lnktWardSelect
+                .prop('disabled', true)
+                .empty()
+                .append($('<option>', { value: '', text: '-- Chọn Phường / Xã --' }));
+        }
+        lnktSetProvinceStatus('Đang tải địa giới hành chính 3 cấp (Tỉnh/Huyện/Xã)...', 'fa-spinner fa-spin text-info');
 
         $.getJSON(lnktProvinceApiUrl)
             .done(function (provinces) {
@@ -1223,20 +1271,28 @@ $(document).ready(function () {
                 });
 
                 lnktProvinceSelect.prop('disabled', false);
-                lnktSetProvinceStatus('Đã tải sẵn sàng ' + provinces.length + ' Tỉnh / Thành phố.', 'fa-circle-check text-success');
+                lnktSetProvinceStatus('Đã tải sẵn sàng ' + provinces.length + ' Tỉnh / Thành phố (đầy đủ 3 cấp Phường/Xã).', 'fa-circle-check text-success');
             })
             .fail(function () {
                 lnktProvinceData = [
-                    { name: 'Thành phố Hồ Chí Minh', districts: [{ name: 'Quận 1' }, { name: 'Quận 3' }, { name: 'Quận 7' }, { name: 'Quận Bình Thạnh' }, { name: 'Quận Phú Nhuận' }, { name: 'Thành phố Thủ Đức' }] },
-                    { name: 'Thành phố Hà Nội', districts: [{ name: 'Quận Hoàn Kiếm' }, { name: 'Quận Ba Đình' }, { name: 'Quận Cầu Giấy' }, { name: 'Quận Đống Đa' }, { name: 'Quận Thanh Xuân' }, { name: 'Quận Tây Hồ' }] },
-                    { name: 'Thành phố Đà Nẵng', districts: [{ name: 'Quận Hải Châu' }, { name: 'Quận Thanh Khê' }, { name: 'Quận Sơn Trà' }, { name: 'Quận Ngũ Hành Sơn' }] },
-                    { name: 'Thành phố Cần Thơ', districts: [{ name: 'Quận Ninh Kiều' }, { name: 'Quận Bình Thủy' }, { name: 'Quận Cái Răng' }] },
-                    { name: 'Thành phố Hải Phòng', districts: [{ name: 'Quận Hồng Bàng' }, { name: 'Quận Ngô Quyền' }, { name: 'Quận Lê Chân' }] },
-                    { name: 'Tỉnh Bình Dương', districts: [{ name: 'Thành phố Thủ Dầu Một' }, { name: 'Thành phố Thuận An' }, { name: 'Thành phố Dĩ An' }] },
-                    { name: 'Tỉnh Đồng Nai', districts: [{ name: 'Thành phố Biên Hòa' }, { name: 'Thành phố Long Khánh' }, { name: 'Huyện Long Thành' }] },
-                    { name: 'Tỉnh Khánh Hòa', districts: [{ name: 'Thành phố Nha Trang' }, { name: 'Thành phố Cam Ranh' }] },
-                    { name: 'Tỉnh Thừa Thiên Huế', districts: [{ name: 'Quận Thuận Hóa' }, { name: 'Quận Phú Xuân' }] },
-                    { name: 'Tỉnh Bà Rịa - Vũng Tàu', districts: [{ name: 'Thành phố Vũng Tàu' }, { name: 'Thành phố Bà Rịa' }] }
+                    { name: 'Thành phố Hồ Chí Minh', districts: [
+                        { name: 'Quận 1', wards: [{ name: 'Phường Bến Nghé' }, { name: 'Phường Bến Thành' }, { name: 'Phường Đa Kao' }] },
+                        { name: 'Quận 3', wards: [{ name: 'Phường Võ Thị Sáu' }, { name: 'Phường 1' }, { name: 'Phường 5' }] },
+                        { name: 'Quận 7', wards: [{ name: 'Phường Tân Phong' }, { name: 'Phường Tân Phú' }, { name: 'Phường Phú Mỹ' }] },
+                        { name: 'Quận Bình Thạnh', wards: [{ name: 'Phường 1' }, { name: 'Phường 14' }, { name: 'Phường 25' }] },
+                        { name: 'Quận Phú Nhuận', wards: [{ name: 'Phường 1' }, { name: 'Phường 7' }, { name: 'Phường 15' }] },
+                        { name: 'Thành phố Thủ Đức', wards: [{ name: 'Phường Thảo Điền' }, { name: 'Phường Hiệp Bình Chánh' }, { name: 'Phường Linh Trung' }] }
+                    ] },
+                    { name: 'Thành phố Hà Nội', districts: [
+                        { name: 'Quận Hoàn Kiếm', wards: [{ name: 'Phường Hàng Bạc' }, { name: 'Phường Tràng Tiền' }] },
+                        { name: 'Quận Ba Đình', wards: [{ name: 'Phường Điện Biên' }, { name: 'Phường Đội Cấn' }] },
+                        { name: 'Quận Cầu Giấy', wards: [{ name: 'Phường Dịch Vọng' }, { name: 'Phường Trung Hòa' }] },
+                        { name: 'Quận Đống Đa', wards: [{ name: 'Phường Láng Hạ' }, { name: 'Phường Ô Chợ Dừa' }] }
+                    ] },
+                    { name: 'Thành phố Đà Nẵng', districts: [{ name: 'Quận Hải Châu', wards: [{ name: 'Phường Thạch Thang' }, { name: 'Phường Hải Châu 1' }] }, { name: 'Quận Sơn Trà', wards: [{ name: 'Phường An Hải Bắc' }] }] },
+                    { name: 'Thành phố Cần Thơ', districts: [{ name: 'Quận Ninh Kiều', wards: [{ name: 'Phường Tân An' }, { name: 'Phường Xuân Khánh' }] }] },
+                    { name: 'Tỉnh Bình Dương', districts: [{ name: 'Thành phố Thủ Dầu Một', wards: [{ name: 'Phường Phú Cường' }, { name: 'Phường Hiệp Thành' }] }, { name: 'Thành phố Thuận An', wards: [{ name: 'Phường Lái Thiêu' }] }] },
+                    { name: 'Tỉnh Đồng Nai', districts: [{ name: 'Thành phố Biên Hòa', wards: [{ name: 'Phường Quyết Thắng' }, { name: 'Phường Tân Hiệp' }] }] }
                 ];
                 lnktProvinceSelect
                     .empty()
@@ -1248,7 +1304,7 @@ $(document).ready(function () {
                     }));
                 });
                 lnktProvinceSelect.prop('disabled', false);
-                lnktSetProvinceStatus('Đã tải sẵn sàng ' + lnktProvinceData.length + ' Tỉnh / Thành phố.', 'fa-circle-check text-success');
+                lnktSetProvinceStatus('Đang dùng bộ dữ liệu địa giới 3 cấp dự phòng (' + lnktProvinceData.length + ' Tỉnh/TP).', 'fa-circle-check text-success');
             })
             .always(function () {
                 if (lnktProvinceData.length > 0) {
@@ -1257,13 +1313,15 @@ $(document).ready(function () {
             });
     };
 
-    // Ghép chuỗi địa chỉ đầy đủ vào trường ẩn #tgb_full_address để nộp cùng form sp_tgb_tao_don_hang_va_chi_tiet
+    // Ghép chuỗi địa chỉ đầy đủ vào trường ẩn #tgb_full_address
     window.tgbComposeFullAddress = function () {
         let addr = ($('#lnkt_shippingAddress').val() || '').trim();
+        let ward = ($('#tgb_select_ward').val() || '').trim();
         let dist = ($('#tgb_select_district').val() || '').trim();
         let prov = ($('#tgb_select_province').val() || '').trim();
         let parts = [];
         if (addr) parts.push(addr);
+        if (ward) parts.push(ward);
         if (dist) parts.push(dist);
         if (prov) parts.push(prov);
         let fullStr = parts.join(', ');
@@ -1273,13 +1331,110 @@ $(document).ready(function () {
         return fullStr;
     };
 
+    window.lnktRefreshCheckoutShipping = function () {
+        if (!$('#lnkt_checkout_section').length) return;
+        let province = ($('#tgb_select_province').val() || '').trim();
+        let district = ($('#tgb_select_district').val() || '').trim();
+        let ward = ($('#tgb_select_ward').val() || '').trim();
+        let serviceType = ($('input[name="dich_vu_van_chuyen"]:checked').val() || 'standard').trim();
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxCalculateShipping',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                province: province,
+                district: district,
+                ward: ward,
+                service_type: serviceType
+            },
+            timeout: 8000,
+            success: function (res) {
+                if (res && res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                }
+            }
+        });
+    };
+
+    window.lnktApplyVoucherCode = function () {
+        let code = ($('#lnkt_voucherCodeInput').val() || '').trim().toUpperCase();
+        let $alert = $('#lnkt_voucherAlert');
+        let $btn = $('#lnkt_btnApplyVoucher');
+        if (!code) {
+            $alert.removeClass('d-none text-success').addClass('text-danger font-weight-bold').text('Vui lòng nhập mã giảm giá!');
+            $('#lnkt_voucherCodeInput').focus();
+            return;
+        }
+        let origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxApplyVoucher',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                voucher_code: code,
+                province: ($('#tgb_select_province').val() || '').trim(),
+                district: ($('#tgb_select_district').val() || '').trim(),
+                ward: ($('#tgb_select_ward').val() || '').trim(),
+                service_type: ($('input[name="dich_vu_van_chuyen"]:checked').val() || 'standard').trim()
+            },
+            timeout: 6000,
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                $alert.removeClass('d-none text-danger').addClass('text-success font-weight-bold')
+                    .html('<i class="fa-solid fa-circle-check mr-1"></i>' + lnktEscapeHtml((res && res.message) ? res.message : 'Áp dụng mã thành công!'));
+                if (res && res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện!';
+                $alert.removeClass('d-none text-success').addClass('text-danger font-weight-bold')
+                    .html('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + lnktEscapeHtml(errMsg));
+                if (xhr.responseJSON && xhr.responseJSON.cart_summary) {
+                    window.lnktApplyServerCartSummary(xhr.responseJSON.cart_summary);
+                }
+            }
+        });
+    };
+
+    window.lnktRemoveVoucherCode = function () {
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxRemoveVoucher',
+            type: 'POST',
+            dataType: 'json',
+            timeout: 5000,
+            success: function (res) {
+                $('#lnkt_voucherCodeInput').val('');
+                $('#lnkt_voucherAlert').addClass('d-none').text('');
+                if (res && res.cart_summary) {
+                    window.lnktApplyServerCartSummary(res.cart_summary);
+                }
+            }
+        });
+    };
+
     if (lnktProvinceSelect.length) {
         lnktProvinceSelect.on('change', function () {
             window.lnktOnProvinceChange($(this).val());
             window.tgbComposeFullAddress();
+            window.lnktRefreshCheckoutShipping();
         });
         lnktDistrictSelect.on('change', function () {
+            window.lnktOnDistrictChange($(this).val());
             window.tgbComposeFullAddress();
+            window.lnktRefreshCheckoutShipping();
+        });
+        lnktWardSelect.on('change', function () {
+            window.tgbComposeFullAddress();
+            window.lnktRefreshCheckoutShipping();
+        });
+        $(document).on('change', 'input[name="dich_vu_van_chuyen"]', function () {
+            window.lnktRefreshCheckoutShipping();
         });
         $('#lnkt_shippingAddress').on('input change', function () {
             window.tgbComposeFullAddress();
@@ -1370,12 +1525,49 @@ $(document).ready(function () {
         }
 
         let discountAmt = Number(summary.discount_amount || 0);
+        let shipFee = Number(summary.shipping_fee || 0);
+        let voucherDisc = Number(summary.voucher_discount || 0);
+        let voucherCode = String(summary.voucher_code || '').trim();
         let totalAmt = Number(summary.total_amount || 0);
         let rewardPts = Number(summary.reward_points || 0);
 
         $('#lnkt_summarySubtotal').text(lnktFormatVnd(summary.subtotal || 0));
         $('#lnkt_summaryDiscount').text(discountAmt > 0 ? ('-' + lnktFormatVnd(discountAmt)) : '0 đ');
-        $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
+
+        let $shipBadge = $('#lnkt_summaryShipping');
+        $shipBadge.attr('data-fee', shipFee);
+        if (shipFee <= 0) {
+            $shipBadge.text('Miễn phí (0 đ)').removeClass('badge-warning badge-sky').addClass('badge-mint');
+        } else {
+            $shipBadge.text(lnktFormatVnd(shipFee)).removeClass('badge-mint badge-warning').addClass('badge-sky');
+        }
+
+        if (summary.shipping_meta && $('#lnkt_shippingMetaInfo').length) {
+            let sm = summary.shipping_meta;
+            let wg = summary.weight_gram || sm.weight_gram || 250;
+            let metaLine = [sm.service_label, sm.zone_label, 'Khối lượng: ' + wg + 'g', sm.eta_text].filter(Boolean).join(' • ');
+            $('#lnkt_shippingMetaInfo').html('<i class="fa-solid fa-truck text-peach mr-1"></i>' + lnktEscapeHtml(metaLine));
+        }
+
+        if ($('#lnkt_appliedVoucherInput').length) {
+            $('#lnkt_appliedVoucherInput').val(voucherCode);
+        }
+        if ($('#lnkt_btnRemoveVoucher').length) {
+            $('#lnkt_btnRemoveVoucher').toggleClass('d-none', voucherCode === '');
+        }
+        if ($('#lnkt_summaryVoucherRow').length) {
+            $('#lnkt_summaryVoucherRow').attr('data-voucher-discount', voucherDisc);
+            if (voucherDisc > 0 && voucherCode !== '') {
+                $('#lnkt_summaryVoucherRow').removeClass('d-none');
+                $('#lnkt_summaryVoucherLabel').text('4. Voucher (' + voucherCode + '):');
+                $('#lnkt_summaryVoucherDiscount').text('-' + lnktFormatVnd(voucherDisc));
+            } else {
+                $('#lnkt_summaryVoucherRow').addClass('d-none');
+                $('#lnkt_summaryVoucherLabel').text('4. Voucher:');
+                $('#lnkt_summaryVoucherDiscount').text('0 đ');
+            }
+        }
+
         $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmt));
         if ($('#tgb_checkout_total').length) { $('#tgb_checkout_total').val(totalAmt); }
         $('#lnkt_summaryRewardPoints').text('+' + rewardPts.toLocaleString('vi-VN') + ' điểm VIP');
@@ -1500,12 +1692,20 @@ $(document).ready(function () {
 
         let discountPercent = parseFloat($('#lnkt_checkoutDiscountPercent').val()) || 0;
         let discountAmount = Math.round((subtotal * discountPercent) / 100);
-        let totalAmount = Math.max(0, subtotal - discountAmount);
+        let curShipFee = parseFloat($('#lnkt_summaryShipping').attr('data-fee')) || 0;
+        if ($('.lnkt-cart-row').length === 0) curShipFee = 0;
+        let curVoucherDisc = parseFloat($('#lnkt_summaryVoucherRow').attr('data-voucher-discount')) || 0;
+        if ($('.lnkt-cart-row').length === 0) curVoucherDisc = 0;
+        let totalAmount = Math.max(0, subtotal - discountAmount - curVoucherDisc + curShipFee);
         let rewardPts = Math.floor(totalAmount / 10000);
 
         $('#lnkt_summarySubtotal').text(lnktFormatVnd(subtotal));
         $('#lnkt_summaryDiscount').text(discountAmount > 0 ? ('-' + lnktFormatVnd(discountAmount)) : '0 đ');
-        $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning').addClass('badge-mint');
+        if (curShipFee <= 0) {
+            $('#lnkt_summaryShipping').text('Miễn phí (0 đ)').removeClass('badge-warning badge-sky').addClass('badge-mint');
+        } else {
+            $('#lnkt_summaryShipping').text(lnktFormatVnd(curShipFee)).removeClass('badge-mint badge-warning').addClass('badge-sky');
+        }
         $('#lnkt_summaryTotalAmount').text(lnktFormatVnd(totalAmount));
         if ($('#tgb_checkout_total').length) { $('#tgb_checkout_total').val(totalAmount); }
         $('#lnkt_summaryRewardPoints').text('+' + rewardPts.toLocaleString('vi-VN') + ' điểm VIP');
@@ -1605,10 +1805,15 @@ $(document).ready(function () {
         let deadlineLabel = ord.han_thanh_toan ? lnktFormatMysqlDt(ord.han_thanh_toan) : '--:--';
         let createdTs = parseInt(ord.created_ts, 10) || lnktParseMysqlTs(ord.ngay_dat_hang);
         let deadlineTs = parseInt(ord.han_thanh_toan_ts, 10) || (createdTs + 86400);
-        let fullAddress = [ord.dia_chi_giao_hang, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
+        let fullAddress = [ord.dia_chi_giao_hang, ord.phuong_xa, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
         let totalAmt = Number(ord.tong_tien_thanh_toan || 0);
         let subtotalAmt = Number(ord.tien_hang_tam_tinh || 0);
         let discountAmt = Number(ord.tien_giam_gia || 0);
+        let shipFeeAmt = Number(ord.phi_van_chuyen || 0);
+        let voucherDiscAmt = Number(ord.tien_giam_voucher || 0);
+        let voucherCodeStr = String(ord.ma_voucher || '').trim();
+        let carrierCode = String(ord.ma_van_don_hang_vc || '').trim();
+        let carrierName = String(ord.don_vi_van_chuyen || 'GHN').trim();
         let codCollectAmt = (ord.cod_collect_amount !== undefined)
             ? Number(ord.cod_collect_amount)
             : ((isPaid || statusKey === 'da_huy') ? 0 : totalAmt);
@@ -1632,6 +1837,13 @@ $(document).ready(function () {
         );
         $('#lnkt_createdTimeMeta').html('Ngày đặt: <strong>' + lnktEscapeHtml(createdLabel) + '</strong>');
         $('#lnkt_staffMeta').html('Nhân viên phụ trách: <strong>' + lnktEscapeHtml(ord.nhan_vien_phu_trach || 'Đang chờ tiếp nhận') + '</strong>');
+        if ($('#lnkt_carrierMeta').length) {
+            if (carrierCode !== '') {
+                $('#lnkt_carrierMeta').removeClass('d-none').html('Vận đơn <strong>' + lnktEscapeHtml(carrierName || 'GHN') + '</strong>: <strong id="lnkt_carrierCodeText">' + lnktEscapeHtml(carrierCode) + '</strong>');
+            } else {
+                $('#lnkt_carrierMeta').addClass('d-none');
+            }
+        }
 
         if (canCancel) {
             $('#lnkt_ownerCancelBar').removeClass('d-none');
@@ -1792,6 +2004,24 @@ $(document).ready(function () {
         $('#lnkt_sumSubtotal').text(lnktFormatVnd(subtotalAmt));
         $('#lnkt_sumVipLabel').text('Ưu đãi VIP (' + (ord.khach_hang_hang || 'Thành viên') + '):');
         $('#lnkt_sumDiscount').text(discountAmt > 0 ? ('-' + lnktFormatVnd(discountAmt)) : '0 đ');
+        if ($('#lnkt_sumShippingFee').length) {
+            if (shipFeeAmt <= 0) {
+                $('#lnkt_sumShippingFee').text('Miễn phí (0 đ)').removeClass('badge-sky badge-warning').addClass('badge-mint');
+            } else {
+                $('#lnkt_sumShippingFee').text(lnktFormatVnd(shipFeeAmt)).removeClass('badge-mint badge-warning').addClass('badge-sky');
+            }
+        }
+        if ($('#lnkt_sumVoucherRow').length) {
+            if (voucherDiscAmt > 0) {
+                $('#lnkt_sumVoucherRow').removeClass('d-none');
+                $('#lnkt_sumVoucherLabel').text('Mã giảm giá' + (voucherCodeStr !== '' ? (' (' + voucherCodeStr + ')') : '') + ':');
+                $('#lnkt_sumVoucherDiscount').text('-' + lnktFormatVnd(voucherDiscAmt));
+            } else {
+                $('#lnkt_sumVoucherRow').addClass('d-none');
+                $('#lnkt_sumVoucherLabel').text('Mã giảm giá:');
+                $('#lnkt_sumVoucherDiscount').text('0 đ');
+            }
+        }
         $('#lnkt_sumPaymentMethod').text(payMethod === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thanh toán khi nhận hàng (COD)');
         $('#lnkt_sumPaymentStatus')
             .removeClass('text-success text-danger text-warning')
@@ -2218,7 +2448,7 @@ $(document).ready(function () {
         return '<span class="badge badge-secondary px-2 py-1 rounded-pill text-nowrap">' + lnktEscapeHtml(uiStatus) + '</span>';
     }
 
-    function lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid) {
+    function lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid, carrierCode) {
         let safeCode = String(ocode || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         if (st === 'cho_duyet' && pm === 'vietqr' && !isPaid) {
             return (
@@ -2230,7 +2460,10 @@ $(document).ready(function () {
             return '<button type="button" class="btn btn-outline-info btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'da_xac_nhan\')"><i class="fa-solid fa-box-open mr-1"></i>Tiếp nhận &amp; Xác nhận</button>';
         }
         if (st === 'da_xac_nhan') {
-            return '<button type="button" class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'dang_giao\')"><i class="fa-solid fa-truck-fast mr-1"></i>Chuyển Giao Hàng</button>';
+            let pushBtn = !carrierCode
+                ? '<button type="button" class="btn btn-pastel-sky btn-sm btn-block rounded-pill py-0 small font-weight-bold text-slate mb-1" onclick="lnktCreateCarrierWaybill(' + oid + ', this)"><i class="fa-solid fa-truck-pickup text-info mr-1"></i>Đẩy đơn GHN</button>'
+                : '';
+            return pushBtn + '<button type="button" class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'dang_giao\')"><i class="fa-solid fa-truck-fast mr-1"></i>Chuyển Giao Hàng</button>';
         }
         if (st === 'dang_giao') {
             return '<button type="button" class="btn btn-outline-success btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1" onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeCode) + '\', \'hoan_tat\')"><i class="fa-solid fa-circle-check mr-1"></i>Hoàn Tất &amp; Tích Điểm</button>';
@@ -2310,6 +2543,13 @@ $(document).ready(function () {
         let isPaid = (!!ord.is_paid || ps === 'da_thanh_toan');
         let isLocked = (st === 'hoan_tat' || st === 'da_huy');
         let lockConfirm = (st === 'cho_duyet' && pm === 'vietqr' && !isPaid);
+        let carrierCode = String(ord.ma_van_don_hang_vc || '').trim();
+        let carrierName = String(ord.don_vi_van_chuyen || 'GHN').trim();
+        let shipVal = Number(ord.phi_van_chuyen || 0);
+        let shipFmt = shipVal > 0 ? lnktFormatVnd(shipVal) : 'Miễn phí (0 đ)';
+        let vouchVal = Number(ord.tien_giam_voucher || 0);
+        let vouchCode = String(ord.ma_voucher || '').trim();
+        let vouchFmt = vouchVal > 0 ? ('-' + lnktFormatVnd(vouchVal) + (vouchCode !== '' ? (' (' + vouchCode + ')') : '')) : '0 đ';
 
         $row.attr('data-status', st)
             .attr('data-payment-method', pm)
@@ -2318,7 +2558,14 @@ $(document).ready(function () {
         $('#lnkt_payBadgeWrap_' + oid).html(lnktRenderStaffPaymentBadgesHtml(ord));
         $('#lnkt_collectBadge_' + oid).html(lnktRenderStaffCollectHtml(ord));
         $('#lnkt_orderBadgeCell_' + oid).html(lnktBuildStaffStatusBadgeHtml(st));
-        $('#lnkt_quickActionCell_' + oid).html(lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid));
+        if ($('#lnkt_carrierBadgeWrap_' + oid).length) {
+            $('#lnkt_carrierBadgeWrap_' + oid).html(
+                carrierCode
+                    ? ('<span class="badge badge-light border text-info small py-0 px-2 rounded-pill mt-1 text-nowrap"><i class="fa-solid fa-barcode mr-1"></i>' + lnktEscapeHtml(carrierName + ': ' + carrierCode) + '</span>')
+                    : ''
+            );
+        }
+        $('#lnkt_quickActionCell_' + oid).html(lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid, carrierCode));
 
         let $select = $('#lnkt_statusSelect_' + oid);
         if ($select.length) {
@@ -2341,6 +2588,8 @@ $(document).ready(function () {
                 .attr('data-payment', payText)
                 .attr('data-cod-collect', codMeta.text)
                 .attr('data-cod-class', codMeta.cls)
+                .attr('data-ship-fee', shipFmt)
+                .attr('data-voucher', vouchFmt)
                 .attr('data-staff', ord.nhan_vien_phu_trach || 'Chưa tiếp nhận');
             if (ord.ghi_chu) {
                 $inspLink.attr('data-note', ord.ghi_chu);
@@ -2348,6 +2597,8 @@ $(document).ready(function () {
         }
         if ($('#lnkt_inspectCode').text().trim() === '#' + ocode) {
             $('#lnkt_inspectPayment').text(payText);
+            if ($('#lnkt_inspectShipFee').length) $('#lnkt_inspectShipFee').text(shipFmt);
+            if ($('#lnkt_inspectVoucher').length) $('#lnkt_inspectVoucher').text(vouchFmt);
             $('#lnkt_inspectCodCollect')
                 .removeClass('text-success text-danger text-peach')
                 .addClass(codMeta.cls)
@@ -2542,6 +2793,44 @@ $(document).ready(function () {
         });
     };
 
+    window.lnktCreateCarrierWaybill = function (orderId, btnEl) {
+        let $btn = btnEl ? $(btnEl) : $();
+        let origHtml = $btn.length ? $btn.html() : '';
+        if ($btn.length) {
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang tạo vận đơn...');
+        }
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=staff&a=ajaxCreateCarrierOrder',
+            type: 'POST',
+            dataType: 'json',
+            data: { order_id: orderId },
+            timeout: 15000,
+            complete: function () {
+                if ($btn.length && document.body.contains($btn[0])) {
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+            },
+            success: function (res) {
+                if (!res || res.status !== 'success') {
+                    lnktShowStaffOrderAlert('error', (res && res.message) ? res.message : 'Không thể đẩy đơn sang GHN.');
+                    return;
+                }
+                if (res.order) {
+                    lnktSyncExistingStaffRow(res.order);
+                }
+                lnktShowStaffOrderAlert('success', res.message || ('Đã tạo vận đơn GHN: ' + (res.tracking_code || '')));
+                window.lnktFilterStaffOrders();
+            },
+            error: function (xhr) {
+                let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Lỗi tạo mã vận đơn GHN lúc này!';
+                lnktShowStaffOrderAlert('error', errMsg);
+            }
+        });
+    };
+
     window.lnktInspectStaffOrder = function (el) {
         let $el = $(el);
         let oid = parseInt($el.attr('data-order-id'), 10) || 0;
@@ -2552,6 +2841,12 @@ $(document).ready(function () {
         $('#lnkt_inspectItems').text($el.attr('data-items'));
         $('#lnkt_inspectSubtotal').text($el.attr('data-subtotal'));
         $('#lnkt_inspectDiscount').text($el.attr('data-discount'));
+        if ($('#lnkt_inspectShipFee').length) {
+            $('#lnkt_inspectShipFee').text($el.attr('data-ship-fee') || 'Miễn phí (0 đ)');
+        }
+        if ($('#lnkt_inspectVoucher').length) {
+            $('#lnkt_inspectVoucher').text($el.attr('data-voucher') || '0 đ');
+        }
         $('#lnkt_inspectTotal').text($el.attr('data-total'));
         $('#lnkt_inspectStaff').text($el.attr('data-staff'));
         if ($('#lnkt_inspectPayment').length && $el.attr('data-payment')) {
@@ -2634,6 +2929,15 @@ $(document).ready(function () {
                 $('#lnkt_labelBarcodeText').text(lbl.barcode_value || ('FKORD' + String(oid).padStart(6, '0')));
                 window.lnktGenerateBarcodeSvg(lbl.barcode_value || ('FKORD' + oid));
                 $('#lnkt_labelWaybillCode').text('#' + (lbl.ma_van_don || ('FK-ORD-' + String(oid).padStart(6, '0'))));
+                if ($('#lnkt_labelCarrierRow').length) {
+                    if (lbl.carrier_tracking_code) {
+                        $('#lnkt_labelCarrierRow').removeClass('d-none');
+                        $('#lnkt_labelCarrierCode').text((lbl.carrier_name ? (lbl.carrier_name + ': ') : '') + lbl.carrier_tracking_code);
+                    } else {
+                        $('#lnkt_labelCarrierRow').addClass('d-none');
+                        $('#lnkt_labelCarrierCode').text('--');
+                    }
+                }
 
                 let $qrImg = $('#lnkt_labelQrImg');
                 $qrImg.attr('src', lbl.qr_tracking_img || '').off('error').on('error', function () {
@@ -2671,6 +2975,21 @@ $(document).ready(function () {
 
                 $('#lnkt_labelSubtotal').text(lnktFormatVnd(lbl.subtotal || 0));
                 $('#lnkt_labelDiscount').text((lbl.discount || 0) > 0 ? ('-' + lnktFormatVnd(lbl.discount)) : '0 đ');
+                if ($('#lnkt_labelShippingFee').length) {
+                    let sFee = Number(lbl.shipping_fee || 0);
+                    $('#lnkt_labelShippingFee').text(sFee > 0 ? lnktFormatVnd(sFee) : 'Miễn phí (0 đ)');
+                }
+                if ($('#lnkt_labelVoucherRow').length) {
+                    let vDisc = Number(lbl.voucher_discount || 0);
+                    let vCd = String(lbl.voucher_code || '').trim();
+                    if (vDisc > 0) {
+                        $('#lnkt_labelVoucherRow').removeClass('d-none');
+                        $('#lnkt_labelVoucherLabel').text('Voucher' + (vCd ? (' (' + vCd + ')') : '') + ':');
+                        $('#lnkt_labelVoucherDiscount').text('-' + lnktFormatVnd(vDisc));
+                    } else {
+                        $('#lnkt_labelVoucherRow').addClass('d-none');
+                    }
+                }
                 $('#lnkt_labelTotal').text(lnktFormatVnd(lbl.total_amount || 0));
                 $('#lnkt_labelPayMethodName').text(lbl.payment_method_name || '--');
 
@@ -2760,7 +3079,8 @@ $(document).ready(function () {
             let ps = (ord.trang_thai_thanh_toan || 'chua_thanh_toan').toLowerCase();
             let isPaid = (!!ord.is_paid || ps === 'da_thanh_toan');
             let lockConfirm = (st === 'cho_duyet' && pm === 'vietqr' && !isPaid);
-            let fullAddr = [ord.dia_chi_giao_hang, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
+            let fullAddr = [ord.dia_chi_giao_hang, ord.phuong_xa, ord.quan_huyen, ord.tinh_thanh_pho].filter(Boolean).join(', ');
+            let wardDistrict = [ord.phuong_xa, ord.quan_huyen].filter(Boolean).join(', ');
             let createdStr = lnktFormatMysqlDt(ord.ngay_dat_hang);
             let handledBy = ord.nhan_vien_phu_trach || 'Chưa tiếp nhận';
             let noteStr = ord.ghi_chu || '';
@@ -2769,6 +3089,13 @@ $(document).ready(function () {
             let subtotalF = lnktFormatVnd(ord.tien_hang_tam_tinh || 0);
             let discVal = Number(ord.tien_giam_gia || 0);
             let discountF = discVal > 0 ? ('-' + lnktFormatVnd(discVal)) : '0 đ';
+            let shipVal = Number(ord.phi_van_chuyen || 0);
+            let shipF = shipVal > 0 ? lnktFormatVnd(shipVal) : 'Miễn phí (0 đ)';
+            let vouchVal = Number(ord.tien_giam_voucher || 0);
+            let vouchCode = String(ord.ma_voucher || '').trim();
+            let voucherF = vouchVal > 0 ? ('-' + lnktFormatVnd(vouchVal) + (vouchCode !== '' ? (' (' + vouchCode + ')') : '')) : '0 đ';
+            let carrierCode = String(ord.ma_van_don_hang_vc || '').trim();
+            let carrierName = String(ord.don_vi_van_chuyen || 'GHN').trim();
             let totalF = lnktFormatVnd(ord.tong_tien_thanh_toan || 0);
             let isLocked = (st === 'hoan_tat' || st === 'da_huy');
             let safeJsCode = String(ocode).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -2785,6 +3112,8 @@ $(document).ready(function () {
                            'data-items="' + lnktEscapeHtml(ord.item_summary || 'Sản phẩm FashionKids') + '" ' +
                            'data-subtotal="' + lnktEscapeHtml(subtotalF) + '" ' +
                            'data-discount="' + lnktEscapeHtml(discountF) + '" ' +
+                           'data-ship-fee="' + lnktEscapeHtml(shipF) + '" ' +
+                           'data-voucher="' + lnktEscapeHtml(voucherF) + '" ' +
                            'data-total="' + lnktEscapeHtml(totalF) + '" ' +
                            'data-staff="' + lnktEscapeHtml(handledBy) + '" ' +
                            'data-payment="' + lnktEscapeHtml(payLabel) + '" ' +
@@ -2802,7 +3131,8 @@ $(document).ready(function () {
                     '</td>' +
                     '<td>' +
                         '<div class="small font-weight-bold text-slate">' + lnktEscapeHtml(ord.tinh_thanh_pho || '') + '</div>' +
-                        '<small class="text-muted-custom d-block">' + lnktEscapeHtml(ord.quan_huyen || '') + '</small>' +
+                        '<small class="text-muted-custom d-block">' + lnktEscapeHtml(wardDistrict) + '</small>' +
+                        '<div id="lnkt_carrierBadgeWrap_' + oid + '">' + (carrierCode ? '<span class="badge badge-light border text-info small py-0 px-2 rounded-pill mt-1 text-nowrap"><i class="fa-solid fa-barcode mr-1"></i>' + lnktEscapeHtml(carrierName + ': ' + carrierCode) + '</span>' : '') + '</div>' +
                         (noteStr ? '<small class="text-info d-block text-truncate fk-ellipsis-220" title="' + lnktEscapeHtml(noteStr) + '"><i class="fa-regular fa-note-sticky mr-1"></i>' + lnktEscapeHtml(noteStr) + '</small>' : '') +
                     '</td>' +
                     '<td class="text-right text-nowrap">' +
@@ -2823,7 +3153,7 @@ $(document).ready(function () {
                                 '<button type="button" id="lnkt_saveStatusBtn_' + oid + '" class="btn btn-pastel-primary px-2" ' + (isLocked ? 'disabled' : '') + ' onclick="lnktUpdateStaffOrderStatus(' + oid + ', \'' + lnktEscapeHtml(safeJsCode) + '\')"><i class="fa-solid fa-check"></i> Lưu</button>' +
                             '</div>' +
                         '</div>' +
-                        '<div id="lnkt_quickActionCell_' + oid + '">' + lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid) + '</div>' +
+                        '<div id="lnkt_quickActionCell_' + oid + '">' + lnktBuildStaffQuickActionHtml(oid, ocode, st, pm, isPaid, carrierCode) + '</div>' +
                         '<button type="button" class="btn btn-light btn-sm btn-block border rounded-pill py-0 small font-weight-bold text-slate" onclick="lnktOpenShippingLabelModal(' + oid + ')"><i class="fa-solid fa-barcode text-peach mr-1"></i>In tem giao hàng</button>' +
                     '</td>' +
                 '</tr>'
@@ -3165,6 +3495,9 @@ $(document).ready(function () {
                 );
             },
             error: function (xhr) {
+                if (window.turnstile && typeof window.turnstile.reset === 'function') {
+                    try { window.turnstile.reset(); } catch (e) {}
+                }
                 let errMsg = (xhr.responseJSON && xhr.responseJSON.message)
                     ? xhr.responseJSON.message
                     : 'Không thể gửi hồ sơ lúc này. Vui lòng thử lại!';
@@ -3278,6 +3611,130 @@ $(document).ready(function () {
             });
         }, 5000);
     }
+
+    // Đồng bộ Carousel Banner Tạp Chí & Thumbnail Switcher (blog-feeds.php)
+    if ($('#fk_magHeroCarousel').length) {
+        let $magCarousel = $('#fk_magHeroCarousel');
+        $magCarousel.carousel({ interval: 4600, pause: 'hover', ride: 'carousel' });
+        $magCarousel.on('slide.bs.carousel', function (e) {
+            let nextIdx = typeof e.to === 'number' ? e.to : 0;
+            $('.fk-mag-thumb-item').removeClass('active').eq(nextIdx).addClass('active');
+        });
+        $('.fk-mag-thumb-item').on('click', function () {
+            let idx = parseInt($(this).attr('data-slide-to'), 10) || 0;
+            $magCarousel.carousel(idx);
+        });
+    }
+
+    window.fkCopyMagVoucher = function (code, btnEl) {
+        let text = code || 'FASHION10';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () {});
+        }
+        if (btnEl) {
+            let $b = $(btnEl);
+            let origHtml = $b.data('orig-html') || $b.html();
+            $b.data('orig-html', origHtml);
+            $b.html('<i class="fa-solid fa-check text-success"></i> Đã sao chép mã <strong>' + text + '</strong>');
+            setTimeout(function () {
+                $b.html(origHtml);
+            }, 2200);
+        }
+        if (typeof fkShowToast === 'function') {
+            fkShowToast('Đã sao chép mã ưu đãi ' + text + ' (Giảm 10% đơn từ 200K)!', 'success');
+        }
+    };
+
+    // Bộ lọc & Modal Hồ sơ Chi tiết Danh sách Sao Nhí (kol-stars.php)
+    window.fkActiveKolFilter = 'all';
+    window.fkFilterKolStars = function (filterKey, btnEl) {
+        window.fkActiveKolFilter = filterKey || 'all';
+        $('#fk_kolFilterGroup .fk-blog-filter-btn').removeClass('active');
+        if (btnEl) $(btnEl).addClass('active');
+        window.fkApplyKolSearch();
+    };
+
+    window.fkApplyKolSearch = function () {
+        let $cols = $('#fk_kolStarsGrid .fk-kol-star-col');
+        if (!$cols.length) return;
+        let kw = ($('#fk_kolSearchInput').val() || '').toLowerCase().trim();
+        let filterKey = window.fkActiveKolFilter || 'all';
+        let visibleCount = 0;
+
+        $cols.each(function () {
+            let $el = $(this);
+            let st = $el.attr('data-status') || '';
+            let gd = $el.attr('data-gender') || '';
+            let blob = ($el.attr('data-search') || '').toLowerCase();
+
+            let matchFilter = (filterKey === 'all')
+                || (filterKey === st)
+                || (filterKey === gd);
+            let matchSearch = (!kw || blob.indexOf(kw) !== -1);
+
+            if (matchFilter && matchSearch) {
+                $el.removeClass('d-none');
+                visibleCount++;
+            } else {
+                $el.addClass('d-none');
+            }
+        });
+
+        if (visibleCount === 0) {
+            $('#fk_kolEmptyAlert').removeClass('d-none');
+        } else {
+            $('#fk_kolEmptyAlert').addClass('d-none');
+        }
+    };
+
+    window.fkResetKolFilters = function () {
+        $('#fk_kolSearchInput').val('');
+        let $allBtn = $('#fk_kolFilterGroup [data-filter="all"]');
+        window.fkFilterKolStars('all', $allBtn.get(0));
+    };
+
+    window.fkOpenKolStarModal = function (btnEl) {
+        if (!btnEl) return;
+        let $b = $(btnEl);
+        let photos = [];
+        try {
+            photos = JSON.parse($b.attr('data-photos') || '[]');
+        } catch (e) {
+            photos = [];
+        }
+        if (!photos.length) {
+            photos = ['/FashionKids/images/kol/kol-bao-sam.jpg'];
+        }
+
+        $('#fk_kolModalName').text($b.attr('data-name') || 'Siêu Sao Nhí');
+        $('#fk_kolModalCode').text($b.attr('data-code') || '');
+        $('#fk_kolModalStatus')
+            .attr('class', 'badge badge-pill px-3 py-1 ' + ($b.attr('data-badge') || 'badge-mint'))
+            .text($b.attr('data-status') || 'Gương mặt nổi bật');
+        $('#fk_kolModalAgeGender').text(($b.attr('data-age') || '') + ' • ' + ($b.attr('data-gender') || ''));
+        $('#fk_kolModalSize').text($b.attr('data-size') || '');
+        $('#fk_kolModalHeight').text(($b.attr('data-height') || '') + ' cm');
+        $('#fk_kolModalWeight').text(($b.attr('data-weight') || '') + ' kg');
+        $('#fk_kolModalTalent').text($b.attr('data-talent') || '');
+        $('#fk_kolModalGuardian').text($b.attr('data-guardian') || 'Phụ huynh đồng hành');
+        $('#fk_kolModalMainPhoto').attr('src', photos[0]);
+
+        let $thumbs = $('#fk_kolModalThumbs').empty();
+        if (photos.length > 1) {
+            photos.forEach(function (src, idx) {
+                let $btn = $('<button type="button" class="fk-kol-modal-thumb ' + (idx === 0 ? 'active' : '') + '"></button>');
+                $btn.append($('<img>').attr('src', src).attr('alt', 'Lookbook photo ' + (idx + 1)));
+                $btn.on('click', function () {
+                    $('#fk_kolModalMainPhoto').attr('src', src);
+                    $thumbs.find('.fk-kol-modal-thumb').removeClass('active');
+                    $btn.addClass('active');
+                });
+                $thumbs.append($btn);
+            });
+        }
+
+        $('#fk_modalKolStarDetail').modal('show');
+    };
 
     // Đồng hồ đếm ngược Lịch Sự Kiện Realtime trên Trang chủ
     if ($('#fk_homeLiveCountdown').length) {
@@ -3793,23 +4250,43 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------
     // 5. MH 08 & MH 11: TIN NHẮN TƯ VẤN TRỰC TUYẾN REALTIME (tgb_tin_nhan_tu_van)
     // ------------------------------------------------------------------------
+    function fkChatEndpoint() {
+        let ep = $('meta[name="fk-endpoint"]').attr('content') || '';
+        return ep ? ep : '/FashionKids/index.php';
+    }
+
     function fkRenderClientChatList(messages) {
         let $area = $('#fk_clientChatMessagesArea');
         if (!$area.length || !Array.isArray(messages)) return;
         let html = '';
-        messages.forEach(function (m) {
-            if (m.sender === 'khach_hang') {
-                html +=
-                    '<div class="d-flex justify-content-end mb-3">' +
-                        '<div class="p-3 small shadow-sm chat-bubble-sent">' + fkEsc(m.content) + '</div>' +
-                    '</div>';
-            } else {
-                html +=
-                    '<div class="d-flex mb-3">' +
-                        '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' + fkEsc(m.content) + '</div>' +
-                    '</div>';
-            }
-        });
+        if (messages.length === 0) {
+            html =
+                '<div class="d-flex mb-3">' +
+                    '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' +
+                        'Xin chào ba mẹ! Em là Chuyên viên tư vấn thời trang sợi tre <strong>FashionKids</strong>. Ba mẹ cần hỗ trợ chọn size cho bé hay kiểm tra đơn hàng cứ nhắn trực tiếp tại đây ạ!' +
+                    '</div>' +
+                '</div>';
+        } else {
+            messages.forEach(function (m) {
+                if (m.sender === 'khach_hang') {
+                    html +=
+                        '<div class="d-flex justify-content-end mb-3">' +
+                            '<div class="p-3 small shadow-sm chat-bubble-sent">' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                                (m.time ? '<div class="small text-light opacity-75 mt-1" style="font-size:0.7rem;">Bạn • ' + fkEsc(m.time) + '</div>' : '') +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    html +=
+                        '<div class="d-flex mb-3">' +
+                            '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' +
+                                '<div class="small font-weight-bold text-peach mb-1" style="font-size:0.72rem;"><i class="fa-solid fa-headset mr-1"></i>FashionKids CSKH' + (m.time ? ' • ' + fkEsc(m.time) : '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                }
+            });
+        }
         $area.html(html);
         $area.scrollTop($area[0].scrollHeight);
     }
@@ -3818,27 +4295,68 @@ $(document).ready(function () {
         let $box = $('#fk_staffChatMessagesBox');
         if (!$box.length || !Array.isArray(messages)) return;
         let html = '';
-        messages.forEach(function (m) {
-            if (m.sender === 'khach_hang') {
-                html +=
-                    '<div class="d-flex mb-3">' +
-                        '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
-                            '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
-                            '<div>' + fkEsc(m.content) + '</div>' +
-                        '</div>' +
-                    '</div>';
-            } else {
-                html +=
-                    '<div class="d-flex justify-content-end mb-3">' +
-                        '<div class="p-3 shadow-sm chat-bubble-sent">' +
-                            '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
-                            '<div>' + fkEsc(m.content) + '</div>' +
-                        '</div>' +
-                    '</div>';
-            }
-        });
+        if (messages.length === 0) {
+            html =
+                '<div class="text-center text-muted-custom py-5 small">' +
+                    '<i class="fa-regular fa-comments fa-2x mb-2 text-peach"></i>' +
+                    '<div>Phiên hội thoại này chưa có tin nhắn nào. Hãy gửi lời chào để bắt đầu tư vấn phụ huynh!</div>' +
+                '</div>';
+        } else {
+            messages.forEach(function (m) {
+                if (m.sender === 'khach_hang') {
+                    html +=
+                        '<div class="d-flex mb-3">' +
+                            '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
+                                '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    html +=
+                        '<div class="d-flex justify-content-end mb-3">' +
+                            '<div class="p-3 shadow-sm chat-bubble-sent">' +
+                                '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                }
+            });
+        }
         $box.html(html);
         $box.scrollTop($box[0].scrollHeight);
+    }
+
+    function fkRenderStaffSessionList(sessions, activeSessionId) {
+        let $list = $('#fk_staffSessionList');
+        if (!$list.length || !Array.isArray(sessions)) return;
+        if ($('#fk_staffSessionCount').length) {
+            $('#fk_staffSessionCount').text(sessions.length);
+        }
+        let html = '';
+        sessions.forEach(function (sess) {
+            let sid = String(sess.session_id || '');
+            let isActive = (sid === String(activeSessionId || ''));
+            let unread = parseInt(sess.unread || 0, 10) || 0;
+            let rightBadge = unread > 0
+                ? '<span class="badge badge-danger badge-pill fk-session-unread text-nowrap flex-shrink-0">' + unread + ' mới</span>'
+                : '<small class="text-muted-custom text-nowrap flex-shrink-0">' + fkEsc(sess.last_time || '') + '</small>';
+
+            html +=
+                '<a href="javascript:void(0)" ' +
+                   'onclick="fkSwitchStaffChatSession(\'' + fkEsc(sid).replace(/'/g, '&#39;') + '\', \'' + fkEsc(sess.customer_name || 'Khách hàng').replace(/'/g, '&#39;') + '\', \'' + fkEsc(sess.vip_label || 'Khách Trực Tuyến').replace(/'/g, '&#39;') + '\', this)" ' +
+                   'class="list-group-item list-group-item-action py-3 fk-staff-session-item ' + (isActive ? 'bg-milk-cream border-left-peach' : '') + '" ' +
+                   'data-session-id="' + fkEsc(sid) + '">' +
+                    '<div class="d-flex w-100 justify-content-between align-items-center fk-card-header-row mb-1">' +
+                        '<h6 class="mb-0 font-weight-bold text-slate small min-w-0">' +
+                            '<span class="fk-live-pulse-dot mr-1"></span>' + fkEsc(sess.customer_name || 'Khách hàng') +
+                        '</h6>' +
+                        rightBadge +
+                    '</div>' +
+                    '<span class="badge ' + fkEsc(sess.badge_class || 'badge-peach') + ' small mb-1">' + fkEsc(sess.vip_label || 'Khách Trực Tuyến') + '</span>' +
+                    '<p class="mb-0 small text-muted-custom text-truncate">' + fkEsc(sess.last_message || '') + '</p>' +
+                '</a>';
+        });
+        $list.html(html);
     }
 
     window.fkSendQuickClientChat = function (questionText) {
@@ -3856,7 +4374,7 @@ $(document).ready(function () {
         $input.val('');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            url: fkChatEndpoint() + '?c=home&a=ajaxSendSupport',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -3867,12 +4385,19 @@ $(document).ready(function () {
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderClientChatList(res.messages);
+                    if ($('#fk_staff_chat_section').length && Array.isArray(res.sessions)) {
+                        let curStaffSid = $('#fk_staffCurrentSessionId').val() || sessionId;
+                        fkRenderStaffSessionList(res.sessions, curStaffSid);
+                        if (curStaffSid === sessionId) {
+                            fkRenderStaffChatList(res.messages);
+                        }
+                    }
                 }
             }
         });
     });
 
-    // Nhân viên CSKH gửi tin nhắn từ trang staff-chat.php (MH 11)
+    // Nhân viên CSKH / Admin gửi tin nhắn từ trang staff-support.php (MH 11)
     window.fkStaffQuickReply = function (replyText) {
         $('#fk_staffChatInput').val(replyText);
         $('#fk_formStaffChat').trigger('submit');
@@ -3881,6 +4406,8 @@ $(document).ready(function () {
     $('#fk_formStaffChat').on('submit', function (e) {
         e.preventDefault();
         let $input = $('#fk_staffChatInput');
+        let $errBox = $('#fk_staffChatErrorAlert');
+        if ($errBox.length) $errBox.addClass('d-none').text('');
         let msg = ($input.val() || '').trim();
         if (!msg) return;
 
@@ -3888,7 +4415,7 @@ $(document).ready(function () {
         $input.val('');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            url: fkChatEndpoint() + '?c=staff&a=ajaxSendSupport',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -3899,15 +4426,33 @@ $(document).ready(function () {
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderStaffChatList(res.messages);
+                    if (Array.isArray(res.sessions)) {
+                        fkRenderStaffSessionList(res.sessions, sessionId);
+                    }
+                    if ($('#customerChatWidget').hasClass('show') && $('#fk_clientChatMessagesArea').attr('data-session-id') === sessionId) {
+                        fkRenderClientChatList(res.messages);
+                    }
+                } else if (res && res.message && $errBox.length) {
+                    $errBox.removeClass('d-none').text(res.message);
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr && xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể gửi tin nhắn phản hồi. Vui lòng kiểm tra kết nối hoặc đăng nhập lại.';
+                if ($errBox.length) {
+                    $errBox.removeClass('d-none').text(errMsg);
                 }
             }
         });
     });
 
     window.fkSwitchStaffChatSession = function (sessionId, customerName, vipLabel, el) {
-        $('.fk-staff-session-item').removeClass('bg-milk-cream');
-        $(el).addClass('bg-milk-cream');
-        $(el).find('.fk-session-unread').remove();
+        $('.fk-staff-session-item').removeClass('bg-milk-cream border-left-peach');
+        if (el) {
+            $(el).addClass('bg-milk-cream border-left-peach');
+            $(el).find('.fk-session-unread').remove();
+        }
 
         $('#fk_staffCurrentSessionId').val(sessionId);
         $('#fk_activeChatSessionCode').text(sessionId);
@@ -3916,13 +4461,16 @@ $(document).ready(function () {
 
         // Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc) qua StaffController
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxMarkChatRead',
+            url: fkChatEndpoint() + '?c=staff&a=ajaxMarkSupportRead',
             type: 'POST',
             dataType: 'json',
             data: { session_id: sessionId },
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderStaffChatList(res.messages);
+                    if (Array.isArray(res.sessions)) {
+                        fkRenderStaffSessionList(res.sessions, sessionId);
+                    }
                 } else {
                     window.fkPollStaffChatNow();
                 }
@@ -3934,28 +4482,51 @@ $(document).ready(function () {
     };
 
     window.fkPollStaffChatNow = function () {
-        let sessionId = $('#fk_staffCurrentSessionId').val() || $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
         let isStaffDesk = $('#fk_staff_chat_section').length > 0 ? 1 : 0;
-        $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxPollChat',
-            type: 'GET',
-            dataType: 'json',
-            data: { session_id: sessionId, mark_read: isStaffDesk },
-            success: function (res) {
-                if (res && res.status === 'success') {
-                    if ($('#fk_staffPollClock').length && res.timestamp) {
-                        $('#fk_staffPollClock').text(res.timestamp);
+        let staffSessionId = $('#fk_staffCurrentSessionId').val() || 'sess_guest_123456';
+        let clientSessionId = $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+
+        if (isStaffDesk) {
+            $.ajax({
+                url: fkChatEndpoint() + '?c=home&a=ajaxPollSupport',
+                type: 'GET',
+                dataType: 'json',
+                data: { session_id: staffSessionId, mark_read: 1 },
+                success: function (res) {
+                    if (res && res.status === 'success') {
+                        if ($('#fk_staffPollClock').length && res.timestamp) {
+                            $('#fk_staffPollClock').text(res.timestamp);
+                        }
+                        if ($('#fk_staffChatMessagesBox').length && Array.isArray(res.messages)) {
+                            fkRenderStaffChatList(res.messages);
+                        }
+                        if (Array.isArray(res.sessions)) {
+                            fkRenderStaffSessionList(res.sessions, staffSessionId);
+                        }
                     }
-                    if ($('#fk_staffChatMessagesBox').length && Array.isArray(res.messages)) {
-                        fkRenderStaffChatList(res.messages);
-                    }
-                    if ($('#customerChatWidget').hasClass('show') && Array.isArray(res.messages)) {
+                }
+            });
+        }
+
+        if ($('#customerChatWidget').hasClass('show')) {
+            $.ajax({
+                url: fkChatEndpoint() + '?c=home&a=ajaxPollSupport',
+                type: 'GET',
+                dataType: 'json',
+                data: { session_id: clientSessionId, mark_read: 0 },
+                success: function (res) {
+                    if (res && res.status === 'success' && Array.isArray(res.messages)) {
                         fkRenderClientChatList(res.messages);
                     }
                 }
-            }
-        });
+            });
+        }
     };
+
+    // Đồng bộ ngay khi mở hộp thoại Chat khách hàng
+    $('#customerChatWidget').on('shown.bs.collapse', function () {
+        window.fkPollStaffChatNow();
+    });
 
     // Tự động đồng bộ tin nhắn Realtime mỗi 3.5 giây khi đang ở trang CSKH hoặc mở hộp thoại Chat
     if ($('#fk_staff_chat_section').length || $('#customerChatWidget').length) {
@@ -4130,7 +4701,10 @@ $(document).ready(function () {
             let receiverEmail = ($('#tgb_receiver_email').val() || '').trim();
             let province = ($('#tgb_select_province').val() || '').trim();
             let district = ($('#tgb_select_district').val() || '').trim();
+            let ward = ($('#tgb_select_ward').val() || '').trim();
             let shippingAddress = ($('#lnkt_shippingAddress').val() || '').trim();
+            let serviceType = ($('input[name="dich_vu_van_chuyen"]:checked').val() || 'standard').trim();
+            let voucherCode = ($('#lnkt_appliedVoucherInput').val() || $('#lnkt_voucherCodeInput').val() || '').trim().toUpperCase();
             let paymentMethod = ($('input[name="phuong_thuc_thanh_toan"]:checked').val() || 'cod').trim();
             let orderNote = ($('#lnkt_orderNote').val() || '').trim();
             let csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
@@ -4151,8 +4725,12 @@ $(document).ready(function () {
                 fkShowCheckoutFormError('Vui lòng chọn Quận / Huyện giao hàng!', $('#tgb_select_district'));
                 return false;
             }
+            if ($('#tgb_select_ward').length && !$('#tgb_select_ward').prop('disabled') && $('#tgb_select_ward option').length > 1 && !ward) {
+                fkShowCheckoutFormError('Vui lòng chọn Phường / Xã giao hàng!', $('#tgb_select_ward'));
+                return false;
+            }
             if (!shippingAddress) {
-                fkShowCheckoutFormError('Vui lòng nhập địa chỉ giao hàng chi tiết (Số nhà, Tên đường, Phường/Xã)!', $('#lnkt_shippingAddress'));
+                fkShowCheckoutFormError('Vui lòng nhập địa chỉ giao hàng chi tiết (Số nhà, Tên đường)!', $('#lnkt_shippingAddress'));
                 return false;
             }
 
@@ -4172,7 +4750,10 @@ $(document).ready(function () {
                     thu_dien_tu_nhan:       receiverEmail,
                     tinh_thanh_pho:         province,
                     quan_huyen:             district,
+                    phuong_xa:              ward,
                     dia_chi_giao_hang:      shippingAddress,
+                    dich_vu_van_chuyen:     serviceType,
+                    ma_voucher:             voucherCode,
                     phuong_thuc_thanh_toan: paymentMethod,
                     ghi_chu:                orderNote,
                     csrf_token:             csrfToken
@@ -4390,7 +4971,7 @@ $(document).ready(function () {
         $alert.addClass('d-none').removeClass('alert-danger alert-mint text-slate');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=staff&a=ajaxRestockInventory',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -4444,6 +5025,120 @@ $(document).ready(function () {
     let lnktReturnPreviewUrls = [];
     let lnktActiveReturnFilter = 'all';
     let lnktRetMgmtPollInFlight = false;
+    let lnktBanksLoaded = false;
+
+    window.lnktLoadReturnBanks = function () {
+        let $sel = $('#lnkt_returnBankSelect');
+        if (!$sel.length || lnktBanksLoaded) return;
+
+        $.ajax({
+            url: '/FashionKids/index.php?c=order&a=ajaxGetVietQrBanks',
+            type: 'GET',
+            dataType: 'json',
+            timeout: 8000,
+            success: function (res) {
+                let banks = (res && Array.isArray(res.banks)) ? res.banks : [];
+                $sel.empty().append('<option value="" data-short="" data-bin="">-- Chọn Ngân hàng / Ví nhận hoàn tiền --</option>');
+                $sel.append('<option value="MOMO" data-short="Ví MoMo" data-bin="">Ví điện tử MoMo (SĐT đăng ký)</option>');
+                banks.forEach(function (b) {
+                    let shortName = String(b.shortName || b.code || '');
+                    let fullName = String(b.name || shortName);
+                    let bin = String(b.bin || '');
+                    $sel.append(
+                        $('<option>')
+                            .val(shortName)
+                            .attr('data-short', shortName)
+                            .attr('data-bin', bin)
+                            .text(shortName + ' - ' + fullName + (bin ? ' (BIN ' + bin + ')' : ''))
+                    );
+                });
+                lnktBanksLoaded = true;
+            },
+            error: function () {
+                $sel.empty()
+                    .append('<option value="" data-short="" data-bin="">-- Chọn Ngân hàng (hoặc gõ tay ở ô bên dưới) --</option>')
+                    .append('<option value="MBBank" data-short="MBBank" data-bin="970422">MBBank - Ngân hàng TMCP Quân đội</option>')
+                    .append('<option value="Vietcombank" data-short="Vietcombank" data-bin="970436">Vietcombank - Ngoại thương VN</option>')
+                    .append('<option value="Techcombank" data-short="Techcombank" data-bin="970407">Techcombank - Kỹ thương VN</option>')
+                    .append('<option value="BIDV" data-short="BIDV" data-bin="970418">BIDV - Đầu tư và Phát triển VN</option>')
+                    .append('<option value="MOMO" data-short="Ví MoMo" data-bin="">Ví điện tử MoMo</option>');
+            }
+        });
+    };
+
+    window.lnktSyncReturnBankInfoText = function () {
+        let $sel = $('#lnkt_returnBankSelect');
+        let $opt = $sel.find('option:selected');
+        let bankShort = String($opt.attr('data-short') || $sel.val() || '').trim();
+        let bankBin = String($opt.attr('data-bin') || '').trim();
+        let accNo = ($('#lnkt_returnBankAccNo').val() || '').trim();
+        let accName = ($('#lnkt_returnBankAccName').val() || '').trim().toUpperCase();
+        if (!bankShort && !accNo) return;
+
+        let parts = [];
+        if (bankShort) parts.push(bankShort);
+        if (accNo) parts.push(accNo);
+        if (accName) parts.push(accName);
+        let composed = parts.join(' - ');
+        if (bankBin) {
+            composed += ' [BIN:' + bankBin + ']';
+        }
+        $('#lnkt_returnBankInfo').val(composed);
+    };
+
+    $(document).on('change input', '#lnkt_returnBankSelect, #lnkt_returnBankAccNo, #lnkt_returnBankAccName', function () {
+        window.lnktSyncReturnBankInfoText();
+    });
+
+    window.lnktOpenRefundQrModal = function (returnId, returnCode, amount, bankInfo) {
+        let $modal = $('#modalRefundQr');
+        if (!$modal.length) return;
+        let amt = Math.round(Number(amount || 0));
+        let infoStr = String(bankInfo || '').trim();
+        let rcodeLabel = String(returnCode || ('FK-RET-' + String(returnId).padStart(5, '0'))).replace(/^#/, '');
+
+        $('#lnkt_refundQrCode').text('#' + rcodeLabel);
+        $('#lnkt_refundQrAmount').text(lnktFormatVnd(amt));
+        $('#lnkt_refundQrBankText').text(infoStr || 'Khách hàng chưa cung cấp tài khoản');
+
+        let binMatch = infoStr.match(/\[BIN:(\d{4,8})\]/i);
+        let cleanNoBin = infoStr.replace(/\[BIN:[^\]]+\]/ig, '').trim();
+        let parts = cleanNoBin.split(/\s*-\s*/);
+        let accNo = '';
+        let accName = '';
+        for (let i = 0; i < parts.length; i++) {
+            let p = parts[i].trim();
+            if (!accNo && /^[0-9]{6,20}$/.test(p.replace(/\s+/g, ''))) {
+                accNo = p.replace(/\s+/g, '');
+            } else if (accNo && !accName) {
+                accName = p;
+            }
+        }
+        if (!accNo) {
+            let numMatch = cleanNoBin.match(/\b(\d{6,20})\b/);
+            if (numMatch) accNo = numMatch[1];
+        }
+
+        let $notice = $('#lnkt_refundQrNotice');
+        let $img = $('#lnkt_refundQrImg');
+        if (binMatch && accNo) {
+            let bin = binMatch[1];
+            let memo = 'Hoan don ' + rcodeLabel.replace(/[^A-Za-z0-9]/g, '');
+            let qrUrl = 'https://img.vietqr.io/image/' + encodeURIComponent(bin) + '-' + encodeURIComponent(accNo) +
+                '-compact2.png?amount=' + amt +
+                '&addInfo=' + encodeURIComponent(memo) +
+                (accName ? ('&accountName=' + encodeURIComponent(accName)) : '');
+            $notice.addClass('d-none').text('');
+            $img.attr('src', qrUrl).removeClass('d-none');
+        } else {
+            $img.addClass('d-none').attr('src', '');
+            $notice.removeClass('d-none').html(
+                '<i class="fa-solid fa-circle-info mr-1"></i>Tài khoản khách chọn Ví MoMo hoặc chưa có mã BIN VietQR chuẩn. Vui lòng chuyển khoản thủ công theo thông tin: <strong>' +
+                lnktEscapeHtml(infoStr) + '</strong>'
+            );
+        }
+        $modal.modal('show');
+    };
 
     window.lnktOpenReturnLightbox = function (imgUrl) {
         if (!imgUrl) return;
@@ -4472,6 +5167,7 @@ $(document).ready(function () {
         $('#lnkt_returnFormAlert').addClass('d-none').removeClass('alert-danger alert-mint lnkt-alert-mint-pastel text-slate').text('');
         $('#lnkt_returnPreviewGrid').empty().addClass('d-none');
         $('#lnkt_returnImagesLabel').text('Chọn 1 - 3 ảnh chụp sản phẩm thực tế & tem mác...');
+        window.lnktLoadReturnBanks();
         $modal.modal('show');
     };
 
@@ -4765,6 +5461,15 @@ $(document).ready(function () {
             actionsHtml =
                 '<button type="button" class="btn btn-outline-success btn-sm btn-block rounded-pill font-weight-bold" onclick="lnktProcessReturnRequest(' + rid + ', \'hoan_tat_hoan\', \'\', this)">' +
                     '<i class="fa-solid fa-hand-holding-dollar mr-1"></i>Xác nhận hoàn tiền &amp; Nhập lại kho' +
+                '</button>';
+        }
+        if (rst !== 'tu_choi_hoan') {
+            let safeBankJs = String(ret.thong_tin_nhan_tien || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            let refundAmtNum = Number(ret.so_tien_hoan || 0);
+            actionsHtml +=
+                '<button type="button" class="btn btn-outline-warning text-dark btn-sm btn-block rounded-pill font-weight-bold mt-1" ' +
+                'onclick="lnktOpenRefundQrModal(' + rid + ', \'' + lnktEscapeHtml(safeRcodeJs) + '\', ' + refundAmtNum + ', \'' + lnktEscapeHtml(safeBankJs) + '\')">' +
+                    '<i class="fa-solid fa-qrcode mr-1"></i>QR Hoàn tiền' +
                 '</button>';
         }
 

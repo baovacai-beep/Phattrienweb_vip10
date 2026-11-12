@@ -121,16 +121,38 @@ $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', 
                     </span>
                 </div>
 
+                <?php
+                $isCustomerAccount = (Rbac::currentRole() === 'khach_hang');
+                $isGoogleLinked = !empty($sessUser['google_id']) || (($sessUser['auth_provider'] ?? '') === 'google');
+                ?>
+
+                <?php if ($isGoogleLinked): ?>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between p-3 rounded border bg-milk-cream mb-4">
+                        <div class="small text-slate pr-2">
+                            <i class="fa-brands fa-google text-danger mr-1"></i>
+                            Đang liên kết với Google Email <strong><?= htmlspecialchars($user['thu_dien_tu']) ?></strong>.
+                        </div>
+                        <a href="<?= htmlspecialchars(APP_ENDPOINT) ?>?c=auth&amp;a=googleSwitchAccount&amp;logout=1"
+                           class="btn btn-sm btn-outline-secondary rounded-pill font-weight-bold mt-2 mt-sm-0 text-nowrap">
+                            <i class="fa-solid fa-arrows-rotate mr-1"></i>Đổi tài khoản Google khác
+                        </a>
+                    </div>
+                <?php endif; ?>
+
                 <div id="hgb_profile_alert" class="alert small py-2 d-none" role="alert"></div>
 
                 <form id="hgb_formProfileUpdate" novalidate>
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label class="small font-weight-bold text-slate">Tên đăng nhập:</label>
-                            <input type="text" class="form-control" name="ten_dang_nhap" value="<?= htmlspecialchars($user['ten_dang_nhap']) ?>" readonly>
+                            <label for="hgb_profile_username" class="small font-weight-bold text-slate">Tên đăng nhập:</label>
+                            <input type="text" class="form-control" id="hgb_profile_username" name="ten_dang_nhap" maxlength="30"
+                                   value="<?= htmlspecialchars($user['ten_dang_nhap']) ?>" <?= $isCustomerAccount ? '' : 'readonly' ?>>
+                            <?php if ($isCustomerAccount): ?>
+                                <small class="form-text text-muted-custom">4-30 ký tự (chữ không dấu, số, <code>_</code>).</small>
+                            <?php endif; ?>
                         </div>
                         <div class="form-group col-md-6">
-                            <label class="small font-weight-bold text-slate">Họ và tên:</label>
+                            <label for="hgb_profile_fullname" class="small font-weight-bold text-slate">Họ và tên:</label>
                             <input type="text" class="form-control" id="hgb_profile_fullname" name="ho_va_ten" value="<?= htmlspecialchars($user['ho_va_ten']) ?>" required>
                         </div>
                     </div>

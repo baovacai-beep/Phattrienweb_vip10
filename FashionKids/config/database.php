@@ -12,7 +12,10 @@ $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
 $isHosting = (
     !empty($httpHost) && (
+        strpos($httpHost, 'infinityfree.com') !== false ||
         strpos($httpHost, 'infinityfreeapp.com') !== false ||
+        strpos($httpHost, 'free.nf') !== false ||
+        strpos($httpHost, 'great-site.net') !== false ||
         strpos($httpHost, 'epizy.com') !== false ||
         strpos($httpHost, 'rf.gd') !== false ||
         strpos($httpHost, 'kesug.com') !== false
@@ -23,11 +26,11 @@ $isLocalhost = in_array($remoteAddr, ['127.0.0.1', '::1', '::ffff:127.0.0.1'], t
     || strpos($httpHost, '127.0.0.1') === 0;
 
 if ($isHosting) {
-    // 1. Môi trường Production (InfinityFree Hosting)
-    if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'sql205.infinityfree.com'); // Thay bằng MySQL Hostname của nhóm
-    if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'if0_41368416_fashionkids'); // Thay bằng DB Name của nhóm
-    if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'if0_41368416');             // Thay bằng MySQL Username
-    if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: 'MatKhauHostingCuaBan');     // Thay bằng MySQL Password
+    // 1. Môi trường Production (InfinityFree Hosting - qrrhmzrn.infinityfree.com)
+    if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'sql301.infinityfree.com');
+    if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'if0_43426037_fashionkids');
+    if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'if0_43426037');
+    if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: 'YMIDguvMTUj7ir');
 } elseif ($isLocalhost) {
     // 2. Môi trường Máy chủ XAMPP cục bộ (Máy của Hồ Gia Bảo)
     if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');

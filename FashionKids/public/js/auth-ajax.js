@@ -12,6 +12,21 @@ $(document).ready(function () {
 
     const ENDPOINT = $('meta[name="fk-endpoint"]').attr('content') || 'index.php';
     let otpCountdownTimer = null;
+    let fpCountdownTimer = null;
+
+    function hgbGetTurnstileToken($scope) {
+        if (!$scope || !$scope.length) return '';
+        const val = $scope.find('input[name="cf-turnstile-response"]').val();
+        return val ? String(val).trim() : '';
+    }
+
+    function hgbResetTurnstile() {
+        if (window.turnstile && typeof window.turnstile.reset === 'function') {
+            try {
+                window.turnstile.reset();
+            } catch (e) {}
+        }
+    }
 
     function hgbDetectEmailDomainTypo(email) {
         const atPos = email.lastIndexOf('@');
@@ -195,11 +210,17 @@ $(document).ready(function () {
         const originalHtml = isResend ? 'Gửi lại mã' : 'Lấy mã OTP';
         $triggerBtn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang gửi...');
 
+        const tsRegisterToken = hgbGetTurnstileToken($('#hgb_turnstile_register'));
+
         $.ajax({
             url: ENDPOINT + '?c=auth&a=ajaxSendOtp',
             type: 'POST',
             dataType: 'json',
-            data: { email: email, name: fullname },
+            data: {
+                email: email,
+                name: fullname,
+                'cf-turnstile-response': tsRegisterToken
+            },
             success: function (res) {
                 $triggerBtn.prop('disabled', false).html(originalHtml);
                 $('#hgb_display_otp_email').text(email);
@@ -212,6 +233,7 @@ $(document).ready(function () {
             },
             error: function (xhr) {
                 $triggerBtn.prop('disabled', false).html(originalHtml);
+                hgbResetTurnstile();
                 const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Không thể gửi mã OTP lúc này. Vui lòng thử lại!';
                 if (isResend) {
                     $('#hgb_otp_alert').removeClass('d-none alert-success').addClass('alert-danger d-block').text(msg);
@@ -389,6 +411,7 @@ $(document).ready(function () {
 
         alertBox.addClass('d-none').removeClass('alert-danger alert-success');
         btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang đăng nhập...');
+        const tsLoginToken = hgbGetTurnstileToken($('#hgb_turnstile_login'));
 
         $.ajax({
             url: ENDPOINT + '?c=auth&a=login',
@@ -398,7 +421,8 @@ $(document).ready(function () {
                 ten_dang_nhap: username,
                 mat_khau: password,
                 csrf_token: csrfToken,
-                redirect: redirectUrl
+                redirect: redirectUrl,
+                'cf-turnstile-response': tsLoginToken
             },
             success: function (res) {
                 alertBox.removeClass('d-none alert-danger').addClass('alert-success d-block').text(res.message);
@@ -406,6 +430,7 @@ $(document).ready(function () {
             },
             error: function (xhr) {
                 btn.prop('disabled', false).text('Đăng Nhập Ngay');
+                hgbResetTurnstile();
                 const errMsg = xhr.responseJSON ? xhr.responseJSON.message : 'Tên đăng nhập hoặc mật khẩu không chính xác!';
                 alertBox.removeClass('d-none alert-success').addClass('alert-danger d-block').text(errMsg);
             }
@@ -417,11 +442,19 @@ $(document).ready(function () {
         e.preventDefault();
         const $btn = $('#hgb_btnUpdateProfile');
         const $alert = $('#hgb_profile_alert');
+        const $unameInput = $('#hgb_profile_username');
+        const canEditUname = $unameInput.length && !$unameInput.prop('readonly');
+        const username = canEditUname ? ($unameInput.val() || '').trim() : '';
         const fullname = ($('#hgb_profile_fullname').val() || '').trim();
         const phone = ($('#hgb_profile_phone').val() || '').trim();
         const address = ($('#hgb_profile_address').val() || '').trim();
 
         $alert.addClass('d-none').removeClass('alert-danger alert-success');
+        if (canEditUname && !/^[a-zA-Z0-9_]{4,30}$/.test(username)) {
+            $alert.removeClass('d-none').addClass('alert-danger d-block').text('Tên đăng nhập phải từ 4-30 ký tự (chữ không dấu, số hoặc _).');
+            $unameInput.focus();
+            return;
+        }
         if (fullname.length < 2) {
             $alert.removeClass('d-none').addClass('alert-danger d-block').text('Họ và tên phải có ít nhất 2 ký tự.');
             return;
@@ -433,15 +466,20 @@ $(document).ready(function () {
 
         $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu...');
 
+        const payload = {
+            ho_va_ten: fullname,
+            so_dien_thoai: phone,
+            dia_chi: address
+        };
+        if (canEditUname) {
+            payload.ten_dang_nhap = username;
+        }
+
         $.ajax({
             url: ENDPOINT + '?c=auth&a=ajaxUpdateProfile',
             type: 'POST',
             dataType: 'json',
-            data: {
-                ho_va_ten: fullname,
-                so_dien_thoai: phone,
-                dia_chi: address
-            },
+            data: payload,
             complete: function () {
                 $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk mr-1"></i> Cập Nhật Thông Tin');
             },
@@ -531,4 +569,382 @@ $(document).ready(function () {
             }
         });
     });
+
+    // 10. Quên mật khẩu qua Email OTP 3 bước (#modalForgotPassword)
+    function startFpCountdown(seconds) {
+        clearInterval(fpCountdownTimer);
+        let remaining = parseInt(seconds, 10) || 60;
+        const $btnResend = $('#hgb_fp_btn_resend');
+        const $timerText = $('#hgb_fp_countdown');
+        $btnResend.prop('disabled', true).addClass('disabled text-muted').removeClass('text-primary');
+        $timerText.text(remaining + 's');
+
+        fpCountdownTimer = setInterval(function () {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(fpCountdownTimer);
+                $timerText.text('');
+                $btnResend.prop('disabled', false).removeClass('disabled text-muted').addClass('text-primary');
+            } else {
+                $timerText.text(remaining + 's');
+            }
+        }, 1000);
+    }
+
+    function showFpAlert(type, msg) {
+        const $alert = $('#hgb_fp_alert');
+        $alert.removeClass('d-none alert-danger alert-success alert-info');
+        if (type === 'success') {
+            $alert.addClass('alert-success d-block').text(msg);
+        } else {
+            $alert.addClass('alert-danger d-block').text(msg);
+        }
+    }
+
+    $('#modalForgotPassword').on('show.bs.modal', function () {
+        clearInterval(fpCountdownTimer);
+        $('#hgb_fp_alert').addClass('d-none').removeClass('alert-danger alert-success').text('');
+        $('#hgb_fp_step1').removeClass('d-none');
+        $('#hgb_fp_step2, #hgb_fp_step3').addClass('d-none');
+        $('#hgb_fp_email').val('');
+        $('#hgb_fp_verified_email').val('');
+        $('#hgb_fp_otp').val('');
+        $('#hgb_fp_new_pass, #hgb_fp_confirm_pass').val('');
+        $('#hgb_fp_countdown').text('');
+    });
+
+    $('#hgb_fp_otp').on('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    function requestResetOtp(email, $btn, origHtml) {
+        const tsForgotToken = hgbGetTurnstileToken($('#hgb_turnstile_forgot'));
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang gửi...');
+        $('#hgb_fp_alert').addClass('d-none').removeClass('alert-danger alert-success').text('');
+
+        $.ajax({
+            url: ENDPOINT + '?c=auth&a=ajaxSendResetOtp',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                email: email,
+                'cf-turnstile-response': tsForgotToken
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                $('#hgb_fp_verified_email').val(email);
+                $('#hgb_fp_display_email').text(email);
+                $('#hgb_fp_step1').addClass('d-none');
+                $('#hgb_fp_step2').removeClass('d-none');
+                $('#hgb_fp_otp').val('').focus();
+                showFpAlert('success', (res && res.message) ? res.message : 'Mã OTP khôi phục đã được gửi tới Email của bạn.');
+                startFpCountdown((res && res.resend_in) ? res.resend_in : 60);
+            },
+            error: function (xhr) {
+                hgbResetTurnstile();
+                const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể gửi mã OTP khôi phục lúc này. Vui lòng thử lại!';
+                showFpAlert('error', msg);
+            }
+        });
+    }
+
+    $('#hgb_fp_form_email').on('submit', function (e) {
+        e.preventDefault();
+        const email = ($('#hgb_fp_email').val() || '').trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const typoErr = email ? hgbDetectEmailDomainTypo(email) : null;
+
+        if (!email || !emailRegex.test(email) || typoErr) {
+            showFpAlert('error', typoErr || 'Vui lòng nhập địa chỉ Email hợp lệ đã đăng ký!');
+            $('#hgb_fp_email').focus();
+            return;
+        }
+        const $btn = $('#hgb_fp_btn_send_otp');
+        requestResetOtp(email, $btn, '<i class="fa-solid fa-paper-plane mr-1"></i>Gửi Mã OTP Khôi Phục');
+    });
+
+    $('#hgb_fp_btn_resend').on('click', function () {
+        const email = ($('#hgb_fp_verified_email').val() || '').trim().toLowerCase();
+        if (!email) return;
+        requestResetOtp(email, $(this), 'Gửi lại mã');
+    });
+
+    $('#hgb_fp_btn_back_email').on('click', function () {
+        clearInterval(fpCountdownTimer);
+        $('#hgb_fp_step2').addClass('d-none');
+        $('#hgb_fp_step1').removeClass('d-none');
+        $('#hgb_fp_alert').addClass('d-none').text('');
+        $('#hgb_fp_email').focus();
+    });
+
+    $('#hgb_fp_form_otp').on('submit', function (e) {
+        e.preventDefault();
+        const email = ($('#hgb_fp_verified_email').val() || '').trim().toLowerCase();
+        const otp = ($('#hgb_fp_otp').val() || '').trim();
+        if (!/^\d{6}$/.test(otp)) {
+            showFpAlert('error', 'Mã OTP khôi phục phải gồm đúng 6 chữ số.');
+            $('#hgb_fp_otp').focus();
+            return;
+        }
+        const $btn = $('#hgb_fp_btn_verify_otp');
+        const origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang xác nhận...');
+
+        $.ajax({
+            url: ENDPOINT + '?c=auth&a=ajaxVerifyResetOtp',
+            type: 'POST',
+            dataType: 'json',
+            data: { email: email, otp: otp },
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                clearInterval(fpCountdownTimer);
+                $('#hgb_fp_step2').addClass('d-none');
+                $('#hgb_fp_step3').removeClass('d-none');
+                showFpAlert('success', (res && res.message) ? res.message : 'Xác thực OTP thành công! Mời nhập mật khẩu mới.');
+                $('#hgb_fp_new_pass').focus();
+            },
+            error: function (xhr) {
+                const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Mã OTP không chính xác hoặc đã hết hạn!';
+                showFpAlert('error', msg);
+            }
+        });
+    });
+
+    $('#hgb_fp_form_reset').on('submit', function (e) {
+        e.preventDefault();
+        const email = ($('#hgb_fp_verified_email').val() || '').trim().toLowerCase();
+        const newPass = $('#hgb_fp_new_pass').val() || '';
+        const confirmPass = $('#hgb_fp_confirm_pass').val() || '';
+
+        if (newPass.length < 6) {
+            showFpAlert('error', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+            $('#hgb_fp_new_pass').focus();
+            return;
+        }
+        if (newPass !== confirmPass) {
+            showFpAlert('error', 'Mật khẩu nhập lại không khớp.');
+            $('#hgb_fp_confirm_pass').focus();
+            return;
+        }
+
+        const $btn = $('#hgb_fp_btn_reset_submit');
+        const origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang cập nhật...');
+
+        $.ajax({
+            url: ENDPOINT + '?c=auth&a=ajaxResetPassword',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                email: email,
+                new_password: newPass,
+                confirm_password: confirmPass
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(origHtml);
+            },
+            success: function (res) {
+                const msg = (res && res.message) ? res.message : 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.';
+                $('#modalForgotPassword').modal('hide');
+                $('#tab-login').tab('show');
+                $('#hgb_login_alert')
+                    .removeClass('d-none alert-danger')
+                    .addClass('alert-success d-block')
+                    .text(msg);
+                $('#hgb_login_password').val('').focus();
+            },
+            error: function (xhr) {
+                const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể đặt lại mật khẩu lúc này. Vui lòng thử lại!';
+                showFpAlert('error', msg);
+            }
+        });
+    });
+
+    // 11. Google OAuth Onboarding (#hgb_formGoogleComplete)
+    if ($('#hgb_formGoogleComplete').length) {
+        let ggProvinces = [];
+
+        function syncGgAddressPreview() {
+            const parts = [];
+            const street = ($('#hgb_gg_street').val() || '').trim();
+            const ward = ($('#hgb_gg_ward').val() || '').trim();
+            const dist = ($('#hgb_gg_district').val() || '').trim();
+            const prov = ($('#hgb_gg_province').val() || '').trim();
+            if (street) parts.push(street);
+            if (ward) parts.push(ward);
+            if (dist) parts.push(dist);
+            if (prov) parts.push(prov);
+            if (parts.length > 0) {
+                $('#hgb_gg_address').val(parts.join(', ')).removeClass('is-invalid');
+            }
+        }
+
+        // Tải danh sách Tỉnh/Huyện/Xã 3 cấp cho form Google Onboarding
+        fetch('https://provinces.open-api.vn/api/?depth=3')
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (data) {
+                if (!Array.isArray(data) || !data.length) return;
+                ggProvinces = data;
+                const $prov = $('#hgb_gg_province');
+                data.forEach(function (p) {
+                    $prov.append($('<option>').val(p.name).text(p.name));
+                });
+            })
+            .catch(function () {});
+
+        $('#hgb_gg_province').on('change', function () {
+            const pName = $(this).val();
+            const $dist = $('#hgb_gg_district').empty().append('<option value="">-- Quận / Huyện --</option>');
+            const $ward = $('#hgb_gg_ward').empty().append('<option value="">-- Phường / Xã --</option>').prop('disabled', true);
+            const pObj = ggProvinces.find(function (p) { return p.name === pName; });
+            if (pObj && Array.isArray(pObj.districts)) {
+                pObj.districts.forEach(function (d) {
+                    $dist.append($('<option>').val(d.name).text(d.name));
+                });
+                $dist.prop('disabled', false);
+            } else {
+                $dist.prop('disabled', true);
+            }
+            $ward.prop('disabled', true);
+            syncGgAddressPreview();
+        });
+
+        $('#hgb_gg_district').on('change', function () {
+            const pName = $('#hgb_gg_province').val();
+            const dName = $(this).val();
+            const $ward = $('#hgb_gg_ward').empty().append('<option value="">-- Phường / Xã --</option>');
+            const pObj = ggProvinces.find(function (p) { return p.name === pName; });
+            const dObj = pObj && Array.isArray(pObj.districts)
+                ? pObj.districts.find(function (d) { return d.name === dName; })
+                : null;
+            if (dObj && Array.isArray(dObj.wards)) {
+                dObj.wards.forEach(function (w) {
+                    $ward.append($('<option>').val(w.name).text(w.name));
+                });
+                $ward.prop('disabled', false);
+            } else {
+                $ward.prop('disabled', true);
+            }
+            syncGgAddressPreview();
+        });
+
+        $('#hgb_gg_ward').on('change', syncGgAddressPreview);
+        $('#hgb_gg_street').on('input', syncGgAddressPreview);
+
+        $('#hgb_gg_phone').on('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 11);
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#hgb_gg_username').on('blur', function () {
+            const $input = $(this);
+            const uname = ($input.val() || '').trim();
+            const $fb = $input.siblings('.invalid-feedback');
+            if (!uname) {
+                $input.removeClass('is-valid is-invalid');
+                return;
+            }
+            if (!/^[a-zA-Z0-9_]{4,30}$/.test(uname)) {
+                $input.removeClass('is-valid').addClass('is-invalid');
+                $fb.text('Tên đăng nhập phải từ 4-30 ký tự (chữ không dấu, số hoặc _).');
+                return;
+            }
+            $.post(ENDPOINT + '?c=auth&a=ajaxCheckDuplicate', {
+                field: 'ten_dang_nhap',
+                value: uname,
+                exclude_self: 1
+            }, function (res) {
+                if (res.status === 'duplicate' || res.exists === true) {
+                    $input.removeClass('is-valid').addClass('is-invalid');
+                    $fb.text(res.message || 'Tên đăng nhập này đã có người dùng!');
+                } else {
+                    $input.removeClass('is-invalid').addClass('is-valid');
+                }
+            }, 'json');
+        });
+
+        $('#hgb_formGoogleComplete').on('submit', function (e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $alert = $('#hgb_gg_alert');
+            const $btn = $('#hgb_btn_gg_complete');
+            const $uname = $('#hgb_gg_username');
+            const $fname = $('#hgb_gg_fullname');
+            const $phone = $('#hgb_gg_phone');
+            const $addr = $('#hgb_gg_address');
+            const $pass = $('#hgb_gg_password');
+
+            const uname = ($uname.val() || '').trim();
+            const fname = ($fname.val() || '').trim();
+            const phone = ($phone.val() || '').trim();
+            const addr = ($addr.val() || '').trim();
+            const pass = $pass.val() || '';
+
+            $form.find('.is-invalid').removeClass('is-invalid');
+            $alert.addClass('d-none').removeClass('alert-danger alert-success');
+
+            if (!/^[a-zA-Z0-9_]{4,30}$/.test(uname)) {
+                $uname.addClass('is-invalid').siblings('.invalid-feedback').text('Tên đăng nhập phải từ 4-30 ký tự (chữ không dấu, số hoặc _).');
+                $uname.focus();
+                return;
+            }
+            if (fname.length < 2) {
+                $fname.addClass('is-invalid').siblings('.invalid-feedback').text('Họ và tên phải có ít nhất 2 ký tự.');
+                $fname.focus();
+                return;
+            }
+            if (!/^\d{9,11}$/.test(phone)) {
+                $phone.addClass('is-invalid').siblings('.invalid-feedback').text('Số điện thoại phải gồm từ 9 đến 11 chữ số.');
+                $phone.focus();
+                return;
+            }
+            if (addr.length < 5) {
+                $addr.addClass('is-invalid').siblings('.invalid-feedback').text('Vui lòng nhập đầy đủ địa chỉ giao hàng (ít nhất 5 ký tự).');
+                $addr.focus();
+                return;
+            }
+            if (pass !== '' && pass.length < 6) {
+                $pass.addClass('is-invalid').closest('.form-group').find('.invalid-feedback').text('Mật khẩu tối thiểu 6 ký tự (hoặc để trống).');
+                $pass.focus();
+                return;
+            }
+
+            const origHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu hồ sơ...');
+
+            $.ajax({
+                url: ENDPOINT + '?c=auth&a=ajaxCompleteGoogleProfile',
+                type: 'POST',
+                dataType: 'json',
+                data: $form.serialize(),
+                complete: function () {
+                    $btn.prop('disabled', false).html(origHtml);
+                },
+                success: function (res) {
+                    $alert.removeClass('d-none alert-danger').addClass('alert-success d-block').text(res.message || 'Hoàn tất tài khoản thành công!');
+                    window.location.href = res.redirect || '/FashionKids/views/pages/profile.php';
+                },
+                error: function (xhr) {
+                    const res = xhr.responseJSON || {};
+                    const msg = res.message || 'Không thể hoàn tất thông tin tài khoản Google lúc này.';
+                    $alert.removeClass('d-none alert-success').addClass('alert-danger d-block').text(msg);
+                    if (res.expired) {
+                        setTimeout(function () {
+                            window.location.href = '/FashionKids/views/pages/login-register.php';
+                        }, 1800);
+                    }
+                }
+            });
+        });
+    }
 });

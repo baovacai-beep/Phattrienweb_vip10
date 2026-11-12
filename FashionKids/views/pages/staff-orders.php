@@ -48,12 +48,17 @@ $inspOid        = $inspectOrder ? (int)$inspectOrder['ma_don_hang'] : 0;
 $inspCode       = $inspectOrder ? ('#' . $inspectOrder['ma_van_don']) : 'Chưa chọn đơn';
 $inspReceiver   = $inspectOrder ? (string)$inspectOrder['ten_nguoi_nhan'] : '---';
 $inspPhone      = $inspectOrder ? (string)$inspectOrder['so_dien_thoai_nhan'] : '---';
-$inspAddress    = $inspectOrder ? trim(implode(', ', array_filter([$inspectOrder['dia_chi_giao_hang'] ?? '', $inspectOrder['quan_huyen'] ?? '', $inspectOrder['tinh_thanh_pho'] ?? '']))) : '---';
+$inspAddress    = $inspectOrder ? trim(implode(', ', array_filter([$inspectOrder['dia_chi_giao_hang'] ?? '', $inspectOrder['phuong_xa'] ?? '', $inspectOrder['quan_huyen'] ?? '', $inspectOrder['tinh_thanh_pho'] ?? '']))) : '---';
 $inspStaff      = ($inspectOrder && !empty($inspectOrder['nhan_vien_phu_trach'])) ? (string)$inspectOrder['nhan_vien_phu_trach'] : 'Đang chờ tiếp nhận';
 $inspItems      = $inspectOrder ? (string)($inspectOrder['item_summary'] ?? 'Sản phẩm FashionKids') : '---';
 $inspSubtotal   = $inspectOrder ? (number_format((float)$inspectOrder['tien_hang_tam_tinh'], 0, ',', '.') . ' đ') : '0 đ';
 $inspDiscountV  = $inspectOrder ? (float)($inspectOrder['tien_giam_gia'] ?? 0) : 0;
 $inspDiscount   = $inspDiscountV > 0 ? ('-' . number_format($inspDiscountV, 0, ',', '.') . ' đ') : '0 đ';
+$inspShipFeeV   = $inspectOrder ? (float)($inspectOrder['phi_van_chuyen'] ?? 0) : 0;
+$inspShipFee    = $inspShipFeeV > 0 ? (number_format($inspShipFeeV, 0, ',', '.') . ' đ') : 'Miễn phí (0 đ)';
+$inspVoucherV   = $inspectOrder ? (float)($inspectOrder['tien_giam_voucher'] ?? 0) : 0;
+$inspVoucherC   = $inspectOrder ? trim((string)($inspectOrder['ma_voucher'] ?? '')) : '';
+$inspVoucher    = $inspVoucherV > 0 ? ('-' . number_format($inspVoucherV, 0, ',', '.') . ' đ' . ($inspVoucherC !== '' ? " ({$inspVoucherC})" : '')) : '0 đ';
 $inspTotal      = $inspectOrder ? (number_format((float)$inspectOrder['tong_tien_thanh_toan'], 0, ',', '.') . ' đ') : '0 đ';
 $inspPayText    = $inspectOrder ? (string)($inspectOrder['payment_display_label'] ?? 'Thu hộ COD') : '---';
 $inspIsPaid     = $inspectOrder && !empty($inspectOrder['is_paid']);
@@ -292,7 +297,7 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                     $txCode     = trim((string)($ord['ma_giao_dich_ngan_hang'] ?? ''));
                                     $codAmt     = (float)($ord['cod_collect_amount'] ?? ($isPaid || $st === 'da_huy' ? 0 : $ord['tong_tien_thanh_toan']));
                                     $lockConfirm = ($st === 'cho_duyet' && $pm === 'vietqr' && !$isPaid);
-                                    $fullAddr   = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
+                                    $fullAddr   = trim(implode(', ', array_filter([$ord['dia_chi_giao_hang'] ?? '', $ord['phuong_xa'] ?? '', $ord['quan_huyen'] ?? '', $ord['tinh_thanh_pho'] ?? ''])));
                                     $createdStr = !empty($ord['ngay_dat_hang']) ? date('d/m/Y H:i', strtotime($ord['ngay_dat_hang'])) : '';
                                     $handledBy  = trim((string)($ord['nhan_vien_phu_trach'] ?? '')) ?: 'Chưa tiếp nhận';
                                     $noteStr    = trim((string)($ord['ghi_chu'] ?? ''));
@@ -306,6 +311,13 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                     $subtotalF  = number_format((float)$ord['tien_hang_tam_tinh'], 0, ',', '.') . ' đ';
                                     $discVal    = (float)($ord['tien_giam_gia'] ?? 0);
                                     $discountF  = $discVal > 0 ? ('-' . number_format($discVal, 0, ',', '.') . ' đ') : '0 đ';
+                                    $shipVal    = (float)($ord['phi_van_chuyen'] ?? 0);
+                                    $shipF      = $shipVal > 0 ? (number_format($shipVal, 0, ',', '.') . ' đ') : 'Miễn phí (0 đ)';
+                                    $vouchVal   = (float)($ord['tien_giam_voucher'] ?? 0);
+                                    $vouchCode  = trim((string)($ord['ma_voucher'] ?? ''));
+                                    $voucherF   = $vouchVal > 0 ? ('-' . number_format($vouchVal, 0, ',', '.') . ' đ' . ($vouchCode !== '' ? " ({$vouchCode})" : '')) : '0 đ';
+                                    $carrierCd  = trim((string)($ord['ma_van_don_hang_vc'] ?? ''));
+                                    $carrierNm  = trim((string)($ord['don_vi_van_chuyen'] ?? 'GHN'));
                                     $totalF     = number_format((float)$ord['tong_tien_thanh_toan'], 0, ',', '.') . ' đ';
                                 ?>
                                     <tr class="lnkt-staff-order-row <?= ($highlightOrderId === $oid) ? 'lnkt-order-highlight-row' : '' ?>"
@@ -326,6 +338,8 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                                data-items="<?= htmlspecialchars((string)($ord['item_summary'] ?? 'Sản phẩm FashionKids')) ?>"
                                                data-subtotal="<?= htmlspecialchars($subtotalF) ?>"
                                                data-discount="<?= htmlspecialchars($discountF) ?>"
+                                               data-ship-fee="<?= htmlspecialchars($shipF) ?>"
+                                               data-voucher="<?= htmlspecialchars($voucherF) ?>"
                                                data-total="<?= htmlspecialchars($totalF) ?>"
                                                data-staff="<?= htmlspecialchars($handledBy) ?>"
                                                data-payment="<?= htmlspecialchars($payLabel) ?>"
@@ -369,7 +383,14 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
 
                                         <td>
                                             <div class="small font-weight-bold text-slate"><?= htmlspecialchars((string)($ord['tinh_thanh_pho'] ?? '')) ?></div>
-                                            <small class="text-muted-custom d-block"><?= htmlspecialchars((string)($ord['quan_huyen'] ?? '')) ?></small>
+                                            <small class="text-muted-custom d-block"><?= htmlspecialchars(trim(implode(', ', array_filter([$ord['phuong_xa'] ?? '', $ord['quan_huyen'] ?? ''])))) ?></small>
+                                            <div id="lnkt_carrierBadgeWrap_<?= $oid ?>">
+                                                <?php if ($carrierCd !== ''): ?>
+                                                    <span class="badge badge-light border text-info small py-0 px-2 rounded-pill mt-1 text-nowrap">
+                                                        <i class="fa-solid fa-barcode mr-1"></i><?= htmlspecialchars($carrierNm . ': ' . $carrierCd) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                             <?php if ($noteStr !== ''): ?>
                                                 <small class="text-info d-block text-truncate fk-ellipsis-150" title="<?= htmlspecialchars($noteStr) ?>">
                                                     <i class="fa-regular fa-note-sticky mr-1"></i><?= htmlspecialchars($noteStr) ?>
@@ -436,6 +457,13 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                                                         <i class="fa-solid fa-box-open mr-1"></i>Tiếp nhận &amp; Xác nhận
                                                     </button>
                                                 <?php elseif ($st === 'da_xac_nhan'): ?>
+                                                    <?php if ($carrierCd === ''): ?>
+                                                        <button type="button"
+                                                                class="btn btn-pastel-sky btn-sm btn-block rounded-pill py-0 small font-weight-bold text-slate mb-1"
+                                                                onclick="lnktCreateCarrierWaybill(<?= $oid ?>, this)">
+                                                            <i class="fa-solid fa-truck-pickup text-info mr-1"></i>Đẩy đơn GHN
+                                                        </button>
+                                                    <?php endif; ?>
                                                     <button type="button"
                                                             class="btn btn-outline-primary btn-sm btn-block rounded-pill py-0 small font-weight-bold mb-1"
                                                             onclick="lnktUpdateStaffOrderStatus(<?= $oid ?>, '<?= htmlspecialchars($ocode, ENT_QUOTES) ?>', 'dang_giao')">
@@ -519,6 +547,14 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted-custom mr-2 flex-shrink-0">Giảm giá VIP:</span>
                             <strong class="text-success text-right text-nowrap" id="lnkt_inspectDiscount"><?= htmlspecialchars($inspDiscount) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted-custom mr-2 flex-shrink-0">Phí vận chuyển:</span>
+                            <strong class="text-slate text-right text-nowrap" id="lnkt_inspectShipFee"><?= htmlspecialchars($inspShipFee) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted-custom mr-2 flex-shrink-0">Mã giảm giá (Voucher):</span>
+                            <strong class="text-success text-right text-nowrap" id="lnkt_inspectVoucher"><?= htmlspecialchars($inspVoucher) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top mb-2">
                             <span class="font-weight-bold text-slate mr-2 flex-shrink-0">Tổng giá trị đơn:</span>

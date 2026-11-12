@@ -54,12 +54,25 @@
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold small text-slate" for="lnkt_returnBankInfo">
-              3. Thông tin tài khoản Ngân hàng / Ví điện tử nhận tiền hoàn <span class="text-danger">*</span>
+            <label class="font-weight-bold small text-slate" for="lnkt_returnBankSelect">
+              3. Chọn Ngân hàng nhận hoàn tiền (Chuẩn VietQR) &amp; Số tài khoản <span class="text-danger">*</span>
             </label>
-            <input type="text" class="form-control rounded-lg" id="lnkt_returnBankInfo" name="thong_tin_nhan_tien"
-                   placeholder="VD: MB Bank - 0913672861 - NGUYEN VAN A (hoặc Ví MoMo SĐT)" required>
-            <small class="form-text text-muted-custom">FashionKids sẽ hoàn 100% số tiền thanh toán về tài khoản này ngay sau khi thu hồi hàng.</small>
+            <select class="custom-select rounded-lg mb-2" id="lnkt_returnBankSelect">
+              <option value="">-- Đang tải danh sách Ngân hàng Việt Nam... --</option>
+            </select>
+            <div class="form-row mb-2">
+              <div class="col-12 col-sm-6 mb-2 mb-sm-0">
+                <input type="text" class="form-control rounded-lg" id="lnkt_returnBankAccNo"
+                       placeholder="Số tài khoản / SĐT nhận hoàn tiền...">
+              </div>
+              <div class="col-12 col-sm-6">
+                <input type="text" class="form-control rounded-lg text-uppercase" id="lnkt_returnBankAccName"
+                       placeholder="TÊN CHỦ TÀI KHOẢN (KHÔNG DẤU)">
+              </div>
+            </div>
+            <input type="text" class="form-control rounded-lg bg-light small" id="lnkt_returnBankInfo" name="thong_tin_nhan_tien"
+                   placeholder="VD: MBBank - 0913672861 - NGUYEN VAN A [BIN:970422]" required>
+            <small class="form-text text-muted-custom">Dữ liệu tự động đồng bộ từ API Ngân hàng VietQR để Nhân viên quét QR hoàn tiền 100% chính xác.</small>
           </div>
 
           <div class="form-group mb-0">

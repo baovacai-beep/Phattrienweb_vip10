@@ -171,7 +171,13 @@ $panelReturnCounts   = isset($returnCounts) && is_array($returnCounts) ? $return
                                                 <i class="fa-solid fa-hand-holding-dollar mr-1"></i>Xác nhận hoàn tiền &amp; Nhập lại kho
                                             </button>
                                         <?php else: ?>
-                                            <span class="small text-muted-custom">Đã hoàn tất xử lý</span>
+                                            <span class="small text-muted-custom d-block mb-1">Đã hoàn tất xử lý</span>
+                                        <?php endif; ?>
+                                        <?php if ($rst !== 'tu_choi_hoan'): ?>
+                                            <button type="button" class="btn btn-outline-warning text-dark btn-sm btn-block rounded-pill font-weight-bold mt-1"
+                                                    onclick="lnktOpenRefundQrModal(<?= $rid ?>, '<?= htmlspecialchars($rcode, ENT_QUOTES) ?>', <?= (float)($ret['so_tien_hoan'] ?? 0) ?>, '<?= htmlspecialchars((string)($ret['thong_tin_nhan_tien'] ?? ''), ENT_QUOTES) ?>')">
+                                                <i class="fa-solid fa-qrcode mr-1"></i>QR Hoàn tiền
+                                            </button>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -233,6 +239,39 @@ $panelReturnCounts   = isset($returnCounts) && is_array($returnCounts) ? $return
             </div>
             <div class="modal-body text-center p-3">
                 <img id="lnkt_returnLightboxImg" src="" alt="Ảnh minh chứng hoàn hàng" class="lnkt-lightbox-img">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal VietQR Hoàn Tiền Nhanh cho Khách Hàng (Staff/Admin) -->
+<div class="modal fade" id="modalRefundQr" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 rounded-lg shadow-lg overflow-hidden">
+            <div class="modal-header bg-light border-0 py-3">
+                <h6 class="modal-title font-weight-bold text-slate mb-0">
+                    <i class="fa-solid fa-qrcode text-peach mr-2"></i>QR Hoàn Tiền Cho Khách <span id="lnkt_refundQrCode"></span>
+                </h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="lnkt_refundQrNotice" class="alert alert-warning small d-none text-left"></div>
+                <img id="lnkt_refundQrImg" src="" alt="VietQR Hoàn Tiền" class="img-fluid rounded border shadow-sm mb-3" style="max-height: 290px;">
+                <div class="p-3 rounded bg-milk-cream border text-left small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted-custom">Số tiền cần hoàn:</span>
+                        <strong class="text-peach" id="lnkt_refundQrAmount">0 đ</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted-custom d-block">Tài khoản nhận của khách:</span>
+                        <strong class="text-slate" id="lnkt_refundQrBankText">--</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light py-2">
+                <button type="button" class="btn btn-light border rounded-pill px-4 font-weight-bold" data-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>

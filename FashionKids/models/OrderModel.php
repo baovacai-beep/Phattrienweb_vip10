@@ -13,6 +13,7 @@
 require_once __DIR__ . '/../core/Model.php';
 require_once __DIR__ . '/../config/payment.php';
 require_once __DIR__ . '/../core/CassoService.php';
+require_once __DIR__ . '/../core/ShippingService.php';
 require_once __DIR__ . '/entities/DonHang.php';
 require_once __DIR__ . '/entities/ChiTietDonHang.php';
 require_once __DIR__ . '/entities/ThanhToanVietQR.php';
@@ -21,6 +22,7 @@ require_once __DIR__ . '/entities/ThanhToanCOD.php';
 class OrderModel extends Model {
     private static bool $schemaChecked = false;
     private static bool $returnSchemaChecked = false;
+    private static bool $voucherSchemaChecked = false;
     private static bool $expirySweptThisRequest = false;
     private ?CassoService $cassoService = null;
 
@@ -31,6 +33,7 @@ class OrderModel extends Model {
         parent::__construct();
         $this->cassoService = $cassoService;
         $this->ensureOrderSchema();
+        $this->ensureVoucherSchema();
         $this->ensureReturnSchema();
     }
 
@@ -88,8 +91,32 @@ class OrderModel extends Model {
             if (!isset($cols['noi_dung_chuyen_khoan'])) {
                 $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `noi_dung_chuyen_khoan` VARCHAR(50) NULL DEFAULT NULL AFTER `han_thanh_toan`");
             }
+            if (!isset($cols['phuong_xa'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `phuong_xa` VARCHAR(100) NULL DEFAULT NULL AFTER `quan_huyen`");
+            }
+            if (!isset($cols['dich_vu_van_chuyen'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `dich_vu_van_chuyen` VARCHAR(30) NOT NULL DEFAULT 'standard' AFTER `phuong_xa`");
+            }
+            if (!isset($cols['phi_van_chuyen'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `phi_van_chuyen` DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER `tien_giam_gia`");
+            }
+            if (!isset($cols['trong_luong_gram'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `trong_luong_gram` INT NOT NULL DEFAULT 300 AFTER `phi_van_chuyen`");
+            }
+            if (!isset($cols['ma_voucher'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `ma_voucher` VARCHAR(50) NULL DEFAULT NULL AFTER `trong_luong_gram`");
+            }
+            if (!isset($cols['tien_giam_voucher'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `tien_giam_voucher` DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER `ma_voucher`");
+            }
             if (!isset($cols['ghi_chu'])) {
                 $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `ghi_chu` VARCHAR(255) NULL AFTER `noi_dung_chuyen_khoan`");
+            }
+            if (!isset($cols['don_vi_van_chuyen'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `don_vi_van_chuyen` VARCHAR(50) NULL DEFAULT NULL AFTER `ghi_chu`");
+            }
+            if (!isset($cols['ma_van_don_hang_vc'])) {
+                $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `ma_van_don_hang_vc` VARCHAR(100) NULL DEFAULT NULL AFTER `don_vi_van_chuyen`");
             }
             if (!isset($cols['ngay_cap_nhat'])) {
                 $this->db->exec("ALTER TABLE `lnkt_don_hang` ADD COLUMN `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `ngay_dat_hang`");
@@ -160,6 +187,200 @@ class OrderModel extends Model {
         } catch (PDOException $e) {
             error_log('[lnkt] ensureReturnSchema: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Đảm bảo bảng mã giảm giá lnkt_ma_giam_gia tồn tại & có seed chuẩn
+     */
+    public function ensureVoucherSchema(): void {
+        if (self::$voucherSchemaChecked || !$this->hasConnection()) {
+            return;
+        }
+        self::$voucherSchemaChecked = true;
+        try {
+            $this->db->exec("
+                CREATE TABLE IF NOT EXISTS `lnkt_ma_giam_gia` (
+                    `ma_voucher` INT AUTO_INCREMENT PRIMARY KEY,
+                    `ma_code` VARCHAR(50) NOT NULL UNIQUE,
+                    `mo_ta` VARCHAR(255) NOT NULL,
+                    `loai_giam` ENUM('percent', 'fixed', 'freeship') NOT NULL DEFAULT 'fixed',
+                    `gia_tri_giam` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `giam_toi_da` DECIMAL(12,2) NULL DEFAULT NULL,
+                    `don_toi_thieu` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `gioi_han_luot` INT NULL DEFAULT NULL,
+                    `da_su_dung` INT NOT NULL DEFAULT 0,
+                    `ngay_bat_dau` DATETIME NULL DEFAULT NULL,
+                    `ngay_het_han` DATETIME NULL DEFAULT NULL,
+                    `trang_thai` TINYINT(1) NOT NULL DEFAULT 1,
+                    `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            $ins = $this->db->prepare("
+                INSERT IGNORE INTO `lnkt_ma_giam_gia`
+                    (`ma_code`, `mo_ta`, `loai_giam`, `gia_tri_giam`, `giam_toi_da`, `don_toi_thieu`, `gioi_han_luot`, `da_su_dung`, `ngay_bat_dau`, `ngay_het_han`, `trang_thai`)
+                VALUES
+                    (:code, :desc, :type, :val, :cap, :min, :limit, 0, '2025-01-01 00:00:00', '2028-12-31 23:59:59', 1)
+            ");
+            foreach ($this->getDefaultVouchersSeed() as $v) {
+                $ins->execute([
+                    ':code'  => $v['ma_code'],
+                    ':desc'  => $v['mo_ta'],
+                    ':type'  => $v['loai_giam'],
+                    ':val'   => $v['gia_tri_giam'],
+                    ':cap'   => $v['giam_toi_da'],
+                    ':min'   => $v['don_toi_thieu'],
+                    ':limit' => $v['gioi_han_luot'],
+                ]);
+            }
+        } catch (PDOException $e) {
+            error_log('[lnkt] ensureVoucherSchema: ' . $e->getMessage());
+        }
+    }
+
+    private function getDefaultVouchersSeed(): array {
+        return [
+            [
+                'ma_code'       => 'FASHION10',
+                'mo_ta'         => 'Giảm 10% tối đa 50.000đ cho đơn từ 200.000đ',
+                'loai_giam'     => 'percent',
+                'gia_tri_giam'  => 10.0,
+                'giam_toi_da'   => 50000.0,
+                'don_toi_thieu' => 200000.0,
+                'gioi_han_luot' => 500,
+                'da_su_dung'    => 0,
+                'trang_thai'    => 1,
+            ],
+            [
+                'ma_code'       => 'SOITRE30K',
+                'mo_ta'         => 'Giảm trực tiếp 30.000đ cho đơn từ 250.000đ',
+                'loai_giam'     => 'fixed',
+                'gia_tri_giam'  => 30000.0,
+                'giam_toi_da'   => 30000.0,
+                'don_toi_thieu' => 250000.0,
+                'gioi_han_luot' => 300,
+                'da_su_dung'    => 0,
+                'trang_thai'    => 1,
+            ],
+            [
+                'ma_code'       => 'FREESHIPFK',
+                'mo_ta'         => 'Miễn phí vận chuyển GHN (tối đa 35.000đ) đơn từ 150.000đ',
+                'loai_giam'     => 'freeship',
+                'gia_tri_giam'  => 35000.0,
+                'giam_toi_da'   => 35000.0,
+                'don_toi_thieu' => 150000.0,
+                'gioi_han_luot' => 1000,
+                'da_su_dung'    => 0,
+                'trang_thai'    => 1,
+            ],
+        ];
+    }
+
+    public function getAvailableVouchers(): array {
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->query("
+                    SELECT *
+                    FROM `lnkt_ma_giam_gia`
+                    WHERE `trang_thai` = 1
+                      AND (`ngay_bat_dau` IS NULL OR NOW() >= `ngay_bat_dau`)
+                      AND (`ngay_het_han` IS NULL OR NOW() <= `ngay_het_han`)
+                      AND (`gioi_han_luot` IS NULL OR `da_su_dung` < `gioi_han_luot`)
+                    ORDER BY `don_toi_thieu` ASC
+                ");
+                $rows = $stmt->fetchAll();
+                $stmt->closeCursor();
+                if (!empty($rows)) {
+                    return $rows;
+                }
+            } catch (PDOException $e) {
+                error_log('[lnkt] getAvailableVouchers: ' . $e->getMessage());
+            }
+        }
+        return $this->getDefaultVouchersSeed();
+    }
+
+    /**
+     * Kiểm tra tính hợp lệ của Voucher & tính toán mức giảm thực tế
+     */
+    public function kiemTraMaGiamGia(string $rawCode, float $subtotal, float $shippingFee = 0.0): array {
+        $code = strtoupper(trim($rawCode));
+        if ($code === '') {
+            return ['valid' => false, 'code' => '', 'discount_amount' => 0.0, 'message' => 'Vui lòng nhập mã giảm giá cần áp dụng.'];
+        }
+
+        $voucher = null;
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("SELECT * FROM `lnkt_ma_giam_gia` WHERE UPPER(`ma_code`) = :code LIMIT 1");
+                $stmt->execute([':code' => $code]);
+                $voucher = $stmt->fetch();
+                $stmt->closeCursor();
+            } catch (PDOException $e) {
+                error_log('[lnkt] kiemTraMaGiamGia: ' . $e->getMessage());
+            }
+        } else {
+            foreach ($this->getDefaultVouchersSeed() as $sv) {
+                if (strcasecmp($sv['ma_code'], $code) === 0) {
+                    $voucher = $sv;
+                    break;
+                }
+            }
+        }
+
+        if (!$voucher) {
+            return ['valid' => false, 'code' => $code, 'discount_amount' => 0.0, 'message' => 'Mã giảm giá "' . $code . '" không tồn tại hoặc đã bị gỡ bỏ.'];
+        }
+        if ((int)($voucher['trang_thai'] ?? 0) !== 1) {
+            return ['valid' => false, 'code' => $code, 'discount_amount' => 0.0, 'message' => 'Mã giảm giá "' . $code . '" hiện đang tạm ngưng áp dụng.'];
+        }
+        $now = time();
+        if (!empty($voucher['ngay_bat_dau']) && strtotime((string)$voucher['ngay_bat_dau']) > $now) {
+            return ['valid' => false, 'code' => $code, 'discount_amount' => 0.0, 'message' => 'Mã giảm giá "' . $code . '" chưa đến thời gian áp dụng.'];
+        }
+        if (!empty($voucher['ngay_het_han']) && strtotime((string)$voucher['ngay_het_han']) < $now) {
+            return ['valid' => false, 'code' => $code, 'discount_amount' => 0.0, 'message' => 'Mã giảm giá "' . $code . '" đã hết hạn sử dụng.'];
+        }
+        if ($voucher['gioi_han_luot'] !== null && (int)$voucher['da_su_dung'] >= (int)$voucher['gioi_han_luot']) {
+            return ['valid' => false, 'code' => $code, 'discount_amount' => 0.0, 'message' => 'Mã giảm giá "' . $code . '" đã hết lượt sử dụng trong đợt này.'];
+        }
+
+        $minOrder = (float)($voucher['don_toi_thieu'] ?? 0);
+        if ($subtotal < $minOrder) {
+            return [
+                'valid'           => false,
+                'code'            => $code,
+                'discount_amount' => 0.0,
+                'message'         => 'Đơn hàng cần tối thiểu ' . number_format($minOrder, 0, ',', '.') . ' đ để dùng mã "' . $code . '".',
+            ];
+        }
+
+        $type = strtolower((string)($voucher['loai_giam'] ?? 'fixed'));
+        $val  = (float)($voucher['gia_tri_giam'] ?? 0);
+        $cap  = ($voucher['giam_toi_da'] !== null && (float)$voucher['giam_toi_da'] > 0) ? (float)$voucher['giam_toi_da'] : null;
+
+        if ($type === 'percent') {
+            $discount = round(($subtotal * $val) / 100.0, 0);
+            if ($cap !== null) {
+                $discount = min($discount, $cap);
+            }
+            $discount = min($subtotal, max(0.0, $discount));
+        } elseif ($type === 'freeship') {
+            $maxShipCut = $cap !== null ? $cap : $val;
+            $discount   = min(max(0.0, $shippingFee), $maxShipCut);
+        } else {
+            $discount = min($subtotal, max(0.0, $val));
+        }
+
+        return [
+            'valid'           => true,
+            'code'            => (string)$voucher['ma_code'],
+            'type'            => $type,
+            'description'     => (string)($voucher['mo_ta'] ?? ''),
+            'discount_amount' => round($discount, 0),
+            'voucher'         => $voucher,
+            'message'         => 'Áp dụng mã ' . $voucher['ma_code'] . ' thành công (-' . number_format($discount, 0, ',', '.') . ' đ).',
+        ];
     }
 
     /**
@@ -302,14 +523,17 @@ class OrderModel extends Model {
             throw new RuntimeException('Không thể kết nối cơ sở dữ liệu để khởi tạo đơn hàng.');
         }
 
-        $userId   = !empty($payload['user_id']) ? (int)$payload['user_id'] : null;
-        $name     = trim((string)($payload['receiver_name'] ?? ''));
-        $phone    = trim((string)($payload['receiver_phone'] ?? ''));
-        $email    = trim((string)($payload['receiver_email'] ?? ''));
-        $address  = trim((string)($payload['shipping_address'] ?? ''));
-        $province = trim((string)($payload['province'] ?? ''));
-        $district = trim((string)($payload['district'] ?? ''));
-        $note     = mb_substr(trim((string)($payload['note'] ?? '')), 0, 255, 'UTF-8');
+        $userId          = !empty($payload['user_id']) ? (int)$payload['user_id'] : null;
+        $name            = trim((string)($payload['receiver_name'] ?? ''));
+        $phone           = trim((string)($payload['receiver_phone'] ?? ''));
+        $email           = trim((string)($payload['receiver_email'] ?? ''));
+        $address         = trim((string)($payload['shipping_address'] ?? ''));
+        $province        = trim((string)($payload['province'] ?? ''));
+        $district        = trim((string)($payload['district'] ?? ''));
+        $ward            = trim((string)($payload['ward'] ?? ''));
+        $shippingService = (strtolower(trim((string)($payload['shipping_service'] ?? 'standard'))) === 'express') ? 'express' : 'standard';
+        $voucherCode     = strtoupper(trim((string)($payload['voucher_code'] ?? '')));
+        $note            = mb_substr(trim((string)($payload['note'] ?? '')), 0, 255, 'UTF-8');
 
         $rawMethod = strtolower(trim((string)($payload['payment_method'] ?? 'cod')));
         $paymentMethod = ($rawMethod === 'vietqr') ? 'vietqr' : 'cod';
@@ -328,6 +552,7 @@ class OrderModel extends Model {
         // Chuẩn hóa danh sách dòng hàng & gom tổng số lượng theo từng ma_san_pham (nhiều size cùng 1 sản phẩm)
         $normalizedItems = [];
         $qtyByProduct = [];
+        $totalUnitsCount = 0;
         foreach ($items as $it) {
             $pid  = (int)($it['product_id'] ?? $it['ma_san_pham'] ?? 0);
             $qty  = (int)($it['quantity'] ?? $it['so_luong'] ?? 0);
@@ -344,48 +569,110 @@ class OrderModel extends Model {
                 'size'       => $size,
             ];
             $qtyByProduct[$pid] = ($qtyByProduct[$pid] ?? 0) + $qty;
+            $totalUnitsCount   += $qty;
         }
         ksort($qtyByProduct);
+        $weightGram = max(250, $totalUnitsCount * 250);
+
+        $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, 0.0);
+        $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
+        $appliedVoucherCode     = null;
+        $appliedVoucherDiscount = 0.0;
 
         $orderId = 0;
+        $usePhpTransaction = (count($normalizedItems) !== 1);
 
-        if (count($normalizedItems) === 1) {
-            // 1 dòng sản phẩm -> Dùng trực tiếp Stored Procedure sp_tgb_tao_don_hang_va_chi_tiet ngoài PDO tx
-            $single = $normalizedItems[0];
-            $orderId = $this->taoDonHang(
-                $userId,
-                $name,
-                $phone,
-                $email,
-                $address,
-                $province,
-                $district,
-                $single['product_id'],
-                $single['size'],
-                $single['quantity']
-            );
+        if (!$usePhpTransaction) {
+            // 1 dòng sản phẩm -> Ưu tiên Stored Procedure sp_tgb_tao_don_hang_va_chi_tiet (tự động fallback nếu Hosting thiếu SP)
+            try {
+                $single = $normalizedItems[0];
+                $orderId = $this->taoDonHang(
+                    $userId,
+                    $name,
+                    $phone,
+                    $email,
+                    $address,
+                    $province,
+                    $district,
+                    $single['product_id'],
+                    $single['size'],
+                    $single['quantity']
+                );
 
-            $transferMemo = (defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK') . $orderId;
-            $ttlHours     = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
-            $updStmt = $this->db->prepare("
-                UPDATE `lnkt_don_hang`
-                SET `phuong_thuc_thanh_toan` = :pm,
-                    `trang_thai_thanh_toan`  = :ps,
-                    `han_thanh_toan`         = CASE WHEN :is_vqr = 1 THEN DATE_ADD(`ngay_dat_hang`, INTERVAL {$ttlHours} HOUR) ELSE NULL END,
-                    `noi_dung_chuyen_khoan`  = :memo,
-                    `ghi_chu`                = :note,
-                    `ngay_cap_nhat`          = NOW()
-                WHERE `ma_don_hang` = :id
-            ");
-            $updStmt->execute([
-                ':pm'     => $paymentMethod,
-                ':ps'     => $paymentStatus,
-                ':is_vqr' => ($paymentMethod === 'vietqr' ? 1 : 0),
-                ':memo'   => $transferMemo,
-                ':note'   => ($note !== '' ? $note : null),
-                ':id'     => $orderId,
-            ]);
-        } else {
+                // Đọc tạm tính & giảm giá VIP do SP vừa tính để cộng phí vận chuyển + voucher chính xác tuyệt đối
+                $spRowStmt = $this->db->prepare("SELECT `tien_hang_tam_tinh`, `tien_giam_gia` FROM `lnkt_don_hang` WHERE `ma_don_hang` = :id LIMIT 1");
+                $spRowStmt->execute([':id' => $orderId]);
+                $spRow = $spRowStmt->fetch();
+                $spRowStmt->closeCursor();
+
+                $spSubtotal = (float)($spRow['tien_hang_tam_tinh'] ?? 0);
+                $spVipDisc  = (float)($spRow['tien_giam_gia'] ?? 0);
+                $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, $spSubtotal);
+                $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
+
+                if ($voucherCode !== '') {
+                    $vCheck = $this->kiemTraMaGiamGia($voucherCode, $spSubtotal, $shippingFee);
+                    if (!empty($vCheck['valid'])) {
+                        $appliedVoucherCode     = $vCheck['code'];
+                        $appliedVoucherDiscount = (float)$vCheck['discount_amount'];
+                    }
+                }
+                $finalSpTotal = max(0.0, round($spSubtotal - $spVipDisc - $appliedVoucherDiscount + $shippingFee, 2));
+
+                $transferMemo = (defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK') . $orderId;
+                $ttlHours     = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
+                $updStmt = $this->db->prepare("
+                    UPDATE `lnkt_don_hang`
+                    SET `phuong_xa`              = :ward,
+                        `dich_vu_van_chuyen`     = :svc,
+                        `phi_van_chuyen`         = :ship_fee,
+                        `trong_luong_gram`       = :weight_g,
+                        `ma_voucher`             = :vcode,
+                        `tien_giam_voucher`      = :vdisc,
+                        `tong_tien_thanh_toan`   = :final_total,
+                        `phuong_thuc_thanh_toan` = :pm,
+                        `trang_thai_thanh_toan`  = :ps,
+                        `han_thanh_toan`         = CASE WHEN :is_vqr = 1 THEN DATE_ADD(`ngay_dat_hang`, INTERVAL {$ttlHours} HOUR) ELSE NULL END,
+                        `noi_dung_chuyen_khoan`  = :memo,
+                        `ghi_chu`                = :note,
+                        `ngay_cap_nhat`          = NOW()
+                    WHERE `ma_don_hang` = :id
+                ");
+                $updStmt->execute([
+                    ':ward'        => ($ward !== '' ? $ward : null),
+                    ':svc'         => $shippingService,
+                    ':ship_fee'    => $shippingFee,
+                    ':weight_g'    => $weightGram,
+                    ':vcode'       => $appliedVoucherCode,
+                    ':vdisc'       => $appliedVoucherDiscount,
+                    ':final_total' => $finalSpTotal,
+                    ':pm'          => $paymentMethod,
+                    ':ps'          => $paymentStatus,
+                    ':is_vqr'      => ($paymentMethod === 'vietqr' ? 1 : 0),
+                    ':memo'        => $transferMemo,
+                    ':note'        => ($note !== '' ? $note : null),
+                    ':id'          => $orderId,
+                ]);
+
+                if ($appliedVoucherCode !== null) {
+                    $this->db->prepare("
+                        UPDATE `lnkt_ma_giam_gia`
+                        SET `da_su_dung` = `da_su_dung` + 1
+                        WHERE `ma_code` = :c AND (`gioi_han_luot` IS NULL OR `da_su_dung` < `gioi_han_luot`)
+                    ")->execute([':c' => $appliedVoucherCode]);
+                }
+            } catch (Throwable $spEx) {
+                $prev = $spEx->getPrevious();
+                $sqlState = ($prev instanceof PDOException) ? ($prev->errorInfo[0] ?? '') : '';
+                if ($sqlState === '45000' || strpos($spEx->getMessage(), 'TGB_ERR_') !== false) {
+                    throw $spEx;
+                }
+                error_log('[tgb] Fallback PHP ACID transaction for 1-item order: ' . $spEx->getMessage());
+                $usePhpTransaction = true;
+            }
+        }
+
+        if ($usePhpTransaction) {
             // Nhiều dòng sản phẩm -> Explicit ACID Transaction + FOR UPDATE row locking
             try {
                 $this->db->beginTransaction();
@@ -421,33 +708,60 @@ class OrderModel extends Model {
                     $subtotal += $unitPrice * $line['quantity'];
                 }
 
-                // Gọi Stored Function fn_hgb_tinh_phan_tram_giam_gia tính % VIP tự động từ DB
+                $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, $subtotal);
+                $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
+
+                // Gọi Stored Function fn_hgb_tinh_phan_tram_giam_gia tính % VIP tự động từ DB (kèm fallback nếu thiếu Routine)
                 $discountPct = 0.0;
                 if ($userId !== null && $userId > 0) {
-                    $vipStmt = $this->db->prepare("SELECT `fn_hgb_tinh_phan_tram_giam_gia`(:uid) AS phan_tram");
-                    $vipStmt->execute([':uid' => $userId]);
-                    $vipRes = $vipStmt->fetch();
-                    $vipStmt->closeCursor();
-                    $discountPct = (float)($vipRes['phan_tram'] ?? 0.0);
+                    try {
+                        $vipStmt = $this->db->prepare("SELECT `fn_hgb_tinh_phan_tram_giam_gia`(:uid) AS phan_tram");
+                        $vipStmt->execute([':uid' => $userId]);
+                        $vipRes = $vipStmt->fetch();
+                        $vipStmt->closeCursor();
+                        $discountPct = (float)($vipRes['phan_tram'] ?? 0.0);
+                    } catch (PDOException $vipEx) {
+                        $vipFb = $this->db->prepare("
+                            SELECT COALESCE(h.phan_tram_giam_gia, 0) AS phan_tram
+                            FROM `hgb_nguoi_dung` u
+                            LEFT JOIN `hgb_hang_thanh_vien` h ON u.ma_hang_thanh_vien = h.ma_hang
+                            WHERE u.ma_nguoi_dung = :uid
+                            LIMIT 1
+                        ");
+                        $vipFb->execute([':uid' => $userId]);
+                        $discountPct = (float)($vipFb->fetchColumn() ?: 0.0);
+                        $vipFb->closeCursor();
+                    }
                 }
 
                 $discountAmount = round(($subtotal * $discountPct) / 100.0, 2);
-                $totalAmount    = max(0.0, round($subtotal - $discountAmount, 2));
-                $ttlHours       = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
+
+                if ($voucherCode !== '') {
+                    $vCheck = $this->kiemTraMaGiamGia($voucherCode, $subtotal, $shippingFee);
+                    if (!empty($vCheck['valid'])) {
+                        $appliedVoucherCode     = $vCheck['code'];
+                        $appliedVoucherDiscount = (float)$vCheck['discount_amount'];
+                    }
+                }
+
+                $totalAmount = max(0.0, round($subtotal - $discountAmount - $appliedVoucherDiscount + $shippingFee, 2));
+                $ttlHours    = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
 
                 $insOrder = $this->db->prepare("
                     INSERT INTO `lnkt_don_hang` (
                         `ma_nguoi_dung`, `ma_nhan_vien_xu_ly`, `ten_nguoi_nhan`,
                         `so_dien_thoai_nhan`, `thu_dien_tu_nhan`, `dia_chi_giao_hang`,
-                        `tinh_thanh_pho`, `quan_huyen`, `tien_hang_tam_tinh`,
-                        `tien_giam_gia`, `tong_tien_thanh_toan`,
+                        `tinh_thanh_pho`, `quan_huyen`, `phuong_xa`, `dich_vu_van_chuyen`,
+                        `tien_hang_tam_tinh`, `tien_giam_gia`, `phi_van_chuyen`, `trong_luong_gram`,
+                        `ma_voucher`, `tien_giam_voucher`, `tong_tien_thanh_toan`,
                         `phuong_thuc_thanh_toan`, `trang_thai_thanh_toan`, `han_thanh_toan`,
                         `ghi_chu`, `trang_thai_don_hang`, `ngay_dat_hang`, `ngay_cap_nhat`
                     ) VALUES (
                         :uid, NULL, :ten,
                         :sdt, :email, :diachi,
-                        :tinh, :huyen, :tam_tinh,
-                        :giam_gia, :tong_tien,
+                        :tinh, :huyen, :ward, :svc,
+                        :tam_tinh, :giam_gia, :ship_fee, :weight_g,
+                        :vcode, :vdisc, :tong_tien,
                         :pm, :ps, CASE WHEN :is_vqr = 1 THEN DATE_ADD(NOW(), INTERVAL {$ttlHours} HOUR) ELSE NULL END,
                         :note, 'cho_duyet', NOW(), NOW()
                     )
@@ -460,8 +774,14 @@ class OrderModel extends Model {
                     ':diachi'    => $address,
                     ':tinh'      => $province,
                     ':huyen'     => $district,
+                    ':ward'      => ($ward !== '' ? $ward : null),
+                    ':svc'       => $shippingService,
                     ':tam_tinh'  => $subtotal,
                     ':giam_gia'  => $discountAmount,
+                    ':ship_fee'  => $shippingFee,
+                    ':weight_g'  => $weightGram,
+                    ':vcode'     => $appliedVoucherCode,
+                    ':vdisc'     => $appliedVoucherDiscount,
                     ':tong_tien' => $totalAmount,
                     ':pm'        => $paymentMethod,
                     ':ps'        => $paymentStatus,
@@ -473,6 +793,14 @@ class OrderModel extends Model {
                 $transferMemo = (defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK') . $orderId;
                 $memoStmt = $this->db->prepare("UPDATE `lnkt_don_hang` SET `noi_dung_chuyen_khoan` = :memo WHERE `ma_don_hang` = :id");
                 $memoStmt->execute([':memo' => $transferMemo, ':id' => $orderId]);
+
+                if ($appliedVoucherCode !== null) {
+                    $this->db->prepare("
+                        UPDATE `lnkt_ma_giam_gia`
+                        SET `da_su_dung` = `da_su_dung` + 1
+                        WHERE `ma_code` = :c AND (`gioi_han_luot` IS NULL OR `da_su_dung` < `gioi_han_luot`)
+                    ")->execute([':c' => $appliedVoucherCode]);
+                }
 
                 $insDetail = $this->db->prepare("
                     INSERT INTO `tgb_chi_tiet_don_hang` (
@@ -527,6 +855,8 @@ class OrderModel extends Model {
         $finalTotal    = (float)($orderRow['tong_tien_thanh_toan'] ?? 0);
         $finalSubtotal = (float)($orderRow['tien_hang_tam_tinh'] ?? $finalTotal);
         $finalDiscount = (float)($orderRow['tien_giam_gia'] ?? 0);
+        $finalShipFee  = (float)($orderRow['phi_van_chuyen'] ?? $shippingFee);
+        $finalVDisc    = (float)($orderRow['tien_giam_voucher'] ?? $appliedVoucherDiscount);
         $appliedPct    = $finalSubtotal > 0 ? round(($finalDiscount / $finalSubtotal) * 100, 1) : 0.0;
 
         $paymentProvider = ($paymentMethod === 'vietqr') ? new ThanhToanVietQR() : new ThanhToanCOD();
@@ -539,6 +869,12 @@ class OrderModel extends Model {
             'tien_hang_tam_tinh'    => $finalSubtotal,
             'phan_tram_giam'        => $appliedPct,
             'tien_giam_vip'         => $finalDiscount,
+            'phi_van_chuyen'        => $finalShipFee,
+            'ma_voucher'            => $orderRow['ma_voucher'] ?? $appliedVoucherCode,
+            'tien_giam_voucher'     => $finalVDisc,
+            'phuong_xa'             => $orderRow['phuong_xa'] ?? $ward,
+            'dich_vu_van_chuyen'    => $orderRow['dich_vu_van_chuyen'] ?? $shippingService,
+            'shipping_meta'         => $shippingCalc,
             'tong_tien'             => $finalTotal,
             'phuong_thuc'           => $paymentMethod,
             'trang_thai_thanh_toan' => $paymentStatus,
@@ -1477,6 +1813,65 @@ class OrderModel extends Model {
     }
 
     /**
+     * Gán mã vận đơn đơn vị vận chuyển (GHN) & tự động chuyển sang Đang giao nếu đang Chờ duyệt / Đã xác nhận
+     */
+    public function updateCarrierTracking(int $orderId, int $staffId, string $carrierName, string $trackingCode): array {
+        if (!$this->hasConnection()) {
+            throw new RuntimeException('Chưa kết nối cơ sở dữ liệu.');
+        }
+        $order = $this->getOrderById($orderId);
+        if (!$order) {
+            throw new RuntimeException('Không tìm thấy đơn hàng #' . $orderId);
+        }
+        $curStatus = $this->normalizeStatus((string)($order['trang_thai_don_hang'] ?? 'cho_duyet'));
+        if (in_array($curStatus, ['da_huy', 'hoan_tat'], true)) {
+            throw new RuntimeException('Đơn hàng đã hoàn tất hoặc đã hủy, không thể tạo vận đơn mới.');
+        }
+
+        // Nếu đang ở cho_duyet -> ưu tiên nâng lên dang_giao (hoặc qua da_xac_nhan trước nếu VietQR đã thanh toán/COD)
+        if ($curStatus === 'cho_duyet' || $curStatus === 'da_xac_nhan') {
+            $this->capNhatTrangThaiDonHangChiTiet($orderId, $staffId, 'dang_giao');
+        }
+
+        $upd = $this->db->prepare("
+            UPDATE `lnkt_don_hang`
+            SET `don_vi_van_chuyen`  = :carrier,
+                `ma_van_don_hang_vc` = :tcode,
+                `ngay_cap_nhat`      = NOW()
+            WHERE `ma_don_hang` = :id
+        ");
+        $upd->execute([
+            ':carrier' => mb_substr($carrierName, 0, 50, 'UTF-8'),
+            ':tcode'   => mb_substr($trackingCode, 0, 100, 'UTF-8'),
+            ':id'      => $orderId,
+        ]);
+
+        return $this->getOrderById($orderId) ?? $order;
+    }
+
+    /**
+     * Tìm ID đơn hàng theo mã vận đơn đối tác GHN hoặc FK-ORD-xxxxxx (dùng cho Webhook vận chuyển)
+     */
+    public function findOrderIdByCarrierCode(string $code): int {
+        $clean = trim($code);
+        if ($clean === '' || !$this->hasConnection()) {
+            return 0;
+        }
+        if (preg_match('/^(?:#?FK-?ORD-?|#?FK|#)?0*(\d+)$/i', $clean, $m)) {
+            return (int)$m[1];
+        }
+        try {
+            $stmt = $this->db->prepare("SELECT `ma_don_hang` FROM `lnkt_don_hang` WHERE `ma_van_don_hang_vc` = :code LIMIT 1");
+            $stmt->execute([':code' => $clean]);
+            $id = (int)($stmt->fetchColumn() ?: 0);
+            $stmt->closeCursor();
+            return $id;
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    /**
      * Lấy danh sách đơn hàng gần nhất của một Khách hàng (hiển thị lịch sử nhanh trên Tra cứu đơn)
      */
     public function getOrdersByUserId(int $userId, int $limit = 10): array {
@@ -1669,6 +2064,12 @@ class OrderModel extends Model {
                     'payment_display_label'  => $h['payment_display_label'],
                     'nhan_vien_phu_trach'    => $h['nhan_vien_phu_trach'] ?? null,
                     'ghi_chu'                => $h['ghi_chu'] ?? '',
+                    'phuong_xa'              => $h['phuong_xa'] ?? '',
+                    'phi_van_chuyen'         => (float)($h['phi_van_chuyen'] ?? 0),
+                    'ma_voucher'             => $h['ma_voucher'] ?? null,
+                    'tien_giam_voucher'      => (float)($h['tien_giam_voucher'] ?? 0),
+                    'don_vi_van_chuyen'      => $h['don_vi_van_chuyen'] ?? null,
+                    'ma_van_don_hang_vc'     => $h['ma_van_don_hang_vc'] ?? null,
                     'tong_tien_thanh_toan'   => (float)$h['tong_tien_thanh_toan'],
                     'tien_hang_tam_tinh'     => (float)$h['tien_hang_tam_tinh'],
                 ];
