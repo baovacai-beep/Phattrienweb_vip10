@@ -20,6 +20,8 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Mailer.php';
 require_once __DIR__ . '/../core/Csrf.php';
 require_once __DIR__ . '/../core/Rbac.php';
+require_once __DIR__ . '/../core/TurnstileService.php';
+require_once __DIR__ . '/../core/GoogleOAuthService.php';
 require_once __DIR__ . '/../models/UserModel.php';
 
 class AuthController extends Controller {
@@ -75,7 +77,16 @@ class AuthController extends Controller {
                 }
             }
 
-            $exists = $this->userModel->kiemTraTrungLap($field, $value);
+            $excludeSelf = !empty($_POST['exclude_self']);
+            $excludeUid  = 0;
+            if ($excludeSelf) {
+                $excludeUid = (int)($_SESSION['user']['ma_nguoi_dung']
+                    ?? $_SESSION['hgb_pending_google_oauth']['existing_user']['ma_nguoi_dung']
+                    ?? 0);
+            }
+            $exists = $excludeUid > 0
+                ? $this->userModel->kiemTraTrungLapNgoaiTru($field, $value, $excludeUid)
+                : $this->userModel->kiemTraTrungLap($field, $value);
             $fieldNameVi = ($field === 'ten_dang_nhap') ? 'Tên đăng nhập' : 'Địa chỉ Email';
 
             if ($exists) {
@@ -108,6 +119,11 @@ class AuthController extends Controller {
 
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ'], 405);
+        }
+
+        $tsCheck = TurnstileService::verifyToken($_POST['cf-turnstile-response'] ?? $_POST['turnstile_token'] ?? null);
+        if (empty($tsCheck['success'])) {
+            $this->jsonResponse(['status' => 'error', 'message' => $tsCheck['message']], 422);
         }
 
         $email = filter_var(strtolower(trim((string)($_POST['email'] ?? ''))), FILTER_VALIDATE_EMAIL);
@@ -306,6 +322,11 @@ class AuthController extends Controller {
             $this->traLoiDangNhap($ajax, false, 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.', 400);
         }
 
+        $tsCheck = TurnstileService::verifyToken($_POST['cf-turnstile-response'] ?? $_POST['turnstile_token'] ?? null);
+        if (empty($tsCheck['success'])) {
+            $this->traLoiDangNhap($ajax, false, (string)$tsCheck['message'], 422);
+        }
+
         $khoaDen = (int)($_SESSION['hgb_login_lock_until'] ?? 0);
         if ($khoaDen > time()) {
             $this->traLoiDangNhap($ajax, false, 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ' . ($khoaDen - time()) . ' giây.', 429);
@@ -385,20 +406,32 @@ class AuthController extends Controller {
             $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ.'], 405);
         }
 
-        $userId   = (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['user_id'] ?? 0);
-        $fullname = trim((string)($_POST['ho_va_ten'] ?? ''));
-        $phone    = trim((string)($_POST['so_dien_thoai'] ?? ''));
-        $address  = trim((string)($_POST['dia_chi'] ?? $_POST['dia_chi_nha'] ?? ''));
+        $userId      = (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['user_id'] ?? 0);
+        $currentRole = (string)($_SESSION['user']['vai_tro'] ?? Rbac::currentRole());
+        $fullname    = trim((string)($_POST['ho_va_ten'] ?? ''));
+        $phone       = trim((string)($_POST['so_dien_thoai'] ?? ''));
+        $address     = trim((string)($_POST['dia_chi'] ?? $_POST['dia_chi_nha'] ?? ''));
+        $newUsername = null;
+        if ($currentRole === 'khach_hang' && isset($_POST['ten_dang_nhap']) && trim((string)$_POST['ten_dang_nhap']) !== '') {
+            $newUsername = trim((string)$_POST['ten_dang_nhap']);
+        }
 
         try {
-            $updated = $this->userModel->capNhatThongTinCaNhan($userId, $fullname, $phone, $address);
+            $updated = $this->userModel->capNhatThongTinCaNhan($userId, $fullname, $phone, $address, $newUsername);
 
+            if (!empty($updated['ten_dang_nhap'])) {
+                $_SESSION['user']['ten_dang_nhap'] = $updated['ten_dang_nhap'];
+                $_SESSION['username']              = $updated['ten_dang_nhap'];
+            }
             $_SESSION['user']['ho_va_ten']     = $updated['ho_va_ten'];
             $_SESSION['user']['so_dien_thoai'] = $updated['so_dien_thoai'];
             $_SESSION['user']['dia_chi_nha']   = $updated['dia_chi_nha'];
             $_SESSION['full_name']             = $updated['ho_va_ten'];
 
             if (isset($_SESSION['auth_user']) && is_array($_SESSION['auth_user'])) {
+                if (!empty($updated['ten_dang_nhap'])) {
+                    $_SESSION['auth_user']['username'] = $updated['ten_dang_nhap'];
+                }
                 $_SESSION['auth_user']['full_name'] = $updated['ho_va_ten'];
                 $_SESSION['auth_user']['phone']     = $updated['so_dien_thoai'];
                 $_SESSION['auth_user']['address']   = $updated['dia_chi_nha'];
@@ -559,5 +592,292 @@ class AuthController extends Controller {
             'nhan_vien' => APP_BASE_URL . '/views/pages/staff-orders.php',
             default     => APP_BASE_URL . '/views/pages/profile.php',
         };
+    }
+
+    // ------------------------------------------------------------------------
+    // Endpoint Quên Mật Khẩu qua Email OTP (ajaxSendResetOtp, ajaxVerifyResetOtp, ajaxResetPassword)
+    // ------------------------------------------------------------------------
+
+    public function ajaxSendResetOtp(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $tsCheck = TurnstileService::verifyToken($_POST['cf-turnstile-response'] ?? $_POST['turnstile_token'] ?? null);
+        if (empty($tsCheck['success'])) {
+            $this->jsonResponse(['status' => 'error', 'message' => $tsCheck['message']], 422);
+        }
+
+        $email = filter_var(strtolower(trim((string)($_POST['email'] ?? ''))), FILTER_VALIDATE_EMAIL);
+        if (!$email) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Vui lòng nhập địa chỉ Email hợp lệ!'], 400);
+        }
+
+        $lastSent = (int)($_SESSION['hgb_reset_otp_data']['sent_at'] ?? 0);
+        $cooldown = defined('OTP_RESEND_COOLDOWN') ? (int)OTP_RESEND_COOLDOWN : 60;
+        if ($lastSent > 0 && (time() - $lastSent) < $cooldown) {
+            $wait = $cooldown - (time() - $lastSent);
+            $this->jsonResponse(['status' => 'error', 'message' => "Vui lòng đợi {$wait} giây trước khi gửi lại mã OTP."], 429);
+        }
+
+        $user = $this->userModel->timTheoEmail($email);
+        if (!$user) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Không tìm thấy tài khoản nào liên kết với Email này!'], 404);
+        }
+
+        $otp  = $this->userModel->taoMaOtpQuenMatKhau($email);
+        $name = (string)($user['ho_va_ten'] ?? 'Quý khách');
+        $sent = Mailer::guiOtpQuenMatKhau($email, $name, $otp);
+
+        if ($sent) {
+            $this->jsonResponse([
+                'status'    => 'success',
+                'message'   => "Mã OTP khôi phục 6 số đã được gửi tới {$email}. Vui lòng kiểm tra hộp thư (kể cả Spam).",
+                'resend_in' => $cooldown,
+            ], 200);
+        }
+
+        // Nếu SMTP gặp sự cố trên môi trường localhost/offline, thông báo rõ nếu OTP_DEMO_MODE tắt hoặc hỗ trợ fallback an toàn
+        $smtpErr = Mailer::getLastError();
+        if (defined('OTP_DEMO_MODE') && OTP_DEMO_MODE) {
+            $this->jsonResponse([
+                'status'    => 'success',
+                'demo_mode' => true,
+                'demo_otp'  => $otp,
+                'message'   => "Máy chủ SMTP tạm gián đoạn ({$smtpErr}). Mã OTP khôi phục dùng thử: {$otp}",
+                'resend_in' => $cooldown,
+            ], 200);
+        }
+
+        $this->jsonResponse([
+            'status'  => 'error',
+            'message' => 'Không thể gửi email OTP lúc này: ' . ($smtpErr ?: 'Lỗi kết nối SMTP'),
+        ], 500);
+    }
+
+    public function ajaxVerifyResetOtp(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $email = filter_var(strtolower(trim((string)($_POST['email'] ?? ''))), FILTER_VALIDATE_EMAIL);
+        $otp   = trim((string)($_POST['otp'] ?? ''));
+
+        if (!$email || strlen($otp) !== 6 || !ctype_digit($otp)) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Mã OTP khôi phục phải gồm đúng 6 chữ số!'], 400);
+        }
+
+        $res = $this->userModel->xacThucOtpQuenMatKhau($email, $otp);
+        if (!empty($res['valid'])) {
+            $this->jsonResponse(['status' => 'success', 'message' => $res['message']], 200);
+        }
+        $this->jsonResponse(['status' => 'error', 'message' => $res['message']], 400);
+    }
+
+    public function ajaxResetPassword(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $email   = filter_var(strtolower(trim((string)($_POST['email'] ?? ''))), FILTER_VALIDATE_EMAIL);
+        $newPass = (string)($_POST['new_password'] ?? '');
+        $confirm = (string)($_POST['confirm_password'] ?? '');
+
+        if (!$email) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Email không hợp lệ!'], 400);
+        }
+        if (strlen($newPass) < 6) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Mật khẩu mới phải có ít nhất 6 ký tự!'], 422);
+        }
+        if ($newPass !== $confirm) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Mật khẩu nhập lại không khớp!'], 422);
+        }
+        if (!$this->userModel->emailResetDaXacThuc($email)) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phiên xác thực OTP đã hết hạn hoặc chưa hoàn tất!'], 403);
+        }
+
+        $ok = $this->userModel->datLaiMatKhauBangEmail($email, $newPass);
+        if ($ok) {
+            $this->jsonResponse([
+                'status'  => 'success',
+                'message' => 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ.',
+            ], 200);
+        }
+        $this->jsonResponse(['status' => 'error', 'message' => 'Không thể cập nhật mật khẩu lúc này. Vui lòng thử lại!'], 500);
+    }
+
+    // ------------------------------------------------------------------------
+    // Đăng nhập nhanh bằng Google OAuth 2.0 (googleLogin, googleCallback)
+    // ------------------------------------------------------------------------
+
+    public function googleLogin(): void {
+        if (!GoogleOAuthService::isConfigured()) {
+            $msg = 'Đăng nhập Google OAuth 2.0 chưa được cấu hình GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET trong tệp .env.';
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode($msg));
+        }
+
+        $redirectAfter = trim((string)($_GET['redirect'] ?? ''));
+        if ($redirectAfter !== '' && strpos($redirectAfter, '/') === 0 && strpos($redirectAfter, '//') !== 0) {
+            $_SESSION['hgb_google_redirect'] = $redirectAfter;
+        } else {
+            unset($_SESSION['hgb_google_redirect']);
+        }
+
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['hgb_google_oauth_state'] = $state;
+        header('Location: ' . GoogleOAuthService::getAuthUrl($state));
+        exit;
+    }
+
+    public function googleCallback(): void {
+        $errorParam = trim((string)($_GET['error'] ?? ''));
+        if ($errorParam !== '') {
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode('Bạn đã hủy hoặc từ chối đăng nhập bằng Google (' . $errorParam . ').'));
+        }
+
+        $state = trim((string)($_GET['state'] ?? ''));
+        $expectedState = (string)($_SESSION['hgb_google_oauth_state'] ?? '');
+        unset($_SESSION['hgb_google_oauth_state']);
+
+        if ($state === '' || $expectedState === '' || !hash_equals($expectedState, $state)) {
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode('Phiên xác thực Google OAuth không hợp lệ hoặc đã hết hạn (State mismatch).'));
+        }
+
+        $code = trim((string)($_GET['code'] ?? ''));
+        if ($code === '') {
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode('Thiếu mã ủy quyền từ Google.'));
+        }
+
+        $profile = GoogleOAuthService::exchangeCodeForUser($code);
+        if (empty($profile['success'])) {
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode((string)($profile['message'] ?? 'Đăng nhập Google thất bại.')));
+        }
+
+        try {
+            $lookup = $this->userModel->kiemTraTrangThaiTaiKhoanGoogle($profile);
+
+            if (($lookup['status'] ?? '') === 'ready' && !empty($lookup['user'])) {
+                $user = $lookup['user'];
+                if (isset($user['trang_thai']) && (int)$user['trang_thai'] === 0) {
+                    $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode('Tài khoản này đang bị tạm khóa.'));
+                }
+                unset($_SESSION['hgb_pending_google_oauth']);
+                $this->thietLapPhienDangNhap($user);
+                $customRedirect = (string)($_SESSION['hgb_google_redirect'] ?? '');
+                unset($_SESSION['hgb_google_redirect']);
+                $targetUrl = ($customRedirect !== '') ? $customRedirect : $this->trangDichTheoVaiTro((string)($user['vai_tro'] ?? 'khach_hang'));
+                $this->redirect($targetUrl);
+            }
+
+            // Tài khoản Google mới hoặc cần bổ sung / xác nhận liên kết -> chuyển sang bước hoàn tất thông tin cơ bản
+            $_SESSION['hgb_pending_google_oauth'] = [
+                'mode'               => (string)($lookup['mode'] ?? 'new_user'),
+                'google_id'          => (string)$profile['google_id'],
+                'email'              => (string)$profile['email'],
+                'name'               => (string)$profile['name'],
+                'avatar'             => (string)$profile['avatar'],
+                'suggested_username' => (string)($lookup['suggested_username'] ?? ''),
+                'existing_user'      => $lookup['user'] ?? null,
+                'redirect'           => (string)($_SESSION['hgb_google_redirect'] ?? ''),
+                'created_at'         => time(),
+            ];
+            $this->redirect(APP_BASE_URL . '/views/pages/google-complete-profile.php');
+        } catch (Throwable $e) {
+            $this->redirect(APP_BASE_URL . '/views/pages/login-register.php?error=' . urlencode('Lỗi đăng nhập Google: ' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * Đổi sang tài khoản Google khác (xóa phiên Google tạm hoặc đăng xuất tài khoản hiện tại rồi mở Google chooser)
+     */
+    public function googleSwitchAccount(): void {
+        unset($_SESSION['hgb_pending_google_oauth']);
+        if (!empty($_GET['logout'])) {
+            $preservedCart = $_SESSION['cart'] ?? [];
+            unset(
+                $_SESSION['auth_user'],
+                $_SESSION['user'],
+                $_SESSION['user_id'],
+                $_SESSION['username'],
+                $_SESSION['full_name'],
+                $_SESSION['role']
+            );
+            $_SESSION['cart'] = $preservedCart;
+        }
+        $this->googleLogin();
+    }
+
+    /**
+     * Hoàn tất tạo tài khoản mới hoặc cập nhật & liên kết tài khoản Google OAuth 2.0 (AJAX + POST)
+     * URL: index.php?c=auth&a=ajaxCompleteGoogleProfile
+     */
+    public function ajaxCompleteGoogleProfile(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $pending = $_SESSION['hgb_pending_google_oauth'] ?? null;
+        if (!is_array($pending) || empty($pending['google_id']) || (time() - (int)($pending['created_at'] ?? 0)) > 1800) {
+            unset($_SESSION['hgb_pending_google_oauth']);
+            $this->jsonResponse([
+                'status'  => 'error',
+                'expired' => true,
+                'message' => 'Phiên đăng nhập Google đã hết hạn. Vui lòng bấm đăng nhập lại bằng Google!'
+            ], 401);
+        }
+
+        // Ghép địa chỉ chuẩn nếu người dùng chọn 3 cấp hành chính + số nhà
+        $soNha    = trim((string)($_POST['so_nha'] ?? ''));
+        $tinh     = trim((string)($_POST['tinh_thanh'] ?? ''));
+        $quan     = trim((string)($_POST['quan_huyen'] ?? ''));
+        $phuong   = trim((string)($_POST['phuong_xa'] ?? ''));
+        $rawAddr  = trim((string)($_POST['dia_chi_nha'] ?? $_POST['address'] ?? ''));
+
+        $parts = array_filter([$soNha, $phuong, $quan, $tinh], static fn($v) => $v !== '');
+        $finalAddress = !empty($parts) ? implode(', ', $parts) : $rawAddr;
+
+        try {
+            $user = $this->userModel->hoanTatTaiKhoanGoogle($pending, [
+                'ten_dang_nhap' => trim((string)($_POST['ten_dang_nhap'] ?? $_POST['username'] ?? '')),
+                'ho_va_ten'     => trim((string)($_POST['ho_va_ten'] ?? $_POST['fullname'] ?? '')),
+                'so_dien_thoai' => trim((string)($_POST['so_dien_thoai'] ?? $_POST['phone'] ?? '')),
+                'dia_chi_nha'   => $finalAddress,
+                'mat_khau'      => (string)($_POST['mat_khau'] ?? $_POST['password'] ?? ''),
+            ]);
+
+            if (isset($user['trang_thai']) && (int)$user['trang_thai'] === 0) {
+                $this->jsonResponse(['status' => 'error', 'message' => 'Tài khoản này đang bị tạm khóa.'], 403);
+            }
+
+            $customRedirect = (string)($pending['redirect'] ?? $_SESSION['hgb_google_redirect'] ?? '');
+            unset($_SESSION['hgb_pending_google_oauth'], $_SESSION['hgb_google_redirect']);
+
+            $this->thietLapPhienDangNhap($user);
+            $targetUrl = ($customRedirect !== '')
+                ? $customRedirect
+                : $this->trangDichTheoVaiTro((string)($user['vai_tro'] ?? 'khach_hang'));
+
+            $this->jsonResponse([
+                'status'   => 'success',
+                'message'  => 'Hoàn tất thông tin tài khoản Google thành công! Đang chuyển hướng...',
+                'redirect' => $targetUrl,
+            ], 200);
+        } catch (DomainException $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 422);
+        } catch (Throwable $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Không thể hoàn tất tài khoản: ' . $e->getMessage()], 500);
+        }
     }
 }

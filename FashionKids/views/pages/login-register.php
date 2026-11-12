@@ -2,10 +2,14 @@
 $page_title = "Đăng Nhập & Đăng Ký Thành Viên - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../core/GoogleOAuthService.php";
 
 // Thông báo lỗi khi đăng nhập bằng form truyền thống (không bật JavaScript)
 $hgb_flash_error = isset($_GET['error']) ? htmlspecialchars((string)$_GET['error']) : '';
 $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET['redirect']) : '';
+$hgb_google_enabled = GoogleOAuthService::isConfigured();
+$hgb_turnstile_enabled = TurnstileService::isConfigured();
+$hgb_google_url = APP_ENDPOINT . '?c=auth&a=googleLogin' . ($hgb_redirect_after !== '' ? ('&redirect=' . urlencode((string)$_GET['redirect'])) : '');
 ?>
 
 <div class="container my-5" id="hgb_auth_container">
@@ -60,6 +64,9 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
                                 <div class="form-group mb-4">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <label for="hgb_login_password" class="small font-weight-bold text-slate mb-0">Mật khẩu:</label>
+                                        <a href="javascript:void(0)" class="small font-weight-bold text-peach text-decoration-none" data-toggle="modal" data-target="#modalForgotPassword">
+                                            Quên mật khẩu?
+                                        </a>
                                     </div>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
@@ -74,9 +81,29 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
                                     </div>
                                 </div>
 
-                                <button type="submit" id="hgb_btn_login" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm mb-2">
+                                <?php if ($hgb_turnstile_enabled): ?>
+                                    <div id="hgb_turnstile_login" class="cf-turnstile mb-3" data-sitekey="<?= htmlspecialchars(TurnstileService::getSiteKey()) ?>" data-theme="light"></div>
+                                <?php endif; ?>
+
+                                <button type="submit" id="hgb_btn_login" class="btn btn-pastel-primary btn-block font-weight-bold py-2 shadow-sm mb-3">
                                     Đăng Nhập Ngay
                                 </button>
+
+                                <div class="d-flex align-items-center my-3">
+                                    <hr class="flex-grow-1 my-0">
+                                    <span class="px-2 small text-muted-custom font-weight-bold">Hoặc</span>
+                                    <hr class="flex-grow-1 my-0">
+                                </div>
+
+                                <a href="<?= htmlspecialchars($hgb_google_url) ?>"
+                                   class="btn btn-light border btn-block font-weight-bold py-2 d-flex align-items-center justify-content-center shadow-sm text-slate">
+                                    <i class="fa-brands fa-google text-danger mr-2"></i>Đăng nhập nhanh bằng Google
+                                </a>
+                                <?php if (!$hgb_google_enabled): ?>
+                                    <small class="d-block text-center text-muted-custom mt-2">
+                                        <i class="fa-solid fa-circle-info mr-1"></i>Chưa điền <code>GOOGLE_CLIENT_ID</code> trong <code>.env</code>
+                                    </small>
+                                <?php endif; ?>
                             </form>
                         </div>
 
@@ -114,6 +141,9 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
                                         <span class="badge badge-mint px-3 py-2"><i class="fa-solid fa-circle-check mr-1"></i>Email đã xác thực OTP</span>
                                         <button type="button" class="btn btn-link btn-sm text-muted-custom p-0 ml-2" id="hgb_btn_change_email">Đổi email</button>
                                     </div>
+                                    <?php if ($hgb_turnstile_enabled): ?>
+                                        <div id="hgb_turnstile_register" class="cf-turnstile mt-2" data-sitekey="<?= htmlspecialchars(TurnstileService::getSiteKey()) ?>" data-theme="light"></div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="form-group">
@@ -171,5 +201,6 @@ $hgb_redirect_after = isset($_GET['redirect']) ? htmlspecialchars((string)$_GET[
 
 <?php
 require_once __DIR__ . "/../modals/modal-otp.php";
+require_once __DIR__ . "/../modals/modal-forgot-password.php";
 require_once __DIR__ . "/../layouts/footer.php";
 ?>

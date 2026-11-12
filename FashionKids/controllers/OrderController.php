@@ -7,6 +7,8 @@
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Rbac.php';
 require_once __DIR__ . '/../core/Mailer.php';
+require_once __DIR__ . '/../core/ShippingService.php';
+require_once __DIR__ . '/../core/VietQrBankService.php';
 require_once __DIR__ . '/../models/OrderModel.php';
 require_once __DIR__ . '/../models/ProductModel.php';
 require_once __DIR__ . '/../models/ReviewModel.php';
@@ -83,19 +85,49 @@ class OrderController extends Controller {
         $vipInfo = $this->userModel->layThongTinVipHienTai($uid);
         $discountPercent = (float)($vipInfo['discount_percent'] ?? 0.0);
         $discountAmount  = round(($subtotal * $discountPercent) / 100.0, 0);
-        $shippingFee     = 0.0;
-        $totalAmount     = max(0.0, round($subtotal - $discountAmount, 0));
-        $rewardPoints    = (int)floor($totalAmount / 10000);
+
+        $shipCfg = $_SESSION['checkout_shipping_cfg'] ?? [];
+        $province = trim((string)($shipCfg['province'] ?? ''));
+        $district = trim((string)($shipCfg['district'] ?? ''));
+        $ward     = trim((string)($shipCfg['ward'] ?? ''));
+        $svcType  = (($shipCfg['service_type'] ?? 'standard') === 'express') ? 'express' : 'standard';
+        $weightG  = max(250, $totalQty * 250);
+
+        $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightG, $svcType, $subtotal);
+        $shippingFee  = ($totalQty > 0) ? (float)$shippingCalc['shipping_fee'] : 0.0;
+
+        $savedVoucher = strtoupper(trim((string)($_SESSION['checkout_voucher_code'] ?? '')));
+        $voucherCode  = '';
+        $voucherDisc  = 0.0;
+        $voucherDesc  = '';
+        if ($savedVoucher !== '' && $totalQty > 0) {
+            $vCheck = $this->orderModel->kiemTraMaGiamGia($savedVoucher, $subtotal, $shippingFee);
+            if (!empty($vCheck['valid'])) {
+                $voucherCode = $vCheck['code'];
+                $voucherDisc = (float)$vCheck['discount_amount'];
+                $voucherDesc = (string)($vCheck['description'] ?? '');
+            } else {
+                unset($_SESSION['checkout_voucher_code']);
+            }
+        }
+
+        $totalAmount  = max(0.0, round($subtotal - $discountAmount - $voucherDisc + $shippingFee, 0));
+        $rewardPoints = (int)floor($totalAmount / 10000);
 
         return [
             'items'            => $items,
             'line_count'       => count($items),
             'total_qty'        => $totalQty,
+            'weight_gram'      => $weightG,
             'subtotal'         => $subtotal,
             'vip'              => $vipInfo,
             'discount_percent' => $discountPercent,
             'discount_amount'  => $discountAmount,
             'shipping_fee'     => $shippingFee,
+            'shipping_meta'    => $shippingCalc,
+            'voucher_code'     => $voucherCode,
+            'voucher_discount' => $voucherDisc,
+            'voucher_desc'     => $voucherDesc,
             'total_amount'     => $totalAmount,
             'reward_points'    => $rewardPoints,
         ];
@@ -113,9 +145,10 @@ class OrderController extends Controller {
         $cartSummary = $this->buildLiveCartSummary();
 
         $this->view('pages/checkout', [
-            'page_title'  => 'Giỏ Hàng & Thanh Toán Đơn Hàng',
-            'cartSummary' => $cartSummary,
-            'user'        => $_SESSION['user'] ?? null,
+            'page_title'        => 'Giỏ Hàng & Thanh Toán Đơn Hàng',
+            'cartSummary'       => $cartSummary,
+            'availableVouchers' => $this->orderModel->getAvailableVouchers(),
+            'user'              => $_SESSION['user'] ?? null,
         ]);
     }
 
@@ -234,6 +267,9 @@ class OrderController extends Controller {
             'shipping_address' => trim((string)($_POST['dia_chi_giao_hang'] ?? '')),
             'province'         => trim((string)($_POST['tinh_thanh_pho'] ?? '')),
             'district'         => trim((string)($_POST['quan_huyen'] ?? '')),
+            'ward'             => trim((string)($_POST['phuong_xa'] ?? '')),
+            'shipping_service' => strtolower(trim((string)($_POST['dich_vu_van_chuyen'] ?? 'standard'))),
+            'voucher_code'     => strtoupper(trim((string)($_POST['ma_voucher'] ?? ($_SESSION['checkout_voucher_code'] ?? '')))),
             'payment_method'   => strtolower(trim((string)($_POST['phuong_thuc_thanh_toan'] ?? 'cod'))),
             'note'             => trim((string)($_POST['ghi_chu'] ?? '')),
         ];
@@ -241,8 +277,9 @@ class OrderController extends Controller {
         try {
             $result = $this->orderModel->taoDonHangHoanChinh($payload, $items);
 
-            // Làm sạch giỏ hàng & lưu thông tin đơn vừa đặt
+            // Làm sạch giỏ hàng, voucher đã áp & lưu thông tin đơn vừa đặt
             $_SESSION['cart'] = [];
+            unset($_SESSION['checkout_voucher_code'], $_SESSION['checkout_shipping_cfg']);
             $_SESSION['recent_order'] = [
                 'order_id'       => $result['ma_don_hang'],
                 'ma_van_don'     => $result['ma_van_don'],
@@ -392,6 +429,9 @@ class OrderController extends Controller {
             'shipping_address' => trim((string)($data['shipping_address'] ?? $data['dia_chi_giao_hang'] ?? '')),
             'province'         => trim((string)($data['province'] ?? $data['tinh_thanh_pho'] ?? '')),
             'district'         => trim((string)($data['district'] ?? $data['quan_huyen'] ?? '')),
+            'ward'             => trim((string)($data['ward'] ?? $data['phuong_xa'] ?? '')),
+            'shipping_service' => strtolower(trim((string)($data['shipping_service'] ?? $data['dich_vu_van_chuyen'] ?? 'standard'))),
+            'voucher_code'     => strtoupper(trim((string)($data['voucher_code'] ?? $data['ma_voucher'] ?? ($_SESSION['checkout_voucher_code'] ?? '')))),
             'payment_method'   => strtolower(trim((string)($data['payment_method'] ?? $data['phuong_thuc_thanh_toan'] ?? 'cod'))),
             'note'             => trim((string)($data['note'] ?? $data['ghi_chu'] ?? '')),
         ];
@@ -400,6 +440,7 @@ class OrderController extends Controller {
             $result = $this->orderModel->taoDonHangHoanChinh($payload, $items);
 
             $_SESSION['cart'] = [];
+            unset($_SESSION['checkout_voucher_code'], $_SESSION['checkout_shipping_cfg']);
             $_SESSION['recent_order'] = [
                 'order_id'       => $result['ma_don_hang'],
                 'ma_van_don'     => $result['ma_van_don'],
@@ -422,6 +463,11 @@ class OrderController extends Controller {
                     'tien_hang_tam_tinh'    => $result['tien_hang_tam_tinh'],
                     'phan_tram_giam'        => $result['phan_tram_giam'],
                     'tien_giam_vip'         => $result['tien_giam_vip'],
+                    'phi_van_chuyen'        => $result['phi_van_chuyen'] ?? 0,
+                    'ma_voucher'            => $result['ma_voucher'] ?? null,
+                    'tien_giam_voucher'     => $result['tien_giam_voucher'] ?? 0,
+                    'phuong_xa'             => $result['phuong_xa'] ?? '',
+                    'dich_vu_van_chuyen'    => $result['dich_vu_van_chuyen'] ?? 'standard',
                     'tong_tien'             => $result['tong_tien'],
                     'phuong_thuc'           => $result['phuong_thuc'],
                     'trang_thai_thanh_toan' => $result['trang_thai_thanh_toan'],
@@ -1211,6 +1257,177 @@ class OrderController extends Controller {
                 'data'    => null,
                 'message' => $e->getMessage()
             ], 400);
+        }
+    }
+
+    /**
+     * API AJAX Tính phí vận chuyển GHN động theo Tỉnh/Huyện/Xã & Gói dịch vụ
+     * URL: index.php?c=order&a=ajaxCalculateShipping
+     */
+    public function ajaxCalculateShipping(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $province = trim((string)($data['province'] ?? $_GET['province'] ?? ''));
+        $district = trim((string)($data['district'] ?? $_GET['district'] ?? ''));
+        $ward     = trim((string)($data['ward'] ?? $_GET['ward'] ?? ''));
+        $svcType  = strtolower(trim((string)($data['service_type'] ?? $_GET['service_type'] ?? 'standard')));
+        $svcType  = ($svcType === 'express') ? 'express' : 'standard';
+
+        $_SESSION['checkout_shipping_cfg'] = [
+            'province'     => $province,
+            'district'     => $district,
+            'ward'         => $ward,
+            'service_type' => $svcType,
+        ];
+
+        $summary = $this->buildLiveCartSummary();
+        $this->jsonResponse([
+            'status'       => 'success',
+            'code'         => 200,
+            'cart_summary' => $summary,
+            'data'         => $summary,
+            'message'      => 'Đã cập nhật phí vận chuyển (' . ($summary['shipping_meta']['provider_label'] ?? 'GHN') . ').',
+        ], 200);
+    }
+
+    /**
+     * API AJAX Kiểm tra & áp dụng mã giảm giá (Voucher) cho giỏ hàng Checkout
+     * URL: index.php?c=order&a=ajaxApplyVoucher
+     */
+    public function ajaxApplyVoucher(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->jsonResponse(['status' => 'error', 'code' => 405, 'data' => null, 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $code = strtoupper(trim((string)($data['voucher_code'] ?? $data['code'] ?? '')));
+
+        if (isset($data['province']) || isset($data['district']) || isset($data['ward'])) {
+            $_SESSION['checkout_shipping_cfg'] = [
+                'province'     => trim((string)($data['province'] ?? '')),
+                'district'     => trim((string)($data['district'] ?? '')),
+                'ward'         => trim((string)($data['ward'] ?? '')),
+                'service_type' => ((string)($data['service_type'] ?? 'standard') === 'express') ? 'express' : 'standard',
+            ];
+        }
+
+        // Tạm tính subtotal + shipping trước khi kiểm tra voucher
+        unset($_SESSION['checkout_voucher_code']);
+        $preSummary = $this->buildLiveCartSummary();
+        if (($preSummary['total_qty'] ?? 0) <= 0) {
+            $this->jsonResponse(['status' => 'error', 'code' => 400, 'data' => null, 'message' => 'Giỏ hàng của bạn đang trống!'], 400);
+        }
+
+        $check = $this->orderModel->kiemTraMaGiamGia($code, (float)$preSummary['subtotal'], (float)$preSummary['shipping_fee']);
+        if (empty($check['valid'])) {
+            $this->jsonResponse([
+                'status'       => 'error',
+                'code'         => 422,
+                'cart_summary' => $preSummary,
+                'data'         => $preSummary,
+                'message'      => (string)$check['message'],
+            ], 422);
+        }
+
+        $_SESSION['checkout_voucher_code'] = $check['code'];
+        $finalSummary = $this->buildLiveCartSummary();
+        $this->jsonResponse([
+            'status'       => 'success',
+            'code'         => 200,
+            'voucher'      => $check,
+            'cart_summary' => $finalSummary,
+            'data'         => $finalSummary,
+            'message'      => (string)$check['message'],
+        ], 200);
+    }
+
+    /**
+     * API AJAX Gỡ mã giảm giá hiện tại trên giỏ hàng Checkout
+     * URL: index.php?c=order&a=ajaxRemoveVoucher
+     */
+    public function ajaxRemoveVoucher(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        unset($_SESSION['checkout_voucher_code']);
+        $summary = $this->buildLiveCartSummary();
+        $this->jsonResponse([
+            'status'       => 'success',
+            'code'         => 200,
+            'cart_summary' => $summary,
+            'data'         => $summary,
+            'message'      => 'Đã gỡ mã giảm giá khỏi đơn hàng.',
+        ], 200);
+    }
+
+    /**
+     * API AJAX Lấy danh sách Ngân hàng Việt Nam chuẩn VietQR (https://api.vietqr.io/v2/banks)
+     * URL: index.php?c=order&a=ajaxGetVietQrBanks
+     */
+    public function ajaxGetVietQrBanks(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        $force = isset($_GET['refresh']) && $_GET['refresh'] === '1';
+        $res   = VietQrBankService::getBanks($force);
+        $this->jsonResponse([
+            'status' => 'success',
+            'code'   => 200,
+            'source' => $res['source'],
+            'banks'  => $res['banks'],
+            'data'   => $res['banks'],
+            'count'  => count($res['banks']),
+        ], 200);
+    }
+
+    /**
+     * Webhook nhận cập nhật tiến trình vận đơn tự động từ GHN / Đơn vị vận chuyển
+     * URL: index.php?c=order&a=shippingWebhook
+     */
+    public function shippingWebhook(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        $secret = trim((string)($_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? $_GET['secret'] ?? ''));
+        $expected = defined('SHIPPING_WEBHOOK_SECRET') ? (string)SHIPPING_WEBHOOK_SECRET : '';
+        if ($expected !== '' && !hash_equals($expected, $secret)) {
+            $this->jsonResponse(['error' => 1, 'message' => 'Invalid Webhook Secret'], 401);
+        }
+
+        $raw  = (string)file_get_contents('php://input');
+        $body = json_decode($raw, true);
+        if (!is_array($body)) {
+            $body = $_POST;
+        }
+
+        $carrierCode   = trim((string)($body['OrderCode'] ?? $body['ClientOrderCode'] ?? $body['tracking_code'] ?? ''));
+        $carrierStatus = trim((string)($body['Status'] ?? $body['status'] ?? ''));
+        $mappedStatus  = ShippingService::mapCarrierStatusToOrderStatus($carrierStatus);
+
+        if ($carrierCode === '' || $mappedStatus === null) {
+            $this->jsonResponse(['error' => 1, 'message' => 'Thiếu OrderCode hoặc Status không hợp lệ'], 400);
+        }
+
+        $orderId = $this->orderModel->findOrderIdByCarrierCode($carrierCode);
+        if ($orderId <= 0) {
+            $this->jsonResponse(['error' => 1, 'message' => 'Không tìm thấy đơn hàng khớp mã ' . $carrierCode], 404);
+        }
+
+        try {
+            $res = $this->orderModel->capNhatTrangThaiDonHangChiTiet($orderId, 2, $mappedStatus);
+            $this->jsonResponse([
+                'error'      => 0,
+                'order_id'   => $orderId,
+                'new_status' => $mappedStatus,
+                'message'    => 'Đã đồng bộ trạng thái đơn #' . $orderId . ' sang ' . $mappedStatus,
+                'data'       => $res,
+            ], 200);
+        } catch (Throwable $e) {
+            $this->jsonResponse(['error' => 1, 'message' => $e->getMessage()], 400);
         }
     }
 }

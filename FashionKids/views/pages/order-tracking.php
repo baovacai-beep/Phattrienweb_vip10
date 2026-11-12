@@ -69,6 +69,11 @@ $paidAtLabel      = ($hasOrder && !empty($trackedOrder['thoi_gian_thanh_toan']))
 $orderTotal       = $hasOrder ? (float)($trackedOrder['tong_tien_thanh_toan'] ?? 0) : 0;
 $orderSubtotal    = $hasOrder ? (float)($trackedOrder['tien_hang_tam_tinh'] ?? 0) : 0;
 $orderDiscount    = $hasOrder ? (float)($trackedOrder['tien_giam_gia'] ?? 0) : 0;
+$orderShipFee     = $hasOrder ? (float)($trackedOrder['phi_van_chuyen'] ?? 0) : 0;
+$orderVoucherCode = $hasOrder ? trim((string)($trackedOrder['ma_voucher'] ?? '')) : '';
+$orderVoucherDisc = $hasOrder ? (float)($trackedOrder['tien_giam_voucher'] ?? 0) : 0;
+$carrierName      = $hasOrder ? trim((string)($trackedOrder['don_vi_van_chuyen'] ?? '')) : '';
+$carrierCode      = $hasOrder ? trim((string)($trackedOrder['ma_van_don_hang_vc'] ?? '')) : '';
 $codCollectAmt    = $hasOrder ? (float)($trackedOrder['cod_collect_amount'] ?? ($isPaid || $statusKey === 'da_huy' ? 0 : $orderTotal)) : 0;
 $orderRewardPts   = (int)floor($orderTotal / 10000);
 $createdTs        = ($hasOrder && !empty($trackedOrder['ngay_dat_hang'])) ? strtotime($trackedOrder['ngay_dat_hang']) : time();
@@ -79,6 +84,7 @@ $updatedLabel     = ($hasOrder && !empty($trackedOrder['ngay_cap_nhat'])) ? date
 $trackedItems     = $hasOrder && !empty($trackedOrder['items']) ? $trackedOrder['items'] : [];
 $fullAddress      = $hasOrder ? trim(implode(', ', array_filter([
     $trackedOrder['dia_chi_giao_hang'] ?? '',
+    $trackedOrder['phuong_xa'] ?? '',
     $trackedOrder['quan_huyen'] ?? '',
     $trackedOrder['tinh_thanh_pho'] ?? '',
 ]))) : '';
@@ -217,6 +223,9 @@ foreach ($trackedItems as $ti) {
                     </span>
                     <div class="small text-muted-custom mt-1" id="lnkt_staffMeta">
                         Nhân viên phụ trách: <strong><?= htmlspecialchars((string)($trackedOrder['nhan_vien_phu_trach'] ?? 'Đang chờ tiếp nhận')) ?></strong>
+                    </div>
+                    <div class="small text-info mt-1 <?= $carrierCode !== '' ? '' : 'd-none' ?>" id="lnkt_carrierMeta">
+                        Vận đơn <strong><?= htmlspecialchars($carrierName ?: 'GHN') ?></strong>: <strong id="lnkt_carrierCodeText"><?= htmlspecialchars($carrierCode) ?></strong>
                     </div>
                     <div class="mt-2 <?= $canCancel ? '' : 'd-none' ?>" id="lnkt_ownerCancelBar">
                         <button type="button" id="lnkt_btnCancelMyOrder"
@@ -655,8 +664,18 @@ foreach ($trackedItems as $ti) {
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
-                        <span class="text-muted-custom">Phí vận chuyển:</span>
-                        <span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap flex-shrink-0">Miễn phí (0 đ)</span>
+                        <span class="text-muted-custom">Phí vận chuyển (GHN):</span>
+                        <span id="lnkt_sumShippingFee" class="badge <?= $orderShipFee <= 0 ? 'badge-mint' : 'badge-sky' ?> px-2 py-1 rounded-pill text-nowrap flex-shrink-0">
+                            <?= $orderShipFee <= 0 ? 'Miễn phí (0 đ)' : (number_format($orderShipFee, 0, ',', '.') . ' đ') ?>
+                        </span>
+                    </div>
+                    <div id="lnkt_sumVoucherRow" class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2 <?= $orderVoucherDisc > 0 ? '' : 'd-none' ?>">
+                        <span class="text-muted-custom min-w-0" id="lnkt_sumVoucherLabel">
+                            Mã giảm giá<?= $orderVoucherCode !== '' ? (' (' . htmlspecialchars($orderVoucherCode) . ')') : '' ?>:
+                        </span>
+                        <span class="font-weight-bold text-success text-right text-nowrap flex-shrink-0" id="lnkt_sumVoucherDiscount">
+                            <?= $orderVoucherDisc > 0 ? ('-' . number_format($orderVoucherDisc, 0, ',', '.') . ' đ') : '0 đ' ?>
+                        </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
                         <span class="text-muted-custom">Phương thức thanh toán:</span>

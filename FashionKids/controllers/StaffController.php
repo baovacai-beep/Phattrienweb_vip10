@@ -12,6 +12,7 @@
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Database.php';
 require_once __DIR__ . '/../core/Rbac.php';
+require_once __DIR__ . '/../core/ShippingService.php';
 require_once __DIR__ . '/../models/OrderModel.php';
 require_once __DIR__ . '/../models/ProductModel.php';
 require_once __DIR__ . '/../models/RealtimeContentModel.php';
@@ -261,6 +262,7 @@ class StaffController extends Controller {
 
         $fullAddr = trim(implode(', ', array_filter([
             $order['dia_chi_giao_hang'] ?? '',
+            $order['phuong_xa'] ?? '',
             $order['quan_huyen'] ?? '',
             $order['tinh_thanh_pho'] ?? '',
         ])));
@@ -300,10 +302,14 @@ class StaffController extends Controller {
                 'is_expired'          => $isExpired,
                 'tx_code'             => (string)($order['ma_giao_dich_ngan_hang'] ?? ''),
                 'paid_at_label'       => !empty($order['thoi_gian_thanh_toan']) ? date('d/m/Y H:i', strtotime((string)$order['thoi_gian_thanh_toan'])) : '',
-                'subtotal'            => (float)($order['tien_hang_tam_tinh'] ?? 0),
-                'discount'            => (float)($order['tien_giam_gia'] ?? 0),
-                'shipping_fee'        => 0.0,
-                'total_amount'        => $totalAmount,
+                'subtotal'              => (float)($order['tien_hang_tam_tinh'] ?? 0),
+                'discount'              => (float)($order['tien_giam_gia'] ?? 0),
+                'voucher_code'          => (string)($order['ma_voucher'] ?? ''),
+                'voucher_discount'      => (float)($order['tien_giam_voucher'] ?? 0),
+                'shipping_fee'          => (float)($order['phi_van_chuyen'] ?? 0),
+                'carrier_name'          => (string)($order['don_vi_van_chuyen'] ?? 'GHN'),
+                'carrier_tracking_code' => (string)($order['ma_van_don_hang_vc'] ?? ''),
+                'total_amount'          => $totalAmount,
                 'cod_collect_amount'  => $codCollect,
                 'cod_collect_text'    => $codCollectText,
                 'cod_instruction'     => $codInstruction,
@@ -538,5 +544,64 @@ class StaffController extends Controller {
         require_once __DIR__ . '/OrderController.php';
         $orderCtrl = new OrderController();
         $orderCtrl->ajaxProcessReturn();
+    }
+
+    /**
+     * 8. MH 10 (Vận chuyển GHN): AJAX Tạo vận đơn đối tác GHN & chuyển trạng thái Đang giao
+     * URL: index.php?c=staff&a=ajaxCreateCarrierOrder
+     */
+    public function ajaxCreateCarrierOrder(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được tạo vận đơn GHN!'
+        );
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->json(['status' => 'error', 'message' => 'Phương thức không hợp lệ!'], 405);
+        }
+
+        $data    = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $orderId = (int)($data['order_id'] ?? $data['ma_don_hang'] ?? 0);
+        $staffId = (int)(Rbac::currentUserId() ?? 2);
+        if ($orderId <= 0) {
+            $this->json(['status' => 'error', 'message' => 'Mã đơn hàng không hợp lệ!'], 400);
+        }
+
+        $order = $this->orderModel->getOrderById($orderId);
+        if (!$order) {
+            $this->json(['status' => 'error', 'message' => 'Không tìm thấy đơn hàng #' . $orderId], 404);
+        }
+
+        $payMethod = strtolower((string)($order['phuong_thuc_thanh_toan'] ?? 'cod'));
+        $payStatus = strtolower((string)($order['trang_thai_thanh_toan'] ?? 'chua_thanh_toan'));
+        if ($payMethod === 'vietqr' && $payStatus !== 'da_thanh_toan') {
+            $this->json([
+                'status'  => 'error',
+                'message' => 'Đơn VietQR #' . $orderId . ' chưa xác nhận nhận tiền chuyển khoản, không thể đẩy vận đơn GHN!'
+            ], 400);
+        }
+
+        try {
+            $shipRes = ShippingService::createCarrierOrder($order);
+            $updated = $this->orderModel->updateCarrierTracking(
+                $orderId,
+                $staffId,
+                (string)$shipRes['carrier_name'],
+                (string)$shipRes['tracking_code']
+            );
+            $this->json([
+                'status'        => 'success',
+                'mode'          => $shipRes['mode'],
+                'carrier_name'  => $shipRes['carrier_name'],
+                'tracking_code' => $shipRes['tracking_code'],
+                'order'         => $updated,
+                'counts'        => $this->orderModel->getOrderStatusCounts(),
+                'message'       => $shipRes['message'],
+            ], 200);
+        } catch (Throwable $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
     }
 }

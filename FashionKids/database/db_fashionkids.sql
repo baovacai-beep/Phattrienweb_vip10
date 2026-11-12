@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS `tgb_bai_viet_tin_tuc`;
 DROP TABLE IF EXISTS `tgb_tin_nhan_tu_van`;
 DROP TABLE IF EXISTS `tgb_chi_tiet_don_hang`;
 DROP TABLE IF EXISTS `lnkt_yeu_cau_hoan_hang`;
+DROP TABLE IF EXISTS `lnkt_ma_giam_gia`;
 DROP TABLE IF EXISTS `lnkt_dang_ky_kol_nhi`;
 DROP TABLE IF EXISTS `lnkt_don_hang`;
 DROP TABLE IF EXISTS `lnkt_banner_su_kien`;
@@ -48,6 +49,9 @@ CREATE TABLE `hgb_nguoi_dung` (
     `diem_tich_luy` INT NOT NULL DEFAULT 0,
     `vai_tro` ENUM('quan_tri', 'nhan_vien', 'khach_hang') NOT NULL DEFAULT 'khach_hang',
     `da_xac_thuc_otp` TINYINT(1) NOT NULL DEFAULT 0,
+    `google_id` VARCHAR(100) NULL DEFAULT NULL UNIQUE,
+    `auth_provider` ENUM('local', 'google') NOT NULL DEFAULT 'local',
+    `avatar_url` VARCHAR(255) NULL DEFAULT NULL,
     `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `kn_nguoi_dung_hang` 
         FOREIGN KEY (`ma_hang_thanh_vien`) REFERENCES `hgb_hang_thanh_vien`(`ma_hang`) 
@@ -107,8 +111,14 @@ CREATE TABLE `lnkt_don_hang` (
     `dia_chi_giao_hang` VARCHAR(255) NOT NULL,
     `tinh_thanh_pho` VARCHAR(100) NOT NULL,
     `quan_huyen` VARCHAR(100) NOT NULL,
+    `phuong_xa` VARCHAR(100) NULL DEFAULT NULL,
+    `dich_vu_van_chuyen` VARCHAR(30) NOT NULL DEFAULT 'standard',
     `tien_hang_tam_tinh` DECIMAL(12,2) NOT NULL,
     `tien_giam_gia` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `phi_van_chuyen` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `trong_luong_gram` INT NOT NULL DEFAULT 300,
+    `ma_voucher` VARCHAR(50) NULL DEFAULT NULL,
+    `tien_giam_voucher` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     `tong_tien_thanh_toan` DECIMAL(12,2) NOT NULL,
     `phuong_thuc_thanh_toan` ENUM('cod', 'vietqr') NOT NULL DEFAULT 'cod',
     `trang_thai_thanh_toan` ENUM('chua_thanh_toan', 'cho_chuyen_khoan', 'da_thanh_toan') NOT NULL DEFAULT 'chua_thanh_toan',
@@ -119,6 +129,8 @@ CREATE TABLE `lnkt_don_hang` (
     `han_thanh_toan` DATETIME NULL DEFAULT NULL,
     `noi_dung_chuyen_khoan` VARCHAR(50) NULL DEFAULT NULL,
     `ghi_chu` VARCHAR(255) NULL,
+    `don_vi_van_chuyen` VARCHAR(50) NULL DEFAULT NULL,
+    `ma_van_don_hang_vc` VARCHAR(100) NULL DEFAULT NULL,
     `trang_thai_don_hang` ENUM('cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy') NOT NULL DEFAULT 'cho_duyet',
     `ngay_dat_hang` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -155,6 +167,22 @@ CREATE TABLE `lnkt_yeu_cau_hoan_hang` (
     CONSTRAINT `kn_hoan_nhan_vien`
         FOREIGN KEY (`ma_nhan_vien_xu_ly`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`)
         ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `lnkt_ma_giam_gia` (
+    `ma_voucher` INT AUTO_INCREMENT PRIMARY KEY,
+    `ma_code` VARCHAR(50) NOT NULL UNIQUE,
+    `mo_ta` VARCHAR(255) NOT NULL,
+    `loai_giam` ENUM('percent', 'fixed', 'freeship') NOT NULL DEFAULT 'fixed',
+    `gia_tri_giam` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `giam_toi_da` DECIMAL(12,2) NULL DEFAULT NULL,
+    `don_toi_thieu` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `gioi_han_luot` INT NULL DEFAULT NULL,
+    `da_su_dung` INT NOT NULL DEFAULT 0,
+    `ngay_bat_dau` DATETIME NULL DEFAULT NULL,
+    `ngay_het_han` DATETIME NULL DEFAULT NULL,
+    `trang_thai` TINYINT(1) NOT NULL DEFAULT 1,
+    `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `lnkt_banner_su_kien` (
@@ -354,6 +382,12 @@ INSERT INTO `tgb_chi_tiet_don_hang` (`ma_chi_tiet_don`, `ma_don_hang`, `ma_san_p
 (1, 1, 1, 'Size 2 (2-3T)', 2, 450000.00),
 (2, 2, 2, 'Size 3 (3-4T)', 1, 280000.00)
 ON DUPLICATE KEY UPDATE `don_gia_mua`=VALUES(`don_gia_mua`);
+
+INSERT INTO `lnkt_ma_giam_gia` (`ma_code`, `mo_ta`, `loai_giam`, `gia_tri_giam`, `giam_toi_da`, `don_toi_thieu`, `gioi_han_luot`, `da_su_dung`, `ngay_bat_dau`, `ngay_het_han`, `trang_thai`) VALUES
+('FASHION10', 'Giảm 10% tối đa 50.000đ cho đơn từ 200.000đ', 'percent', 10.00, 50000.00, 200000.00, 500, 0, '2025-01-01 00:00:00', '2028-12-31 23:59:59', 1),
+('SOITRE30K', 'Giảm trực tiếp 30.000đ cho đơn từ 250.000đ', 'fixed', 30000.00, 30000.00, 250000.00, 300, 0, '2025-01-01 00:00:00', '2028-12-31 23:59:59', 1),
+('FREESHIPFK', 'Miễn phí vận chuyển GHN (tối đa 35.000đ) đơn từ 150.000đ', 'freeship', 35000.00, 35000.00, 150000.00, 1000, 0, '2025-01-01 00:00:00', '2028-12-31 23:59:59', 1)
+ON DUPLICATE KEY UPDATE `mo_ta`=VALUES(`mo_ta`);
 
 INSERT INTO `lnkt_banner_su_kien` (`ma_banner`, `tieu_de`, `duong_dan_anh`, `duong_dan_dieu_huong`, `loai_su_kien`, `ngay_bat_dau`, `ngay_ket_thuc`, `dang_kich_hoat`, `thu_tu_hien_thi`) VALUES
 (1, 'Bộ sưu tập Mùa Hè 2026 - Giảm đến 30%', 'banner_mua_he.jpg', '/danh-muc/mua-he', 'theo_mua', '2026-06-01 00:00:00', '2026-08-31 23:59:59', 1, 1),

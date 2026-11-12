@@ -23,6 +23,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../core/Csrf.php';
 require_once __DIR__ . '/../../core/Rbac.php';
+require_once __DIR__ . '/../../core/TurnstileService.php';
 Rbac::syncSession();
 $fk_rbac_access_granted = Rbac::enforceCurrentViewAccess();
 ?>
@@ -34,6 +35,7 @@ $fk_rbac_access_granted = Rbac::enforceCurrentViewAccess();
     <meta name="csrf-token" content="<?= htmlspecialchars(Csrf::token()) ?>">
     <meta name="fk-endpoint" content="<?= htmlspecialchars(APP_ENDPOINT) ?>">
     <meta name="fk-user-role" content="<?= htmlspecialchars(Rbac::currentRole()) ?>">
+    <meta name="fk-turnstile-sitekey" content="<?= htmlspecialchars(TurnstileService::getSiteKey()) ?>">
     <title><?= isset($page_title) ? htmlspecialchars($page_title) . " - FashionKids" : "FashionKids - Thời Trang Trẻ Em An Toàn" ?></title>
     
     <!-- Favicon Logo Nhom 10 FashionKids (Hien thi tren Tab & Thanh tim kiem trinh duyet) -->
@@ -55,5 +57,8 @@ $fk_rbac_access_granted = Rbac::enforceCurrentViewAccess();
     <!-- Custom Bright Pastel Theme (60-30-10) -->
     <?php $cssVer = @filemtime(__DIR__ . '/../../public/css/style-pastel.css') ?: '20261110'; ?>
     <link rel="stylesheet" href="/FashionKids/public/css/style-pastel.css?v=<?= $cssVer ?>">
+    <?php if (TurnstileService::isConfigured()): ?>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <?php endif; ?>
 </head>
 <body class="bg-milk-cream" data-user-role="<?= htmlspecialchars(Rbac::currentRole()) ?>">

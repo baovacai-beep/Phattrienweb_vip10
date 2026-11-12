@@ -9,6 +9,7 @@
 
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Rbac.php';
+require_once __DIR__ . '/../core/TurnstileService.php';
 require_once __DIR__ . '/../models/RealtimeContentModel.php';
 
 class HomeController extends Controller {
@@ -200,10 +201,11 @@ class HomeController extends Controller {
 
         $data = $this->realtimeModel->sendChatMessage($sessionId, $sender, $message, $sender === 'khach_hang');
         $this->json([
-            'status'   => 'success',
-            'sent'     => $data['sent'],
-            'messages' => $data['messages'],
-            'sessions' => $this->realtimeModel->getChatSessions()
+            'status'     => 'success',
+            'sent'       => $data['sent'],
+            'auto_reply' => $data['auto_reply'] ?? null,
+            'messages'   => $data['messages'],
+            'sessions'   => $this->realtimeModel->getChatSessions()
         ]);
     }
 
@@ -353,6 +355,12 @@ class HomeController extends Controller {
             ['khach_hang', 'nhan_vien', 'quan_tri'],
             'Vui lòng đăng nhập tài khoản thành viên để nộp hồ sơ ứng tuyển KOL Nhí.'
         );
+
+        $tsCheck = TurnstileService::verifyToken($_POST['cf-turnstile-response'] ?? $_POST['turnstile_token'] ?? null);
+        if (empty($tsCheck['success'])) {
+            $this->json(['status' => 'error', 'message' => $tsCheck['message']], 422);
+            return;
+        }
 
         $res = $this->realtimeModel->submitKolApplication($_POST);
         $this->json([

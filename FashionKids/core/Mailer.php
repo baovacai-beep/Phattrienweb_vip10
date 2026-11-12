@@ -141,6 +141,42 @@ class Mailer {
     }
 
     /**
+     * Gửi mã OTP đặt lại mật khẩu 6 chữ số (Quên mật khẩu) qua Gmail SMTP
+     */
+    public static function guiOtpQuenMatKhau(string $toEmail, string $toName, string $otp): bool {
+        $safeName = htmlspecialchars($toName !== '' ? $toName : 'Quý khách', ENT_QUOTES, 'UTF-8');
+        $safeOtp  = htmlspecialchars($otp, ENT_QUOTES, 'UTF-8');
+        $subject  = '[FashionKids] Mã OTP khôi phục mật khẩu: ' . $safeOtp;
+
+        $bodyHtml = "
+            <div style='font-family: Arial, Helvetica, sans-serif; background-color: #FFFDF9; padding: 28px 16px;'>
+                <div style='max-width: 540px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #F3E8E2; overflow: hidden; box-shadow: 0 6px 20px rgba(74, 85, 104, 0.08);'>
+                    <div style='background: linear-gradient(135deg, #F472B6, #FF9E8A); padding: 22px 24px; text-align: center;'>
+                        <h2 style='color: #FFFFFF; margin: 0; font-size: 22px; letter-spacing: 0.5px;'>FashionKids</h2>
+                        <p style='color: #FFF5F7; margin: 6px 0 0; font-size: 13px;'>Khôi Phục Mật Khẩu Tài Khoản Thành Viên</p>
+                    </div>
+                    <div style='padding: 28px 26px; color: #374151;'>
+                        <p style='margin-top: 0; font-size: 15px;'>Xin chào <strong>{$safeName}</strong>,</p>
+                        <p style='font-size: 14px; line-height: 1.6; color: #4B5563;'>
+                            Bạn vừa yêu cầu đặt lại mật khẩu tài khoản tại <strong>FashionKids</strong>. Vui lòng nhập mã xác thực OTP gồm 6 chữ số dưới đây để tiếp tục:
+                        </p>
+                        <div style='background-color: #FFF5F7; border: 2px dashed #FF8E8E; border-radius: 12px; padding: 18px; text-align: center; margin: 22px 0;'>
+                            <span style='font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #E11D48;'>{$safeOtp}</span>
+                        </div>
+                        <p style='font-size: 13px; color: #6B7280; margin-bottom: 6px;'>
+                            • Mã OTP có hiệu lực trong vòng <strong>5 phút</strong>.
+                        </p>
+                        <p style='font-size: 13px; color: #6B7280; margin-top: 0;'>
+                            • Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này để giữ an toàn cho tài khoản.
+                        </p>
+                    </div>
+                </div>
+            </div>";
+
+        return self::sendHtmlEmail($toEmail, $toName, $subject, $bodyHtml);
+    }
+
+    /**
      * Hàm lõi gửi email HTML qua PHPMailer (hỗ trợ dự phòng cổng 587 STARTTLS -> 465 SMTPS)
      */
     private static function sendHtmlEmail(string $toEmail, string $toName, string $subject, string $bodyHtml): bool {

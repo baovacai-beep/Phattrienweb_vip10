@@ -4,9 +4,12 @@ require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/ProductModel.php";
 require_once __DIR__ . "/../../models/UserModel.php";
+require_once __DIR__ . "/../../models/OrderModel.php";
+require_once __DIR__ . "/../../core/ShippingService.php";
 
 $checkoutProductModel = new ProductModel();
 $checkoutUserModel    = new UserModel();
+$checkoutOrderModel   = new OrderModel();
 $currentUid           = Rbac::currentUserId();
 if ($currentUid) {
     $checkoutUserModel->dongBoSessionNguoiDung($currentUid);
@@ -82,13 +85,47 @@ $firstCartSize      = !empty($lnkt_cart_items) ? (string)$lnkt_cart_items[0]['si
 $firstCartQty       = !empty($lnkt_cart_items) ? (int)$lnkt_cart_items[0]['quantity'] : 1;
 
 $init_subtotal = 0;
+$init_total_qty = 0;
 foreach ($lnkt_cart_items as $item) {
     $init_subtotal += $item['price'] * $item['quantity'];
+    $init_total_qty += (int)$item['quantity'];
 }
 $init_discount_amount = round(($init_subtotal * $init_vip_percent) / 100);
-$init_shipping_fee    = 0;
-$init_total_amount    = max(0, $init_subtotal - $init_discount_amount);
-$init_reward_points   = (int)floor($init_total_amount / 10000);
+
+$shipCfg           = $_SESSION['checkout_shipping_cfg'] ?? [];
+$init_ship_service = (($shipCfg['service_type'] ?? 'standard') === 'express') ? 'express' : 'standard';
+$init_weight_gram  = max(250, $init_total_qty * 250);
+$init_ship_calc    = ShippingService::calculateFee(
+    (string)($shipCfg['province'] ?? ''),
+    (string)($shipCfg['district'] ?? ''),
+    (string)($shipCfg['ward'] ?? ''),
+    $init_weight_gram,
+    $init_ship_service,
+    $init_subtotal
+);
+$init_shipping_fee = ($init_total_qty > 0) ? (float)$init_ship_calc['shipping_fee'] : 0.0;
+
+$savedVoucherCode  = strtoupper(trim((string)($_SESSION['checkout_voucher_code'] ?? '')));
+$init_voucher_code = '';
+$init_voucher_disc = 0.0;
+$init_voucher_desc = '';
+if ($savedVoucherCode !== '' && $init_total_qty > 0) {
+    $vCheck = $checkoutOrderModel->kiemTraMaGiamGia($savedVoucherCode, $init_subtotal, $init_shipping_fee);
+    if (!empty($vCheck['valid'])) {
+        $init_voucher_code = (string)$vCheck['code'];
+        $init_voucher_disc = (float)$vCheck['discount_amount'];
+        $init_voucher_desc = (string)($vCheck['description'] ?? '');
+    } else {
+        unset($_SESSION['checkout_voucher_code']);
+    }
+}
+
+$checkoutVouchers  = isset($availableVouchers) && is_array($availableVouchers)
+    ? $availableVouchers
+    : $checkoutOrderModel->getAvailableVouchers();
+
+$init_total_amount  = max(0, round($init_subtotal - $init_discount_amount - $init_voucher_disc + $init_shipping_fee));
+$init_reward_points = (int)floor($init_total_amount / 10000);
 
 $checkoutFlashError = $_SESSION['checkout_flash_error'] ?? '';
 unset($_SESSION['checkout_flash_error']);
@@ -279,22 +316,19 @@ unset($_SESSION['checkout_flash_error']);
                             </div>
                         </div>
 
-                        <!-- Hệ thống Dropdown chọn Tỉnh/Thành phố và Quận/Huyện -->
+                        <!-- Hệ thống Dropdown chọn 3 cấp: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã (depth=3) -->
                         <div class="form-row">
-                            <div class="form-group col-12 col-md-6">
+                            <div class="form-group col-12 col-md-4 mb-2">
                                 <label class="small font-weight-bold text-slate" for="tgb_select_province">
                                     Tỉnh / Thành phố (<span class="text-danger">*</span>):
                                 </label>
                                 <select id="tgb_select_province" name="tinh_thanh_pho" class="custom-select form-control"
                                         required disabled>
-                                    <option value="">Đang tải Tỉnh / Thành phố...</option>
+                                    <option value="">Đang tải Tỉnh / TP...</option>
                                 </select>
-                                <small id="lnkt_apiStatusText" class="text-muted-custom d-block mt-1">
-                                    <i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải danh sách Tỉnh / Thành phố...
-                                </small>
                             </div>
 
-                            <div class="form-group col-12 col-md-6">
+                            <div class="form-group col-12 col-md-4 mb-2">
                                 <label class="small font-weight-bold text-slate" for="tgb_select_district">
                                     Quận / Huyện (<span class="text-danger">*</span>):
                                 </label>
@@ -303,15 +337,68 @@ unset($_SESSION['checkout_flash_error']);
                                     <option value="">-- Chọn Quận / Huyện --</option>
                                 </select>
                             </div>
+
+                            <div class="form-group col-12 col-md-4 mb-2">
+                                <label class="small font-weight-bold text-slate" for="tgb_select_ward">
+                                    Phường / Xã (<span class="text-danger">*</span>):
+                                </label>
+                                <select id="tgb_select_ward" name="phuong_xa" class="custom-select form-control"
+                                        required disabled>
+                                    <option value="">-- Chọn Phường / Xã --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <small id="lnkt_apiStatusText" class="text-muted-custom d-block">
+                                    <i class="fa-solid fa-spinner fa-spin text-info mr-1"></i>Đang tải danh giới hành chính 3 cấp (Tỉnh/Huyện/Xã)...
+                                </small>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label class="small font-weight-bold text-slate" for="lnkt_shippingAddress">
-                                Địa chỉ giao hàng chi tiết (Số nhà, Tên đường, Phường/Xã) (<span class="text-danger">*</span>):
+                                Số nhà, Tên đường / Tòa nhà (<span class="text-danger">*</span>):
                             </label>
                             <input type="text" id="lnkt_shippingAddress" name="dia_chi_giao_hang" class="form-control"
-                                   value="<?= htmlspecialchars($recvAddr) ?>" placeholder="Nhập số nhà, tên đường, phường/xã..." required>
+                                   value="<?= htmlspecialchars($recvAddr) ?>" placeholder="VD: Số 18 Đường Hoa Cúc, Khu A..." required>
                         </div>
+
+                        <!-- Gói dịch vụ vận chuyển GHN -->
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-slate d-block mb-2">
+                                Gói dịch vụ vận chuyển (GHN API / Bảng cước chuẩn):
+                            </label>
+                            <div class="form-row">
+                                <div class="col-12 col-sm-6 mb-2 mb-sm-0">
+                                    <label class="d-block p-2 px-3 rounded border bg-milk-cream mb-0 small cursor-pointer" for="lnkt_shipStandard">
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="lnkt_shipStandard" name="dich_vu_van_chuyen" class="custom-control-input"
+                                                   value="standard" <?= $init_ship_service === 'standard' ? 'checked' : '' ?>>
+                                            <span class="custom-control-label font-weight-bold text-slate">
+                                                Giao Tiêu Chuẩn <span class="text-muted-custom font-weight-normal">(2-4 ngày)</span>
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="d-block p-2 px-3 rounded border bg-milk-cream mb-0 small cursor-pointer" for="lnkt_shipExpress">
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="lnkt_shipExpress" name="dich_vu_van_chuyen" class="custom-control-input"
+                                                   value="express" <?= $init_ship_service === 'express' ? 'checked' : '' ?>>
+                                            <span class="custom-control-label font-weight-bold text-slate">
+                                                Giao Nhanh Hỏa Tốc <span class="text-muted-custom font-weight-normal">(24-48h)</span>
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <small id="lnkt_shippingMetaInfo" class="text-muted-custom d-block mt-1">
+                                <i class="fa-solid fa-truck text-peach mr-1"></i>
+                                <?= htmlspecialchars($init_ship_calc['service_label'] . ' • ' . $init_ship_calc['zone_label'] . ' • Khối lượng: ' . $init_weight_gram . 'g • ' . $init_ship_calc['eta_text']) ?>
+                            </small>
+                        </div>
+
+                        <input type="hidden" name="ma_voucher" id="lnkt_appliedVoucherInput" value="<?= htmlspecialchars($init_voucher_code) ?>">
                         <input type="hidden" name="thu_dien_tu_nhan" id="tgb_receiver_email" value="<?= htmlspecialchars($recvEmail) ?>">
                         <input type="hidden" id="tgb_full_address" name="dia_chi_day_du" value="<?= htmlspecialchars($recvAddr) ?>">
                         <input type="hidden" id="tgb_checkout_product_id" name="ma_san_pham" value="<?= $firstCartProductId ?>">
@@ -389,6 +476,41 @@ unset($_SESSION['checkout_flash_error']);
                         <input type="hidden" id="lnkt_checkoutDiscountPercent" value="<?= (float)$init_vip_percent ?>" readonly>
                     </div>
 
+                    <!-- Mã giảm giá (Voucher) -->
+                    <div class="border rounded p-3 bg-white mb-3">
+                        <label class="small font-weight-bold text-slate mb-2 d-block" for="lnkt_voucherCodeInput">
+                            <i class="fa-solid fa-ticket text-peach mr-1"></i>Mã Giảm Giá / FreeShip FashionKids:
+                        </label>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" id="lnkt_voucherCodeInput" class="form-control font-weight-bold text-uppercase"
+                                   value="<?= htmlspecialchars($init_voucher_code) ?>"
+                                   placeholder="Nhập mã (VD: FASHION10, FREESHIPFK...)">
+                            <div class="input-group-append">
+                                <button type="button" id="lnkt_btnApplyVoucher" class="btn btn-pastel-primary font-weight-bold px-3 text-nowrap" onclick="lnktApplyVoucherCode()">
+                                    Áp dụng
+                                </button>
+                                <button type="button" id="lnkt_btnRemoveVoucher" class="btn btn-outline-danger font-weight-bold px-2 <?= $init_voucher_code !== '' ? '' : 'd-none' ?>" onclick="lnktRemoveVoucherCode()" title="Gỡ mã">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="lnkt_voucherAlert" class="small <?= $init_voucher_desc !== '' ? 'text-success font-weight-bold' : 'd-none' ?> mb-2">
+                            <?= $init_voucher_desc !== '' ? ('<i class="fa-solid fa-circle-check mr-1"></i>' . htmlspecialchars($init_voucher_desc)) : '' ?>
+                        </div>
+                        <?php if (!empty($checkoutVouchers)): ?>
+                            <div class="d-flex flex-wrap fk-btn-toolbar">
+                                <?php foreach ($checkoutVouchers as $vRow): ?>
+                                    <button type="button"
+                                            class="btn btn-light btn-sm border rounded-pill py-0 px-2 small font-weight-bold text-slate"
+                                            title="<?= htmlspecialchars((string)($vRow['mo_ta'] ?? '')) ?>"
+                                            onclick="$('#lnkt_voucherCodeInput').val('<?= htmlspecialchars((string)$vRow['ma_code'], ENT_QUOTES) ?>'); lnktApplyVoucherCode();">
+                                        <i class="fa-solid fa-tag text-peach mr-1"></i><?= htmlspecialchars((string)$vRow['ma_code']) ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
                     <!-- Bảng tổng hợp dòng tiền -->
                     <div class="border rounded p-3 bg-milk-cream mb-3">
                         <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
@@ -407,14 +529,23 @@ unset($_SESSION['checkout_flash_error']);
                             </span>
                         </div>
 
-                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2 pb-2 border-bottom">
-                            <span class="text-muted-custom font-weight-bold">Phí vận chuyển tiêu chuẩn:</span>
-                            <span id="lnkt_summaryShipping" class="badge badge-mint px-2 py-1 rounded-pill text-nowrap flex-shrink-0">
-                                Miễn phí (0 đ)
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                            <span class="text-muted-custom font-weight-bold">3. Phí vận chuyển (GHN):</span>
+                            <span id="lnkt_summaryShipping" class="badge <?= $init_shipping_fee <= 0 ? 'badge-mint' : 'badge-sky' ?> px-2 py-1 rounded-pill text-nowrap flex-shrink-0">
+                                <?= $init_shipping_fee <= 0 ? 'Miễn phí (0 đ)' : number_format($init_shipping_fee, 0, ',', '.') . ' đ' ?>
                             </span>
                         </div>
 
-                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pt-1">
+                        <div id="lnkt_summaryVoucherRow" class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2 <?= $init_voucher_disc > 0 ? '' : 'd-none' ?>">
+                            <span class="text-muted-custom font-weight-bold" id="lnkt_summaryVoucherLabel">
+                                4. Voucher<?= $init_voucher_code !== '' ? (' (' . htmlspecialchars($init_voucher_code) . ')') : '' ?>:
+                            </span>
+                            <span id="lnkt_summaryVoucherDiscount" class="font-weight-bold text-success h6 mb-0 text-nowrap">
+                                <?= $init_voucher_disc > 0 ? ('-' . number_format($init_voucher_disc, 0, ',', '.') . ' đ') : '0 đ' ?>
+                            </span>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pt-2 border-top">
                             <div>
                                 <span class="font-weight-bold text-slate h6 mb-0 d-block">3. Tổng thanh toán:</span>
                                 <small class="text-muted-custom">(Đã bao gồm VAT)</small>

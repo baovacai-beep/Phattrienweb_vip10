@@ -23,6 +23,7 @@ $chatIdentityText = Rbac::isGuest()
                 <div class="min-w-0">
                     <div class="font-weight-bold small d-flex align-items-center">
                         <span>Tư Vấn FashionKids</span>
+                        <span class="badge badge-light text-peach ml-2 px-2 py-0 rounded-pill text-nowrap flex-shrink-0">Gemini AI 24/7</span>
                         <span class="fk-live-pulse-dot ml-2 flex-shrink-0"></span>
                     </div>
                     <div class="small text-light text-truncate"><?= htmlspecialchars($chatIdentityText) ?></div>

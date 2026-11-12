@@ -52,4 +52,5 @@ if (function_exists('date_default_timezone_set')) {
     @date_default_timezone_set('Asia/Ho_Chi_Minh');
 }
 
+require_once __DIR__ . '/integrations.php';
 require_once __DIR__ . '/payment.php';

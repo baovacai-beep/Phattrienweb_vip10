@@ -56,6 +56,9 @@ $lnkt_kol_stars = [
                         <i class="fa-solid fa-clipboard-check mr-1"></i> Bàn Duyệt KOL
                     </a>
                 <?php endif; ?>
+                <a href="/FashionKids/views/pages/kol-stars.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mr-2 mb-2">
+                    <i class="fa-solid fa-crown mr-1 text-warning"></i> Danh Sách Sao Nhí
+                </a>
                 <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mb-2">
                     <i class="fa-solid fa-arrow-left mr-1 text-peach"></i> Về Trang Chủ
                 </a>
@@ -264,6 +267,10 @@ $lnkt_kol_stars = [
                                 </label>
                             </div>
                         </div>
+
+                        <?php if (class_exists('TurnstileService') && TurnstileService::isConfigured()): ?>
+                            <div id="lnkt_turnstile_kol" class="cf-turnstile mb-3" data-sitekey="<?= htmlspecialchars(TurnstileService::getSiteKey()) ?>" data-theme="light"></div>
+                        <?php endif; ?>
 
                         <button type="submit" id="lnkt_btnSubmitKolCasting" class="btn btn-pastel-primary btn-block font-weight-bold py-3 shadow">
                             <i class="fa-solid fa-paper-plane mr-2"></i><?= Rbac::isGuest() ? 'Đăng Nhập Tài Khoản Để Nộp Hồ Sơ KOL Nhí' : 'Nộp Hồ Sơ Ứng Tuyển KOL Nhí Ngay' ?>

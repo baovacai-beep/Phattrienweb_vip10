@@ -1242,19 +1242,24 @@ class RealtimeContentModel extends BaseModel {
 
         $autoReplyObj = null;
         if ($sender === 'khach_hang' && $autoReplyForCustomer) {
-            $lower = mb_strtolower($message, 'UTF-8');
-            $replyText = '';
-            if (strpos($lower, 'size') !== false || strpos($lower, 'kg') !== false || strpos($lower, 'cm') !== false || strpos($lower, 'tuổi') !== false) {
-                $replyText = 'Dạ với số đo của bé, mẹ có thể chọn Size 2 (90-100cm, 12-15kg) hoặc Size 3 (100-110cm, 15-18kg) vải sợi tre co giãn 4 chiều cực êm ạ! Tư vấn viên đã nhận tin nhắn và sẽ hỗ trợ mẹ ngay.';
-            } elseif (strpos($lower, 'sợi tre') !== false || strpos($lower, 'chất') !== false || strpos($lower, 'giặt') !== false) {
-                $replyText = 'Dạ 100% sản phẩm FashionKids làm từ vải sợi tre hữu cơ đạt chuẩn OEKO-TEX® Standard 100, kháng khuẩn 99.8% và hạ nhiệt -2°C cho làn da nhạy cảm của bé ạ!';
-            } elseif (strpos($lower, 'đơn') !== false || strpos($lower, 'giao') !== false || strpos($lower, 'ship') !== false) {
-                $replyText = 'Dạ FashionKids miễn phí vận chuyển toàn quốc cho đơn từ 300.000đ và giao nhanh trong 24-48h. Mẹ có thể tra cứu trực tiếp tại mục Tra Cứu Đơn Hàng nhé!';
-            } elseif (strpos($lower, 'kol') !== false || strpos($lower, 'mẫu nhí') !== false || strpos($lower, 'casting') !== false) {
-                $replyText = 'Dạ Chiến dịch Tuyển chọn Siêu sao nhí KOL 2026 đang mở nhận hồ sơ tại mục Tuyển KOL Nhí với giải thưởng gói trang phục 15.000.000đ và thẻ VIP Kim Cương ạ!';
+            require_once __DIR__ . '/../core/GeminiService.php';
+            $sizeCharts = [];
+            $products   = [];
+            $history    = $this->getChatMessages($sessionId);
+            if ($this->hasConnection()) {
+                try {
+                    $sizeCharts = $this->db->query("SELECT * FROM `lnkt_bang_kich_co` ORDER BY `ma_danh_muc` ASC, `chieu_cao_toi_thieu` ASC LIMIT 20")->fetchAll();
+                } catch (PDOException $e) {}
+                try {
+                    $products = $this->db->query("SELECT `ten_san_pham`, `gia_ban`, `so_luong_ton_kho`, `mo_ta_chat_lieu` FROM `lbn_san_pham` ORDER BY `ma_san_pham` ASC LIMIT 12")->fetchAll();
+                } catch (PDOException $e) {}
             }
 
+            $aiRes     = GeminiService::replyToCustomer($message, $history, $sizeCharts, $products);
+            $replyText = trim((string)($aiRes['text'] ?? ''));
+
             if ($replyText !== '') {
+                $replyId = $newMsgId + 1;
                 if ($this->hasConnection()) {
                     try {
                         $stmt2 = $this->db->prepare("
@@ -1262,22 +1267,29 @@ class RealtimeContentModel extends BaseModel {
                             VALUES (:sid, 2, 'nhan_vien', :msg, 1, NOW())
                         ");
                         $stmt2->execute([':sid' => $sessionId, ':msg' => $replyText]);
+                        $replyId = (int)$this->db->lastInsertId();
                     } catch (PDOException $e) {}
                 } else {
                     $_SESSION['fk_chat_messages'][$sessionId][] = [
-                        'id'         => $newMsgId + 1,
+                        'id'         => $replyId,
                         'session_id' => $sessionId,
                         'sender'     => 'nhan_vien',
                         'content'    => $replyText,
                         'time'       => date('H:i')
                     ];
                 }
+                $autoReplyObj = [
+                    'id'      => $replyId,
+                    'source'  => $aiRes['source'] ?? 'local_ai',
+                    'content' => $replyText,
+                ];
             }
         }
 
         return [
-            'sent'     => $msgObj,
-            'messages' => $this->getChatMessages($sessionId)
+            'sent'       => $msgObj,
+            'auto_reply' => $autoReplyObj,
+            'messages'   => $this->getChatMessages($sessionId)
         ];
     }
 

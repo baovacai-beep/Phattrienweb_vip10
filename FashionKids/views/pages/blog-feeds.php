@@ -7,6 +7,91 @@ require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 $rtModel  = new RealtimeContentModel();
 $articles = $rtModel->getArticles('all', '', 'newest');
 $featured = $articles[0] ?? null;
+$kolSpotlight = array_slice($rtModel->getKolApplications(), 0, 4);
+
+$magSlides = [
+    [
+        'eyebrow'   => '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Lookbook Mùa Hè 2026 • Ấn Phẩm Số 11',
+        'badge_cls' => 'badge-mint',
+        'title'     => 'Tạp Chí <span class="text-peach">Mẫu Nhí FashionKids</span> &amp; Cẩm Nang Sợi Tre',
+        'desc'      => 'Khám phá xu hướng phối đồ Bright Pastel cho bé, bí quyết bảo vệ làn da nhạy cảm từ chuyên gia nhi khoa và toàn cảnh hậu trường Lookbook Siêu Sao Nhí 2026.',
+        'image'     => '/FashionKids/images/banners/mag-banner-kol-2026.jpg',
+        'img_pos'   => 'center 22%',
+        'thumb'     => '/FashionKids/images/banners/mag-banner-kol-2026.jpg',
+        'thumb_title' => 'Lookbook Mẫu Nhí 2026',
+        'thumb_sub'   => 'Xu hướng Bright Pastel',
+        'photo_tag' => 'Lookbook Mùa Hè • Vải Sợi Tre 100%',
+        'photo_sub' => 'Đầm công chúa nhún bèo &amp; Polo sợi tre kháng khuẩn',
+        'kpis'      => ['100% Bamboo Organic', count($articles) . ' Chuyên Đề', 'OEKO-TEX® Hạng I'],
+        'cta1_text' => 'Khám Phá Bộ Sưu Tập',
+        'cta1_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        'cta1_icon' => 'fa-bag-shopping',
+        'cta2_text' => 'Đọc Tiêu Điểm',
+        'cta2_js'   => $featured ? 'fkOpenQuickReadModal(' . (int)$featured['id'] . ')' : '',
+        'cta2_url'  => '#fk_spotlightArticleCard',
+    ],
+    [
+        'eyebrow'   => '<i class="fa-solid fa-crown mr-1"></i>Casting KOL Nhí Toàn Quốc • Đang Mở Hồ Sơ',
+        'badge_cls' => 'badge-peach',
+        'title'     => 'Tìm Kiếm <span class="text-peach">Đại Sứ Mẫu Nhí</span> Tỏa Sáng Sân Khấu 2026',
+        'desc'      => 'Cơ hội sải bước trên sàn diễn Vietnam Kids Fashion Week, chụp bộ ảnh Studio miễn phí và nhận gói tài trợ trang phục lên đến 15.000.000đ cho bé từ 1–6 tuổi.',
+        'image'     => '/FashionKids/images/banners/banner-kol-nhi-2026.jpg',
+        'img_pos'   => 'center 20%',
+        'thumb'     => '/FashionKids/images/banners/banner-kol-nhi-2026.jpg',
+        'thumb_title' => 'Casting KOL Nhí 2026',
+        'thumb_sub'   => 'Tài trợ tới 15 Triệu',
+        'photo_tag' => 'Sân Khấu Casting Studio • FashionKids',
+        'photo_sub' => 'Ekip stylist &amp; nhiếp ảnh chuyên nghiệp đồng hành cùng bé',
+        'kpis'      => ['120+ Mẫu Nhí', 'Chụp Studio Miễn Phí', 'Bé Từ 1–6 Tuổi'],
+        'cta1_text' => 'Đăng Ký Casting Ngay',
+        'cta1_url'  => '/FashionKids/views/pages/kol-casting.php',
+        'cta1_icon' => 'fa-star',
+        'cta2_text' => 'Gương Mặt Tiêu Biểu',
+        'cta2_js'   => '',
+        'cta2_url'  => '/FashionKids/views/pages/kol-stars.php',
+    ],
+    [
+        'eyebrow'   => '<i class="fa-solid fa-leaf mr-1"></i>Chứng Nhận OEKO-TEX® Hạng I • An Toàn Tuyệt Đối',
+        'badge_cls' => 'badge-sky',
+        'title'     => 'Thời Trang <span class="text-peach">Sợi Tre Kháng Khuẩn</span> Dịu Mát Làn Da Bé',
+        'desc'      => 'Chất liệu sợi tre tự nhiên Bamboo Kun thoáng khí gấp 3 lần cotton thông thường, hỗ trợ hạ nhiệt bề mặt da bé tới -2°C và ngăn ngừa rôm sảy suốt mùa nắng nóng.',
+        'image'     => '/FashionKids/images/banners/banner-mua-he-2026.jpg',
+        'img_pos'   => 'center 18%',
+        'thumb'     => '/FashionKids/images/banners/banner-mua-he-2026.jpg',
+        'thumb_title' => 'Công Nghệ Sợi Tre',
+        'thumb_sub'   => 'Hạ nhiệt -2°C • UPF 50+',
+        'photo_tag' => 'Premium Organic Bamboo Wear',
+        'photo_sub' => 'Kháng khuẩn 99.8% • Êm mịn an toàn cho da nhạy cảm',
+        'kpis'      => ['Hạ Nhiệt -2°C', 'Chống Tia UV UPF 50+', 'Kháng Khuẩn 99.8%'],
+        'cta1_text' => 'Mua Sắm BST Sợi Tre',
+        'cta1_url'  => '/FashionKids/views/pages/shop-catalog.php?tag=organic',
+        'cta1_icon' => 'fa-shirt',
+        'cta2_text' => 'Cẩm Nang Chăm Sóc',
+        'cta2_js'   => "fkSelectBlogCategory('cham_soc_be', document.querySelector('#fk_blogCategoryFilterGroup [data-cat=cham_soc_be]'))",
+        'cta2_url'  => '#fk_blogCategoryFilterGroup',
+    ],
+    [
+        'eyebrow'   => '<i class="fa-solid fa-camera-retro mr-1"></i>Behind The Scenes • Hậu Trường Lookbook',
+        'badge_cls' => 'badge-gold',
+        'title'     => 'Toàn Cảnh <span class="text-peach">Hậu Trường Studio</span> &amp; Bí Quyết Tạo Dáng Nhí',
+        'desc'      => 'Theo chân Đạo diễn hình ảnh và Stylist FashionKids khám phá cách tạo tâm lý thoải mái giúp các bạn nhỏ tự tin cười rạng rỡ trước ống kính máy ảnh.',
+        'image'     => '/FashionKids/images/magazine/mag-studio-kol-nhi.jpg',
+        'img_pos'   => 'center 35%',
+        'thumb'     => '/FashionKids/images/magazine/mag-studio-kol-nhi.jpg',
+        'thumb_title' => 'Hậu Trường Studio',
+        'thumb_sub'   => 'Bí quyết tạo dáng nhí',
+        'photo_tag' => 'Lookbook Studio Session 2026',
+        'photo_sub' => 'Ánh sáng tản dịu an toàn cho mắt trẻ nhỏ',
+        'kpis'      => ['Stylist Bảo Ngọc', 'Ảnh Thực Tế 100%', 'Không Gây Mệt Cho Bé'],
+        'cta1_text' => 'Xem Hậu Trường',
+        'cta1_url'  => '#fk_blogCategoryFilterGroup',
+        'cta1_js'   => "fkSelectBlogCategory('hau_truong', document.querySelector('#fk_blogCategoryFilterGroup [data-cat=hau_truong]'))",
+        'cta1_icon' => 'fa-clapperboard',
+        'cta2_text' => 'Ứng Tuyển KOL Nhí',
+        'cta2_js'   => '',
+        'cta2_url'  => '/FashionKids/views/pages/kol-casting.php',
+    ]
+];
 
 $perPage       = 6;
 $totalArticles = count($articles);
@@ -36,8 +121,8 @@ foreach ($articles as $a) {
     <!-- ====================================================================
          1. THANH ĐIỂM TIN BÁO CHÍ & SỰ KIỆN REALTIME (LIVE PRESS TICKER)
          ==================================================================== -->
-    <div class="fk-press-ticker-bar d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4 shadow-sm">
-        <div class="d-flex flex-wrap align-items-center fk-card-header-row min-w-0 py-1">
+    <div class="fk-press-ticker-bar d-flex flex-wrap flex-lg-nowrap justify-content-between align-items-center fk-card-header-row mb-4 shadow-sm">
+        <div class="d-flex flex-wrap flex-sm-nowrap align-items-center fk-press-ticker-main py-1">
             <span class="d-inline-flex align-items-center flex-shrink-0">
                 <span class="fk-live-pulse-dot mr-2 flex-shrink-0"></span>
                 <span class="badge badge-pill badge-peach px-3 py-1 text-nowrap flex-shrink-0">
@@ -48,9 +133,9 @@ foreach ($articles as $a) {
                 [Mới cập nhật] FashionKids chính thức nhận Chứng nhận Quốc tế OEKO-TEX® Standard 100 Hạng I cho dòng Vải Sợi Tre Mùa Hè 2026!
             </span>
         </div>
-        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/kol-casting.php" class="badge badge-pill badge-mint px-3 py-1 text-decoration-none text-nowrap flex-shrink-0">
-                <i class="fa-solid fa-calendar-star mr-1"></i>Sự kiện Casting KOL Nhí: Đang mở
+        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar flex-shrink-0">
+            <a href="/FashionKids/views/pages/kol-casting.php" class="badge badge-pill badge-mint px-3 py-2 text-decoration-none text-nowrap flex-shrink-0 shadow-sm">
+                <i class="fa-solid fa-calendar-check mr-1"></i>Casting KOL Nhí: Đang mở
             </a>
             <?php if (Rbac::isStaffOrAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-light btn-sm rounded-pill border px-3 py-1 small font-weight-bold text-slate text-nowrap flex-shrink-0">
@@ -61,31 +146,230 @@ foreach ($articles as $a) {
     </div>
 
     <!-- ====================================================================
-         2. HERO BANNER TẠP CHÍ MẪU NHÍ & CẨM NANG CHĂM SÓC BÉ
+         2. EDITORIAL CAROUSEL BANNER TẠP CHÍ MẪU NHÍ & CHIẾN DỊCH (XOAY VÒNG TỰ ĐỘNG)
          ==================================================================== -->
-    <div class="fk-blog-hero-banner p-4 p-md-5 mb-5 shadow-sm">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-8 mb-3 mb-lg-0">
-                <span class="badge badge-pill badge-mint px-3 py-2 mb-3 shadow-sm">
-                    <i class="fa-solid fa-book-open-reader mr-1"></i>Chuyên Trang Tạp Chí &amp; Truyền Thông FashionKids
+    <div class="fk-mag-showcase-shell mb-4">
+        <!-- Thanh Masthead Cố Định (Giữ nút Đã lưu & Viết bài luôn hiển thị) -->
+        <div class="fk-mag-masthead d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
+                <span class="fk-mag-issue-pill">
+                    <i class="fa-solid fa-book-open-reader text-peach"></i>
+                    TẠP CHÍ MẪU NHÍ FASHIONKIDS • SỐ 11/2026
                 </span>
-                <h1 class="font-weight-bold text-slate mb-2">
-                    Tạp Chí <span class="text-peach">Mẫu Nhí FashionKids</span> &amp; Cẩm Nang Sợi Tre
-                </h1>
-                <p class="text-muted-custom mb-0 h6 font-weight-normal">
-                    Khám phá xu hướng phối đồ Bright Pastel cho bé, bí quyết bảo vệ làn da nhạy cảm từ chuyên gia nhi khoa và toàn cảnh hậu trường Lookbook Siêu Sao Nhí 2026.
-                </p>
+                <span class="small font-weight-bold text-muted-custom d-none d-md-inline">
+                    <i class="fa-solid fa-camera text-info mr-1"></i>Chuyên trang Lookbook, Sợi Tre &amp; KOL Nhí
+                </span>
             </div>
-            <div class="col-12 col-lg-4 text-lg-right">
-                <div class="d-inline-flex flex-wrap justify-content-lg-end fk-btn-toolbar">
-                    <?php if (Rbac::isStaffOrAdmin()): ?>
-                        <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary px-4 py-2 shadow-sm font-weight-bold text-nowrap">
-                            <i class="fa-solid fa-feather-pointed mr-1"></i><?= Rbac::isAdmin() ? 'Đăng Bài Viết Mới' : 'Tạo Bản Nháp Bài Viết' ?>
+            <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+                <?php if (Rbac::isStaffOrAdmin()): ?>
+                    <a href="/FashionKids/views/pages/admin-cms-blog.php" class="btn btn-pastel-primary btn-sm px-3 py-2 shadow-sm font-weight-bold text-nowrap">
+                        <i class="fa-solid fa-feather-pointed mr-1"></i><?= Rbac::isAdmin() ? 'Đăng Bài Viết Mới' : 'Tạo Bản Nháp Bài Viết' ?>
+                    </a>
+                <?php endif; ?>
+                <button type="button" onclick="fkFilterSavedBookmarks()" id="fk_btnShowBookmarks" class="btn btn-light btn-sm border rounded-pill px-3 py-2 font-weight-bold text-slate shadow-sm text-nowrap">
+                    <i class="fa-solid fa-bookmark text-warning mr-1"></i>Đã lưu (<span id="fk_savedCountBadge"><?= count($_SESSION['fk_bookmarked_articles'] ?? []) ?></span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Bootstrap 4 Auto-Rotating Carousel -->
+        <div id="fk_magHeroCarousel" class="carousel slide" data-ride="carousel" data-interval="4600">
+            <div class="carousel-inner">
+                <?php foreach ($magSlides as $sIdx => $slide):
+                    $slideNumStr = str_pad((string)($sIdx + 1), 2, '0', STR_PAD_LEFT) . ' / ' . str_pad((string)count($magSlides), 2, '0', STR_PAD_LEFT);
+                ?>
+                    <div class="carousel-item <?= $sIdx === 0 ? 'active' : '' ?>">
+                        <div class="fk-mag-slide">
+                            <div class="row align-items-center">
+                                <!-- Cột Trái: Editorial Copy & CTA (Căn giữa trên Mobile, gọn gàng trên Desktop) -->
+                                <div class="col-12 col-lg-6 order-2 order-lg-1 fk-mag-slide-copy text-center text-lg-left">
+                                    <div class="mb-2">
+                                        <span class="badge badge-pill <?= htmlspecialchars($slide['badge_cls']) ?> px-3 py-2 shadow-sm">
+                                            <?= $slide['eyebrow'] ?>
+                                        </span>
+                                    </div>
+                                    <h1 class="fk-mag-slide-title mb-3">
+                                        <?= $slide['title'] ?>
+                                    </h1>
+                                    <p class="text-muted-custom mb-3" style="font-size: 0.94rem; line-height: 1.62;">
+                                        <?= htmlspecialchars($slide['desc']) ?>
+                                    </p>
+                                    <div class="fk-mag-slide-kpis justify-content-center justify-content-lg-start mb-4">
+                                        <?php foreach ($slide['kpis'] as $kpi): ?>
+                                            <span class="fk-mag-kpi-chip">
+                                                <i class="fa-solid fa-circle-check text-success mr-1"></i><?= htmlspecialchars($kpi) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start" style="gap: 10px;">
+                                        <?php if (!empty($slide['cta1_js'])): ?>
+                                            <a href="<?= htmlspecialchars($slide['cta1_url']) ?>"
+                                               onclick="<?= htmlspecialchars($slide['cta1_js']) ?>;"
+                                               class="btn btn-pastel-primary btn-sm px-4 py-2 font-weight-bold shadow-sm text-nowrap">
+                                                <i class="fa-solid <?= htmlspecialchars($slide['cta1_icon']) ?> mr-1"></i><?= htmlspecialchars($slide['cta1_text']) ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="<?= htmlspecialchars($slide['cta1_url']) ?>"
+                                               class="btn btn-pastel-primary btn-sm px-4 py-2 font-weight-bold shadow-sm text-nowrap">
+                                                <i class="fa-solid <?= htmlspecialchars($slide['cta1_icon']) ?> mr-1"></i><?= htmlspecialchars($slide['cta1_text']) ?>
+                                            </a>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($slide['cta2_js'])): ?>
+                                            <button type="button"
+                                                    onclick="<?= htmlspecialchars($slide['cta2_js']) ?>"
+                                                    class="btn btn-light btn-sm border rounded-pill px-3 py-2 font-weight-bold text-slate shadow-sm text-nowrap">
+                                                <?= htmlspecialchars($slide['cta2_text']) ?> <i class="fa-solid fa-arrow-right ml-1 text-peach"></i>
+                                            </button>
+                                        <?php else: ?>
+                                            <a href="<?= htmlspecialchars($slide['cta2_url']) ?>"
+                                               class="btn btn-light btn-sm border rounded-pill px-3 py-2 font-weight-bold text-slate shadow-sm text-nowrap">
+                                                <?= htmlspecialchars($slide['cta2_text']) ?> <i class="fa-solid fa-arrow-right ml-1 text-peach"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Cột Phải: Khung Ảnh Lookbook 16:9 Nguyên Vẹn (Không bị che hay cắt góc) -->
+                                <div class="col-12 col-lg-6 order-1 order-lg-2">
+                                    <div class="fk-mag-photo-frame mx-auto">
+                                        <div class="fk-mag-photo-stage">
+                                            <img src="<?= htmlspecialchars($slide['image']) ?>"
+                                                 alt="<?= htmlspecialchars($slide['thumb_title']) ?>"
+                                                 class="fk-mag-slide-img"
+                                                 style="object-position: <?= htmlspecialchars($slide['img_pos'] ?? 'center 22%') ?>;">
+                                        </div>
+                                        <div class="fk-mag-photo-caption">
+                                            <div class="min-w-0">
+                                                <div class="font-weight-bold text-slate small text-truncate">
+                                                    <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i><?= $slide['photo_tag'] ?>
+                                                </div>
+                                                <div class="text-muted-custom text-truncate" style="font-size: 0.74rem;">
+                                                    <?= $slide['photo_sub'] ?>
+                                                </div>
+                                            </div>
+                                            <span class="badge badge-pill badge-peach px-3 py-1 flex-shrink-0 text-nowrap">
+                                                <?= $slideNumStr ?> • LOOKBOOK
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Nút điều hướng Trước / Sau dạng Kính Mờ -->
+            <a class="fk-mag-carousel-control fk-mag-carousel-prev" href="#fk_magHeroCarousel" role="button" data-slide="prev" aria-label="Banner trước">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <a class="fk-mag-carousel-control fk-mag-carousel-next" href="#fk_magHeroCarousel" role="button" data-slide="next" aria-label="Banner tiếp theo">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+
+        <!-- Thanh Thumbnail Switcher Tương Tác 4 Chiến Dịch -->
+        <div class="fk-mag-thumb-bar">
+            <?php foreach ($magSlides as $tIdx => $slide): ?>
+                <button type="button"
+                        class="fk-mag-thumb-item <?= $tIdx === 0 ? 'active' : '' ?>"
+                        data-target="#fk_magHeroCarousel"
+                        data-slide-to="<?= $tIdx ?>">
+                    <img src="<?= htmlspecialchars($slide['thumb']) ?>" alt="<?= htmlspecialchars($slide['thumb_title']) ?>" class="fk-mag-thumb-img">
+                    <div class="min-w-0">
+                        <span class="fk-mag-thumb-label"><?= htmlspecialchars($slide['thumb_title']) ?></span>
+                        <span class="fk-mag-thumb-sub"><?= htmlspecialchars($slide['thumb_sub']) ?></span>
+                    </div>
+                </button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         2B. SHOWCASE GƯƠNG MẶT KOL NHÍ TIÊU BIỂU & POSTER QUẢNG CÁO CHIẾN DỊCH
+         ==================================================================== -->
+    <div class="row align-items-stretch mb-5" id="fk_kolShowcaseSection">
+        <!-- Cột Trái (8 cột): Gương Mặt KOL Nhí FashionKids 2026 -->
+        <div class="col-12 col-lg-8 mb-4 mb-lg-0">
+            <div class="fk-kol-showcase-panel p-3 p-md-4 h-100 d-flex flex-column">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: 10px;">
+                    <div>
+                        <span class="badge badge-pill badge-peach px-3 py-1 mb-1">
+                            <i class="fa-solid fa-crown mr-1"></i>ĐẠI SỨ NHÍ 2026
+                        </span>
+                        <h4 class="font-weight-bold text-slate mb-0">
+                            Gương Mặt <span class="text-peach">KOL Nhí</span> Tỏa Sáng Trên Tạp Chí
+                        </h4>
+                    </div>
+                    <a href="/FashionKids/views/pages/kol-stars.php" class="btn btn-light btn-sm rounded-pill border px-3 py-2 font-weight-bold text-slate text-nowrap">
+                        Xem tất cả Sao Nhí <i class="fa-solid fa-arrow-right text-peach ml-1"></i>
+                    </a>
+                </div>
+
+                <div class="row flex-grow-1">
+                    <?php foreach ($kolSpotlight as $kol):
+                        $stMap = [
+                            'trung_tuyen'   => ['Trúng tuyển', 'badge-mint'],
+                            'moi_phong_van' => ['Mời phỏng vấn', 'badge-peach'],
+                            'cho_duyet'     => ['Nổi bật', 'badge-sky'],
+                        ];
+                        $stInfo = $stMap[$kol['status'] ?? ''] ?? ['Mẫu Nhí', 'badge-gold'];
+                    ?>
+                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                            <a href="/FashionKids/views/pages/kol-stars.php?kol_id=<?= (int)$kol['id'] ?>" class="text-decoration-none d-block h-100">
+                                <div class="fk-kol-mini-card">
+                                    <div class="fk-kol-mini-photo-wrap">
+                                        <img src="<?= htmlspecialchars($kol['image']) ?>"
+                                             alt="<?= htmlspecialchars($kol['baby_name']) ?>"
+                                             class="fk-kol-mini-photo">
+                                        <span class="badge <?= $stInfo[1] ?> fk-kol-mini-badge"><?= $stInfo[0] ?></span>
+                                        <span class="fk-kol-age-chip">
+                                            <?= htmlspecialchars($kol['age_label']) ?> • <?= (int)($kol['height_cm'] ?? 95) ?>cm
+                                        </span>
+                                    </div>
+                                    <div class="p-2 p-xl-3 d-flex flex-column flex-grow-1">
+                                        <div class="font-weight-bold text-slate small mb-1" style="line-height: 1.3;">
+                                            <?= htmlspecialchars($kol['baby_name']) ?>
+                                        </div>
+                                        <p class="text-muted-custom mb-0" style="font-size: 0.74rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            <?= htmlspecialchars($kol['talent']) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Phải (4 cột): Poster Quảng Cáo BST Sợi Tre & Voucher Độc Quyền -->
+        <div class="col-12 col-lg-4">
+            <div class="fk-mag-promo-poster">
+                <img src="/FashionKids/images/magazine/mag-catwalk-tuan-le-thoi-trang.jpg"
+                     alt="Quảng cáo BST Tuần Lễ Thời Trang Trẻ Em 2026"
+                     class="fk-mag-promo-poster-img">
+                <div class="fk-mag-promo-scrim"></div>
+                <div class="fk-mag-promo-body">
+                    <span class="badge badge-pill badge-peach px-3 py-1 mb-2">
+                        <i class="fa-solid fa-fire mr-1"></i>QUẢNG CÁO CHIẾN DỊCH HÈ 2026
+                    </span>
+                    <h5 class="font-weight-bold text-white mb-2">
+                        BST Sợi Tre Bright Pastel — Mặc Êm Như Mây
+                    </h5>
+                    <p class="small mb-3" style="color: rgba(255, 255, 255, 0.88); line-height: 1.45;">
+                        Nhập mã độc quyền dành cho độc giả Tạp chí khi thanh toán đơn từ 200.000đ.
+                    </p>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 8px;">
+                        <button type="button" onclick="fkCopyMagVoucher('FASHION10', this)" class="fk-mag-voucher-pill" title="Bấm để sao chép mã giảm giá">
+                            <i class="fa-solid fa-ticket"></i>
+                            <span>Mã: <strong>FASHION10</strong> (-10%)</span>
+                        </button>
+                        <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary btn-sm rounded-pill px-3 py-2 font-weight-bold shadow-sm text-nowrap">
+                            Mua ngay <i class="fa-solid fa-arrow-right ml-1"></i>
                         </a>
-                    <?php endif; ?>
-                    <button type="button" onclick="fkFilterSavedBookmarks()" id="fk_btnShowBookmarks" class="btn btn-light border rounded-pill px-3 py-2 font-weight-bold text-slate shadow-sm text-nowrap">
-                        <i class="fa-solid fa-bookmark text-warning mr-1"></i>Đã lưu (<span id="fk_savedCountBadge"><?= count($_SESSION['fk_bookmarked_articles'] ?? []) ?></span>)
-                    </button>
+                    </div>
                 </div>
             </div>
         </div>
