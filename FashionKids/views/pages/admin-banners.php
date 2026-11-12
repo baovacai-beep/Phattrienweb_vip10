@@ -56,8 +56,8 @@ $lnkt_banners_list = [
 
 <div class="container-fluid my-4 px-lg-5" id="lnkt_admin_banners_section">
     <!-- Header Quản Trị Banner -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="fk-header-title-grow">
             <h4 class="font-weight-bold text-slate mb-1">
                 <i class="fa-solid fa-images text-peach mr-2"></i>Bảng Điều Khiển Quản Trị Banner Slider &amp; Lịch Chiến Dịch
             </h4>
@@ -65,11 +65,11 @@ $lnkt_banners_list = [
                 Quản lý Banner Trang chủ, lịch hẹn giờ và đường dẫn đích
             </small>
         </div>
-        <div class="mt-2 mt-md-0">
-            <a href="/FashionKids/views/pages/home.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 mr-2">
+        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+            <a href="/FashionKids/views/pages/home.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-eye mr-1"></i> Xem Carousel Trang Chủ
             </a>
-            <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3">
+            <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-pastel-primary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-crown mr-1"></i> Cổng Casting KOL
             </a>
         </div>
@@ -81,8 +81,8 @@ $lnkt_banners_list = [
              ================================================================ -->
         <div class="col-12 col-xl-8 mb-4">
             <div class="card card-pastel shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h6 class="font-weight-bold text-slate mb-0">
                             Danh Sách Chiến Dịch Slider Carousel Toàn Trang
                         </h6>
@@ -90,7 +90,7 @@ $lnkt_banners_list = [
                             Tốc độ chuyển cảnh mặc định: <strong>4.000 ms (4 giây / slide)</strong>
                         </small>
                     </div>
-                    <button type="button" onclick="lnktResetBannerForm()" class="btn btn-pastel-primary btn-sm px-3 mt-2 mt-sm-0">
+                    <button type="button" onclick="lnktResetBannerForm()" class="btn btn-pastel-primary btn-sm px-3 text-nowrap flex-shrink-0">
                         <i class="fa-solid fa-plus mr-1"></i> Tạo Chiến Dịch Banner Mới
                     </button>
                 </div>
@@ -123,7 +123,7 @@ $lnkt_banners_list = [
                                                 <span class="lbn-inv-thumb mr-3 flex-shrink-0">
                                                     <i class="fa-solid <?= $bn['icon'] ?> h4 mb-0"></i>
                                                 </span>
-                                                <div>
+                                                <div class="min-w-0">
                                                     <div class="font-weight-bold text-slate"><?= htmlspecialchars($bn['title']) ?></div>
                                                     <small class="text-muted-custom d-block mb-1"><?= htmlspecialchars($bn['subtitle']) ?></small>
                                                     <span class="badge px-2 py-1 text-white" data-fk-bg="<?= htmlspecialchars($bn['cta_color']) ?>">
@@ -150,13 +150,13 @@ $lnkt_banners_list = [
                                             </div>
                                         </td>
 
-                                        <td class="text-center" id="lnkt_bannerStatusCell_<?= $bn['id'] ?>">
+                                        <td class="text-center text-nowrap" id="lnkt_bannerStatusCell_<?= $bn['id'] ?>">
                                             <?php if ($bn['status'] === 'active'): ?>
-                                                <span class="badge badge-mint px-2 py-1 rounded-pill">
+                                                <span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap">
                                                     <i class="fa-solid fa-circle-play mr-1"></i>Đang chạy
                                                 </span>
                                             <?php else: ?>
-                                                <span class="badge badge-gold px-2 py-1 rounded-pill">
+                                                <span class="badge badge-gold px-2 py-1 rounded-pill text-nowrap">
                                                     <i class="fa-solid fa-calendar-clock mr-1"></i>Hẹn giờ
                                                 </span>
                                             <?php endif; ?>
@@ -194,11 +194,11 @@ $lnkt_banners_list = [
 
             <!-- Khung Xem Trước Trực Tiếp (Live Preview Banner) -->
             <div class="card card-pastel p-4 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="font-weight-bold text-slate mb-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                         <i class="fa-solid fa-desktop text-peach mr-2"></i>Xem Trước Giao Diện Hiển Thị Banner Trực Quan
                     </h6>
-                    <span class="badge badge-pill badge-sky px-3 py-1">Chuyển ảnh tự động 4 giây</span>
+                    <span class="badge badge-pill badge-sky px-3 py-1 text-nowrap flex-shrink-0">Chuyển ảnh tự động 4 giây</span>
                 </div>
                 <div class="lnkt-hero-slide lnkt-slide-kol p-4 rounded border">
                     <span class="badge badge-gold px-3 py-1 rounded-pill mb-2">Xem trước Chiến dịch</span>
@@ -221,12 +221,12 @@ $lnkt_banners_list = [
              ================================================================ -->
         <div class="col-12 col-xl-4 mb-4">
             <div class="card card-pastel shadow-sm" id="lnkt_bannerFormCard">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="font-weight-bold text-slate mb-0" id="lnkt_bannerFormHeader">
+                <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                    <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow" id="lnkt_bannerFormHeader">
                         <i class="fa-solid fa-calendar-check text-peach mr-1"></i> Thiết Lập Chiến Dịch Banner
                     </h6>
                     <button type="button" id="lnkt_btnCancelBannerEdit" onclick="lnktResetBannerForm()"
-                            class="btn btn-light btn-sm rounded-pill border d-none">
+                            class="btn btn-light btn-sm rounded-pill border d-none text-nowrap flex-shrink-0">
                         Hủy sửa
                     </button>
                 </div>

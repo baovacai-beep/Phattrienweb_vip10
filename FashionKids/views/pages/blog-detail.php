@@ -71,14 +71,14 @@ $relatedProductsCatalog = [
         <div class="col-12 col-lg-8 mb-4">
             <!-- Khung Nội Dung Bài Viết Chính -->
             <div class="card card-pastel border-0 shadow-sm p-4 p-md-5 mb-4 bg-white">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                    <span class="badge <?= htmlspecialchars($article['badge_class']) ?> px-3 py-2 rounded-pill">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                    <span class="badge <?= htmlspecialchars($article['badge_class']) ?> px-3 py-2 rounded-pill text-nowrap">
                         <i class="fa-solid fa-feather-pointed mr-1"></i><?= htmlspecialchars($article['category_name']) ?>
                     </span>
-                    <div class="small text-muted-custom font-weight-bold mt-2 mt-sm-0">
-                        <span class="mr-3"><i class="fa-regular fa-calendar text-peach mr-1"></i><?= htmlspecialchars($article['published_at']) ?></span>
-                        <span class="mr-3"><i class="fa-regular fa-clock text-info mr-1"></i><?= htmlspecialchars($article['read_time']) ?></span>
-                        <span><i class="fa-regular fa-eye text-success mr-1"></i><strong id="fk_detailViewCount"><?= number_format($article['views']) ?></strong> lượt xem</span>
+                    <div class="small text-muted-custom font-weight-bold d-flex flex-wrap fk-btn-toolbar">
+                        <span class="text-nowrap"><i class="fa-regular fa-calendar text-peach mr-1"></i><?= htmlspecialchars($article['published_at']) ?></span>
+                        <span class="text-nowrap"><i class="fa-regular fa-clock text-info mr-1"></i><?= htmlspecialchars($article['read_time']) ?></span>
+                        <span class="text-nowrap"><i class="fa-regular fa-eye text-success mr-1"></i><strong id="fk_detailViewCount"><?= number_format($article['views']) ?></strong> lượt xem</span>
                     </div>
                 </div>
 
@@ -116,26 +116,26 @@ $relatedProductsCatalog = [
                 </div>
 
                 <!-- Thanh Nút Tương Tác: Thả Tim, Lưu Bài Viết & Chia Sẻ -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-4 border-top">
-                    <div class="d-flex align-items-center mb-2 mb-sm-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mt-4 pt-4 border-top">
+                    <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
                         <button type="button"
                                 onclick="fkToggleLikeArticle(<?= $article['id'] ?>, this)"
-                                class="btn btn-light border fk-btn-like-blog px-4 py-2 mr-2 shadow-sm <?= !empty($article['is_liked']) ? 'liked' : '' ?>"
+                                class="btn btn-light border fk-btn-like-blog px-4 py-2 shadow-sm text-nowrap <?= !empty($article['is_liked']) ? 'liked' : '' ?>"
                                 data-article-id="<?= $article['id'] ?>">
                             <i class="fa-solid fa-heart text-danger mr-1"></i>
                             Thả tim bài viết (<span class="fk-like-count-<?= $article['id'] ?>"><?= number_format($article['likes']) ?></span>)
                         </button>
                         <button type="button"
                                 onclick="fkToggleBookmarkArticle(<?= $article['id'] ?>, this)"
-                                class="btn btn-light border fk-btn-bookmark-blog px-3 py-2 shadow-sm <?= !empty($article['is_bookmarked']) ? 'bookmarked' : '' ?>"
+                                class="btn btn-light border fk-btn-bookmark-blog px-3 py-2 shadow-sm text-nowrap <?= !empty($article['is_bookmarked']) ? 'bookmarked' : '' ?>"
                                 data-article-id="<?= $article['id'] ?>">
                             <i class="fa-solid fa-bookmark text-warning mr-1"></i>Lưu cẩm nang
                         </button>
                     </div>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center flex-shrink-0">
                         <button type="button"
                                 onclick="fkShareBlogLink(<?= $article['id'] ?>, '<?= htmlspecialchars($article['title'], ENT_QUOTES) ?>')"
-                                class="btn btn-pastel-sky btn-sm px-3 py-2 font-weight-bold">
+                                class="btn btn-pastel-sky btn-sm px-3 py-2 font-weight-bold text-nowrap">
                             <i class="fa-solid fa-link mr-1"></i>Sao chép link bài viết
                         </button>
                     </div>
@@ -146,11 +146,11 @@ $relatedProductsCatalog = [
                  KHỐI BÌNH LUẬN ĐA CẤP REALTIME (tgb_binh_luan_bai_viet)
                  ============================================================ -->
             <div class="card card-pastel border-0 shadow-sm p-4 p-md-5 bg-white" id="fk_commentsSection">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="font-weight-bold text-slate mb-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+                    <h5 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                         <i class="fa-solid fa-comments text-peach mr-2"></i>Bình Luận &amp; Chia Sẻ Từ Phụ Huynh (<span id="fk_totalCommentsCounter"><?= count($comments) ?></span>)
                     </h5>
-                    <span class="badge badge-pill badge-mint px-3 py-1">
+                    <span class="badge badge-pill badge-mint px-3 py-1 text-nowrap flex-shrink-0">
                         <i class="fa-solid fa-bolt mr-1"></i>Bình luận trực tuyến
                     </span>
                 </div>
@@ -190,18 +190,18 @@ $relatedProductsCatalog = [
                             <textarea id="fk_commentContent" class="form-control rounded-lg" rows="3"
                                       placeholder="Chia sẻ cảm nhận của ba mẹ hoặc đặt câu hỏi về cách phối đồ, chọn size sợi tre cho bé..." required></textarea>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-none d-sm-flex flex-wrap">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                            <div class="d-none d-sm-flex flex-wrap fk-btn-toolbar">
                                 <button type="button" onclick="fkQuickInsertComment('Bài viết rất bổ ích, cảm ơn FashionKids!')"
-                                        class="btn btn-light btn-sm border rounded-pill mr-1 py-0 px-2 small text-slate">
+                                        class="btn btn-light btn-sm border rounded-pill py-1 px-2 small text-slate text-nowrap">
                                     + Bài viết rất bổ ích!
                                 </button>
                                 <button type="button" onclick="fkQuickInsertComment('Chất vải sợi tre của shop mặc mát và êm da bé lắm ạ.')"
-                                        class="btn btn-light btn-sm border rounded-pill py-0 px-2 small text-slate">
+                                        class="btn btn-light btn-sm border rounded-pill py-1 px-2 small text-slate text-nowrap">
                                     + Vải sợi tre rất mát!
                                 </button>
                             </div>
-                            <button type="submit" id="fk_btnSubmitComment" class="btn btn-pastel-primary px-4 py-2 font-weight-bold shadow-sm">
+                            <button type="submit" id="fk_btnSubmitComment" class="btn btn-pastel-primary px-4 py-2 font-weight-bold shadow-sm text-nowrap flex-shrink-0">
                                 <i class="fa-solid fa-paper-plane mr-1"></i>Gửi Bình Luận
                             </button>
                         </div>
@@ -214,17 +214,17 @@ $relatedProductsCatalog = [
                         <div class="fk-comment-item mb-3" id="fk_commentThread_<?= $com['id'] ?>">
                             <!-- Bình luận gốc (Cha) -->
                             <div class="fk-comment-box p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <span class="rounded-circle bg-peach text-white d-inline-flex align-items-center justify-content-center avatar-40 mr-2 font-weight-bold">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                                    <div class="d-flex align-items-center min-w-0">
+                                        <span class="rounded-circle bg-peach text-white d-inline-flex align-items-center justify-content-center avatar-40 mr-2 font-weight-bold flex-shrink-0">
                                             <i class="fa-solid fa-user"></i>
                                         </span>
-                                        <div>
-                                            <strong class="text-slate mr-2"><?= htmlspecialchars($com['author_name']) ?></strong>
-                                            <span class="badge badge-pill badge-gold small"><?= htmlspecialchars($com['vip_badge'] ?? 'Thành Viên') ?></span>
+                                        <div class="d-flex flex-wrap align-items-center fk-btn-toolbar min-w-0">
+                                            <strong class="text-slate"><?= htmlspecialchars($com['author_name']) ?></strong>
+                                            <span class="badge badge-pill badge-gold small text-nowrap"><?= htmlspecialchars($com['vip_badge'] ?? 'Thành Viên') ?></span>
                                         </div>
                                     </div>
-                                    <small class="text-muted-custom"><?= htmlspecialchars($com['created_at']) ?></small>
+                                    <small class="text-muted-custom text-nowrap flex-shrink-0"><?= htmlspecialchars($com['created_at']) ?></small>
                                 </div>
                                 <p class="mb-2 text-slate small pl-5"><?= htmlspecialchars($com['content']) ?></p>
                                 <?php if (!Rbac::isGuest()): ?>
@@ -243,7 +243,7 @@ $relatedProductsCatalog = [
                                                    placeholder="Viết phản hồi gửi tới <?= htmlspecialchars($com['author_name']) ?>...">
                                             <div class="input-group-append">
                                                 <button type="button" onclick="fkSubmitReplyComment(<?= $article['id'] ?>, <?= $com['id'] ?>)"
-                                                        class="btn btn-pastel-primary btn-sm rounded-pill px-3 font-weight-bold">
+                                                        class="btn btn-pastel-primary btn-sm rounded-pill px-3 font-weight-bold text-nowrap">
                                                     Gửi phản hồi
                                                 </button>
                                             </div>
@@ -257,14 +257,14 @@ $relatedProductsCatalog = [
                                 <?php if (!empty($com['replies'])): ?>
                                     <?php foreach ($com['replies'] as $rep): ?>
                                         <div class="fk-comment-reply-box p-3 mb-2 shadow-sm">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <div>
-                                                    <strong class="text-slate small mr-1">
+                                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
+                                                <div class="d-flex flex-wrap align-items-center fk-btn-toolbar min-w-0">
+                                                    <strong class="text-slate small">
                                                         <i class="fa-solid fa-circle-check text-success mr-1"></i><?= htmlspecialchars($rep['author_name']) ?>
                                                     </strong>
-                                                    <span class="badge badge-pill badge-mint small"><?= htmlspecialchars($rep['vip_badge'] ?? 'Quản Trị Viên') ?></span>
+                                                    <span class="badge badge-pill badge-mint small text-nowrap"><?= htmlspecialchars($rep['vip_badge'] ?? 'Quản Trị Viên') ?></span>
                                                 </div>
-                                                <small class="text-muted-custom"><?= htmlspecialchars($rep['created_at']) ?></small>
+                                                <small class="text-muted-custom text-nowrap flex-shrink-0"><?= htmlspecialchars($rep['created_at']) ?></small>
                                             </div>
                                             <p class="mb-0 text-slate small"><?= htmlspecialchars($rep['content']) ?></p>
                                         </div>
@@ -292,15 +292,15 @@ $relatedProductsCatalog = [
                             <a href="/FashionKids/views/pages/product-detail.php?id=<?= $rp['id'] ?>" class="lbn-inv-thumb mr-3 flex-shrink-0">
                                 <img src="<?= htmlspecialchars($rp['image']) ?>" alt="<?= htmlspecialchars($rp['name']) ?>" class="lbn-thumb-img">
                             </a>
-                            <div class="flex-grow-1">
+                            <div class="flex-grow-1 min-w-0">
                                 <a href="/FashionKids/views/pages/product-detail.php?id=<?= $rp['id'] ?>" class="small font-weight-bold text-slate d-block text-decoration-none mb-1">
                                     <?= htmlspecialchars($rp['name']) ?>
                                 </a>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="small font-weight-bold text-peach"><?= number_format($rp['price'], 0, ',', '.') ?> đ</span>
+                                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                                    <span class="small font-weight-bold text-peach text-nowrap"><?= number_format($rp['price'], 0, ',', '.') ?> đ</span>
                                     <button type="button"
                                             onclick="lbnQuickAddToCart('<?= htmlspecialchars($rp['name'], ENT_QUOTES) ?>', <?= $rp['price'] ?>, <?= $rp['id'] ?>)"
-                                            class="btn btn-pastel-primary btn-sm py-0 px-2 small">
+                                            class="btn btn-pastel-primary btn-sm py-0 px-2 small text-nowrap flex-shrink-0">
                                         <i class="fa-solid fa-cart-plus mr-1"></i>Mua
                                     </button>
                                 </div>
@@ -325,7 +325,7 @@ $relatedProductsCatalog = [
                             <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $other['id'] ?>" class="lbn-inv-thumb mr-3 flex-shrink-0">
                                 <img src="<?= htmlspecialchars($other['image']) ?>" alt="<?= htmlspecialchars($other['title']) ?>" class="lbn-thumb-img">
                             </a>
-                            <div>
+                            <div class="min-w-0">
                                 <span class="badge <?= htmlspecialchars($other['badge_class']) ?> small mb-1"><?= htmlspecialchars($other['category_name']) ?></span>
                                 <a href="/FashionKids/views/pages/blog-detail.php?id=<?= $other['id'] ?>" class="small font-weight-bold text-slate d-block text-decoration-none">
                                     <?= htmlspecialchars($other['title']) ?>

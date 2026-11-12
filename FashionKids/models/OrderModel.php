@@ -20,15 +20,18 @@ require_once __DIR__ . '/entities/ThanhToanCOD.php';
 
 class OrderModel extends Model {
     private static bool $schemaChecked = false;
+    private static bool $returnSchemaChecked = false;
     private static bool $expirySweptThisRequest = false;
     private ?CassoService $cassoService = null;
 
     public const VALID_STATUSES = ['cho_duyet', 'da_xac_nhan', 'dang_giao', 'hoan_tat', 'da_huy'];
+    public const VALID_RETURN_STATUSES = ['cho_duyet_hoan', 'da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan'];
 
     public function __construct(?CassoService $cassoService = null) {
         parent::__construct();
         $this->cassoService = $cassoService;
         $this->ensureOrderSchema();
+        $this->ensureReturnSchema();
     }
 
     public function setCassoService(?CassoService $service): void {
@@ -115,6 +118,47 @@ class OrderModel extends Model {
             $bfStmt->execute([':prefix' => $prefix]);
         } catch (PDOException $e) {
             error_log('[lnkt] ensureOrderSchema: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Đảm bảo bảng yêu cầu hoàn hàng / trả hàng lnkt_yeu_cau_hoan_hang tồn tại trong CSDL.
+     */
+    public function ensureReturnSchema(): void {
+        if (self::$returnSchemaChecked || !$this->hasConnection()) {
+            return;
+        }
+        self::$returnSchemaChecked = true;
+        try {
+            $this->db->exec("
+                CREATE TABLE IF NOT EXISTS `lnkt_yeu_cau_hoan_hang` (
+                    `ma_hoan_hang` INT AUTO_INCREMENT PRIMARY KEY,
+                    `ma_don_hang` INT NOT NULL,
+                    `ma_nguoi_dung` INT NOT NULL,
+                    `ma_nhan_vien_xu_ly` INT NULL,
+                    `ly_do_hoan` VARCHAR(255) NOT NULL,
+                    `mo_ta_chi_tiet` TEXT NULL,
+                    `hinh_anh_minh_chung` TEXT NULL,
+                    `so_tien_hoan` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `thong_tin_nhan_tien` VARCHAR(255) NULL,
+                    `trang_thai_hoan` ENUM('cho_duyet_hoan', 'da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan') NOT NULL DEFAULT 'cho_duyet_hoan',
+                    `ghi_chu_xu_ly` TEXT NULL,
+                    `ngay_yeu_cau` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `ngay_cap_nhat` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY `uq_lnkt_hoan_don_hang` (`ma_don_hang`),
+                    CONSTRAINT `kn_hoan_don_hang`
+                        FOREIGN KEY (`ma_don_hang`) REFERENCES `lnkt_don_hang`(`ma_don_hang`)
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+                    CONSTRAINT `kn_hoan_nguoi_dung`
+                        FOREIGN KEY (`ma_nguoi_dung`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`)
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+                    CONSTRAINT `kn_hoan_nhan_vien`
+                        FOREIGN KEY (`ma_nhan_vien_xu_ly`) REFERENCES `hgb_nguoi_dung`(`ma_nguoi_dung`)
+                        ON DELETE SET NULL ON UPDATE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+        } catch (PDOException $e) {
+            error_log('[lnkt] ensureReturnSchema: ' . $e->getMessage());
         }
     }
 
@@ -1328,6 +1372,7 @@ class OrderModel extends Model {
             $stmt = $this->db->prepare("
                 SELECT dh.*,
                        nv.ho_va_ten AS nhan_vien_phu_trach,
+                       kh.thu_dien_tu AS khach_hang_email,
                        kh.diem_tich_luy AS khach_hang_diem,
                        COALESCE(h.ten_hang, 'Đồng (Bronze)') AS khach_hang_hang,
                        COALESCE(h.phan_tram_giam_gia, 0) AS khach_hang_giam_gia
@@ -1376,6 +1421,7 @@ class OrderModel extends Model {
             unset($it);
 
             $order['items'] = $items;
+            $order['return_request'] = $this->getReturnRequestByOrderId($orderId);
             return $this->hydrateOrderPaymentMeta($order);
         } catch (PDOException $e) {
             error_log('[lnkt] getOrderById: ' . $e->getMessage());
@@ -1754,6 +1800,7 @@ class OrderModel extends Model {
             'low_stock_products' => [],
             'recent_orders'      => [],
             'status_counts'      => $this->getOrderStatusCounts(),
+            'return_counts'      => $this->getReturnStatusCounts(),
             'revenue_7_days'     => [],
             'category_breakdown' => [],
         ];
@@ -1843,5 +1890,372 @@ class OrderModel extends Model {
         }
 
         return $data;
+    }
+
+    /**
+     * Siêu dữ liệu hiển thị cho 5 trạng thái Yêu cầu Hoàn hàng / Trả hàng (lnkt_yeu_cau_hoan_hang)
+     */
+    public function getReturnStatusMeta(string $status): array {
+        $s = strtolower(trim($status));
+        $map = [
+            'cho_duyet_hoan' => [
+                'code'        => 'cho_duyet_hoan',
+                'step'        => 1,
+                'label'       => 'Chờ duyệt hoàn hàng',
+                'badge_class' => 'badge-gold',
+                'icon'        => 'fa-hourglass-half',
+                'description' => 'Shop đã tiếp nhận yêu cầu hoàn trả của ba mẹ và đang kiểm tra minh chứng.'
+            ],
+            'da_duyet_hoan' => [
+                'code'        => 'da_duyet_hoan',
+                'step'        => 2,
+                'label'       => 'Đã duyệt hoàn hàng',
+                'badge_class' => 'badge-sky',
+                'icon'        => 'fa-circle-check',
+                'description' => 'Yêu cầu hợp lệ — FashionKids đang sắp xếp bưu tá đến thu hồi đơn hàng.'
+            ],
+            'dang_thu_hoi' => [
+                'code'        => 'dang_thu_hoi',
+                'step'        => 3,
+                'label'       => 'Đang thu hồi hàng',
+                'badge_class' => 'badge-sky',
+                'icon'        => 'fa-truck-arrow-right',
+                'description' => 'Bưu tá đang đến nhận hoặc đang vận chuyển kiện hàng hoàn về kho FashionKids.'
+            ],
+            'hoan_tat_hoan' => [
+                'code'        => 'hoan_tat_hoan',
+                'step'        => 4,
+                'label'       => 'Đã hoàn tiền & Nhập kho',
+                'badge_class' => 'badge-mint',
+                'icon'        => 'fa-hand-holding-dollar',
+                'description' => 'Đã nhập lại kho, hoàn tiền cho ba mẹ và điều chỉnh điểm VIP tương ứng.'
+            ],
+            'tu_choi_hoan' => [
+                'code'        => 'tu_choi_hoan',
+                'step'        => 0,
+                'label'       => 'Từ chối hoàn hàng',
+                'badge_class' => 'badge-danger',
+                'icon'        => 'fa-circle-xmark',
+                'description' => 'Yêu cầu hoàn hàng không đáp ứng điều kiện chính sách đổi trả của FashionKids.'
+            ],
+        ];
+        return $map[$s] ?? $map['cho_duyet_hoan'];
+    }
+
+    private function hydrateReturnRow(array $row): array {
+        $rawImgs = trim((string)($row['hinh_anh_minh_chung'] ?? ''));
+        $imgs = [];
+        if ($rawImgs !== '') {
+            $decoded = json_decode($rawImgs, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $p) {
+                    $pt = trim((string)$p);
+                    if ($pt !== '') {
+                        if (strpos($pt, '/') === false) {
+                            $pt = '/FashionKids/public/uploads/returns/' . $pt;
+                        }
+                        $imgs[] = $pt;
+                    }
+                }
+            } else {
+                foreach (explode(',', $rawImgs) as $p) {
+                    $pt = trim((string)$p);
+                    if ($pt !== '') {
+                        if (strpos($pt, '/') === false) {
+                            $pt = '/FashionKids/public/uploads/returns/' . $pt;
+                        }
+                        $imgs[] = $pt;
+                    }
+                }
+            }
+        }
+
+        $rid = (int)($row['ma_hoan_hang'] ?? 0);
+        $oid = (int)($row['ma_don_hang'] ?? 0);
+        $refundAmt = (float)($row['so_tien_hoan'] ?? 0);
+        $statusKey = (string)($row['trang_thai_hoan'] ?? 'cho_duyet_hoan');
+
+        $row['ma_hoan_hang']             = $rid;
+        $row['ma_hoan_code']             = 'FK-RET-' . str_pad((string)$rid, 5, '0', STR_PAD_LEFT);
+        $row['ma_don_hang']              = $oid;
+        $row['ma_van_don']               = $this->formatTrackingCode($oid);
+        $row['so_tien_hoan']             = $refundAmt;
+        $row['so_tien_hoan_formatted']   = number_format($refundAmt, 0, ',', '.') . ' đ';
+        $row['hinh_anh_list']            = $imgs;
+        $row['trang_thai_hoan']          = $statusKey;
+        $row['status_meta']              = $this->getReturnStatusMeta($statusKey);
+        $row['ngay_yeu_cau_formatted']   = !empty($row['ngay_yeu_cau']) ? date('d/m/Y H:i', strtotime((string)$row['ngay_yeu_cau'])) : '--:--';
+        $row['ngay_cap_nhat_formatted']  = !empty($row['ngay_cap_nhat']) ? date('d/m/Y H:i', strtotime((string)$row['ngay_cap_nhat'])) : $row['ngay_yeu_cau_formatted'];
+
+        return $row;
+    }
+
+    /**
+     * Lấy yêu cầu hoàn hàng (nếu có) theo Mã đơn hàng
+     */
+    public function getReturnRequestByOrderId(int $orderId): ?array {
+        if (!$this->hasConnection() || $orderId <= 0) {
+            return null;
+        }
+        try {
+            $stmt = $this->db->prepare("
+                SELECT hh.*,
+                       nv.ho_va_ten AS nhan_vien_xu_ly_ten,
+                       kh.ho_va_ten AS khach_hang_ten,
+                       kh.so_dien_thoai AS khach_hang_sdt,
+                       dh.ten_nguoi_nhan,
+                       dh.so_dien_thoai_nhan,
+                       dh.tong_tien_thanh_toan,
+                       dh.ngay_dat_hang
+                FROM lnkt_yeu_cau_hoan_hang hh
+                LEFT JOIN hgb_nguoi_dung nv ON hh.ma_nhan_vien_xu_ly = nv.ma_nguoi_dung
+                LEFT JOIN hgb_nguoi_dung kh ON hh.ma_nguoi_dung = kh.ma_nguoi_dung
+                LEFT JOIN lnkt_don_hang dh ON hh.ma_don_hang = dh.ma_don_hang
+                WHERE hh.ma_don_hang = :oid
+                LIMIT 1
+            ");
+            $stmt->execute([':oid' => $orderId]);
+            $row = $stmt->fetch();
+            $stmt->closeCursor();
+            return $row ? $this->hydrateReturnRow($row) : null;
+        } catch (PDOException $e) {
+            error_log('[lnkt] getReturnRequestByOrderId: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Lấy chi tiết 1 yêu cầu hoàn hàng theo ID yêu cầu
+     */
+    public function getReturnRequestById(int $returnId): ?array {
+        if (!$this->hasConnection() || $returnId <= 0) {
+            return null;
+        }
+        try {
+            $stmt = $this->db->prepare("
+                SELECT hh.*,
+                       nv.ho_va_ten AS nhan_vien_xu_ly_ten,
+                       kh.ho_va_ten AS khach_hang_ten,
+                       kh.so_dien_thoai AS khach_hang_sdt,
+                       dh.ten_nguoi_nhan,
+                       dh.so_dien_thoai_nhan,
+                       dh.tong_tien_thanh_toan,
+                       dh.ngay_dat_hang
+                FROM lnkt_yeu_cau_hoan_hang hh
+                LEFT JOIN hgb_nguoi_dung nv ON hh.ma_nhan_vien_xu_ly = nv.ma_nguoi_dung
+                LEFT JOIN hgb_nguoi_dung kh ON hh.ma_nguoi_dung = kh.ma_nguoi_dung
+                LEFT JOIN lnkt_don_hang dh ON hh.ma_don_hang = dh.ma_don_hang
+                WHERE hh.ma_hoan_hang = :rid
+                LIMIT 1
+            ");
+            $stmt->execute([':rid' => $returnId]);
+            $row = $stmt->fetch();
+            $stmt->closeCursor();
+            return $row ? $this->hydrateReturnRow($row) : null;
+        } catch (PDOException $e) {
+            error_log('[lnkt] getReturnRequestById: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Tạo yêu cầu hoàn hàng qua Stored Procedure sp_lnkt_tao_yeu_cau_hoan_hang
+     */
+    public function createReturnRequest(
+        int $orderId,
+        int $userId,
+        string $reason,
+        string $description,
+        array $imagePaths,
+        string $bankInfo
+    ): array {
+        if (!$this->hasConnection()) {
+            throw new RuntimeException('Chưa kết nối cơ sở dữ liệu.');
+        }
+
+        $encodedImages = !empty($imagePaths)
+            ? json_encode(array_values($imagePaths), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            : '';
+
+        try {
+            $stmt = $this->db->prepare("
+                CALL sp_lnkt_tao_yeu_cau_hoan_hang(:oid, :uid, :reason, :descr, :imgs, :bank, @new_return_id)
+            ");
+            $stmt->execute([
+                ':oid'    => $orderId,
+                ':uid'    => $userId,
+                ':reason' => trim($reason),
+                ':descr'  => trim($description),
+                ':imgs'   => $encodedImages,
+                ':bank'   => trim($bankInfo),
+            ]);
+            $stmt->closeCursor();
+
+            $outRow = $this->db->query("SELECT @new_return_id AS new_id")->fetch();
+            $newReturnId = (int)($outRow['new_id'] ?? 0);
+            $created = $this->getReturnRequestById($newReturnId) ?: $this->getReturnRequestByOrderId($orderId);
+            return $created ?? [];
+        } catch (PDOException $e) {
+            error_log('[lnkt] createReturnRequest: ' . $e->getMessage());
+            throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+        }
+    }
+
+    /**
+     * Lấy danh sách yêu cầu hoàn hàng / trả hàng cho Nhân viên & Admin
+     */
+    public function getAllReturnRequests(string $statusFilter = 'all', string $keyword = ''): array {
+        if (!$this->hasConnection()) {
+            return [];
+        }
+        try {
+            $sql = "
+                SELECT hh.*,
+                       nv.ho_va_ten AS nhan_vien_xu_ly_ten,
+                       kh.ho_va_ten AS khach_hang_ten,
+                       kh.so_dien_thoai AS khach_hang_sdt,
+                       dh.ten_nguoi_nhan,
+                       dh.so_dien_thoai_nhan,
+                       dh.tong_tien_thanh_toan,
+                       dh.ngay_dat_hang,
+                       COALESCE(GROUP_CONCAT(CONCAT(sp.ten_san_pham, ' (', ct.kich_co_chon, ' x', ct.so_luong, ')') SEPARATOR ' + '), 'Sản phẩm FashionKids') AS item_summary
+                FROM lnkt_yeu_cau_hoan_hang hh
+                LEFT JOIN hgb_nguoi_dung nv ON hh.ma_nhan_vien_xu_ly = nv.ma_nguoi_dung
+                LEFT JOIN hgb_nguoi_dung kh ON hh.ma_nguoi_dung = kh.ma_nguoi_dung
+                LEFT JOIN lnkt_don_hang dh ON hh.ma_don_hang = dh.ma_don_hang
+                LEFT JOIN tgb_chi_tiet_don_hang ct ON dh.ma_don_hang = ct.ma_don_hang
+                LEFT JOIN lbn_san_pham sp ON ct.ma_san_pham = sp.ma_san_pham
+                WHERE 1=1
+            ";
+            $params = [];
+            $cleanStatus = strtolower(trim($statusFilter));
+            if ($cleanStatus !== '' && $cleanStatus !== 'all' && in_array($cleanStatus, self::VALID_RETURN_STATUSES, true)) {
+                $sql .= " AND hh.trang_thai_hoan = :st";
+                $params[':st'] = $cleanStatus;
+            }
+            $kwClean = trim($keyword);
+            if ($kwClean !== '') {
+                $kw = '%' . $kwClean . '%';
+                $sql .= " AND (
+                    dh.ten_nguoi_nhan LIKE :kw1
+                    OR dh.so_dien_thoai_nhan LIKE :kw2
+                    OR kh.ho_va_ten LIKE :kw3
+                    OR hh.ly_do_hoan LIKE :kw4
+                    OR CAST(hh.ma_don_hang AS CHAR) LIKE :kw5
+                    OR CAST(hh.ma_hoan_hang AS CHAR) LIKE :kw6
+                )";
+                $params[':kw1'] = $kw;
+                $params[':kw2'] = $kw;
+                $params[':kw3'] = $kw;
+                $params[':kw4'] = $kw;
+                $params[':kw5'] = $kw;
+                $params[':kw6'] = $kw;
+            }
+            $sql .= " GROUP BY hh.ma_hoan_hang ORDER BY hh.ma_hoan_hang DESC LIMIT 100";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll();
+            $stmt->closeCursor();
+
+            foreach ($rows as &$r) {
+                $r = $this->hydrateReturnRow($r);
+            }
+            unset($r);
+            return $rows;
+        } catch (PDOException $e) {
+            error_log('[lnkt] getAllReturnRequests: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Đếm số lượng yêu cầu hoàn hàng theo từng trạng thái
+     */
+    public function getReturnStatusCounts(): array {
+        $counts = [
+            'all'            => 0,
+            'cho_duyet_hoan' => 0,
+            'da_duyet_hoan'  => 0,
+            'dang_thu_hoi'   => 0,
+            'hoan_tat_hoan'  => 0,
+            'tu_choi_hoan'   => 0,
+        ];
+        if (!$this->hasConnection()) {
+            return $counts;
+        }
+        try {
+            $rows = $this->db->query("SELECT trang_thai_hoan, COUNT(*) AS cnt FROM lnkt_yeu_cau_hoan_hang GROUP BY trang_thai_hoan")->fetchAll();
+            foreach ($rows as $r) {
+                $st  = strtolower(trim((string)$r['trang_thai_hoan']));
+                $cnt = (int)$r['cnt'];
+                if (isset($counts[$st])) {
+                    $counts[$st] += $cnt;
+                }
+                $counts['all'] += $cnt;
+            }
+        } catch (PDOException $e) {
+            error_log('[lnkt] getReturnStatusCounts: ' . $e->getMessage());
+        }
+        return $counts;
+    }
+
+    /**
+     * Xử lý hoàn hàng / trả hàng qua Stored Procedure sp_lnkt_xu_ly_hoan_hang
+     * - Khi đạt 'hoan_tat_hoan': hoàn tồn kho + trừ điểm VIP & tính lại hạng thẻ tự động (ACID).
+     */
+    public function processReturnRequest(int $returnId, int $staffId, string $newStatus, string $note = ''): array {
+        if (!$this->hasConnection()) {
+            throw new RuntimeException('Chưa kết nối cơ sở dữ liệu.');
+        }
+
+        $cleanStatus = strtolower(trim($newStatus));
+        if (!in_array($cleanStatus, ['da_duyet_hoan', 'dang_thu_hoi', 'hoan_tat_hoan', 'tu_choi_hoan'], true)) {
+            throw new InvalidArgumentException('Trạng thái xử lý hoàn hàng không hợp lệ!');
+        }
+
+        try {
+            $stmt = $this->db->prepare("CALL sp_lnkt_xu_ly_hoan_hang(:rid, :sid, :st, :note)");
+            $stmt->execute([
+                ':rid'  => $returnId,
+                ':sid'  => $staffId,
+                ':st'   => $cleanStatus,
+                ':note' => trim($note),
+            ]);
+            $stmt->closeCursor();
+        } catch (PDOException $e) {
+            error_log('[lnkt] processReturnRequest: ' . $e->getMessage());
+            throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+        }
+
+        unset($_SESSION['lbn_stock_overrides']);
+
+        $updated = $this->getReturnRequestById($returnId);
+        $uid = (int)($updated['ma_nguoi_dung'] ?? 0);
+        $customerPoints = null;
+        $customerTier = null;
+        if ($uid > 0) {
+            $uStmt = $this->db->prepare("
+                SELECT u.diem_tich_luy, COALESCE(h.ten_hang, 'Đồng (Bronze)') AS ten_hang
+                FROM hgb_nguoi_dung u
+                LEFT JOIN hgb_hang_thanh_vien h ON u.ma_hang_thanh_vien = h.ma_hang
+                WHERE u.ma_nguoi_dung = :uid LIMIT 1
+            ");
+            $uStmt->execute([':uid' => $uid]);
+            $uInfo = $uStmt->fetch();
+            $uStmt->closeCursor();
+            if ($uInfo) {
+                $customerPoints = (int)$uInfo['diem_tich_luy'];
+                $customerTier   = (string)$uInfo['ten_hang'];
+            }
+        }
+
+        return [
+            'return_request'  => $updated,
+            'counts'          => $this->getReturnStatusCounts(),
+            'customer_points' => $customerPoints,
+            'customer_tier'   => $customerTier,
+            'routine'         => 'sp_lnkt_xu_ly_hoan_hang',
+        ];
     }
 }

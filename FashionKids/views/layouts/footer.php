@@ -45,17 +45,17 @@ require_once __DIR__ . '/../../core/Rbac.php';
             <div class="col-12 col-md-4 mb-4">
                 <h6 class="font-weight-bold mb-3 text-slate">Tổng Đài Hỗ Trợ &amp; CSKH Trực Tuyến</h6>
                 <div class="p-3 footer-support-box mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                        <div class="min-w-0">
                             <div class="font-weight-bold text-slate h5 mb-0">1900 6868</div>
                             <small class="text-muted-custom">Hỗ trợ phụ huynh từ 8:00 - 21:00 (Cả T7 &amp; CN)</small>
                         </div>
                         <?php if (Rbac::isStaffOrAdmin()): ?>
-                            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach">
+                            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach text-nowrap flex-shrink-0">
                                 <i class="fa-solid fa-headset mr-1"></i>Bàn CSKH
                             </a>
                         <?php else: ?>
-                            <button type="button" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach" data-toggle="collapse" data-target="#customerChatWidget">
+                            <button type="button" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach text-nowrap flex-shrink-0" data-toggle="collapse" data-target="#customerChatWidget">
                                 <i class="fa-solid fa-comments mr-1"></i>Chat Ngay
                             </button>
                         <?php endif; ?>

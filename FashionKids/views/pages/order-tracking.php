@@ -12,7 +12,7 @@ if (!isset($trackedOrder)) {
     $trackedOrder = null;
 }
 
-$reqOrderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
+$reqOrderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
 $reqCode    = trim((string)($_GET['code'] ?? ''));
 
 if (!$trackedOrder) {
@@ -47,6 +47,8 @@ $statusKey        = $hasOrder ? (string)($trackedOrder['trang_thai_don_hang'] ??
 $statusMeta       = $hasOrder ? ($trackedOrder['status_meta'] ?? []) : ['label' => 'Chờ duyệt', 'badge_class' => 'badge-warning text-dark', 'icon' => 'fa-clock'];
 $isOwner          = ($hasOrder && $currentUid !== null && (int)($trackedOrder['ma_nguoi_dung'] ?? 0) === $currentUid);
 $canCancel        = ($isOwner && $statusKey === 'cho_duyet');
+$returnReq        = $hasOrder && !empty($trackedOrder['return_request']) && is_array($trackedOrder['return_request']) ? $trackedOrder['return_request'] : null;
+$canRequestReturn = ($hasOrder && $isOwner && $statusKey === 'hoan_tat' && empty($returnReq));
 $payMethod        = $hasOrder ? (string)($trackedOrder['phuong_thuc_thanh_toan'] ?? 'cod') : 'cod';
 $payStatus        = $hasOrder ? (string)($trackedOrder['trang_thai_thanh_toan'] ?? 'chua_thanh_toan') : 'chua_thanh_toan';
 $isPaid           = ($payStatus === 'da_thanh_toan');
@@ -98,8 +100,8 @@ foreach ($trackedItems as $ti) {
      data-payment-status="<?= htmlspecialchars($payStatus) ?>"
      data-is-expired="<?= $isExpired ? '1' : '0' ?>">
     <!-- Breadcrumb & Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+        <div class="min-w-0">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent p-0 mb-1 small">
                     <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
@@ -110,13 +112,13 @@ foreach ($trackedItems as $ti) {
                 <i class="fa-solid fa-truck-fast text-peach mr-2"></i>Theo Dõi Tiến Trình Đơn Hàng Trực Tuyến
             </h3>
         </div>
-        <div class="mt-2 mt-md-0">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap fk-btn-toolbar">
             <?php if ($isStaffOrAdmin): ?>
-                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-outline btn-sm font-weight-bold mr-2">
+                <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-pastel-outline btn-sm font-weight-bold text-nowrap">
                     <i class="fa-solid fa-user-gear mr-1"></i> Quản Lý Đơn Hàng
                 </a>
             <?php endif; ?>
-            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary btn-sm font-weight-bold">
+            <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary btn-sm font-weight-bold text-nowrap">
                 <i class="fa-solid fa-store mr-1"></i> Tiếp Tục Mua Sắm
             </a>
         </div>
@@ -191,8 +193,8 @@ foreach ($trackedItems as $ti) {
          ==================================================================== -->
     <div id="lnkt_trackingContentWrap" class="<?= $hasOrder ? '' : 'd-none' ?>">
         <div class="card card-pastel p-4 p-md-5 mb-4 shadow-sm">
-            <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-4 border-bottom">
-                <div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pb-3 mb-4 border-bottom">
+                <div class="min-w-0">
                     <span class="small text-muted-custom font-weight-bold text-uppercase">Mã Vận Đơn Điện Tử:</span>
                     <h4 class="font-weight-bold text-slate mb-0 d-inline-block ml-1" id="lnkt_displayOrderCode">
                         <?= $hasOrder ? ('#' . htmlspecialchars($orderCode)) : '' ?>
@@ -208,8 +210,8 @@ foreach ($trackedItems as $ti) {
                     </div>
                 </div>
 
-                <div class="mt-3 mt-md-0 text-md-right">
-                    <span id="lnkt_currentStatusBadge" class="badge <?= htmlspecialchars($statusMeta['badge_class'] ?? 'badge-warning text-dark') ?> px-3 py-2 rounded-pill h6 mb-1">
+                <div class="mt-2 mt-md-0 text-md-right flex-shrink-0">
+                    <span id="lnkt_currentStatusBadge" class="badge <?= htmlspecialchars($statusMeta['badge_class'] ?? 'badge-warning text-dark') ?> px-3 py-2 rounded-pill h6 mb-1 text-nowrap">
                         <i class="fa-solid <?= htmlspecialchars($statusMeta['icon'] ?? 'fa-clock') ?> mr-1"></i>
                         Trạng thái: <?= htmlspecialchars($statusMeta['label'] ?? 'Chờ duyệt') ?>
                     </span>
@@ -218,7 +220,7 @@ foreach ($trackedItems as $ti) {
                     </div>
                     <div class="mt-2 <?= $canCancel ? '' : 'd-none' ?>" id="lnkt_ownerCancelBar">
                         <button type="button" id="lnkt_btnCancelMyOrder"
-                                class="btn btn-outline-danger btn-sm rounded-pill px-3 font-weight-bold"
+                                class="btn btn-outline-danger btn-sm rounded-pill px-3 font-weight-bold text-nowrap"
                                 onclick="lnktCancelMyOrder(<?= $orderId ?>)">
                             <i class="fa-solid fa-ban mr-1"></i> Hủy Đơn Hàng
                         </button>
@@ -246,7 +248,7 @@ foreach ($trackedItems as $ti) {
                         <small class="lnkt-stepper-desc text-muted-custom d-block">
                             <?= htmlspecialchars($step['desc']) ?>
                         </small>
-                        <span class="badge badge-light border mt-1 small lnkt-stepper-time" id="lnkt_stepTime_<?= $step['key'] ?>">
+                        <span class="badge badge-light border mt-1 small lnkt-stepper-time text-nowrap" id="lnkt_stepTime_<?= $step['key'] ?>">
                             <?= htmlspecialchars($stepTime) ?>
                         </span>
                     </div>
@@ -267,12 +269,12 @@ foreach ($trackedItems as $ti) {
                             <span class="fk-live-pulse-dot mr-1"></span>Tự động kiểm tra Casso mỗi 5 giây
                         </small>
                     </div>
-                    <div class="col-12 col-md-8">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-                            <span class="badge badge-pill badge-sky px-3 py-1 font-weight-bold mb-1">
+                    <div class="col-12 col-md-8 min-w-0">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
+                            <span class="badge badge-pill badge-sky px-3 py-1 font-weight-bold mb-1 text-nowrap">
                                 <i class="fa-solid fa-qrcode mr-1"></i>VietQR Napas 247 • <?= htmlspecialchars($bankName) ?>
                             </span>
-                            <span id="lnkt_vietQrCountdownWrap" class="badge badge-pill badge-warning text-dark px-3 py-1 font-weight-bold mb-1">
+                            <span id="lnkt_vietQrCountdownWrap" class="badge badge-pill badge-warning text-dark px-3 py-1 font-weight-bold mb-1 text-nowrap">
                                 <i class="fa-regular fa-clock mr-1"></i>Thời hạn TT 24h còn: <span id="lnkt_qrCountdown">24:00:00</span>
                             </span>
                         </div>
@@ -428,15 +430,120 @@ foreach ($trackedItems as $ti) {
                             Đơn hàng đã giao thành công. Hãy chia sẻ cảm nhận về chất liệu vải sợi tre cho từng sản phẩm ở bảng bên dưới nhé!
                         </p>
                     </div>
-                    <div class="col-12 col-lg-4 text-lg-right" id="lnkt_bannerReviewBtnWrap">
-                        <?php if ($statusKey === 'hoan_tat' && $isOwner && $firstPendingReviewItem): ?>
+                    <div class="col-12 col-lg-4 text-lg-right">
+                        <div class="d-flex flex-wrap justify-content-lg-end align-items-center fk-btn-toolbar">
+                            <span id="lnkt_bannerReviewBtnWrap">
+                                <?php if ($statusKey === 'hoan_tat' && $isOwner && $firstPendingReviewItem): ?>
+                                    <button type="button"
+                                            class="btn lnkt-btn-buttercup px-4 py-2 shadow-sm font-weight-bold"
+                                            data-toggle="modal" data-target="#modalReview"
+                                            onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($firstPendingReviewItem['ten_san_pham'], ENT_QUOTES) ?>', <?= (int)$firstPendingReviewItem['ma_san_pham'] ?>, <?= $orderId ?>)">
+                                        &#9733; Viết đánh giá sản phẩm
+                                    </button>
+                                <?php endif; ?>
+                            </span>
                             <button type="button"
-                                    class="btn lnkt-btn-buttercup px-4 py-2 shadow-sm font-weight-bold"
-                                    data-toggle="modal" data-target="#modalReview"
-                                    onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($firstPendingReviewItem['ten_san_pham'], ENT_QUOTES) ?>', <?= (int)$firstPendingReviewItem['ma_san_pham'] ?>, <?= $orderId ?>)">
-                                &#9733; Viết đánh giá sản phẩm
+                                    id="lnkt_btnOpenReturnModal"
+                                    class="btn btn-outline-danger rounded-pill px-3 py-2 font-weight-bold text-nowrap <?= $canRequestReturn ? '' : 'd-none' ?>"
+                                    onclick="lnktOpenReturnRequestModal(<?= $orderId ?>, '<?= htmlspecialchars($orderCode, ENT_QUOTES) ?>', '<?= number_format($orderTotal, 0, ',', '.') ?> đ')">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Yêu cầu hoàn hàng / Trả hàng
                             </button>
-                        <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KHUNG THEO DÕI TIẾN TRÌNH HOÀN HÀNG / TRẢ HÀNG -->
+            <?php
+                $retStatusKey  = $returnReq ? (string)($returnReq['trang_thai_hoan'] ?? 'cho_duyet_hoan') : 'cho_duyet_hoan';
+                $retStatusMeta = $returnReq ? ($returnReq['status_meta'] ?? []) : ['label' => 'Chờ duyệt hoàn hàng', 'badge_class' => 'badge-gold', 'icon' => 'fa-hourglass-half'];
+                $retStepOrder  = ['cho_duyet_hoan' => 1, 'da_duyet_hoan' => 2, 'dang_thu_hoi' => 3, 'hoan_tat_hoan' => 4];
+                $retCurrentNum = $retStepOrder[$retStatusKey] ?? 0;
+                $retImgs       = ($returnReq && is_array($returnReq['hinh_anh_list'] ?? null)) ? $returnReq['hinh_anh_list'] : [];
+                $retExecNote   = $returnReq ? trim((string)($returnReq['ghi_chu_xu_ly'] ?? '')) : '';
+            ?>
+            <div id="lnkt_returnProgressCard"
+                 data-return-status="<?= htmlspecialchars($returnReq ? $retStatusKey : '') ?>"
+                 class="mt-4 p-4 rounded lnkt-return-card shadow-sm <?= $returnReq ? '' : 'd-none' ?>">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row pb-3 mb-3 border-bottom">
+                    <div>
+                        <span class="small font-weight-bold text-muted-custom text-uppercase">Yêu cầu hoàn trả:</span>
+                        <h5 class="font-weight-bold text-slate d-inline-block ml-1 mb-0" id="lnkt_retDisplayCode">
+                            <?= $returnReq ? ('#' . htmlspecialchars((string)$returnReq['ma_hoan_code'])) : '' ?>
+                        </h5>
+                        <small class="d-block text-muted-custom mt-1" id="lnkt_retTimeMeta">
+                            <?= $returnReq ? ('Gửi lúc: ' . htmlspecialchars((string)$returnReq['ngay_yeu_cau_formatted']) . ' • Cập nhật: ' . htmlspecialchars((string)$returnReq['ngay_cap_nhat_formatted'])) : '' ?>
+                        </small>
+                    </div>
+                    <span id="lnkt_retStatusBadge" class="badge badge-pill <?= htmlspecialchars((string)($retStatusMeta['badge_class'] ?? 'badge-gold')) ?> px-3 py-2 text-nowrap">
+                        <i class="fa-solid <?= htmlspecialchars((string)($retStatusMeta['icon'] ?? 'fa-hourglass-half')) ?> mr-1"></i>
+                        <?= htmlspecialchars((string)($retStatusMeta['label'] ?? 'Chờ duyệt hoàn hàng')) ?>
+                    </span>
+                </div>
+
+                <!-- Stepper 4 bước hoàn hàng -->
+                <div id="lnkt_retStepperWrap" class="lnkt-return-stepper mb-3 <?= ($retStatusKey === 'tu_choi_hoan') ? 'd-none' : '' ?>">
+                    <?php
+                    $retFlow = [
+                        'cho_duyet_hoan' => ['label' => '1. Chờ duyệt hoàn', 'icon' => 'fa-hourglass-half'],
+                        'da_duyet_hoan'  => ['label' => '2. Đã duyệt hoàn',  'icon' => 'fa-circle-check'],
+                        'dang_thu_hoi'   => ['label' => '3. Đang thu hồi',   'icon' => 'fa-truck-arrow-right'],
+                        'hoan_tat_hoan'  => ['label' => '4. Hoàn tiền & Kho', 'icon' => 'fa-hand-holding-dollar'],
+                    ];
+                    foreach ($retFlow as $rk => $rInfo):
+                        $rNum = $retStepOrder[$rk];
+                        $rCls = '';
+                        if ($retCurrentNum > 0) {
+                            if ($rNum < $retCurrentNum) {
+                                $rCls = 'done';
+                            } elseif ($rNum === $retCurrentNum) {
+                                $rCls = ($retStatusKey === 'hoan_tat_hoan') ? 'done active' : 'active';
+                            }
+                        }
+                    ?>
+                        <div class="lnkt-return-step <?= $rCls ?>" data-ret-step="<?= $rk ?>">
+                            <div class="lnkt-return-step-dot"><i class="fa-solid <?= $rInfo['icon'] ?>"></i></div>
+                            <div class="small font-weight-bold text-slate mt-2"><?= htmlspecialchars($rInfo['label']) ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Box thông báo khi bị từ chối hoàn hàng -->
+                <div id="lnkt_retRejectBox" class="p-3 rounded lnkt-return-reject-box mb-3 <?= ($retStatusKey === 'tu_choi_hoan') ? '' : 'd-none' ?>">
+                    <div class="font-weight-bold mb-1">
+                        <i class="fa-solid fa-circle-xmark mr-1"></i>Yêu cầu hoàn hàng đã bị từ chối
+                    </div>
+                    <div class="small" id="lnkt_retRejectNoteText">
+                        <?= $retExecNote !== '' ? htmlspecialchars($retExecNote) : 'Yêu cầu chưa đáp ứng điều kiện chính sách đổi trả của FashionKids.' ?>
+                    </div>
+                </div>
+
+                <div class="row small bg-milk-cream p-3 rounded border mx-0">
+                    <div class="col-12 col-md-6 mb-2">
+                        <span class="text-muted-custom">Lý do hoàn trả:</span>
+                        <strong class="text-slate d-block" id="lnkt_retReasonText"><?= $returnReq ? htmlspecialchars((string)$returnReq['ly_do_hoan']) : '' ?></strong>
+                    </div>
+                    <div class="col-12 col-md-6 mb-2">
+                        <span class="text-muted-custom">Hoàn tiền về TK / Ví:</span>
+                        <strong class="text-slate d-block" id="lnkt_retBankText">
+                            <?= $returnReq ? htmlspecialchars((string)($returnReq['thong_tin_nhan_tien'] ?? '')) : '' ?>
+                            (<span id="lnkt_retAmountText" class="text-peach"><?= $returnReq ? htmlspecialchars((string)$returnReq['so_tien_hoan_formatted']) : '0 đ' ?></span>)
+                        </strong>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <span class="text-muted-custom">Mô tả tình trạng thực tế:</span>
+                        <span class="text-slate d-block" id="lnkt_retDescText"><?= $returnReq ? htmlspecialchars((string)($returnReq['mo_ta_chi_tiet'] ?? '')) : '' ?></span>
+                    </div>
+                    <div class="col-12 <?= !empty($retImgs) ? '' : 'd-none' ?>" id="lnkt_retEvidenceRow">
+                        <span class="text-muted-custom d-block mb-1">Ảnh minh chứng đã tải lên:</span>
+                        <div class="d-flex flex-wrap fk-btn-toolbar" id="lnkt_retEvidenceThumbs">
+                            <?php foreach ($retImgs as $rImg): ?>
+                                <img src="<?= htmlspecialchars((string)$rImg) ?>"
+                                     alt="Minh chứng hoàn hàng"
+                                     class="lnkt-return-thumb"
+                                     onclick="lnktOpenReturnLightbox('<?= htmlspecialchars((string)$rImg, ENT_QUOTES) ?>')">
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -448,11 +555,11 @@ foreach ($trackedItems as $ti) {
         <div class="row">
             <div class="col-12 col-lg-8 mb-4">
                 <div class="card card-pastel shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-bold text-slate mb-0">
+                    <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center fk-card-header-row">
+                        <h6 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                             <i class="fa-solid fa-box-archive text-peach mr-2"></i>Chi Tiết Sản Phẩm Trong Đơn
                         </h6>
-                        <span class="small text-muted-custom font-weight-bold" id="lnkt_trackedItemsCountLabel"><?= count($trackedItems) ?> sản phẩm</span>
+                        <span class="small text-muted-custom font-weight-bold text-nowrap flex-shrink-0" id="lnkt_trackedItemsCountLabel"><?= count($trackedItems) ?> sản phẩm</span>
                     </div>
 
                     <div class="card-body p-0">
@@ -481,17 +588,17 @@ foreach ($trackedItems as $ti) {
                                                     <span class="lbn-inv-thumb mr-3 flex-shrink-0">
                                                         <img src="<?= htmlspecialchars((string)$item['image']) ?>" alt="<?= htmlspecialchars((string)$item['ten_san_pham']) ?>" class="lbn-thumb-img">
                                                     </span>
-                                                    <div>
+                                                    <div class="min-w-0">
                                                         <a href="/FashionKids/views/pages/product-detail.php?id=<?= $pid ?>"
                                                            class="font-weight-bold text-slate text-decoration-none d-block">
                                                             <?= htmlspecialchars((string)$item['ten_san_pham']) ?>
                                                         </a>
-                                                        <small class="text-muted-custom">Đơn giá: <strong class="text-slate"><?= number_format($unitP, 0, ',', '.') ?> đ</strong></small>
+                                                        <small class="text-muted-custom">Đơn giá: <strong class="text-slate text-nowrap"><?= number_format($unitP, 0, ',', '.') ?> đ</strong></small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-center">
-                                                <span class="badge badge-pill badge-sky px-2 py-1"><?= htmlspecialchars((string)$item['kich_co_chon']) ?></span>
+                                            <td class="text-center text-nowrap">
+                                                <span class="badge badge-pill badge-sky px-2 py-1 text-nowrap"><?= htmlspecialchars((string)$item['kich_co_chon']) ?></span>
                                             </td>
                                             <td class="text-center font-weight-bold">x<?= $qty ?></td>
                                             <td class="text-right font-weight-bold text-peach text-nowrap">
@@ -535,43 +642,43 @@ foreach ($trackedItems as $ti) {
                         <i class="fa-solid fa-receipt text-peach mr-2"></i>Tóm Tắt Thanh Toán Đơn Hàng
                     </h6>
 
-                    <div class="d-flex justify-content-between small mb-2">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
                         <span class="text-muted-custom">Tiền hàng tạm tính:</span>
-                        <span class="font-weight-bold text-slate" id="lnkt_sumSubtotal"><?= number_format($orderSubtotal, 0, ',', '.') ?> đ</span>
+                        <span class="font-weight-bold text-slate text-right text-nowrap" id="lnkt_sumSubtotal"><?= number_format($orderSubtotal, 0, ',', '.') ?> đ</span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-2">
-                        <span class="text-muted-custom" id="lnkt_sumVipLabel">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
+                        <span class="text-muted-custom min-w-0" id="lnkt_sumVipLabel">
                             Ưu đãi VIP (<?= htmlspecialchars((string)($trackedOrder['khach_hang_hang'] ?? $trackedOrder['ten_hang'] ?? 'Thành viên')) ?>):
                         </span>
-                        <span class="font-weight-bold text-success" id="lnkt_sumDiscount">
+                        <span class="font-weight-bold text-success text-right text-nowrap flex-shrink-0" id="lnkt_sumDiscount">
                             <?= $orderDiscount > 0 ? ('-' . number_format($orderDiscount, 0, ',', '.') . ' đ') : '0 đ' ?>
                         </span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-2">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
                         <span class="text-muted-custom">Phí vận chuyển:</span>
-                        <span class="badge badge-mint px-2 py-0 rounded-pill">Miễn phí (0 đ)</span>
+                        <span class="badge badge-mint px-2 py-1 rounded-pill text-nowrap flex-shrink-0">Miễn phí (0 đ)</span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-2">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
                         <span class="text-muted-custom">Phương thức thanh toán:</span>
-                        <span class="font-weight-bold text-slate" id="lnkt_sumPaymentMethod">
+                        <span class="font-weight-bold text-slate text-right" id="lnkt_sumPaymentMethod">
                             <?= $payMethod === 'vietqr' ? 'Chuyển khoản VietQR MB Bank' : 'Thanh toán khi nhận hàng (COD)' ?>
                         </span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-2">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-2">
                         <span class="text-muted-custom">Trạng thái thanh toán:</span>
-                        <span id="lnkt_sumPaymentStatus" class="font-weight-bold <?= $isPaid ? 'text-success' : ($isCancelledExp ? 'text-danger' : 'text-warning') ?>">
+                        <span id="lnkt_sumPaymentStatus" class="font-weight-bold text-right <?= $isPaid ? 'text-success' : ($isCancelledExp ? 'text-danger' : 'text-warning') ?>">
                             <?= $isPaid ? 'Đã thanh toán' : ($isCancelledExp ? 'Quá hạn 24h (Đã hủy)' : ($payMethod === 'vietqr' ? 'Chờ chuyển khoản' : 'Thanh toán khi giao')) ?>
                         </span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-3 pb-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row small mb-3 pb-2 border-bottom">
                         <span class="text-muted-custom">Cần trả bưu tá khi giao:</span>
-                        <strong id="lnkt_sumCodCollect" class="<?= $codCollectAmt <= 0 ? 'text-success' : 'text-peach' ?>">
+                        <strong id="lnkt_sumCodCollect" class="text-right text-nowrap <?= $codCollectAmt <= 0 ? 'text-success' : 'text-peach' ?>">
                             <?= number_format($codCollectAmt, 0, ',', '.') ?> đồng
                         </strong>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center fk-card-header-row mb-3">
                         <span class="font-weight-bold text-slate">Tổng thanh toán:</span>
-                        <span class="h5 font-weight-bold text-peach mb-0" id="lnkt_sumTotal"><?= number_format($orderTotal, 0, ',', '.') ?> đ</span>
+                        <span class="h5 font-weight-bold text-peach mb-0 text-right text-nowrap" id="lnkt_sumTotal"><?= number_format($orderTotal, 0, ',', '.') ?> đ</span>
                     </div>
 
                     <div class="p-3 rounded bg-milk-cream border small text-slate mt-auto">
@@ -599,5 +706,28 @@ foreach ($trackedItems as $ti) {
 if (file_exists(__DIR__ . "/../modals/modal-review.php")) {
     require_once __DIR__ . "/../modals/modal-review.php";
 }
+if (file_exists(__DIR__ . "/../modals/modal-return-request.php")) {
+    require_once __DIR__ . "/../modals/modal-return-request.php";
+}
+?>
+<!-- Modal Lightbox Xem Ảnh Minh Chứng Hoàn Hàng -->
+<div class="modal fade" id="modalReturnImagePreview" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0 rounded-lg shadow-lg bg-white">
+            <div class="modal-header border-0 py-2">
+                <h6 class="modal-title font-weight-bold text-slate">
+                    <i class="fa-regular fa-image text-peach mr-2"></i>Ảnh Minh Chứng Hoàn Hàng
+                </h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img id="lnkt_returnLightboxImg" src="" alt="Ảnh minh chứng hoàn hàng" class="lnkt-lightbox-img">
+            </div>
+        </div>
+    </div>
+</div>
+<?php
 require_once __DIR__ . "/../layouts/footer.php";
 ?>

@@ -130,20 +130,68 @@ body {
     border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 .brand-logo {
-    font-size: 1.55rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--primary-peach);
     letter-spacing: -0.5px;
+    white-space: nowrap;
 }
-.search-input-custom {
-    border-radius: var(--btn-radius) 0 0 var(--btn-radius);
-    border-right: none;
+.fk-search-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch;
+    width: 100%;
+    background-color: #ffffff;
+    border: 1.5px solid #DCE4EC;
+    border-radius: var(--btn-radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.search-btn-custom {
-    border-radius: 0 var(--btn-radius) var(--btn-radius) 0;
-    border-left: none;
+.fk-search-group:focus-within {
+    border-color: var(--primary-peach);
+    box-shadow: 0 0 0 3px rgba(255, 158, 147, 0.22);
+}
+.fk-search-group .search-input-custom {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: 1% !important;
+    height: 38px;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 6px 10px 6px 16px;
+    font-size: 0.9rem;
+    color: var(--text-slate);
+    text-overflow: ellipsis;
+}
+.fk-search-group .search-input-custom::placeholder {
+    color: #94A3B8;
+}
+.fk-search-group .fk-search-append {
+    display: flex;
+    flex: 0 0 auto;
+    margin-left: 0 !important;
+}
+.fk-search-group .search-btn-custom {
+    border: none !important;
+    border-left: 1px solid #EDF2F7 !important;
+    border-radius: 0 !important;
     background-color: #ffffff;
     color: var(--primary-peach);
+    height: 38px;
+    padding: 0 14px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.fk-search-group .search-btn-custom:hover,
+.fk-search-group .search-btn-custom:focus {
+    background-color: #FFF5F4;
+    color: var(--primary-peach-hover);
+    box-shadow: none;
 }
 .cart-badge-custom {
     background-color: var(--primary-peach);
@@ -156,24 +204,82 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 .fk-nav-search {
-    flex: 1 1 260px;
-    max-width: 390px;
+    width: 100%;
+    flex: 1 1 100%;
+    max-width: none;
 }
 .fk-nav-link {
     white-space: nowrap;
-    font-size: 0.94rem;
+    font-size: 0.92rem;
 }
 .fk-btn-cart,
 .fk-btn-user {
     white-space: nowrap;
 }
 .fk-user-name-truncate {
-    max-width: 150px;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: inline-block;
     vertical-align: middle;
+}
+@media (min-width: 992px) {
+    .navbar-custom .navbar-collapse {
+        min-width: 0;
+    }
+    .fk-nav-search {
+        flex: 1 1 200px;
+        min-width: 170px;
+        max-width: 340px;
+        width: auto;
+    }
+}
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .fk-navbar-container {
+        max-width: 100%;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+    .navbar-custom .brand-logo {
+        font-size: 1.2rem;
+    }
+    .navbar-custom .fk-brand-logo {
+        width: 32px;
+        height: 32px;
+    }
+    .fk-nav-search {
+        flex: 1 1 175px;
+        min-width: 170px;
+        max-width: 270px;
+    }
+    .fk-search-group .search-input-custom {
+        padding: 6px 8px 6px 12px;
+        font-size: 0.85rem;
+    }
+    .fk-search-group .search-btn-custom {
+        padding: 0 10px !important;
+    }
+    .fk-nav-link {
+        font-size: 0.84rem;
+        padding-left: 0.34rem !important;
+        padding-right: 0.34rem !important;
+    }
+    .fk-btn-cart,
+    .fk-btn-user {
+        padding: 0.34rem 0.58rem !important;
+        font-size: 0.82rem;
+    }
+    .fk-user-name-truncate {
+        max-width: 66px;
+    }
+}
+@media (min-width: 1200px) {
+    .fk-nav-search {
+        flex: 1 1 240px;
+        min-width: 210px;
+        max-width: 360px;
+    }
 }
 .star-picker-group .star-picker-item {
     font-size: 1.75rem;
@@ -199,11 +305,22 @@ body {
     font-weight: 700;
     font-size: 0.9rem;
     padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1.35;
 }
 .nav-pills-custom .nav-link.active {
     background-color: var(--primary-peach);
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(255, 158, 147, 0.35);
+}
+@media (max-width: 575.98px) {
+    .nav-pills-custom .nav-link {
+        padding: 8px 12px;
+        font-size: 0.84rem;
+    }
 }
 
 /* O Nhap Ma OTP 6 So (MH 20) */
@@ -431,16 +548,75 @@ body {
     border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
+.lbn-filter-header {
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.lbn-filter-header-title {
+    font-size: 0.86rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.lbn-filter-reset-link {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 50px;
+    background-color: #FFF5F4;
+    border: 1px solid rgba(255, 158, 147, 0.45);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lbn-filter-reset-link:hover {
+    background-color: #FFE4E1;
+    border-color: var(--primary-peach);
+}
+
+.lbn-filter-subheader {
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 .lbn-filter-group-title {
-    font-size: 0.95rem;
+    font-size: 0.86rem;
     font-weight: 800;
     color: var(--text-slate);
-    letter-spacing: 0.2px;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+}
+
+.lbn-filter-option-label {
+    font-size: 0.84rem;
+    line-height: 1.45;
+    display: inline-block;
+}
+
+.lbn-price-scale {
+    font-size: 0.74rem;
+    white-space: nowrap;
+    gap: 4px;
+}
+
+@media (min-width: 1200px) {
+    .lbn-catalog-sidebar-col {
+        flex: 0 0 27.5%;
+        max-width: 27.5%;
+    }
+    .lbn-catalog-main-col {
+        flex: 0 0 72.5%;
+        max-width: 72.5%;
+    }
 }
 
 .lbn-cat-filter-item {
     border-radius: 12px;
-    padding: 8px 12px;
+    padding: 8px 10px;
+    gap: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid transparent;
@@ -534,6 +710,7 @@ body {
 .lbn-inv-thumb {
     width: 54px;
     height: 54px;
+    flex-shrink: 0;
     border-radius: 12px;
     background-color: var(--bg-milk-cream);
     display: inline-flex;
@@ -633,6 +810,34 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.lnkt-hero-carousel .carousel-control-prev,
+.lnkt-hero-carousel .carousel-control-next {
+    width: 44px;
+    z-index: 6;
+}
+
+@media (max-width: 767.98px) {
+    .lnkt-hero-slide {
+        padding-left: 3.25rem !important;
+        padding-right: 3.25rem !important;
+    }
+    .lnkt-carousel-nav-btn {
+        width: 34px;
+        height: 34px;
+    }
+}
+
+@media (min-width: 768px) {
+    .lnkt-hero-carousel .carousel-control-prev,
+    .lnkt-hero-carousel .carousel-control-next {
+        width: 52px;
+    }
+    .lnkt-hero-slide {
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
+    }
 }
 
 /* MH 01: Cum Nut Tron Chon Danh Muc BST (Be Gai, Be Trai, Giay dep) */
@@ -1105,9 +1310,9 @@ body {
 
 .fk-press-ticker-bar {
     background: linear-gradient(90deg, #FFFDF5 0%, #FFFFFF 50%, #F0FFF4 100%);
-    border-radius: 50px;
+    border-radius: 18px;
     border: 1px solid #E2E8F0;
-    padding: 8px 16px;
+    padding: 10px 18px;
 }
 
 .fk-live-pulse-dot {
@@ -1134,6 +1339,7 @@ body {
     border: 1.5px solid #E2E8F0 !important;
     background-color: #FFFFFF;
     color: var(--text-slate);
+    white-space: nowrap;
     transition: all 0.25s ease;
 }
 
@@ -1405,11 +1611,17 @@ body {
 /* ==========================================================================
    PHÂN TRANG TẠP CHÍ MẪU NHÍ (6 BÀI / TRANG -> TRANG 1, 2, 3...)
    ========================================================================== */
+.pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 .fk-blog-page-btn {
     border-radius: 50px !important;
     margin: 0 3px;
     padding: 6px 14px !important;
     font-weight: 700 !important;
+    white-space: nowrap;
     color: var(--text-slate) !important;
     border: 1.5px solid #E2E8F0 !important;
     background-color: #FFFFFF !important;
@@ -1628,5 +1840,245 @@ body {
         border: 2px solid #1A202C !important;
         box-shadow: none !important;
         page-break-inside: avoid;
+    }
+}
+
+/* ==========================================================================
+   TIỆN ÍCH CĂN CHỈNH FLEX / BẢNG / HUY HIỆU TOÀN HỆ THỐNG (CHỐNG LỆCH CHỮ)
+   ========================================================================== */
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.fk-card-header-row {
+    gap: 8px 12px;
+}
+
+.fk-btn-toolbar {
+    gap: 8px;
+}
+
+.fk-header-title-grow {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.badge-wrap-safe {
+    white-space: normal !important;
+    text-align: left;
+    line-height: 1.35;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.table-responsive .table thead th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.fk-utility-pill {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fk-kol-star-thumb img.lbn-thumb-img {
+    object-position: center top !important;
+}
+
+.fk-kol-preview-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}
+
+/* ==========================================================================
+   YÊU CẦU 1 - 4: NHÃN CHƯA CÓ ĐÁNH GIÁ, SỐ NGƯỜI MUA & LUỒNG HOÀN TRẢ HÀNG
+   ========================================================================== */
+.fk-compact-table th,
+.fk-compact-table td {
+    padding: 0.55rem 0.42rem;
+    font-size: 0.85rem;
+}
+
+.fk-ellipsis-150 {
+    max-width: 145px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fk-no-review-badge {
+    background-color: #F6F3EE;
+    color: #6B7280;
+    border: 1px solid #E8E1D7;
+    font-weight: 600;
+    font-size: 0.65rem;
+    padding: 0.14rem 0.42rem;
+}
+
+.fk-buyer-count-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #5A6275;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.lnkt-return-modal-hdr {
+    background: linear-gradient(135deg, #FFF0ED 0%, #EAF7F2 100%);
+}
+
+.lnkt-return-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EAE2D6;
+    border-left: 4px solid #FF8A7A;
+}
+
+.lnkt-return-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    gap: 8px;
+}
+
+.lnkt-return-step {
+    flex: 1 1 0;
+    text-align: center;
+    position: relative;
+    padding: 0 4px;
+    z-index: 1;
+}
+
+.lnkt-return-step::before {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: -50%;
+    width: 100%;
+    height: 3px;
+    background-color: #E5E7EB;
+    z-index: -1;
+}
+
+.lnkt-return-step:first-child::before {
+    display: none;
+}
+
+.lnkt-return-step-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F3F4F6;
+    color: #9CA3AF;
+    border: 2px solid #E5E7EB;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.lnkt-return-step.done::before,
+.lnkt-return-step.active::before {
+    background-color: #8CD3C5;
+}
+
+.lnkt-return-step.done .lnkt-return-step-dot {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border-color: #6EE7B7;
+}
+
+.lnkt-return-step.active .lnkt-return-step-dot {
+    background-color: #FF8A7A;
+    color: #FFFFFF;
+    border-color: #FF8A7A;
+    box-shadow: 0 0 0 4px rgba(255, 138, 122, 0.2);
+}
+
+.lnkt-return-step.rejected .lnkt-return-step-dot {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+    border-color: #FCA5A5;
+}
+
+.lnkt-return-reject-box {
+    background-color: #FFF5F5;
+    border: 1px solid #FED7D7;
+    border-left: 4px solid #E53E3E;
+    color: #742A2A;
+}
+
+.lnkt-return-thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.lnkt-return-thumb:hover {
+    transform: scale(1.06);
+}
+
+.lnkt-return-preview-item {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid #FFD6CF;
+}
+
+.lnkt-lightbox-img {
+    max-height: 75vh;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.fk-nav-pills-pastel .nav-link {
+    border-radius: 999px;
+    color: #4A5568;
+    background-color: #FFFFFF;
+    border: 1px solid #E8E1D7;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.45rem 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.fk-nav-pills-pastel .nav-link.active {
+    background-color: #FF8A7A;
+    border-color: #FF8A7A;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(255, 138, 122, 0.28);
+}
+
+@media (max-width: 575.98px) {
+    .lnkt-return-stepper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .lnkt-return-step {
+        width: 100%;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .lnkt-return-step::before {
+        display: none;
     }
 }

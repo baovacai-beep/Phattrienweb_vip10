@@ -97,6 +97,7 @@ class ReviewModel extends Model {
 
     /**
      * Tính điểm sao trung bình của sản phẩm qua fn_tgb_tinh_sao_trung_binh_san_pham
+     * Sản phẩm chưa có đánh giá trả về 0.0 (tuyệt đối không gán sao ảo).
      */
     public function tinhSaoTrungBinh(int $maSanPham): float {
         if ($this->hasConnection()) {
@@ -105,12 +106,30 @@ class ReviewModel extends Model {
                 $stmt->execute([':sp' => $maSanPham]);
                 $row = $stmt->fetch();
                 $stmt->closeCursor();
-                return (float)($row['diem_sao'] ?? 5.0);
+                return (float)($row['diem_sao'] ?? 0.0);
             } catch (PDOException $e) {
                 error_log("Lỗi tính sao trung bình: " . $e->getMessage());
             }
         }
-        return 5.0;
+        return 0.0;
+    }
+
+    /**
+     * Đếm số lượng người mua thực tế (đơn hoàn tất & chưa hoàn tất trả hàng) qua fn_tgb_dem_so_nguoi_mua
+     */
+    public function demSoNguoiMua(int $maSanPham): int {
+        if ($this->hasConnection()) {
+            try {
+                $stmt = $this->db->prepare("SELECT fn_tgb_dem_so_nguoi_mua(:sp) AS so_nguoi_mua");
+                $stmt->execute([':sp' => $maSanPham]);
+                $row = $stmt->fetch();
+                $stmt->closeCursor();
+                return (int)($row['so_nguoi_mua'] ?? 0);
+            } catch (PDOException $e) {
+                error_log("Lỗi đếm số người mua: " . $e->getMessage());
+            }
+        }
+        return 0;
     }
 
     /**

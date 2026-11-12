@@ -70,11 +70,11 @@ $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', 
         <!-- Cột Trái: Thẻ VIP Thành Viên & Tiến Trình -->
         <div class="col-12 col-lg-5 mb-4">
             <div id="hgb_vipCardPreview" class="vip-card-box <?= $user['hang_class'] ?> mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span class="font-weight-bold text-uppercase vip-card-brand">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+                    <span class="font-weight-bold text-uppercase vip-card-brand text-nowrap">
                         <i class="fa-solid fa-crown mr-2"></i>FASHIONKIDS VIP
                     </span>
-                    <span id="hgb_vipBadgeTitle" class="badge badge-light vip-card-tier-badge px-3 py-1 font-weight-bold rounded-pill shadow-sm">
+                    <span id="hgb_vipBadgeTitle" class="badge badge-light vip-card-tier-badge px-3 py-1 font-weight-bold rounded-pill shadow-sm text-nowrap flex-shrink-0">
                         HẠNG <?= htmlspecialchars($user['ten_hang']) ?>
                     </span>
                 </div>
@@ -82,14 +82,14 @@ $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', 
                 <h4 class="font-weight-bold mb-1 vip-card-holder"><?= htmlspecialchars($user['ho_va_ten']) ?></h4>
                 <div class="small mb-4 font-weight-bold vip-card-code">Mã thẻ: <?= htmlspecialchars($maTheHienThi) ?></div>
 
-                <div class="d-flex justify-content-between align-items-end pt-3 vip-divider">
+                <div class="d-flex flex-wrap justify-content-between align-items-end fk-card-header-row pt-3 vip-divider">
                     <div>
                         <div class="small text-uppercase font-weight-bold vip-card-label">Đặc quyền chiết khấu</div>
-                        <div id="hgb_vipDiscount" class="h4 font-weight-bold mb-0 vip-card-val">GIẢM <?= (int)$user['phan_tram_giam'] ?>% MỌI ĐƠN</div>
+                        <div id="hgb_vipDiscount" class="h4 font-weight-bold mb-0 vip-card-val text-nowrap">GIẢM <?= (int)$user['phan_tram_giam'] ?>% MỌI ĐƠN</div>
                     </div>
                     <div class="text-right">
                         <div class="small text-uppercase font-weight-bold vip-card-label">Điểm tích lũy</div>
-                        <div id="hgb_vipCardPts" class="h5 font-weight-bold mb-0 vip-card-val"><?= number_format($user['diem_tich_luy']) ?> PTS</div>
+                        <div id="hgb_vipCardPts" class="h5 font-weight-bold mb-0 vip-card-val text-nowrap"><?= number_format($user['diem_tich_luy']) ?> PTS</div>
                     </div>
                 </div>
             </div>
@@ -114,9 +114,9 @@ $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', 
         <!-- Cột Phải: Form Thông Tin Định Danh & Địa Chỉ -->
         <div class="col-12 col-lg-7">
             <div class="card card-pastel p-4 p-md-5 shadow-sm mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="font-weight-bold mb-0 text-slate">Thông Tin Tài Khoản</h5>
-                    <span class="badge badge-pill <?= !empty($user['da_xac_thuc']) ? 'badge-mint' : 'badge-gold' ?> px-3 py-2">
+                <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
+                    <h5 class="font-weight-bold mb-0 text-slate fk-header-title-grow">Thông Tin Tài Khoản</h5>
+                    <span class="badge badge-pill <?= !empty($user['da_xac_thuc']) ? 'badge-mint' : 'badge-gold' ?> px-3 py-2 text-nowrap flex-shrink-0">
                         <i class="fa-solid <?= !empty($user['da_xac_thuc']) ? 'fa-circle-check' : 'fa-clock' ?> mr-1"></i> <?= !empty($user['da_xac_thuc']) ? 'Tài khoản đã xác thực' : 'Chưa xác thực OTP' ?>
                     </span>
                 </div>

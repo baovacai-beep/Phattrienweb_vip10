@@ -39,9 +39,9 @@ $lbn_products = [
         'price'          => 285000,
         'original_price' => 340000,
         'stock_quantity' => 18,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 420,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Tự Nhiên',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -72,9 +72,9 @@ $lbn_products = [
         'price'          => 225000,
         'original_price' => 280000,
         'stock_quantity' => 24,
-        'rating'         => 4.8,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 560,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Bamboo Thoáng Khí Làm Mát -3°C',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -105,9 +105,9 @@ $lbn_products = [
         'price'          => 210000,
         'original_price' => 260000,
         'stock_quantity' => 14,
-        'rating'         => 5.0,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 310,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Khử Mùi & Đế Uốn Gập 360°',
         'size_range'     => ['Size 21 (12cm)', 'Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)'],
@@ -138,9 +138,9 @@ $lbn_products = [
         'price'          => 320000,
         'original_price' => 380000,
         'stock_quantity' => 5,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 185,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre Dệt Kim UPF 50+ Chống Tia Cực Tím',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -170,9 +170,9 @@ $lbn_products = [
         'price'          => 365000,
         'original_price' => 420000,
         'stock_quantity' => 11,
-        'rating'         => 5.0,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 290,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Hữu Cơ & Voan Tùng Xòe Cao Cấp',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -202,9 +202,9 @@ $lbn_products = [
         'price'          => 195000,
         'original_price' => 240000,
         'stock_quantity' => 32,
-        'rating'         => 4.8,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 410,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => '100% Sợi Tre Kháng Khuẩn Thoáng Khí',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)'],
@@ -234,9 +234,9 @@ $lbn_products = [
         'price'          => 340000,
         'original_price' => 395000,
         'stock_quantity' => 4,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 145,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Nỉ Bông Sợi Tre Giữ Ấm & Chống Nắng',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -266,9 +266,9 @@ $lbn_products = [
         'price'          => 245000,
         'original_price' => 295000,
         'stock_quantity' => 16,
-        'rating'         => 4.7,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 210,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Lót Sợi Tre Êm Chân & Quai Dán Linh Hoạt',
         'size_range'     => ['Size 22 (13cm)', 'Size 24 (14cm)', 'Size 26 (15cm)', 'Size 28 (16.5cm)', 'Size 30 (17.5cm)'],
@@ -297,9 +297,9 @@ $lbn_products = [
         'price'          => 350000,
         'original_price' => 410000,
         'stock_quantity' => 9,
-        'rating'         => 4.9,
+        'rating'         => 0.0,
         'reviews'        => 0,
-        'sold_count'     => 175,
+        'sold_count'     => 0,
         'is_bamboo'      => 1,
         'bamboo_label'   => 'Sợi Tre 2 Lớp Cản Gió & Thoáng Khí',
         'size_range'     => ['Size 1 (1-2T)', 'Size 2 (2-3T)', 'Size 3 (3-4T)', 'Size 4 (4-5T)', 'Size 5 (5-6T)'],
@@ -316,7 +316,7 @@ $lbn_products = [
     ]
 ];
 
-// Đồng bộ dữ liệu giá, tồn kho, tên, ảnh từ CSDL thực tế
+// Đồng bộ dữ liệu giá, tồn kho, tên, ảnh, đánh giá thực và số người mua từ CSDL thực tế
 $liveCatalog = $pdpProductModel->layTatCaSanPhamChuanHoa();
 foreach ($liveCatalog as $liveRow) {
     $lid = (int)$liveRow['id'];
@@ -330,6 +330,10 @@ foreach ($liveCatalog as $liveRow) {
         $lbn_products[$lid]['category_id']    = (int)$liveRow['category_id'];
         $lbn_products[$lid]['category_slug']  = $liveRow['category_slug'];
         $lbn_products[$lid]['category_name']  = $liveRow['category_name'];
+        $lbn_products[$lid]['rating']         = (float)($liveRow['rating'] ?? 0.0);
+        $lbn_products[$lid]['reviews']        = (int)($liveRow['reviews'] ?? 0);
+        $lbn_products[$lid]['buyer_count']    = (int)($liveRow['buyer_count'] ?? 0);
+        $lbn_products[$lid]['sold_count']     = (int)($liveRow['buyer_count'] ?? 0);
     } else {
         $isShoes = ($liveRow['type'] === 'giay_dep');
         $lbn_products[$lid] = [
@@ -346,9 +350,10 @@ foreach ($liveCatalog as $liveRow) {
             'price'          => (float)$liveRow['price'],
             'original_price' => round($liveRow['price'] * 1.18, -3),
             'stock_quantity' => (int)$liveRow['stock_quantity'],
-            'rating'         => (float)$liveRow['rating'],
-            'reviews'        => 0,
-            'sold_count'     => 35,
+            'rating'         => (float)($liveRow['rating'] ?? 0.0),
+            'reviews'        => (int)($liveRow['reviews'] ?? 0),
+            'buyer_count'    => (int)($liveRow['buyer_count'] ?? 0),
+            'sold_count'     => (int)($liveRow['buyer_count'] ?? 0),
             'is_bamboo'      => 1,
             'bamboo_label'   => '100% Vải Sợi Tre Kháng Khuẩn',
             'size_range'     => $isShoes
@@ -384,9 +389,10 @@ $vipPointsNeeded       = (int)($vipInfo['points_needed'] ?? 0);
 $init_discount_amount = round(($prod['price'] * $init_discount_percent) / 100);
 $init_vip_price       = max(0, $prod['price'] - $init_discount_amount);
 
-// Lấy đánh giá thực tế từ CSDL (tgb_danh_gia_san_pham)
+// Lấy đánh giá thực tế và số người mua thực tế từ CSDL
 $dbReviews   = $pdpReviewModel->layDanhGiaTheoSanPham($product_id);
 $reviewCount = count($dbReviews);
+$buyerCount  = $pdpReviewModel->demSoNguoiMua($product_id);
 $starCounts  = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
 if ($reviewCount > 0) {
     foreach ($dbReviews as $rev) {
@@ -395,7 +401,7 @@ if ($reviewCount > 0) {
     }
     $avgRating = round($pdpReviewModel->tinhSaoTrungBinh($product_id), 1);
 } else {
-    $avgRating = (float)$prod['rating'];
+    $avgRating = 0.0;
 }
 
 $reviewEligibility = $currentUid
@@ -536,12 +542,12 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                 </div>
 
                 <!-- CỘT PHẢI (6 CỘT): THÔNG TIN GIÁ, SIZE & ĐẶT MUA -->
-                <div class="col-12 col-lg-6 pl-lg-4">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge badge-pill badge-light border mr-2 font-weight-bold text-slate">
+                <div class="col-12 col-lg-6 pl-lg-4 min-w-0">
+                    <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mb-2">
+                        <span class="badge badge-pill badge-light border font-weight-bold text-slate text-nowrap">
                             Mã SP: <strong class="text-slate"><?= htmlspecialchars($prod['sku']) ?></strong>
                         </span>
-                        <span class="badge badge-pill badge-light border text-muted-custom">
+                        <span class="badge badge-pill badge-light border text-muted-custom text-nowrap">
                             Danh mục: <?= htmlspecialchars($prod['category_name']) ?>
                         </span>
                     </div>
@@ -551,9 +557,9 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                         <?= htmlspecialchars($prod['name']) ?>
                     </h1>
 
-                    <!-- Đánh Giá Sao & Lượt Bán -->
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="text-warning mr-2">
+                    <!-- Đánh Giá Sao & Số Người Mua Thực Tế -->
+                    <div class="d-flex flex-wrap align-items-center fk-btn-toolbar mb-3">
+                        <div id="pdp_rating_stars_top" class="text-warning text-nowrap <?= $reviewCount > 0 ? '' : 'd-none' ?>">
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
@@ -561,33 +567,36 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                             <i class="fa-solid fa-star"></i>
                             <span class="font-weight-bold text-slate ml-1" id="pdp_avg_rating_top"><?= number_format($avgRating, 1) ?></span>
                         </div>
-                        <span class="text-muted-custom small border-left pl-2 mr-2">
+                        <span id="pdp_no_review_badge_top" class="badge badge-pill fk-no-review-badge text-nowrap <?= $reviewCount > 0 ? 'd-none' : '' ?>">
+                            Chưa có đánh giá
+                        </span>
+                        <span class="text-muted-custom small border-left pl-2 text-nowrap">
                             <a href="#pdp_review_section" class="text-muted-custom text-decoration-none">
                                 <strong id="pdp_review_count_top"><?= $reviewCount ?></strong> đánh giá thực tế
                             </a>
                         </span>
-                        <span class="text-muted-custom small border-left pl-2">
-                            Đã bán <strong><?= $prod['sold_count'] ?></strong> món
+                        <span class="text-muted-custom small border-left pl-2 text-nowrap">
+                            <strong id="pdp_buyer_count_top"><?= (int)$buyerCount ?></strong> người mua
                         </span>
                     </div>
 
                     <!-- Khung Giá & Chiết Khấu VIP Tự Động Theo Tài Khoản (Chỉ đọc) -->
                     <div class="p-3 rounded mb-3 bg-milk-cream border">
-                        <div class="d-flex align-items-baseline mb-2">
-                            <span class="h2 font-weight-bold text-peach mb-0 mr-3" id="lbn_pdpBasePrice" data-base-price="<?= (int)$prod['price'] ?>">
+                        <div class="d-flex flex-wrap align-items-baseline fk-btn-toolbar mb-2">
+                            <span class="h2 font-weight-bold text-peach mb-0 text-nowrap" id="lbn_pdpBasePrice" data-base-price="<?= (int)$prod['price'] ?>">
                                 <?= number_format($prod['price'], 0, ',', '.') ?> đ
                             </span>
-                            <span class="text-muted-custom text-decoration-line-through small mr-2">
+                            <span class="text-muted-custom text-decoration-line-through small text-nowrap">
                                 <?= number_format($prod['original_price'], 0, ',', '.') ?> đ
                             </span>
-                            <span class="badge badge-pill badge-danger small font-weight-bold">
+                            <span class="badge badge-pill badge-danger small font-weight-bold text-nowrap">
                                 -<?= max(5, round((($prod['original_price'] - $prod['price']) / max(1, $prod['original_price'])) * 100)) ?>%
                             </span>
                         </div>
 
                         <div class="p-3 rounded lbn-vip-price-box">
-                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
-                                <span class="small font-weight-bold text-slate" id="lbn_pdpVipBadgeLabel">
+                            <div class="d-flex justify-content-between align-items-center fk-card-header-row mb-1 flex-wrap">
+                                <span class="small font-weight-bold text-slate min-w-0" id="lbn_pdpVipBadgeLabel">
                                     <i class="fa-solid fa-crown text-warning mr-1"></i>
                                     <?php if ($vipIsGuest): ?>
                                         Khách vãng lai (Giảm 0%)
@@ -595,12 +604,12 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                         Hạng thẻ của bạn: <strong><?= htmlspecialchars($vipTierTitle) ?></strong> (Giảm <?= (int)$init_discount_percent ?>%)
                                     <?php endif; ?>
                                 </span>
-                                <span class="h5 font-weight-bold text-success mb-0" id="lbn_pdpFinalVipPrice">
+                                <span class="h5 font-weight-bold text-success mb-0 text-nowrap flex-shrink-0" id="lbn_pdpFinalVipPrice">
                                     <?= number_format($init_vip_price, 0, ',', '.') ?> đ
                                 </span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center small">
-                                <span class="text-muted-custom" id="lbn_pdpSavedAmount">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row small">
+                                <span class="text-muted-custom min-w-0" id="lbn_pdpSavedAmount">
                                     <?php if ($init_discount_amount > 0): ?>
                                         Tiết kiệm ngay <strong class="text-success"><?= number_format($init_discount_amount, 0, ',', '.') ?> đ</strong> với thẻ VIP
                                     <?php elseif ($vipIsGuest): ?>
@@ -613,7 +622,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </span>
-                                <span class="text-slate font-weight-bold">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</span>
+                                <span class="text-slate font-weight-bold text-nowrap flex-shrink-0">Tích lũy: +<?= floor($init_vip_price / 10000) ?> điểm</span>
                             </div>
                         </div>
                     </div>
@@ -625,7 +634,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                         </label>
                         <div class="d-flex align-items-center flex-wrap">
                             <?php foreach ($prod['colors'] as $c): ?>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate <?= $c['active'] ? 'border-primary' : '' ?>">
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate text-nowrap <?= $c['active'] ? 'border-primary' : '' ?>">
                                     <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($c['code']) ?>"></span>
                                     <?= htmlspecialchars($c['name']) ?>
                                 </button>
@@ -635,11 +644,11 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
 
                     <!-- Chọn Kích Cỡ & Nút Gợi Ý Size Thước Dây -->
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-2">
                             <label class="small font-weight-bold text-slate mb-0">
-                                Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold"><?= htmlspecialchars($prod['default_size']) ?></span>
+                                Kích cỡ đã chọn: <span id="lbn_selectedSizeText" class="text-peach font-weight-bold text-nowrap"><?= htmlspecialchars($prod['default_size']) ?></span>
                             </label>
-                            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm"
+                            <button type="button" class="btn btn-pastel-sky btn-sm font-weight-bold shadow-sm text-nowrap flex-shrink-0"
                                     data-toggle="modal" data-target="#modalSuggestSize">
                                 <i class="fa-solid fa-ruler-combined text-peach mr-1"></i> Thước Dây Gợi Ý Size
                             </button>
@@ -776,8 +785,8 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
     <section class="reviews-section bg-milk-cream py-4 rounded-lg border shadow-sm mb-5" id="pdp_review_section">
         <div class="container-fluid px-3 px-md-4">
             <div class="row mb-4">
-                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap">
-                    <div>
+                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap fk-card-header-row">
+                    <div class="fk-header-title-grow">
                         <h4 class="font-weight-bold text-slate mb-1">
                             <i class="fa-solid fa-comments text-peach mr-2"></i>Đánh Giá Từ Phụ Huynh Đã Mua Hàng
                         </h4>
@@ -785,17 +794,17 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     </div>
                     <?php if (!empty($reviewEligibility['eligible'])): ?>
                         <button type="button"
-                                class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm mt-2 mt-md-0"
+                                class="btn btn-warning rounded-pill px-4 font-weight-bold shadow-sm text-nowrap flex-shrink-0"
                                 data-toggle="modal" data-target="#modalReview"
                                 onclick="lnktOpenProductReviewModal('<?= htmlspecialchars($prod['name'], ENT_QUOTES) ?>', <?= (int)$prod['id'] ?>, <?= (int)$reviewEligibility['eligible_order_id'] ?>)">
                             <i class="fa-solid fa-pen-to-square mr-2"></i>Viết Đánh Giá
                         </button>
                     <?php elseif (!empty($reviewEligibility['already_reviewed'])): ?>
-                        <span class="badge badge-pill badge-mint px-3 py-2 mt-2 mt-md-0 font-weight-bold">
+                        <span class="badge badge-pill badge-mint px-3 py-2 font-weight-bold badge-wrap-safe flex-shrink-0">
                             <i class="fa-solid fa-circle-check mr-1"></i>Bạn đã gửi đánh giá sản phẩm này
                         </span>
                     <?php else: ?>
-                        <span class="badge badge-pill badge-light border text-muted-custom px-3 py-2 mt-2 mt-md-0">
+                        <span class="badge badge-pill badge-light border text-muted-custom px-3 py-2 badge-wrap-safe flex-shrink-0">
                             <i class="fa-solid fa-lock mr-1"></i>Đánh giá khả dụng sau khi đơn hàng Hoàn tất
                         </span>
                     <?php endif; ?>
@@ -805,15 +814,22 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
             <!-- Hàng thống kê tổng quan và tỷ lệ sao thực tế -->
             <div class="row align-items-center mb-4 bg-white p-4 rounded-lg shadow-sm border">
                 <div class="col-12 col-md-4 text-center border-right mb-3 mb-md-0">
-                    <div class="display-4 font-weight-bold text-warning mb-1" id="pdp_avg_rating_card"><?= number_format($avgRating, 1) ?></div>
-                    <div class="mb-2 text-warning">
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
+                    <div class="<?= $reviewCount > 0 ? '' : 'd-none' ?>" id="pdp_rating_stars_card">
+                        <div class="display-4 font-weight-bold text-warning mb-1" id="pdp_avg_rating_card"><?= number_format($avgRating, 1) ?></div>
+                        <div class="mb-2 text-warning">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
                     </div>
-                    <span class="text-muted-custom small">Dựa trên <strong id="pdp_review_count_card"><?= $reviewCount ?></strong> nhận xét đã xác thực</span>
+                    <div class="mb-2 <?= $reviewCount > 0 ? 'd-none' : '' ?>" id="pdp_no_review_badge_card">
+                        <span class="badge badge-pill fk-no-review-badge px-3 py-2">
+                            Chưa có đánh giá
+                        </span>
+                    </div>
+                    <span class="text-muted-custom small">Dựa trên <strong id="pdp_review_count_card"><?= $reviewCount ?></strong> nhận xét đã xác thực • <strong id="pdp_buyer_count_card"><?= (int)$buyerCount ?></strong> người mua</span>
                 </div>
 
                 <div class="col-12 col-md-8 pl-md-4">
@@ -843,15 +859,15 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     ?>
                         <div class="col-12 mb-3">
                             <div class="card border-0 rounded-lg shadow-sm p-3 bg-white">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 avatar-44">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start fk-card-header-row mb-2">
+                                    <div class="d-flex align-items-center min-w-0">
+                                        <div class="rounded-circle bg-sky text-primary font-weight-bold d-flex align-items-center justify-content-center mr-3 flex-shrink-0 avatar-44">
                                             <?= htmlspecialchars($initials) ?>
                                         </div>
-                                        <div>
+                                        <div class="min-w-0">
                                             <div class="font-weight-bold text-slate">
                                                 <?= htmlspecialchars($author) ?>
-                                                <span class="badge badge-pill badge-mint ml-2">
+                                                <span class="badge badge-pill badge-mint ml-2 text-nowrap">
                                                     <i class="fa-solid fa-circle-check mr-1"></i>Đã mua tại FashionKids
                                                 </span>
                                             </div>
@@ -865,7 +881,7 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="text-muted-custom small"><?= htmlspecialchars($dateFormatted) ?></span>
+                                    <span class="text-muted-custom small text-nowrap flex-shrink-0"><?= htmlspecialchars($dateFormatted) ?></span>
                                 </div>
                                 <p class="text-slate small mb-2">
                                     <?= nl2br(htmlspecialchars((string)($rev['noi_dung_danh_gia'] ?? ''))) ?>
@@ -890,11 +906,11 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
          SẢN PHẨM LIÊN QUAN CÙNG BỘ SƯU TẬP
          ====================================================================== -->
     <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="font-weight-bold text-slate mb-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+            <h4 class="font-weight-bold text-slate mb-0 fk-header-title-grow">
                 <i class="fa-solid fa-sparkles text-peach mr-2"></i>Bé Cũng Sẽ Thích Những Món Này
             </h4>
-            <a href="/FashionKids/views/pages/shop-catalog.php" class="small font-weight-bold text-peach">
+            <a href="/FashionKids/views/pages/shop-catalog.php" class="small font-weight-bold text-peach text-nowrap flex-shrink-0">
                 Xem tất cả cửa hàng <i class="fa-solid fa-arrow-right ml-1"></i>
             </a>
         </div>
@@ -918,10 +934,24 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                                             <?= htmlspecialchars($other_p['name']) ?>
                                         </a>
                                     </h6>
-                                    <div class="small text-warning mb-2">
-                                        <i class="fa-solid fa-star"></i> <?= number_format($other_p['rating'], 1) ?>
-                                        <span class="text-muted-custom ml-1">(Kho: <?= (int)$other_p['stock_quantity'] ?> SP)</span>
+                                    <?php
+                                        $relReviews = (int)($other_p['reviews'] ?? 0);
+                                        $relBuyers  = (int)($other_p['buyer_count'] ?? 0);
+                                    ?>
+                                    <div class="small mb-2 d-flex flex-wrap align-items-center justify-content-between fk-card-header-row">
+                                        <?php if ($relReviews > 0): ?>
+                                            <span class="text-warning font-weight-bold text-nowrap">
+                                                <i class="fa-solid fa-star"></i> <?= number_format((float)$other_p['rating'], 1) ?>
+                                                <span class="text-muted-custom font-weight-normal">(<?= $relReviews ?>)</span>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge badge-pill fk-no-review-badge text-nowrap">Chưa có đánh giá</span>
+                                        <?php endif; ?>
+                                        <span class="fk-buyer-count-pill">
+                                            <i class="fa-solid fa-bag-shopping text-peach mr-1"></i><?= $relBuyers ?> người mua
+                                        </span>
                                     </div>
+                                    <small class="text-muted-custom d-block mb-2">Kho: <?= (int)$other_p['stock_quantity'] ?> SP</small>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                                     <span class="font-weight-bold text-peach h6 mb-0"><?= number_format($other_p['price'], 0, ',', '.') ?> đ</span>

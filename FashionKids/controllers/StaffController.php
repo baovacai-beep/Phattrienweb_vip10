@@ -503,4 +503,40 @@ class StaffController extends Controller {
             'message' => $msg
         ]);
     }
+
+    /**
+     * 6. MH 10 (Hoàn hàng): AJAX Lấy danh sách yêu cầu hoàn trả & đếm theo trạng thái
+     * URL: index.php?c=staff&a=ajaxGetReturnRequests
+     */
+    public function ajaxGetReturnRequests(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép xem danh sách yêu cầu hoàn hàng!'
+        );
+
+        require_once __DIR__ . '/OrderController.php';
+        $orderCtrl = new OrderController();
+        $orderCtrl->ajaxGetReturnRequests();
+    }
+
+    /**
+     * 7. MH 10 (Hoàn hàng): AJAX Duyệt / Từ chối / Thu hồi / Hoàn tiền & Nhập kho yêu cầu hoàn hàng
+     * URL: index.php?c=staff&a=ajaxProcessReturn
+     */
+    public function ajaxProcessReturn(): void {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        Rbac::requireRolesJson(
+            ['nhan_vien', 'quan_tri'],
+            'Chỉ Nhân viên vận hành và Quản trị viên mới được phép xử lý yêu cầu hoàn hàng!'
+        );
+
+        require_once __DIR__ . '/OrderController.php';
+        $orderCtrl = new OrderController();
+        $orderCtrl->ajaxProcessReturn();
+    }
 }

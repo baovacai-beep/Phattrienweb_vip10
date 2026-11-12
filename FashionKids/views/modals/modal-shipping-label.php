@@ -2,15 +2,15 @@
 <div class="modal fade" id="modalShippingLabel" tabindex="-1" role="dialog" aria-labelledby="modalShippingLabelTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg fk-label-modal-content">
-            <div class="modal-header bg-white border-bottom fk-no-print">
-                <h5 class="modal-title font-weight-bold text-slate" id="modalShippingLabelTitle">
+            <div class="modal-header bg-white border-bottom fk-no-print d-flex justify-content-between align-items-center fk-card-header-row">
+                <h5 class="modal-title font-weight-bold text-slate min-w-0" id="modalShippingLabelTitle">
                     <i class="fa-solid fa-barcode text-peach mr-2"></i>Phiếu Giao Hàng, Hóa Đơn Thu Hộ &amp; Mã Vận Đơn
                 </h5>
-                <div class="d-flex align-items-center">
-                    <button type="button" id="lnkt_btnPrintLabelTop" onclick="lnktPrintShippingLabel()" class="btn btn-pastel-primary btn-sm font-weight-bold mr-2">
+                <div class="d-flex align-items-center fk-btn-toolbar flex-shrink-0">
+                    <button type="button" id="lnkt_btnPrintLabelTop" onclick="lnktPrintShippingLabel()" class="btn btn-pastel-primary btn-sm font-weight-bold text-nowrap">
                         <i class="fa-solid fa-print mr-1"></i>In Phiếu / Lưu PDF
                     </button>
-                    <button type="button" class="close text-slate" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-slate ml-1" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -169,9 +169,9 @@
                 </div>
             </div>
 
-            <div class="modal-footer bg-white border-top fk-no-print">
-                <button type="button" class="btn btn-light border rounded-pill px-4 font-weight-bold" data-dismiss="modal">Đóng</button>
-                <button type="button" onclick="lnktPrintShippingLabel()" class="btn btn-pastel-primary rounded-pill px-4 font-weight-bold">
+            <div class="modal-footer bg-white border-top fk-no-print d-flex flex-wrap fk-btn-toolbar">
+                <button type="button" class="btn btn-light border rounded-pill px-4 font-weight-bold text-nowrap" data-dismiss="modal">Đóng</button>
+                <button type="button" onclick="lnktPrintShippingLabel()" class="btn btn-pastel-primary rounded-pill px-4 font-weight-bold text-nowrap">
                     <i class="fa-solid fa-print mr-2"></i>In Tem &amp; Hóa Đơn Dán Đơn Hàng
                 </button>
             </div>
