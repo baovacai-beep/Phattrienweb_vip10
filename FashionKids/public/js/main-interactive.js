@@ -579,7 +579,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=staff&a=ajaxRestockInventory',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -737,7 +737,7 @@ $(document).ready(function () {
         $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu kho...');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=product&a=ajaxSaveProduct',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=product&a=ajaxSaveProduct',
             type: 'POST',
             data: formData,
             processData: false,
@@ -4250,23 +4250,43 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------
     // 5. MH 08 & MH 11: TIN NHẮN TƯ VẤN TRỰC TUYẾN REALTIME (tgb_tin_nhan_tu_van)
     // ------------------------------------------------------------------------
+    function fkChatEndpoint() {
+        let ep = $('meta[name="fk-endpoint"]').attr('content') || '';
+        return ep ? ep : '/FashionKids/index.php';
+    }
+
     function fkRenderClientChatList(messages) {
         let $area = $('#fk_clientChatMessagesArea');
         if (!$area.length || !Array.isArray(messages)) return;
         let html = '';
-        messages.forEach(function (m) {
-            if (m.sender === 'khach_hang') {
-                html +=
-                    '<div class="d-flex justify-content-end mb-3">' +
-                        '<div class="p-3 small shadow-sm chat-bubble-sent">' + fkEsc(m.content) + '</div>' +
-                    '</div>';
-            } else {
-                html +=
-                    '<div class="d-flex mb-3">' +
-                        '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' + fkEsc(m.content) + '</div>' +
-                    '</div>';
-            }
-        });
+        if (messages.length === 0) {
+            html =
+                '<div class="d-flex mb-3">' +
+                    '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' +
+                        'Xin chào ba mẹ! Em là Chuyên viên tư vấn thời trang sợi tre <strong>FashionKids</strong>. Ba mẹ cần hỗ trợ chọn size cho bé hay kiểm tra đơn hàng cứ nhắn trực tiếp tại đây ạ!' +
+                    '</div>' +
+                '</div>';
+        } else {
+            messages.forEach(function (m) {
+                if (m.sender === 'khach_hang') {
+                    html +=
+                        '<div class="d-flex justify-content-end mb-3">' +
+                            '<div class="p-3 small shadow-sm chat-bubble-sent">' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                                (m.time ? '<div class="small text-light opacity-75 mt-1" style="font-size:0.7rem;">Bạn • ' + fkEsc(m.time) + '</div>' : '') +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    html +=
+                        '<div class="d-flex mb-3">' +
+                            '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' +
+                                '<div class="small font-weight-bold text-peach mb-1" style="font-size:0.72rem;"><i class="fa-solid fa-headset mr-1"></i>FashionKids CSKH' + (m.time ? ' • ' + fkEsc(m.time) : '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                }
+            });
+        }
         $area.html(html);
         $area.scrollTop($area[0].scrollHeight);
     }
@@ -4275,27 +4295,68 @@ $(document).ready(function () {
         let $box = $('#fk_staffChatMessagesBox');
         if (!$box.length || !Array.isArray(messages)) return;
         let html = '';
-        messages.forEach(function (m) {
-            if (m.sender === 'khach_hang') {
-                html +=
-                    '<div class="d-flex mb-3">' +
-                        '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
-                            '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
-                            '<div>' + fkEsc(m.content) + '</div>' +
-                        '</div>' +
-                    '</div>';
-            } else {
-                html +=
-                    '<div class="d-flex justify-content-end mb-3">' +
-                        '<div class="p-3 shadow-sm chat-bubble-sent">' +
-                            '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
-                            '<div>' + fkEsc(m.content) + '</div>' +
-                        '</div>' +
-                    '</div>';
-            }
-        });
+        if (messages.length === 0) {
+            html =
+                '<div class="text-center text-muted-custom py-5 small">' +
+                    '<i class="fa-regular fa-comments fa-2x mb-2 text-peach"></i>' +
+                    '<div>Phiên hội thoại này chưa có tin nhắn nào. Hãy gửi lời chào để bắt đầu tư vấn phụ huynh!</div>' +
+                '</div>';
+        } else {
+            messages.forEach(function (m) {
+                if (m.sender === 'khach_hang') {
+                    html +=
+                        '<div class="d-flex mb-3">' +
+                            '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
+                                '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    html +=
+                        '<div class="d-flex justify-content-end mb-3">' +
+                            '<div class="p-3 shadow-sm chat-bubble-sent">' +
+                                '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
+                                '<div>' + fkEsc(m.content) + '</div>' +
+                            '</div>' +
+                        '</div>';
+                }
+            });
+        }
         $box.html(html);
         $box.scrollTop($box[0].scrollHeight);
+    }
+
+    function fkRenderStaffSessionList(sessions, activeSessionId) {
+        let $list = $('#fk_staffSessionList');
+        if (!$list.length || !Array.isArray(sessions)) return;
+        if ($('#fk_staffSessionCount').length) {
+            $('#fk_staffSessionCount').text(sessions.length);
+        }
+        let html = '';
+        sessions.forEach(function (sess) {
+            let sid = String(sess.session_id || '');
+            let isActive = (sid === String(activeSessionId || ''));
+            let unread = parseInt(sess.unread || 0, 10) || 0;
+            let rightBadge = unread > 0
+                ? '<span class="badge badge-danger badge-pill fk-session-unread text-nowrap flex-shrink-0">' + unread + ' mới</span>'
+                : '<small class="text-muted-custom text-nowrap flex-shrink-0">' + fkEsc(sess.last_time || '') + '</small>';
+
+            html +=
+                '<a href="javascript:void(0)" ' +
+                   'onclick="fkSwitchStaffChatSession(\'' + fkEsc(sid).replace(/'/g, '&#39;') + '\', \'' + fkEsc(sess.customer_name || 'Khách hàng').replace(/'/g, '&#39;') + '\', \'' + fkEsc(sess.vip_label || 'Khách Trực Tuyến').replace(/'/g, '&#39;') + '\', this)" ' +
+                   'class="list-group-item list-group-item-action py-3 fk-staff-session-item ' + (isActive ? 'bg-milk-cream border-left-peach' : '') + '" ' +
+                   'data-session-id="' + fkEsc(sid) + '">' +
+                    '<div class="d-flex w-100 justify-content-between align-items-center fk-card-header-row mb-1">' +
+                        '<h6 class="mb-0 font-weight-bold text-slate small min-w-0">' +
+                            '<span class="fk-live-pulse-dot mr-1"></span>' + fkEsc(sess.customer_name || 'Khách hàng') +
+                        '</h6>' +
+                        rightBadge +
+                    '</div>' +
+                    '<span class="badge ' + fkEsc(sess.badge_class || 'badge-peach') + ' small mb-1">' + fkEsc(sess.vip_label || 'Khách Trực Tuyến') + '</span>' +
+                    '<p class="mb-0 small text-muted-custom text-truncate">' + fkEsc(sess.last_message || '') + '</p>' +
+                '</a>';
+        });
+        $list.html(html);
     }
 
     window.fkSendQuickClientChat = function (questionText) {
@@ -4313,7 +4374,7 @@ $(document).ready(function () {
         $input.val('');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            url: fkChatEndpoint() + '?c=home&a=ajaxSendSupport',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -4324,12 +4385,19 @@ $(document).ready(function () {
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderClientChatList(res.messages);
+                    if ($('#fk_staff_chat_section').length && Array.isArray(res.sessions)) {
+                        let curStaffSid = $('#fk_staffCurrentSessionId').val() || sessionId;
+                        fkRenderStaffSessionList(res.sessions, curStaffSid);
+                        if (curStaffSid === sessionId) {
+                            fkRenderStaffChatList(res.messages);
+                        }
+                    }
                 }
             }
         });
     });
 
-    // Nhân viên CSKH gửi tin nhắn từ trang staff-chat.php (MH 11)
+    // Nhân viên CSKH / Admin gửi tin nhắn từ trang staff-support.php (MH 11)
     window.fkStaffQuickReply = function (replyText) {
         $('#fk_staffChatInput').val(replyText);
         $('#fk_formStaffChat').trigger('submit');
@@ -4338,6 +4406,8 @@ $(document).ready(function () {
     $('#fk_formStaffChat').on('submit', function (e) {
         e.preventDefault();
         let $input = $('#fk_staffChatInput');
+        let $errBox = $('#fk_staffChatErrorAlert');
+        if ($errBox.length) $errBox.addClass('d-none').text('');
         let msg = ($input.val() || '').trim();
         if (!msg) return;
 
@@ -4345,7 +4415,7 @@ $(document).ready(function () {
         $input.val('');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSendChat',
+            url: fkChatEndpoint() + '?c=staff&a=ajaxSendSupport',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -4356,15 +4426,33 @@ $(document).ready(function () {
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderStaffChatList(res.messages);
+                    if (Array.isArray(res.sessions)) {
+                        fkRenderStaffSessionList(res.sessions, sessionId);
+                    }
+                    if ($('#customerChatWidget').hasClass('show') && $('#fk_clientChatMessagesArea').attr('data-session-id') === sessionId) {
+                        fkRenderClientChatList(res.messages);
+                    }
+                } else if (res && res.message && $errBox.length) {
+                    $errBox.removeClass('d-none').text(res.message);
+                }
+            },
+            error: function (xhr) {
+                let errMsg = (xhr && xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'Không thể gửi tin nhắn phản hồi. Vui lòng kiểm tra kết nối hoặc đăng nhập lại.';
+                if ($errBox.length) {
+                    $errBox.removeClass('d-none').text(errMsg);
                 }
             }
         });
     });
 
     window.fkSwitchStaffChatSession = function (sessionId, customerName, vipLabel, el) {
-        $('.fk-staff-session-item').removeClass('bg-milk-cream');
-        $(el).addClass('bg-milk-cream');
-        $(el).find('.fk-session-unread').remove();
+        $('.fk-staff-session-item').removeClass('bg-milk-cream border-left-peach');
+        if (el) {
+            $(el).addClass('bg-milk-cream border-left-peach');
+            $(el).find('.fk-session-unread').remove();
+        }
 
         $('#fk_staffCurrentSessionId').val(sessionId);
         $('#fk_activeChatSessionCode').text(sessionId);
@@ -4373,13 +4461,16 @@ $(document).ready(function () {
 
         // Đồng bộ trạng thái "Đã đọc" (tgb_danh_dau_tin_da_doc) qua StaffController
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxMarkChatRead',
+            url: fkChatEndpoint() + '?c=staff&a=ajaxMarkSupportRead',
             type: 'POST',
             dataType: 'json',
             data: { session_id: sessionId },
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
                     fkRenderStaffChatList(res.messages);
+                    if (Array.isArray(res.sessions)) {
+                        fkRenderStaffSessionList(res.sessions, sessionId);
+                    }
                 } else {
                     window.fkPollStaffChatNow();
                 }
@@ -4391,28 +4482,51 @@ $(document).ready(function () {
     };
 
     window.fkPollStaffChatNow = function () {
-        let sessionId = $('#fk_staffCurrentSessionId').val() || $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
         let isStaffDesk = $('#fk_staff_chat_section').length > 0 ? 1 : 0;
-        $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxPollChat',
-            type: 'GET',
-            dataType: 'json',
-            data: { session_id: sessionId, mark_read: isStaffDesk },
-            success: function (res) {
-                if (res && res.status === 'success') {
-                    if ($('#fk_staffPollClock').length && res.timestamp) {
-                        $('#fk_staffPollClock').text(res.timestamp);
+        let staffSessionId = $('#fk_staffCurrentSessionId').val() || 'sess_guest_123456';
+        let clientSessionId = $('#fk_clientChatMessagesArea').attr('data-session-id') || 'sess_guest_123456';
+
+        if (isStaffDesk) {
+            $.ajax({
+                url: fkChatEndpoint() + '?c=home&a=ajaxPollSupport',
+                type: 'GET',
+                dataType: 'json',
+                data: { session_id: staffSessionId, mark_read: 1 },
+                success: function (res) {
+                    if (res && res.status === 'success') {
+                        if ($('#fk_staffPollClock').length && res.timestamp) {
+                            $('#fk_staffPollClock').text(res.timestamp);
+                        }
+                        if ($('#fk_staffChatMessagesBox').length && Array.isArray(res.messages)) {
+                            fkRenderStaffChatList(res.messages);
+                        }
+                        if (Array.isArray(res.sessions)) {
+                            fkRenderStaffSessionList(res.sessions, staffSessionId);
+                        }
                     }
-                    if ($('#fk_staffChatMessagesBox').length && Array.isArray(res.messages)) {
-                        fkRenderStaffChatList(res.messages);
-                    }
-                    if ($('#customerChatWidget').hasClass('show') && Array.isArray(res.messages)) {
+                }
+            });
+        }
+
+        if ($('#customerChatWidget').hasClass('show')) {
+            $.ajax({
+                url: fkChatEndpoint() + '?c=home&a=ajaxPollSupport',
+                type: 'GET',
+                dataType: 'json',
+                data: { session_id: clientSessionId, mark_read: 0 },
+                success: function (res) {
+                    if (res && res.status === 'success' && Array.isArray(res.messages)) {
                         fkRenderClientChatList(res.messages);
                     }
                 }
-            }
-        });
+            });
+        }
     };
+
+    // Đồng bộ ngay khi mở hộp thoại Chat khách hàng
+    $('#customerChatWidget').on('shown.bs.collapse', function () {
+        window.fkPollStaffChatNow();
+    });
 
     // Tự động đồng bộ tin nhắn Realtime mỗi 3.5 giây khi đang ở trang CSKH hoặc mở hộp thoại Chat
     if ($('#fk_staff_chat_section').length || $('#customerChatWidget').length) {
@@ -4857,7 +4971,7 @@ $(document).ready(function () {
         $alert.addClass('d-none').removeClass('alert-danger alert-mint text-slate');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=staff&a=ajaxRestockInventory',
+            url: ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php') + '?c=staff&a=ajaxRestockInventory',
             type: 'POST',
             dataType: 'json',
             data: {

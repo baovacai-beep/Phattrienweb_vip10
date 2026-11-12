@@ -49,15 +49,19 @@ class StaffController extends Controller {
     }
 
     /**
-     * Màn hình Live Chat CSKH 3 cột & Tra cứu tồn kho nhanh (MH 11)
+     * Màn hình Bàn Làm Việc CSKH & Tra cứu tồn kho nhanh (MH 11)
      */
-    public function chat(): void {
-        if (!Rbac::enforceCurrentViewAccess('staff-chat.php')) {
+    public function support(): void {
+        if (!Rbac::enforceCurrentViewAccess('staff-support.php')) {
             http_response_code(403);
         }
-        $this->view('staff-chat', [
+        $this->view('staff-support', [
             'page_title' => 'Bàn Tư Vấn & CSKH Trực Tuyến (Nhân Viên)'
         ]);
+    }
+
+    public function chat(): void {
+        $this->support();
     }
 
     /**
@@ -347,13 +351,17 @@ class StaffController extends Controller {
             'sessions'     => $this->realtimeModel->getChatSessions(),
             'messages'     => $this->realtimeModel->getChatMessages($sessionId),
             'routine'      => 'tgb_danh_dau_tin_da_doc',
-            'message'      => 'Đã đồng bộ trạng thái đã đọc cho phiên chat ' . $sessionId
+            'message'      => 'Đã đồng bộ trạng thái đã đọc cho phiên hỗ trợ ' . $sessionId
         ]);
     }
 
+    public function ajaxMarkSupportRead(): void {
+        $this->ajaxMarkChatRead();
+    }
+
     /**
-     * MH 11 (Live Chat): AJAX Gửi phản hồi tư vấn trực tuyến
-     * URL: index.php?c=staff&a=ajaxSendChat
+     * MH 11 (CSKH): AJAX Gửi phản hồi tư vấn trực tuyến
+     * URL: index.php?c=staff&a=ajaxSendSupport
      */
     public function ajaxSendChat(): void {
         if (ob_get_level() > 0) {
@@ -381,6 +389,10 @@ class StaffController extends Controller {
             'sessions' => $this->realtimeModel->getChatSessions(),
             'message'  => 'Đã gửi tin nhắn tư vấn thành công!'
         ]);
+    }
+
+    public function ajaxSendSupport(): void {
+        $this->ajaxSendChat();
     }
 
     /**

@@ -198,20 +198,25 @@ class HomeController extends Controller {
         if (!in_array($sender, ['khach_hang', 'nhan_vien', 'quan_tri'], true)) {
             $sender = 'khach_hang';
         }
+        $dbSender = in_array($sender, ['nhan_vien', 'quan_tri'], true) ? 'nhan_vien' : 'khach_hang';
 
-        $data = $this->realtimeModel->sendChatMessage($sessionId, $sender, $message, $sender === 'khach_hang');
+        $data = $this->realtimeModel->sendChatMessage($sessionId, $dbSender, $message, $dbSender === 'khach_hang');
         $this->json([
             'status'     => 'success',
             'sent'       => $data['sent'],
             'auto_reply' => $data['auto_reply'] ?? null,
             'messages'   => $data['messages'],
-            'sessions'   => $this->realtimeModel->getChatSessions()
+            'sessions'   => Rbac::isStaffOrAdmin() ? $this->realtimeModel->getChatSessions() : []
         ]);
+    }
+
+    public function ajaxSendSupport(): void {
+        $this->ajaxSendChat();
     }
 
     /**
      * API AJAX Đồng bộ Tin nhắn Tư vấn Realtime (Polling) & Đánh dấu đã đọc (tgb_danh_dau_tin_da_doc)
-     * URL: index.php?c=home&a=ajaxPollChat
+     * URL: index.php?c=home&a=ajaxPollSupport (hỗ trợ cả ajaxPollChat)
      */
     public function ajaxPollChat(): void {
         if (ob_get_level() > 0) {
@@ -232,9 +237,13 @@ class HomeController extends Controller {
         ]);
     }
 
+    public function ajaxPollSupport(): void {
+        $this->ajaxPollChat();
+    }
+
     /**
      * API AJAX Đánh dấu đã đọc tin nhắn CSKH (tgb_danh_dau_tin_da_doc) - MH 11
-     * URL: index.php?c=home&a=ajaxMarkChatRead
+     * URL: index.php?c=home&a=ajaxMarkSupportRead
      */
     public function ajaxMarkChatRead(): void {
         if (ob_get_level() > 0) {
@@ -254,6 +263,10 @@ class HomeController extends Controller {
             'routine'      => 'tgb_danh_dau_tin_da_doc',
             'message'      => 'Đã đánh dấu đã đọc toàn bộ tin nhắn phiên ' . $sessionId
         ]);
+    }
+
+    public function ajaxMarkSupportRead(): void {
+        $this->ajaxMarkChatRead();
     }
 
     /**

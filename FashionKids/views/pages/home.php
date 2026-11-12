@@ -418,7 +418,7 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                     </a>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-3 mb-2 mb-lg-0">
-                    <a href="/FashionKids/views/pages/staff-chat.php"
+                    <a href="/FashionKids/views/pages/staff-support.php"
                        class="btn btn-light border btn-block text-left small font-weight-bold text-slate rounded-pill px-3 py-2 fk-utility-pill">
                         <i class="fa-solid fa-headset text-danger mr-2 flex-shrink-0"></i><span>CSKH Trực Tuyến</span>
                     </a>

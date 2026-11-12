@@ -95,7 +95,7 @@ $catColors = [
             <a href="/FashionKids/views/pages/staff-orders.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-truck-ramp-box text-warning mr-1"></i> Xử Lý Đơn Hàng
             </a>
-            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
+            <a href="/FashionKids/views/pages/staff-support.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
             <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">

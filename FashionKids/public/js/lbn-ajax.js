@@ -260,7 +260,7 @@ $(document).ready(function () {
                         only_bamboo: onlyBamboo,
                         sort:        sortMode
                     },
-                    timeout: 3000,
+                    timeout: 12000,
                     success: function (res) {
                         if (res && res.status === 'success' && Array.isArray(res.products)) {
                             var $grid = $('#lbn_catalogGrid');
@@ -320,7 +320,7 @@ $(document).ready(function () {
                     size:        chosenSize,
                     action_type: 'quick_add'
                 },
-                timeout: 3000,
+                timeout: 12000,
                 success: function (res) {
                     var $badges = $('.cart-badge-custom');
                     var nextCount = (res && res.cart_count !== undefined) ? res.cart_count : ((parseInt($badges.first().text(), 10) || 0) + 1);
@@ -447,7 +447,7 @@ $(document).ready(function () {
                     size:        chosenSize,
                     action_type: actionType
                 },
-                timeout: 3000,
+                timeout: 12000,
                 success: function (res) {
                     var avail = (res && res.available_stock !== undefined) ? parseInt(res.available_stock, 10) : maxStock;
                     if (res && res.status === 'success' && res.du_hang) {
@@ -646,7 +646,7 @@ $(document).ready(function () {
                     new_stock:  newStock,
                     mode:       'set'
                 },
-                timeout: 3000,
+                timeout: 15000,
                 complete: function () {
                     $btn.prop('disabled', false).html('<i class="fa-solid fa-rotate"></i>');
                 },
@@ -841,7 +841,7 @@ $(document).ready(function () {
                     contentType: false,
                     dataType: 'json',
                     headers: CSRF ? { 'X-CSRF-Token': CSRF } : {},
-                    timeout: 5000,
+                    timeout: 15000,
                     complete: function () {
                         $submitBtn.prop('disabled', false).html(origBtnHtml);
                     },
@@ -872,9 +872,17 @@ $(document).ready(function () {
                             if (!res.is_edit && typeof window.lbnResetProductForm === 'function') {
                                 window.lbnResetProductForm();
                             }
+                        } else {
+                            lbnShowAlert(
+                                $adminAlert,
+                                'error',
+                                'Không thể lưu sản phẩm',
+                                (res && res.message) ? res.message : 'Máy chủ trả về phản hồi không hợp lệ.',
+                                'Chưa thể lưu'
+                            );
                         }
                     },
-                    error: function (xhr) {
+                    error: function (xhr, textStatus) {
                         var res = xhr.responseJSON;
                         if (res && res.errors) {
                             if (res.errors.sku) $skuInput.addClass('is-invalid').siblings('.invalid-feedback').text(res.errors.sku);
@@ -883,7 +891,11 @@ $(document).ready(function () {
                             if (res.errors.stock_quantity) $stockInput.addClass('is-invalid').siblings('.invalid-feedback').text(res.errors.stock_quantity);
                             if (res.errors.description) $matInput.addClass('is-invalid').siblings('.invalid-feedback').text(res.errors.description);
                         }
-                        var errMsg = (res && res.message) ? res.message : 'Lỗi lưu sản phẩm vào kho hàng!';
+                        var errMsg = (res && res.message)
+                            ? res.message
+                            : (textStatus === 'timeout'
+                                ? 'Máy chủ phản hồi quá lâu (timeout). Vui lòng tải lại trang kiểm tra hoặc thử lại!'
+                                : 'Lỗi lưu sản phẩm vào kho hàng (HTTP ' + (xhr.status || 0) + ')!');
                         lbnShowAlert($adminAlert, 'error', 'Không thể lưu sản phẩm', errMsg, 'Chưa thể lưu');
                     }
                 });

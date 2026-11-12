@@ -993,6 +993,7 @@ class RealtimeContentModel extends BaseModel {
      * ========================================================================
      */
     public function getChatSessions(): array {
+        $baseSeedTs = strtotime('2026-01-01 09:00:00') ?: 1767232800;
         $sessions = [
             'sess_guest_123456' => [
                 'session_id'    => 'sess_guest_123456',
@@ -1002,7 +1003,9 @@ class RealtimeContentModel extends BaseModel {
                 'online'        => true,
                 'last_message'  => 'Shop ơi cho mình hỏi bé cao 92cm nặng 13kg mặc váy Elsa size mấy thì vừa ạ?',
                 'last_time'     => 'Vừa xong',
-                'unread'        => 1
+                'unread'        => 1,
+                'sort_ts'       => $baseSeedTs + 300,
+                'max_id'        => 3
             ],
             'sess_vip_me_chip' => [
                 'session_id'    => 'sess_vip_me_chip',
@@ -1012,7 +1015,9 @@ class RealtimeContentModel extends BaseModel {
                 'online'        => true,
                 'last_message'  => 'Kiểm tra giúp chị đơn hàng #1085 giao về Bình Thạnh tới đâu rồi em nhé?',
                 'last_time'     => '5 phút trước',
-                'unread'        => 2
+                'unread'        => 2,
+                'sort_ts'       => $baseSeedTs + 200,
+                'max_id'        => 2
             ],
             'sess_kol_casting' => [
                 'session_id'    => 'sess_kol_casting',
@@ -1022,41 +1027,110 @@ class RealtimeContentModel extends BaseModel {
                 'online'        => false,
                 'last_message'  => 'Lịch chụp Lookbook Studio đợt 1 vào sáng Chủ Nhật tuần này đúng không shop?',
                 'last_time'     => '18 phút trước',
-                'unread'        => 0
+                'unread'        => 0,
+                'sort_ts'       => $baseSeedTs + 100,
+                'max_id'        => 1
             ]
         ];
 
+        $dbConnected = false;
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->query("
-                    SELECT `ma_phien_khach`, MAX(`ngay_gui`) AS last_time, COUNT(*) AS total_msg,
+                    SELECT `ma_phien_khach`,
+                           MAX(`ngay_gui`) AS last_time,
+                           MAX(`ma_tin_nhan`) AS max_id,
+                           MAX(CASE WHEN `nguoi_gui` = 'khach_hang' THEN `ma_nguoi_dung` ELSE NULL END) AS cust_uid,
+                           COUNT(*) AS total_msg,
                            SUM(CASE WHEN `da_xem` = 0 AND `nguoi_gui` = 'khach_hang' THEN 1 ELSE 0 END) AS unread_cnt
                     FROM `tgb_tin_nhan_tu_van`
                     GROUP BY `ma_phien_khach`
-                    ORDER BY last_time DESC
+                    ORDER BY last_time DESC, max_id DESC
                 ");
                 $rows = $stmt->fetchAll();
+                $stmt->closeCursor();
+                $dbConnected = true;
+
+                // Tra cứu tên & hạng VIP thật của khách hàng từ bảng hgb_nguoi_dung
+                $userMap = [];
+                $uidSet = [];
                 foreach ($rows as $r) {
-                    $sid = $r['ma_phien_khach'];
-                    $lastStmt = $this->db->prepare("SELECT `noi_dung_tin_nhan`, `ngay_gui` FROM `tgb_tin_nhan_tu_van` WHERE `ma_phien_khach` = :sid ORDER BY `ma_tin_nhan` DESC LIMIT 1");
+                    $cid = !empty($r['cust_uid']) ? (int)$r['cust_uid'] : 0;
+                    if ($cid <= 0 && preg_match('/^sess_user_(\d+)$/', (string)$r['ma_phien_khach'], $m)) {
+                        $cid = (int)$m[1];
+                    }
+                    if ($cid > 0) {
+                        $uidSet[$cid] = $cid;
+                    }
+                }
+                if (!empty($uidSet)) {
+                    try {
+                        $inPlaceholders = implode(',', array_map('intval', array_values($uidSet)));
+                        $uStmt = $this->db->query("
+                            SELECT u.`ma_nguoi_dung`, u.`ho_va_ten`, u.`thu_dien_tu`,
+                                   COALESCE(h.`ten_hang`, 'Đồng (Bronze)') AS ten_hang,
+                                   COALESCE(h.`phan_tram_giam_gia`, 0) AS phan_tram_giam_gia
+                            FROM `hgb_nguoi_dung` u
+                            LEFT JOIN `hgb_hang_thanh_vien` h ON u.`ma_hang_thanh_vien` = h.`ma_hang`
+                            WHERE u.`ma_nguoi_dung` IN ({$inPlaceholders})
+                        ");
+                        foreach ($uStmt->fetchAll() as $ur) {
+                            $userMap[(int)$ur['ma_nguoi_dung']] = $ur;
+                        }
+                        $uStmt->closeCursor();
+                    } catch (PDOException $ue) {}
+                }
+
+                foreach ($rows as $r) {
+                    $sid = (string)$r['ma_phien_khach'];
+                    $lastStmt = $this->db->prepare("SELECT `noi_dung_tin_nhan`, `nguoi_gui`, `ngay_gui` FROM `tgb_tin_nhan_tu_van` WHERE `ma_phien_khach` = :sid ORDER BY `ma_tin_nhan` DESC LIMIT 1");
                     $lastStmt->execute([':sid' => $sid]);
                     $lastRow = $lastStmt->fetch();
+                    $lastStmt->closeCursor();
+
+                    $cid = !empty($r['cust_uid']) ? (int)$r['cust_uid'] : 0;
+                    if ($cid <= 0 && preg_match('/^sess_user_(\d+)$/', $sid, $m)) {
+                        $cid = (int)$m[1];
+                    }
+                    $uInfo = $cid > 0 ? ($userMap[$cid] ?? null) : null;
+
+                    $lastPreview = (string)($lastRow['noi_dung_tin_nhan'] ?? '');
+                    if (($lastRow['nguoi_gui'] ?? '') === 'nhan_vien' && $lastPreview !== '') {
+                        $lastPreview = 'Shop: ' . $lastPreview;
+                    }
+                    $sortTs = !empty($lastRow['ngay_gui']) ? (strtotime((string)$lastRow['ngay_gui']) ?: time()) : time();
+                    $timeDisplay = !empty($lastRow['ngay_gui']) ? date('H:i', strtotime((string)$lastRow['ngay_gui'])) : 'Vừa xong';
 
                     if (!isset($sessions[$sid])) {
+                        $custName = $uInfo ? (string)$uInfo['ho_va_ten'] : ('Khách trực tuyến #' . substr($sid, -5));
+                        $vipPct   = $uInfo ? (float)($uInfo['phan_tram_giam_gia'] ?? 0) : 0.0;
+                        $vipName  = $uInfo ? (string)$uInfo['ten_hang'] : 'Khách Trực Tuyến';
+                        $vipLabel = $uInfo
+                            ? ($vipPct > 0 ? ($vipName . ' (-' . rtrim(rtrim((string)$vipPct, '0'), '.') . '%)') : 'Thành viên ' . $vipName)
+                            : 'Khách Ghé Thăm';
+                        $badgeCls = $vipPct >= 15 ? 'badge-mint' : ($vipPct >= 10 ? 'badge-gold' : ($uInfo ? 'badge-sky' : 'badge-peach'));
+
                         $sessions[$sid] = [
                             'session_id'    => $sid,
-                            'customer_name' => 'Khách hàng #' . substr($sid, -5),
-                            'vip_label'     => 'Khách Trực Tuyến',
-                            'badge_class'   => 'badge-peach',
+                            'customer_name' => $custName,
+                            'vip_label'     => $vipLabel,
+                            'badge_class'   => $badgeCls,
                             'online'        => true,
-                            'last_message'  => $lastRow['noi_dung_tin_nhan'] ?? '',
-                            'last_time'     => !empty($lastRow['ngay_gui']) ? date('H:i', strtotime($lastRow['ngay_gui'])) : 'Vừa xong',
-                            'unread'        => (int)$r['unread_cnt']
+                            'last_message'  => $lastPreview,
+                            'last_time'     => $timeDisplay,
+                            'unread'        => (int)$r['unread_cnt'],
+                            'sort_ts'       => $sortTs,
+                            'max_id'        => (int)($r['max_id'] ?? 0)
                         ];
                     } else {
                         if ($lastRow) {
-                            $sessions[$sid]['last_message'] = $lastRow['noi_dung_tin_nhan'];
-                            $sessions[$sid]['last_time'] = !empty($lastRow['ngay_gui']) ? date('H:i', strtotime($lastRow['ngay_gui'])) : 'Vừa xong';
+                            $sessions[$sid]['last_message'] = $lastPreview;
+                            $sessions[$sid]['last_time']    = $timeDisplay;
+                            $sessions[$sid]['sort_ts']      = $sortTs;
+                            $sessions[$sid]['max_id']       = (int)($r['max_id'] ?? 0);
+                        }
+                        if ($uInfo && $sid !== 'sess_guest_123456') {
+                            $sessions[$sid]['customer_name'] = (string)$uInfo['ho_va_ten'];
                         }
                         $sessions[$sid]['unread'] = (int)$r['unread_cnt'];
                     }
@@ -1064,8 +1138,8 @@ class RealtimeContentModel extends BaseModel {
             } catch (PDOException $e) {}
         }
 
-        // Đồng bộ trạng thái đã đọc trong phiên làm việc của Nhân viên CSKH (tgb_danh_dau_tin_da_doc)
-        if (!empty($_SESSION['fk_chat_read_sessions']) && is_array($_SESSION['fk_chat_read_sessions'])) {
+        // Chỉ áp dụng cache đọc trong session khi không có DB (demo offline)
+        if (!$dbConnected && !empty($_SESSION['fk_chat_read_sessions']) && is_array($_SESSION['fk_chat_read_sessions'])) {
             foreach ($_SESSION['fk_chat_read_sessions'] as $readSid => $isRead) {
                 if ($isRead && isset($sessions[$readSid])) {
                     $sessions[$readSid]['unread'] = 0;
@@ -1073,7 +1147,16 @@ class RealtimeContentModel extends BaseModel {
             }
         }
 
-        return array_values($sessions);
+        $list = array_values($sessions);
+        usort($list, static function (array $a, array $b): int {
+            $cmp = ((int)($b['sort_ts'] ?? 0)) <=> ((int)($a['sort_ts'] ?? 0));
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return ((int)($b['max_id'] ?? 0)) <=> ((int)($a['max_id'] ?? 0));
+        });
+
+        return $list;
     }
 
     /**
@@ -1168,13 +1251,14 @@ class RealtimeContentModel extends BaseModel {
             ]
         ];
 
-        $messages = $defaultSeed[$sessionId] ?? $defaultSeed['sess_guest_123456'];
+        $messages = $defaultSeed[$sessionId] ?? [];
 
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare("SELECT * FROM `tgb_tin_nhan_tu_van` WHERE `ma_phien_khach` = :sid ORDER BY `ma_tin_nhan` ASC");
                 $stmt->execute([':sid' => $sessionId]);
                 $rows = $stmt->fetchAll();
+                $stmt->closeCursor();
                 if (!empty($rows)) {
                     $messages = [];
                     foreach ($rows as $r) {
@@ -1200,7 +1284,12 @@ class RealtimeContentModel extends BaseModel {
     }
 
     public function sendChatMessage(string $sessionId, string $sender, string $message, bool $autoReplyForCustomer = true): array {
-        $userId = isset($_SESSION['user']['ma_nguoi_dung']) ? (int)$_SESSION['user']['ma_nguoi_dung'] : null;
+        $userId = isset($_SESSION['user']['ma_nguoi_dung'])
+            ? (int)$_SESSION['user']['ma_nguoi_dung']
+            : (isset($_SESSION['auth_user']['id']) ? (int)$_SESSION['auth_user']['id'] : null);
+        if ($userId !== null && $userId <= 0) {
+            $userId = null;
+        }
         $savedDb = false;
         $newMsgId = time();
 
@@ -1219,7 +1308,25 @@ class RealtimeContentModel extends BaseModel {
                 ]);
                 $newMsgId = (int)$this->db->lastInsertId();
                 $savedDb = true;
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                // Dự phòng nếu ma_nguoi_dung không tồn tại trong FK
+                if ($userId !== null) {
+                    try {
+                        $stmtFb = $this->db->prepare("
+                            INSERT INTO `tgb_tin_nhan_tu_van` (`ma_phien_khach`, `ma_nguoi_dung`, `nguoi_gui`, `noi_dung_tin_nhan`, `da_xem`, `ngay_gui`)
+                            VALUES (:sid, NULL, :sender, :msg, :seen, NOW())
+                        ");
+                        $stmtFb->execute([
+                            ':sid'    => $sessionId,
+                            ':sender' => $sender,
+                            ':msg'    => $message,
+                            ':seen'   => ($sender === 'khach_hang') ? 0 : 1
+                        ]);
+                        $newMsgId = (int)$this->db->lastInsertId();
+                        $savedDb = true;
+                    } catch (PDOException $e2) {}
+                }
+            }
         }
 
         $msgObj = [

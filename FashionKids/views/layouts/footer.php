@@ -51,7 +51,7 @@ require_once __DIR__ . '/../../core/Rbac.php';
                             <small class="text-muted-custom">Hỗ trợ phụ huynh từ 8:00 - 21:00 (Cả T7 &amp; CN)</small>
                         </div>
                         <?php if (Rbac::isStaffOrAdmin()): ?>
-                            <a href="/FashionKids/views/pages/staff-chat.php" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach text-nowrap flex-shrink-0">
+                            <a href="/FashionKids/views/pages/staff-support.php" class="btn btn-light btn-sm rounded-pill border font-weight-bold text-peach text-nowrap flex-shrink-0">
                                 <i class="fa-solid fa-headset mr-1"></i>Bàn CSKH
                             </a>
                         <?php else: ?>

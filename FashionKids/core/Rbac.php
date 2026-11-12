@@ -23,6 +23,7 @@ class Rbac {
 
         // Nhóm trang dành cho Nhân viên vận hành & Quản trị viên (Staff & Admin)
         'staff-orders.php'         => ['nhan_vien', 'quan_tri'],
+        'staff-support.php'        => ['nhan_vien', 'quan_tri'],
         'staff-chat.php'           => ['nhan_vien', 'quan_tri'],
         'staff-casting-review.php' => ['nhan_vien', 'quan_tri'],
         'admin-inventory.php'      => ['nhan_vien', 'quan_tri'],
@@ -37,6 +38,12 @@ class Rbac {
      */
     public static function normalizeIp(?string $ip): string {
         $raw = trim((string)$ip);
+        if ($raw === '' && !empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            $raw = trim((string)$_SERVER['HTTP_CF_CONNECTING_IP']);
+        } elseif ($raw === '' && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $parts = explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']);
+            $raw = trim((string)($parts[0] ?? ''));
+        }
         if ($raw === '' || $raw === '::1' || $raw === '0:0:0:0:0:0:0:1' || strcasecmp($raw, '::ffff:127.0.0.1') === 0) {
             return '127.0.0.1';
         }
@@ -66,14 +73,27 @@ class Rbac {
         if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
             $u = $_SESSION['user'];
             $role = $u['vai_tro'] ?? 'khach_hang';
-            $clientIp = self::normalizeIp($_SERVER['REMOTE_ADDR'] ?? null);
+            $forwardedRaw = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? null));
+            if (is_string($forwardedRaw) && strpos($forwardedRaw, ',') !== false) {
+                $forwardedRaw = trim(explode(',', $forwardedRaw)[0]);
+            }
+            $clientIp = self::normalizeIp($forwardedRaw);
             $clientUa = self::normalizeUa($_SERVER['HTTP_USER_AGENT'] ?? null);
 
             // Kiểm tra chống Session Hijacking đối với Quản trị viên (quan_tri)
             if ($role === 'quan_tri' && isset($_SESSION['auth_user']['ip'], $_SESSION['auth_user']['ua'])) {
                 $sessIp = self::normalizeIp((string)$_SESSION['auth_user']['ip']);
                 $sessUa = self::normalizeUa((string)$_SESSION['auth_user']['ua']);
-                if ($sessIp !== $clientIp || $sessUa !== $clientUa) {
+                $ipMismatch = ($sessIp !== $clientIp);
+                // Hỗ trợ IP proxy/4G đổi dải /16 ở môi trường hosting, vẫn chặn nghiêm ngặt nếu khác User-Agent
+                if ($ipMismatch && filter_var($sessIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    $p1 = explode('.', $sessIp);
+                    $p2 = explode('.', $clientIp);
+                    if ($p1[0] === $p2[0] && $p1[1] === $p2[1]) {
+                        $ipMismatch = false;
+                    }
+                }
+                if ($ipMismatch || $sessUa !== $clientUa) {
                     // Phiên quản trị có dấu hiệu khác IP/User-Agent -> Hủy phiên bảo mật
                     unset($_SESSION['user'], $_SESSION['auth_user'], $_SESSION['role'], $_SESSION['user_id']);
                     return;
