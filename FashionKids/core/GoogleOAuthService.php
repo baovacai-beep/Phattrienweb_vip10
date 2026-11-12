@@ -15,14 +15,21 @@ class GoogleOAuthService {
     }
 
     public static function getRedirectUri(): string {
-        $configured = defined('GOOGLE_REDIRECT_URI') ? trim((string)GOOGLE_REDIRECT_URI) : '';
-        if ($configured !== '') {
-            return $configured;
-        }
         $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || ((int)($_SERVER['SERVER_PORT'] ?? 80) === 443);
+            || ((int)($_SERVER['SERVER_PORT'] ?? 80) === 443)
+            || (strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
         $scheme = $isHttps ? 'https' : 'http';
         $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $hostOnly = strtolower(preg_replace('/:\d+$/', '', (string)$host));
+
+        $configured = defined('GOOGLE_REDIRECT_URI') ? trim((string)GOOGLE_REDIRECT_URI) : '';
+        if ($configured !== '') {
+            $cfgHost = strtolower((string)(parse_url($configured, PHP_URL_HOST) ?? ''));
+            if ($cfgHost !== '' && $cfgHost === $hostOnly) {
+                return $configured;
+            }
+        }
+
         $endpoint = defined('APP_ENDPOINT') ? APP_ENDPOINT : '/FashionKids/index.php';
         return $scheme . '://' . $host . $endpoint . '?c=auth&a=googleCallback';
     }

@@ -580,86 +580,99 @@ class OrderModel extends Model {
         $appliedVoucherDiscount = 0.0;
 
         $orderId = 0;
+        $usePhpTransaction = (count($normalizedItems) !== 1);
 
-        if (count($normalizedItems) === 1) {
-            // 1 dòng sản phẩm -> Dùng trực tiếp Stored Procedure sp_tgb_tao_don_hang_va_chi_tiet ngoài PDO tx
-            $single = $normalizedItems[0];
-            $orderId = $this->taoDonHang(
-                $userId,
-                $name,
-                $phone,
-                $email,
-                $address,
-                $province,
-                $district,
-                $single['product_id'],
-                $single['size'],
-                $single['quantity']
-            );
+        if (!$usePhpTransaction) {
+            // 1 dòng sản phẩm -> Ưu tiên Stored Procedure sp_tgb_tao_don_hang_va_chi_tiet (tự động fallback nếu Hosting thiếu SP)
+            try {
+                $single = $normalizedItems[0];
+                $orderId = $this->taoDonHang(
+                    $userId,
+                    $name,
+                    $phone,
+                    $email,
+                    $address,
+                    $province,
+                    $district,
+                    $single['product_id'],
+                    $single['size'],
+                    $single['quantity']
+                );
 
-            // Đọc tạm tính & giảm giá VIP do SP vừa tính để cộng phí vận chuyển + voucher chính xác tuyệt đối
-            $spRowStmt = $this->db->prepare("SELECT `tien_hang_tam_tinh`, `tien_giam_gia` FROM `lnkt_don_hang` WHERE `ma_don_hang` = :id LIMIT 1");
-            $spRowStmt->execute([':id' => $orderId]);
-            $spRow = $spRowStmt->fetch();
-            $spRowStmt->closeCursor();
+                // Đọc tạm tính & giảm giá VIP do SP vừa tính để cộng phí vận chuyển + voucher chính xác tuyệt đối
+                $spRowStmt = $this->db->prepare("SELECT `tien_hang_tam_tinh`, `tien_giam_gia` FROM `lnkt_don_hang` WHERE `ma_don_hang` = :id LIMIT 1");
+                $spRowStmt->execute([':id' => $orderId]);
+                $spRow = $spRowStmt->fetch();
+                $spRowStmt->closeCursor();
 
-            $spSubtotal = (float)($spRow['tien_hang_tam_tinh'] ?? 0);
-            $spVipDisc  = (float)($spRow['tien_giam_gia'] ?? 0);
-            $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, $spSubtotal);
-            $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
+                $spSubtotal = (float)($spRow['tien_hang_tam_tinh'] ?? 0);
+                $spVipDisc  = (float)($spRow['tien_giam_gia'] ?? 0);
+                $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, $spSubtotal);
+                $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
 
-            if ($voucherCode !== '') {
-                $vCheck = $this->kiemTraMaGiamGia($voucherCode, $spSubtotal, $shippingFee);
-                if (!empty($vCheck['valid'])) {
-                    $appliedVoucherCode     = $vCheck['code'];
-                    $appliedVoucherDiscount = (float)$vCheck['discount_amount'];
+                if ($voucherCode !== '') {
+                    $vCheck = $this->kiemTraMaGiamGia($voucherCode, $spSubtotal, $shippingFee);
+                    if (!empty($vCheck['valid'])) {
+                        $appliedVoucherCode     = $vCheck['code'];
+                        $appliedVoucherDiscount = (float)$vCheck['discount_amount'];
+                    }
                 }
-            }
-            $finalSpTotal = max(0.0, round($spSubtotal - $spVipDisc - $appliedVoucherDiscount + $shippingFee, 2));
+                $finalSpTotal = max(0.0, round($spSubtotal - $spVipDisc - $appliedVoucherDiscount + $shippingFee, 2));
 
-            $transferMemo = (defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK') . $orderId;
-            $ttlHours     = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
-            $updStmt = $this->db->prepare("
-                UPDATE `lnkt_don_hang`
-                SET `phuong_xa`              = :ward,
-                    `dich_vu_van_chuyen`     = :svc,
-                    `phi_van_chuyen`         = :ship_fee,
-                    `trong_luong_gram`       = :weight_g,
-                    `ma_voucher`             = :vcode,
-                    `tien_giam_voucher`      = :vdisc,
-                    `tong_tien_thanh_toan`   = :final_total,
-                    `phuong_thuc_thanh_toan` = :pm,
-                    `trang_thai_thanh_toan`  = :ps,
-                    `han_thanh_toan`         = CASE WHEN :is_vqr = 1 THEN DATE_ADD(`ngay_dat_hang`, INTERVAL {$ttlHours} HOUR) ELSE NULL END,
-                    `noi_dung_chuyen_khoan`  = :memo,
-                    `ghi_chu`                = :note,
-                    `ngay_cap_nhat`          = NOW()
-                WHERE `ma_don_hang` = :id
-            ");
-            $updStmt->execute([
-                ':ward'        => ($ward !== '' ? $ward : null),
-                ':svc'         => $shippingService,
-                ':ship_fee'    => $shippingFee,
-                ':weight_g'    => $weightGram,
-                ':vcode'       => $appliedVoucherCode,
-                ':vdisc'       => $appliedVoucherDiscount,
-                ':final_total' => $finalSpTotal,
-                ':pm'          => $paymentMethod,
-                ':ps'          => $paymentStatus,
-                ':is_vqr'      => ($paymentMethod === 'vietqr' ? 1 : 0),
-                ':memo'        => $transferMemo,
-                ':note'        => ($note !== '' ? $note : null),
-                ':id'          => $orderId,
-            ]);
+                $transferMemo = (defined('VIETQR_TRANSFER_PREFIX') ? VIETQR_TRANSFER_PREFIX : 'FK') . $orderId;
+                $ttlHours     = defined('VIETQR_PAYMENT_TTL_HOURS') ? (int)VIETQR_PAYMENT_TTL_HOURS : 24;
+                $updStmt = $this->db->prepare("
+                    UPDATE `lnkt_don_hang`
+                    SET `phuong_xa`              = :ward,
+                        `dich_vu_van_chuyen`     = :svc,
+                        `phi_van_chuyen`         = :ship_fee,
+                        `trong_luong_gram`       = :weight_g,
+                        `ma_voucher`             = :vcode,
+                        `tien_giam_voucher`      = :vdisc,
+                        `tong_tien_thanh_toan`   = :final_total,
+                        `phuong_thuc_thanh_toan` = :pm,
+                        `trang_thai_thanh_toan`  = :ps,
+                        `han_thanh_toan`         = CASE WHEN :is_vqr = 1 THEN DATE_ADD(`ngay_dat_hang`, INTERVAL {$ttlHours} HOUR) ELSE NULL END,
+                        `noi_dung_chuyen_khoan`  = :memo,
+                        `ghi_chu`                = :note,
+                        `ngay_cap_nhat`          = NOW()
+                    WHERE `ma_don_hang` = :id
+                ");
+                $updStmt->execute([
+                    ':ward'        => ($ward !== '' ? $ward : null),
+                    ':svc'         => $shippingService,
+                    ':ship_fee'    => $shippingFee,
+                    ':weight_g'    => $weightGram,
+                    ':vcode'       => $appliedVoucherCode,
+                    ':vdisc'       => $appliedVoucherDiscount,
+                    ':final_total' => $finalSpTotal,
+                    ':pm'          => $paymentMethod,
+                    ':ps'          => $paymentStatus,
+                    ':is_vqr'      => ($paymentMethod === 'vietqr' ? 1 : 0),
+                    ':memo'        => $transferMemo,
+                    ':note'        => ($note !== '' ? $note : null),
+                    ':id'          => $orderId,
+                ]);
 
-            if ($appliedVoucherCode !== null) {
-                $this->db->prepare("
-                    UPDATE `lnkt_ma_giam_gia`
-                    SET `da_su_dung` = `da_su_dung` + 1
-                    WHERE `ma_code` = :c AND (`gioi_han_luot` IS NULL OR `da_su_dung` < `gioi_han_luot`)
-                ")->execute([':c' => $appliedVoucherCode]);
+                if ($appliedVoucherCode !== null) {
+                    $this->db->prepare("
+                        UPDATE `lnkt_ma_giam_gia`
+                        SET `da_su_dung` = `da_su_dung` + 1
+                        WHERE `ma_code` = :c AND (`gioi_han_luot` IS NULL OR `da_su_dung` < `gioi_han_luot`)
+                    ")->execute([':c' => $appliedVoucherCode]);
+                }
+            } catch (Throwable $spEx) {
+                $prev = $spEx->getPrevious();
+                $sqlState = ($prev instanceof PDOException) ? ($prev->errorInfo[0] ?? '') : '';
+                if ($sqlState === '45000' || strpos($spEx->getMessage(), 'TGB_ERR_') !== false) {
+                    throw $spEx;
+                }
+                error_log('[tgb] Fallback PHP ACID transaction for 1-item order: ' . $spEx->getMessage());
+                $usePhpTransaction = true;
             }
-        } else {
+        }
+
+        if ($usePhpTransaction) {
             // Nhiều dòng sản phẩm -> Explicit ACID Transaction + FOR UPDATE row locking
             try {
                 $this->db->beginTransaction();
@@ -698,14 +711,27 @@ class OrderModel extends Model {
                 $shippingCalc = ShippingService::calculateFee($province, $district, $ward, $weightGram, $shippingService, $subtotal);
                 $shippingFee  = (float)($shippingCalc['shipping_fee'] ?? 0.0);
 
-                // Gọi Stored Function fn_hgb_tinh_phan_tram_giam_gia tính % VIP tự động từ DB
+                // Gọi Stored Function fn_hgb_tinh_phan_tram_giam_gia tính % VIP tự động từ DB (kèm fallback nếu thiếu Routine)
                 $discountPct = 0.0;
                 if ($userId !== null && $userId > 0) {
-                    $vipStmt = $this->db->prepare("SELECT `fn_hgb_tinh_phan_tram_giam_gia`(:uid) AS phan_tram");
-                    $vipStmt->execute([':uid' => $userId]);
-                    $vipRes = $vipStmt->fetch();
-                    $vipStmt->closeCursor();
-                    $discountPct = (float)($vipRes['phan_tram'] ?? 0.0);
+                    try {
+                        $vipStmt = $this->db->prepare("SELECT `fn_hgb_tinh_phan_tram_giam_gia`(:uid) AS phan_tram");
+                        $vipStmt->execute([':uid' => $userId]);
+                        $vipRes = $vipStmt->fetch();
+                        $vipStmt->closeCursor();
+                        $discountPct = (float)($vipRes['phan_tram'] ?? 0.0);
+                    } catch (PDOException $vipEx) {
+                        $vipFb = $this->db->prepare("
+                            SELECT COALESCE(h.phan_tram_giam_gia, 0) AS phan_tram
+                            FROM `hgb_nguoi_dung` u
+                            LEFT JOIN `hgb_hang_thanh_vien` h ON u.ma_hang_thanh_vien = h.ma_hang
+                            WHERE u.ma_nguoi_dung = :uid
+                            LIMIT 1
+                        ");
+                        $vipFb->execute([':uid' => $userId]);
+                        $discountPct = (float)($vipFb->fetchColumn() ?: 0.0);
+                        $vipFb->closeCursor();
+                    }
                 }
 
                 $discountAmount = round(($subtotal * $discountPct) / 100.0, 2);

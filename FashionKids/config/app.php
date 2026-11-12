@@ -11,9 +11,13 @@ if (!defined('APP_BASE_URL')) {
     $httpHost   = $_SERVER['HTTP_HOST'] ?? '';
     $isRootHost = (
         !empty($httpHost) && (
+            strpos($httpHost, 'infinityfree.com') !== false ||
             strpos($httpHost, 'infinityfreeapp.com') !== false ||
+            strpos($httpHost, 'free.nf') !== false ||
+            strpos($httpHost, 'great-site.net') !== false ||
             strpos($httpHost, 'epizy.com') !== false ||
-            strpos($httpHost, 'rf.gd') !== false
+            strpos($httpHost, 'rf.gd') !== false ||
+            strpos($httpHost, 'kesug.com') !== false
         ) && strpos($scriptName, '/FashionKids/') === false
     );
     if ($isRootHost || ($scriptName !== '' && dirname($scriptName) === '/')) {

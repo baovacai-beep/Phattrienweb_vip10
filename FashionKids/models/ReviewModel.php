@@ -108,7 +108,15 @@ class ReviewModel extends Model {
                 $stmt->closeCursor();
                 return (float)($row['diem_sao'] ?? 0.0);
             } catch (PDOException $e) {
-                error_log("Lỗi tính sao trung bình: " . $e->getMessage());
+                try {
+                    $fb = $this->db->prepare("SELECT COALESCE(ROUND(AVG(so_sao), 1), 0.0) AS diem_sao FROM tgb_danh_gia_san_pham WHERE ma_san_pham = :sp");
+                    $fb->execute([':sp' => $maSanPham]);
+                    $val = $fb->fetchColumn();
+                    $fb->closeCursor();
+                    return (float)($val ?? 0.0);
+                } catch (PDOException $e2) {
+                    error_log("Lỗi tính sao trung bình: " . $e2->getMessage());
+                }
             }
         }
         return 0.0;
@@ -126,7 +134,23 @@ class ReviewModel extends Model {
                 $stmt->closeCursor();
                 return (int)($row['so_nguoi_mua'] ?? 0);
             } catch (PDOException $e) {
-                error_log("Lỗi đếm số người mua: " . $e->getMessage());
+                try {
+                    $fb = $this->db->prepare("
+                        SELECT COUNT(DISTINCT COALESCE(CAST(dh.ma_nguoi_dung AS CHAR), dh.so_dien_thoai_nhan))
+                        FROM tgb_chi_tiet_don_hang ct
+                        JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                        LEFT JOIN lnkt_yeu_cau_hoan_hang hh ON hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan'
+                        WHERE ct.ma_san_pham = :sp
+                          AND dh.trang_thai_don_hang = 'hoan_tat'
+                          AND hh.ma_hoan_hang IS NULL
+                    ");
+                    $fb->execute([':sp' => $maSanPham]);
+                    $cnt = $fb->fetchColumn();
+                    $fb->closeCursor();
+                    return (int)($cnt ?: 0);
+                } catch (PDOException $e2) {
+                    error_log("Lỗi đếm số người mua: " . $e2->getMessage());
+                }
             }
         }
         return 0;

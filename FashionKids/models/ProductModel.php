@@ -195,7 +195,34 @@ class ProductModel extends Model {
                     return $rows;
                 }
             } catch (PDOException $e) {
-                error_log("Lỗi lấy danh sách sản phẩm: " . $e->getMessage());
+                // Dự phòng khi Shared Hosting chặn Stored Function (fn_tgb_*)
+                try {
+                    $fallbackSql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                           ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                           (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                           (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                            FROM tgb_chi_tiet_don_hang ct
+                                            JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                            WHERE ct.ma_san_pham = sp.ma_san_pham
+                                              AND dh.trang_thai_don_hang = 'hoan_tat'
+                                              AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                           ) AS so_nguoi_mua
+                                    FROM lbn_san_pham sp
+                                    JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                    WHERE sp.ma_san_pham >= 101 AND sp.gia_ban BETWEEN :minPrice AND :maxPrice";
+                    if ($maDanhMuc !== null && $maDanhMuc > 0) {
+                        $fallbackSql .= " AND sp.ma_danh_muc = :maDanhMuc";
+                    }
+                    $fallbackSql .= " ORDER BY sp.ma_san_pham DESC";
+                    $stmtFb = $this->db->prepare($fallbackSql);
+                    $stmtFb->execute($params);
+                    $rowsFb = $stmtFb->fetchAll();
+                    if (!empty($rowsFb)) {
+                        return $rowsFb;
+                    }
+                } catch (PDOException $e2) {
+                    error_log("Lỗi lấy danh sách sản phẩm: " . $e2->getMessage());
+                }
             }
         }
         return $this->mockProducts;
@@ -224,7 +251,31 @@ class ProductModel extends Model {
                 if (!empty($rows)) {
                     return $rows;
                 }
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                try {
+                    $stmtFb = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                         ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                                         (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                         (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                                          FROM tgb_chi_tiet_don_hang ct
+                                                          JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                                          WHERE ct.ma_san_pham = sp.ma_san_pham
+                                                            AND dh.trang_thai_don_hang = 'hoan_tat'
+                                                            AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                                         ) AS so_nguoi_mua
+                                                  FROM lbn_san_pham sp
+                                                  JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                                  WHERE sp.ma_san_pham >= 101 AND sp.so_luong_ton_kho > 0
+                                                  ORDER BY sp.ma_san_pham ASC
+                                                  LIMIT :limit");
+                    $stmtFb->bindValue(':limit', $limit, PDO::PARAM_INT);
+                    $stmtFb->execute();
+                    $rowsFb = $stmtFb->fetchAll();
+                    if (!empty($rowsFb)) {
+                        return $rowsFb;
+                    }
+                } catch (PDOException $e2) {}
+            }
         }
         return array_slice($this->mockProducts, 0, $limit);
     }
@@ -247,7 +298,27 @@ class ProductModel extends Model {
                 $product = $stmt->fetch();
                 return $product ?: null;
             } catch (PDOException $e) {
-                error_log("Lỗi chi tiết sản phẩm: " . $e->getMessage());
+                try {
+                    $stmtFb = $this->db->prepare("SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                                         ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                                         (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                                         (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                                          FROM tgb_chi_tiet_don_hang ct
+                                                          JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                                          WHERE ct.ma_san_pham = sp.ma_san_pham
+                                                            AND dh.trang_thai_don_hang = 'hoan_tat'
+                                                            AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                                         ) AS so_nguoi_mua
+                                                  FROM lbn_san_pham sp
+                                                  JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                                  WHERE sp.ma_san_pham = :id
+                                                  LIMIT 1");
+                    $stmtFb->execute([':id' => $id]);
+                    $productFb = $stmtFb->fetch();
+                    return $productFb ?: null;
+                } catch (PDOException $e2) {
+                    error_log("Lỗi chi tiết sản phẩm: " . $e2->getMessage());
+                }
             }
         }
 
@@ -495,7 +566,32 @@ class ProductModel extends Model {
                     }
                 }
             } catch (PDOException $e) {
-                error_log("Lỗi đồng bộ lbn_san_pham: " . $e->getMessage());
+                try {
+                    $fallbackSql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
+                                           ROUND(COALESCE((SELECT AVG(dg.so_sao_danh_gia) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham), 0.0), 1) AS sao_trung_binh,
+                                           (SELECT COUNT(*) FROM tgb_danh_gia_san_pham dg WHERE dg.ma_san_pham = sp.ma_san_pham) AS tong_danh_gia,
+                                           (SELECT COUNT(DISTINCT CASE WHEN dh.ma_nguoi_dung IS NOT NULL THEN CONCAT('U', dh.ma_nguoi_dung) ELSE CONCAT('O', dh.ma_don_hang) END)
+                                            FROM tgb_chi_tiet_don_hang ct
+                                            JOIN lnkt_don_hang dh ON ct.ma_don_hang = dh.ma_don_hang
+                                            WHERE ct.ma_san_pham = sp.ma_san_pham
+                                              AND dh.trang_thai_don_hang = 'hoan_tat'
+                                              AND NOT EXISTS (SELECT 1 FROM lnkt_yeu_cau_hoan_hang hh WHERE hh.ma_don_hang = dh.ma_don_hang AND hh.trang_thai_hoan = 'hoan_tat_hoan')
+                                           ) AS so_nguoi_mua
+                                    FROM lbn_san_pham sp
+                                    JOIN lbn_danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                                    WHERE sp.ma_san_pham >= 101
+                                    ORDER BY sp.ma_san_pham ASC";
+                    $rowsFb = $this->db->query($fallbackSql)->fetchAll();
+                    if (!empty($rowsFb)) {
+                        $loadedFromDb = true;
+                        foreach ($rowsFb as $idx => $dbRow) {
+                            $norm = $this->normalizeProductRow($dbRow, $idx);
+                            $byId[$norm['id']] = $norm;
+                        }
+                    }
+                } catch (PDOException $e2) {
+                    error_log("Lỗi đồng bộ lbn_san_pham: " . $e2->getMessage());
+                }
             }
         }
 
