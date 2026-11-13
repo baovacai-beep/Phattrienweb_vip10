@@ -375,11 +375,18 @@ class HomeController extends Controller {
             return;
         }
 
-        $res = $this->realtimeModel->submitKolApplication($_POST);
-        $this->json([
-            'status'      => 'success',
-            'application' => $res,
-            'message'     => 'Đã tiếp nhận hồ sơ ứng tuyển của ' . $res['baby_name'] . ' (Mã hồ sơ: #' . $res['code'] . ') thành công!'
-        ]);
+        try {
+            $res = $this->realtimeModel->submitKolApplication($_POST);
+            $this->json([
+                'status'      => 'success',
+                'application' => $res,
+                'message'     => 'Đã tiếp nhận hồ sơ ứng tuyển của ' . $res['baby_name'] . ' (Mã hồ sơ: #' . $res['code'] . ') thành công!'
+            ]);
+        } catch (Throwable $e) {
+            $this->json([
+                'status'  => 'error',
+                'message' => $e->getMessage() ?: 'Không thể tiếp nhận hồ sơ ứng tuyển KOL Nhí lúc này!'
+            ], 400);
+        }
     }
 }

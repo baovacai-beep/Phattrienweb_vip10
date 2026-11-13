@@ -869,8 +869,33 @@ class UserModel extends Model {
                 $stmt->closeCursor();
                 return $kq;
             } catch (PDOException $e) {
-                error_log('[hgb] tichDiemNangHang: ' . $e->getMessage());
-                return false;
+                error_log('[hgb] tichDiemNangHang fallback: ' . $e->getMessage());
+                if ($diemCong <= 0 || $maNguoiDung <= 0) {
+                    return false;
+                }
+                try {
+                    $uStmt = $this->db->prepare('SELECT COALESCE(diem_tich_luy, 0) FROM hgb_nguoi_dung WHERE ma_nguoi_dung = :id LIMIT 1');
+                    $uStmt->execute([':id' => $maNguoiDung]);
+                    $curPts = $uStmt->fetchColumn();
+                    $uStmt->closeCursor();
+                    if ($curPts === false) {
+                        return false;
+                    }
+                    $newPts = (int)$curPts + $diemCong;
+                    $tStmt = $this->db->prepare('SELECT ma_hang FROM hgb_hang_thanh_vien WHERE diem_toi_thieu <= :pts ORDER BY diem_toi_thieu DESC LIMIT 1');
+                    $tStmt->execute([':pts' => $newPts]);
+                    $newTier = $tStmt->fetchColumn();
+                    $tStmt->closeCursor();
+                    $upd = $this->db->prepare('UPDATE hgb_nguoi_dung SET diem_tich_luy = :pts, ma_hang_thanh_vien = :tier WHERE ma_nguoi_dung = :id');
+                    return $upd->execute([
+                        ':pts'  => $newPts,
+                        ':tier' => ($newTier !== false && $newTier !== null) ? (int)$newTier : null,
+                        ':id'   => $maNguoiDung,
+                    ]);
+                } catch (PDOException $e2) {
+                    error_log('[hgb] tichDiemNangHang SQL fallback error: ' . $e2->getMessage());
+                    return false;
+                }
             }
         }
         return true;

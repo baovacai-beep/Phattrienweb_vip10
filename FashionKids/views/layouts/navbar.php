@@ -153,6 +153,9 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                                     <a class="dropdown-item py-2 text-slate" href="/FashionKids/views/pages/staff-orders.php">
                                         <i class="fa-solid fa-clipboard-check mr-2 text-secondary"></i>Điều phối Đơn hàng &amp; CSKH
                                     </a>
+                                    <a class="dropdown-item py-2 text-slate" href="/FashionKids/views/pages/staff-casting-review.php">
+                                        <i class="fa-solid fa-crown mr-2 text-warning"></i>Duyệt Hồ Sơ KOL Nhí
+                                    </a>
                                 <?php endif; ?>
 
                                 <div class="dropdown-divider"></div>

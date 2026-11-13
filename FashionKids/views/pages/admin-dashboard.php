@@ -98,6 +98,9 @@ $catColors = [
             <a href="/FashionKids/views/pages/staff-support.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-headset text-danger mr-1"></i> CSKH Trực Tuyến
             </a>
+            <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
+                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
+            </a>
             <a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm rounded-pill font-weight-bold text-slate text-nowrap border">
                 <i class="fa-solid fa-images text-secondary mr-1"></i> Banner Chiến Dịch
             </a>
@@ -196,9 +199,9 @@ $catColors = [
                     <div class="min-w-0 pr-2">
                         <small class="text-muted-custom font-weight-bold d-block text-uppercase">Khách Hàng Thành Viên</small>
                         <h4 class="font-weight-bold text-slate mb-1"><?= number_format($totalCustomers) ?> phụ huynh</h4>
-                        <span class="badge badge-pill badge-gold small badge-wrap-safe">
+                        <a href="/FashionKids/views/pages/staff-casting-review.php" class="badge badge-pill badge-gold small badge-wrap-safe text-decoration-none">
                             <i class="fa-solid fa-crown mr-1"></i><?= number_format($totalKolProfiles) ?> hồ sơ KOL Nhí
-                        </span>
+                        </a>
                     </div>
                     <div class="rounded-circle p-3 badge-gold d-flex align-items-center justify-content-center avatar-56 flex-shrink-0">
                         <i class="fa-solid fa-award h4 mb-0 text-warning"></i>
