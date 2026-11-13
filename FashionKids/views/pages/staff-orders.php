@@ -109,6 +109,9 @@ $inspNote       = ($inspectOrder && !empty($inspectOrder['ghi_chu'])) ? (string)
             <a href="/FashionKids/views/pages/order-tracking.php" class="btn btn-pastel-outline btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                 <i class="fa-solid fa-route mr-1"></i> Xem Tiến Trình Khách Hàng
             </a>
+            <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-light btn-sm border font-weight-bold rounded-pill px-3 text-slate text-nowrap">
+                <i class="fa-solid fa-crown text-warning mr-1"></i> Duyệt KOL Nhí
+            </a>
             <?php if (Rbac::isAdmin()): ?>
                 <a href="/FashionKids/views/pages/admin-dashboard.php" class="btn btn-outline-secondary btn-sm font-weight-bold rounded-pill px-3 text-nowrap">
                     <i class="fa-solid fa-gauge-high mr-1"></i> Bảng Điều Khiển

@@ -1549,58 +1549,118 @@ class RealtimeContentModel extends BaseModel {
         ];
     }
 
+    private function formatKolRow(array $r, array $defaultMap = []): array {
+        $id = (int)$r['ma_ho_so'];
+        $years = 3;
+        if (!empty($r['ngay_sinh_be'])) {
+            $ts = strtotime((string)$r['ngay_sinh_be']);
+            if ($ts !== false) {
+                $years = max(1, (int)date('Y') - (int)date('Y', $ts));
+            }
+        }
+        $ageGroup = '3_4';
+        if ($years <= 2) {
+            $ageGroup = '1_2';
+        } elseif ($years >= 5) {
+            $ageGroup = '5_6';
+        }
+
+        $gender = (string)($r['gioi_tinh_be'] ?? 'be_gai');
+        $resolvedPhotos = $this->resolveKolImages($r['danh_sach_anh'] ?? null, $id, $gender, $defaultMap);
+
+        return [
+            'id'            => $id,
+            'user_id'       => !empty($r['ma_nguoi_dung']) ? (int)$r['ma_nguoi_dung'] : null,
+            'code'          => 'KOL-2026-' . str_pad((string)$id, 2, '0', STR_PAD_LEFT),
+            'baby_name'     => (string)$r['ho_ten_be'],
+            'birth_date'    => (string)$r['ngay_sinh_be'],
+            'age_label'     => $years . ' tuổi',
+            'age_group'     => $ageGroup,
+            'gender'        => $gender,
+            'height_cm'     => (float)$r['chieu_cao_be'],
+            'weight_kg'     => (float)$r['can_nang_be'],
+            'guardian_name' => (string)$r['ho_ten_phu_huynh'],
+            'phone'         => (string)$r['so_dien_thoai'],
+            'talent'        => ($r['nang_khieu_kinh_nghiem'] ?? '') !== '' ? (string)$r['nang_khieu_kinh_nghiem'] : 'Tự tin tạo dáng trước ống kính',
+            'image'         => $resolvedPhotos[0],
+            'photos'        => $resolvedPhotos,
+            'status'        => (string)($r['trang_thai_duyet'] ?? 'cho_duyet'),
+            'created_at'    => !empty($r['ngay_nop_ho_so']) ? date('d/m/Y H:i', strtotime((string)$r['ngay_nop_ho_so'])) : date('d/m/Y H:i'),
+        ];
+    }
+
     public function getKolApplications(): array {
-        $list = $this->getDefaultKolCandidates();
+        $defaults = $this->getDefaultKolCandidates();
+        $ordered  = [];
 
         if ($this->hasConnection()) {
             try {
-                $rows = $this->db->query("SELECT * FROM `lnkt_dang_ky_kol_nhi` ORDER BY `ma_ho_so` ASC")->fetchAll();
+                $rows = $this->db->query("
+                    SELECT * FROM `lnkt_dang_ky_kol_nhi`
+                    ORDER BY CASE WHEN `trang_thai_duyet` = 'cho_duyet' THEN 0 ELSE 1 END ASC, `ma_ho_so` DESC
+                ")->fetchAll();
                 foreach ($rows as $r) {
                     $id = (int)$r['ma_ho_so'];
-                    $years = 3;
-                    if (!empty($r['ngay_sinh_be'])) {
-                        $years = max(1, (int)date('Y') - (int)date('Y', strtotime($r['ngay_sinh_be'])));
-                    }
-                    $ageGroup = '3_4';
-                    if ($years <= 2) $ageGroup = '1_2';
-                    elseif ($years >= 5) $ageGroup = '5_6';
-
-                    $gender = (string)($r['gioi_tinh_be'] ?? 'be_gai');
-                    $resolvedPhotos = $this->resolveKolImages($r['danh_sach_anh'] ?? null, $id, $gender, $list);
-                    $list[$id] = [
-                        'id'            => $id,
-                        'code'          => 'KOL-2026-' . str_pad((string)$id, 2, '0', STR_PAD_LEFT),
-                        'baby_name'     => $r['ho_ten_be'],
-                        'birth_date'    => $r['ngay_sinh_be'],
-                        'age_label'     => $years . ' tuổi',
-                        'age_group'     => $ageGroup,
-                        'gender'        => $gender,
-                        'height_cm'     => (float)$r['chieu_cao_be'],
-                        'weight_kg'     => (float)$r['can_nang_be'],
-                        'guardian_name' => $r['ho_ten_phu_huynh'],
-                        'phone'         => $r['so_dien_thoai'],
-                        'talent'        => $r['nang_khieu_kinh_nghiem'] ?: 'Tự tin tạo dáng trước ống kính',
-                        'image'         => $resolvedPhotos[0],
-                        'photos'        => $resolvedPhotos,
-                        'status'        => $r['trang_thai_duyet']
-                    ];
+                    $ordered[$id] = $this->formatKolRow($r, $defaults);
                 }
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                error_log('[lnkt] getKolApplications: ' . $e->getMessage());
+            }
+        }
+
+        // Bổ sung các hồ sơ mẫu nếu DB chưa có
+        foreach ($defaults as $defId => $defItem) {
+            if (!isset($ordered[$defId])) {
+                $ordered[$defId] = $defItem;
+            }
         }
 
         if (!empty($_SESSION['fk_kol_status_overrides'])) {
             foreach ($_SESSION['fk_kol_status_overrides'] as $id => $st) {
-                if (isset($list[$id])) {
-                    $list[$id]['status'] = $st;
+                if (isset($ordered[$id])) {
+                    $ordered[$id]['status'] = $st;
                 }
             }
         }
 
-        return array_values($list);
+        return array_values($ordered);
     }
 
     /**
-     * Xét duyệt hồ sơ KOL Nhí qua Stored Procedure sp_lnkt_duyet_ho_so_kol_nhi / sp_lnkt_xet_duyet_kol_nhi
+     * Lấy danh sách hồ sơ KOL Nhí do chính khách hàng đang đăng nhập đã nộp
+     */
+    public function getKolApplicationsByUser(int $userId): array {
+        if ($userId <= 0 || !$this->hasConnection()) {
+            return [];
+        }
+        $defaults = $this->getDefaultKolCandidates();
+        try {
+            $stmt = $this->db->prepare("
+                SELECT * FROM `lnkt_dang_ky_kol_nhi`
+                WHERE `ma_nguoi_dung` = :uid
+                ORDER BY `ma_ho_so` DESC
+            ");
+            $stmt->execute([':uid' => $userId]);
+            $rows = $stmt->fetchAll();
+            $stmt->closeCursor();
+
+            $result = [];
+            foreach ($rows as $r) {
+                $item = $this->formatKolRow($r, $defaults);
+                if (!empty($_SESSION['fk_kol_status_overrides'][$item['id']])) {
+                    $item['status'] = $_SESSION['fk_kol_status_overrides'][$item['id']];
+                }
+                $result[] = $item;
+            }
+            return $result;
+        } catch (PDOException $e) {
+            error_log('[lnkt] getKolApplicationsByUser: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Xét duyệt hồ sơ KOL Nhí qua Stored Procedure sp_lnkt_duyet_ho_so_kol_nhi / sp_lnkt_xet_duyet_kol_nhi (kèm fallback UPDATE trực tiếp)
      */
     public function reviewKolApplication(int $id, string $newStatus, ?int $reviewerId = null): array {
         $allowed = ['cho_duyet', 'moi_phong_van', 'trung_tuyen', 'tu_choi'];
@@ -1608,26 +1668,37 @@ class RealtimeContentModel extends BaseModel {
             $newStatus = 'moi_phong_van';
         }
         $staffOrAdminId = $reviewerId ?? (int)($_SESSION['user']['ma_nguoi_dung'] ?? $_SESSION['auth_user']['id'] ?? 2);
-        $_SESSION['fk_kol_status_overrides'][$id] = $newStatus;
+        $dbSaved = false;
 
         if ($this->hasConnection()) {
             try {
                 $stmt = $this->db->prepare("CALL `sp_lnkt_duyet_ho_so_kol_nhi`(:id, :uid, :st)");
                 $stmt->execute([':id' => $id, ':uid' => $staffOrAdminId, ':st' => $newStatus]);
                 $stmt->closeCursor();
+                $dbSaved = true;
             } catch (PDOException $e) {
                 try {
                     $stmt2 = $this->db->prepare("CALL `sp_lnkt_xet_duyet_kol_nhi`(:id, :uid, :st)");
                     $stmt2->execute([':id' => $id, ':uid' => $staffOrAdminId, ':st' => $newStatus]);
                     $stmt2->closeCursor();
+                    $dbSaved = true;
                 } catch (PDOException $e2) {
                     try {
                         $stmt3 = $this->db->prepare("UPDATE `lnkt_dang_ky_kol_nhi` SET `trang_thai_duyet` = :st WHERE `ma_ho_so` = :id");
                         $stmt3->execute([':st' => $newStatus, ':id' => $id]);
                         $stmt3->closeCursor();
-                    } catch (PDOException $e3) {}
+                        $dbSaved = true;
+                    } catch (PDOException $e3) {
+                        error_log('[lnkt] reviewKolApplication fallback error: ' . $e3->getMessage());
+                    }
                 }
             }
+        }
+
+        if ($dbSaved) {
+            unset($_SESSION['fk_kol_status_overrides'][$id]);
+        } else {
+            $_SESSION['fk_kol_status_overrides'][$id] = $newStatus;
         }
 
         $all = $this->getKolApplications();
@@ -1649,21 +1720,36 @@ class RealtimeContentModel extends BaseModel {
      * Nộp hồ sơ ứng tuyển KOL Nhí mới từ trang kol-casting.php
      */
     public function submitKolApplication(array $data): array {
-        $babyName     = trim($data['baby_name'] ?? 'Bé Ứng Tuyển Mới');
-        $birthDate    = trim($data['birth_date'] ?? '2023-06-01');
-        $heightCm     = (float)($data['height_cm'] ?? 95);
-        $weightKg     = (float)($data['weight_kg'] ?? 14);
-        $gender       = ($data['gender'] ?? 'girl') === 'boy' ? 'be_trai' : 'be_gai';
-        $guardianName = trim($data['guardian_name'] ?? 'Phụ Huynh');
-        $phone        = trim($data['guardian_phone'] ?? '0918889999');
-        $talents      = trim($data['talents'] ?? 'Tự tin tạo dáng chụp Lookbook');
-        $userId       = isset($_SESSION['user']['ma_nguoi_dung']) ? (int)$_SESSION['user']['ma_nguoi_dung'] : 3;
+        $babyName     = trim((string)($data['baby_name'] ?? ''));
+        if ($babyName === '') {
+            $babyName = 'Bé Ứng Tuyển Mới';
+        }
+        $rawBirthDate = trim((string)($data['birth_date'] ?? ''));
+        $birthDate    = preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawBirthDate) ? $rawBirthDate : '2023-06-01';
+        $heightCm     = max(40.0, (float)($data['height_cm'] ?? 95));
+        $weightKg     = max(2.0, (float)($data['weight_kg'] ?? 14));
+        $gender       = (($data['gender'] ?? 'girl') === 'boy' || ($data['gender'] ?? '') === 'be_trai') ? 'be_trai' : 'be_gai';
+        $guardianName = trim((string)($data['guardian_name'] ?? ''));
+        if ($guardianName === '') {
+            $guardianName = trim((string)($_SESSION['user']['ho_va_ten'] ?? 'Phụ Huynh'));
+        }
+        $phone        = trim((string)($data['guardian_phone'] ?? ''));
+        if ($phone === '') {
+            $phone = trim((string)($_SESSION['user']['so_dien_thoai'] ?? '0918889999'));
+        }
+        $talents      = trim((string)($data['talents'] ?? '')) ?: 'Tự tin tạo dáng chụp Lookbook';
+        $email        = trim((string)($_SESSION['user']['thu_dien_tu'] ?? '')) ?: 'parent@fashionkids.vn';
+        $rawUid       = class_exists('Rbac') ? Rbac::currentUserId() : null;
+        $userId       = $rawUid ?: (!empty($_SESSION['user']['ma_nguoi_dung']) ? (int)$_SESSION['user']['ma_nguoi_dung'] : null);
+        if ($userId !== null && $userId <= 0) {
+            $userId = null;
+        }
 
         $photoList = [];
         if (!empty($_FILES['kol_photos']['name']) && is_array($_FILES['kol_photos']['name'])) {
             $uploadDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'kol' . DIRECTORY_SEPARATOR . 'uploads';
             if (!is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0775, true);
+                @mkdir($uploadDir, 0755, true);
             }
             $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
             foreach ($_FILES['kol_photos']['name'] as $idx => $origName) {
@@ -1678,7 +1764,7 @@ class RealtimeContentModel extends BaseModel {
                     continue;
                 }
                 $safeFile = 'kol_upload_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
-                if (@move_uploaded_file($tmp, $uploadDir . DIRECTORY_SEPARATOR . $safeFile)) {
+                if (is_dir($uploadDir) && @move_uploaded_file($tmp, $uploadDir . DIRECTORY_SEPARATOR . $safeFile)) {
                     $photoList[] = '/FashionKids/images/kol/uploads/' . $safeFile;
                 }
                 if (count($photoList) >= 5) {
@@ -1693,8 +1779,21 @@ class RealtimeContentModel extends BaseModel {
                 : ['/FashionKids/images/kol/kol-bao-sam.jpg', '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg', '/FashionKids/images/kol/kol-casting-studio-demo.jpg'];
         }
 
-        $newId = rand(10, 99);
+        $newId = 0;
         if ($this->hasConnection()) {
+            if ($userId !== null) {
+                try {
+                    $uChk = $this->db->prepare("SELECT 1 FROM `hgb_nguoi_dung` WHERE `ma_nguoi_dung` = :uid LIMIT 1");
+                    $uChk->execute([':uid' => $userId]);
+                    if (!$uChk->fetchColumn()) {
+                        $userId = null;
+                    }
+                    $uChk->closeCursor();
+                } catch (PDOException $ue) {
+                    $userId = null;
+                }
+            }
+
             try {
                 $stmt = $this->db->prepare("
                     INSERT INTO `lnkt_dang_ky_kol_nhi`
@@ -1704,10 +1803,10 @@ class RealtimeContentModel extends BaseModel {
                 ");
                 $stmt->execute([
                     ':uid'    => $userId,
-                    ':parent' => $guardianName,
-                    ':phone'  => $phone,
-                    ':email'  => $_SESSION['user']['thu_dien_tu'] ?? 'parent@fashionkids.vn',
-                    ':baby'   => $babyName,
+                    ':parent' => mb_substr($guardianName, 0, 100, 'UTF-8'),
+                    ':phone'  => mb_substr($phone, 0, 20, 'UTF-8'),
+                    ':email'  => mb_substr($email, 0, 100, 'UTF-8'),
+                    ':baby'   => mb_substr($babyName, 0, 100, 'UTF-8'),
                     ':dob'    => $birthDate,
                     ':gender' => $gender,
                     ':h'      => $heightCm,
@@ -1716,19 +1815,35 @@ class RealtimeContentModel extends BaseModel {
                     ':talent' => $talents
                 ]);
                 $newId = (int)$this->db->lastInsertId();
-            } catch (PDOException $e) {}
+            } catch (PDOException $e) {
+                error_log('[lnkt] submitKolApplication DB error: ' . $e->getMessage());
+                throw new RuntimeException('Không thể lưu hồ sơ ứng tuyển KOL Nhí vào cơ sở dữ liệu lúc này. Vui lòng thử lại!', 0, $e);
+            }
+        } else {
+            $newId = rand(100, 999);
         }
 
+        $years = max(1, (int)date('Y') - (int)date('Y', strtotime($birthDate)));
+        $ageGroup = ($years <= 2) ? '1_2' : (($years >= 5) ? '5_6' : '3_4');
+
         return [
-            'id'        => $newId,
-            'code'      => 'KOL-2026-' . str_pad((string)$newId, 2, '0', STR_PAD_LEFT),
-            'baby_name' => $babyName,
-            'height_cm' => $heightCm,
-            'weight_kg' => $weightKg,
-            'image'     => $photoList[0],
-            'photos'    => $photoList,
-            'talent'    => $talents,
-            'status'    => 'cho_duyet'
+            'id'            => $newId,
+            'user_id'       => $userId,
+            'code'          => 'KOL-2026-' . str_pad((string)$newId, 2, '0', STR_PAD_LEFT),
+            'baby_name'     => $babyName,
+            'birth_date'    => $birthDate,
+            'age_label'     => $years . ' tuổi',
+            'age_group'     => $ageGroup,
+            'gender'        => $gender,
+            'height_cm'     => $heightCm,
+            'weight_kg'     => $weightKg,
+            'guardian_name' => $guardianName,
+            'phone'         => $phone,
+            'image'         => $photoList[0],
+            'photos'        => $photoList,
+            'talent'        => $talents,
+            'status'        => 'cho_duyet',
+            'created_at'    => date('d/m/Y H:i'),
         ];
     }
 }

@@ -2,6 +2,20 @@
 $page_title = "Cổng Tuyển Chọn Siêu Sao Nhí KOL";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+
+$rtKolModel = new RealtimeContentModel();
+$currentKolUid = Rbac::currentUserId();
+$myKolApplications = ($currentKolUid && $currentKolUid > 0)
+    ? $rtKolModel->getKolApplicationsByUser($currentKolUid)
+    : [];
+
+$kolStatusBadgeMap = [
+    'cho_duyet'     => ['label' => 'Chờ xét duyệt', 'class' => 'badge-gold', 'icon' => 'fa-clock'],
+    'moi_phong_van' => ['label' => 'Hẹn thử đồ Studio', 'class' => 'badge-sky', 'icon' => 'fa-camera-retro'],
+    'trung_tuyen'   => ['label' => 'Đã trúng tuyển KOL', 'class' => 'badge-mint', 'icon' => 'fa-trophy'],
+    'tu_choi'       => ['label' => 'Từ chối', 'class' => 'badge-danger', 'icon' => 'fa-ban'],
+];
 
 // Danh sách các hồ sơ gương mặt KOL nhí nổi bật
 $lnkt_kol_stars = [
@@ -103,6 +117,7 @@ $lnkt_kol_stars = [
                         </div>
                     <?php endif; ?>
 
+                    <div id="lnkt_kolSubmitResultAlert" class="alert small py-2 mb-3 d-none" role="alert"></div>
                     <form id="lnkt_formKolCasting" enctype="multipart/form-data">
                         <!-- 1. Họ tên bé & Ngày sinh (Tự động tính tuổi) -->
                         <div class="form-row">
@@ -284,6 +299,50 @@ $lnkt_kol_stars = [
              CỘT PHẢI (5 CỘT): ĐẶC QUYỀN ĐẠI SỨ NHÍ & GƯƠNG MẶT TIÊU BIỂU
              ================================================================ -->
         <div class="col-12 col-lg-5">
+            <?php if (!Rbac::isGuest()): ?>
+                <!-- Hồ sơ KOL Nhí bạn đã đăng ký -->
+                <div class="card card-pastel p-4 shadow-sm mb-4" id="lnkt_myKolApplicationsCard">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-3">
+                        <h6 class="font-weight-bold text-slate mb-0">
+                            <i class="fa-solid fa-folder-open text-peach mr-2"></i>Hồ Sơ KOL Nhí Bạn Đã Nộp
+                        </h6>
+                        <span id="lnkt_myKolCountBadge" class="badge badge-pill badge-sky px-2 py-1 text-nowrap flex-shrink-0">
+                            <?= count($myKolApplications) ?> hồ sơ
+                        </span>
+                    </div>
+                    <div id="lnkt_myKolApplicationsList">
+                        <?php if (empty($myKolApplications)): ?>
+                            <div id="lnkt_myKolEmptyHint" class="p-3 rounded bg-milk-cream border text-center small text-muted-custom">
+                                Bạn chưa nộp hồ sơ KOL Nhí nào. Hãy điền biểu mẫu bên trái để gửi hồ sơ cho bé ngay!
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($myKolApplications as $myKol):
+                                $mySt = $myKol['status'] ?? 'cho_duyet';
+                                $stMeta = $kolStatusBadgeMap[$mySt] ?? $kolStatusBadgeMap['cho_duyet'];
+                            ?>
+                                <div class="p-3 rounded bg-milk-cream border mb-2 d-flex align-items-center">
+                                    <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
+                                        <img src="<?= htmlspecialchars($myKol['image']) ?>" alt="<?= htmlspecialchars($myKol['baby_name']) ?>" class="lbn-thumb-img">
+                                    </span>
+                                    <div class="min-w-0 flex-grow-1">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">
+                                            <strong class="text-slate text-truncate"><?= htmlspecialchars($myKol['baby_name']) ?></strong>
+                                            <span class="badge badge-pill <?= $stMeta['class'] ?> small text-nowrap flex-shrink-0">
+                                                <i class="fa-solid <?= $stMeta['icon'] ?> mr-1"></i><?= $stMeta['label'] ?>
+                                            </span>
+                                        </div>
+                                        <div class="small text-peach font-weight-bold">
+                                            <?= htmlspecialchars($myKol['code']) ?> • Cao <?= rtrim(rtrim(number_format((float)$myKol['height_cm'], 1, '.', ''), '0'), '.') ?> cm • Nặng <?= rtrim(rtrim(number_format((float)$myKol['weight_kg'], 1, '.', ''), '0'), '.') ?> kg
+                                        </div>
+                                        <small class="text-muted-custom d-block text-truncate"><?= htmlspecialchars($myKol['talent']) ?></small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <!-- Đặc quyền KOL Nhí -->
             <div class="card card-pastel p-4 shadow-sm mb-4">
                 <h5 class="font-weight-bold text-slate mb-3">

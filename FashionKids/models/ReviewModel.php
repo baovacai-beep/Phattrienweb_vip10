@@ -33,8 +33,52 @@ class ReviewModel extends Model {
                 $stmt->closeCursor();
                 return true;
             } catch (PDOException $e) {
-                $msg = preg_replace('/^SQLSTATE\[[^\]]+\]:.*?:\s*\d+\s*/u', '', $e->getMessage());
-                throw new RuntimeException(trim((string)$msg) ?: 'Không thể gửi đánh giá sản phẩm.', 0, $e);
+                $sqlState = (string)($e->errorInfo[0] ?? $e->getCode() ?? '');
+                $driverErr = (int)($e->errorInfo[1] ?? 0);
+                if ($sqlState === '45000' || $driverErr === 1644) {
+                    $msg = preg_replace('/^SQLSTATE\[[^\]]+\]:.*?:\s*\d+\s*/u', '', $e->getMessage());
+                    throw new RuntimeException(trim((string)$msg) ?: 'Không thể gửi đánh giá sản phẩm.', 0, $e);
+                }
+                // Fallback SQL thuần cho Shared Hosting không cấp quyền EXECUTE SP
+                if ($soSao < 1 || $soSao > 5) {
+                    throw new RuntimeException('Lỗi [TGB_ERR_05]: Số sao đánh giá chất lượng phải từ 1 đến 5 sao!');
+                }
+                $ordChk = $this->db->prepare("SELECT `trang_thai_don_hang` FROM `lnkt_don_hang` WHERE `ma_don_hang` = :oid AND `ma_nguoi_dung` = :uid LIMIT 1");
+                $ordChk->execute([':oid' => $maDonHang, ':uid' => $maNguoiDung]);
+                $ordStatus = $ordChk->fetchColumn();
+                $ordChk->closeCursor();
+                if ($ordStatus === false) {
+                    throw new RuntimeException('Lỗi [TGB_ERR_06]: Bạn không sở hữu đơn hàng này để viết đánh giá!');
+                }
+                if (strtolower(trim((string)$ordStatus)) !== 'hoan_tat') {
+                    throw new RuntimeException('Lỗi [TGB_ERR_07]: Đơn hàng phải hoàn tất giao dịch thành công mới được đánh giá!');
+                }
+                $itemChk = $this->db->prepare("SELECT 1 FROM `tgb_chi_tiet_don_hang` WHERE `ma_don_hang` = :oid AND `ma_san_pham` = :sp LIMIT 1");
+                $itemChk->execute([':oid' => $maDonHang, ':sp' => $maSanPham]);
+                $hasItem = (bool)$itemChk->fetchColumn();
+                $itemChk->closeCursor();
+                if (!$hasItem) {
+                    throw new RuntimeException('Lỗi [TGB_ERR_08]: Sản phẩm này không tồn tại trong gói hàng đã mua!');
+                }
+                $dupChk = $this->db->prepare("SELECT 1 FROM `tgb_danh_gia_san_pham` WHERE `ma_don_hang` = :oid AND `ma_san_pham` = :sp AND `ma_nguoi_dung` = :uid LIMIT 1");
+                $dupChk->execute([':oid' => $maDonHang, ':sp' => $maSanPham, ':uid' => $maNguoiDung]);
+                $already = (bool)$dupChk->fetchColumn();
+                $dupChk->closeCursor();
+                if ($already) {
+                    throw new RuntimeException('Lỗi [TGB_ERR_09]: Bạn đã gửi đánh giá cho sản phẩm này trong đơn hàng rồi!');
+                }
+                $ins = $this->db->prepare("
+                    INSERT INTO `tgb_danh_gia_san_pham` (`ma_san_pham`, `ma_nguoi_dung`, `ma_don_hang`, `so_sao_danh_gia`, `noi_dung_danh_gia`, `so_luot_huu_ich`, `ngay_danh_gia`)
+                    VALUES (:sp, :uid, :oid, :star, :content, 0, NOW())
+                ");
+                $ins->execute([
+                    ':sp'      => $maSanPham,
+                    ':uid'     => $maNguoiDung,
+                    ':oid'     => $maDonHang,
+                    ':star'    => $soSao,
+                    ':content' => trim($noiDung),
+                ]);
+                return true;
             }
         }
         return true;

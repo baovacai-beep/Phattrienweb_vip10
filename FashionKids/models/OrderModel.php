@@ -456,6 +456,129 @@ class OrderModel extends Model {
         return trim((string)$msg) ?: 'Không thể xử lý giao dịch đơn hàng lúc này.';
     }
 
+    private function isRoutineBusinessError(PDOException $e): bool {
+        $sqlState = (string)($e->errorInfo[0] ?? $e->getCode() ?? '');
+        $driverErr = (int)($e->errorInfo[1] ?? 0);
+        return ($sqlState === '45000' || $driverErr === 1644);
+    }
+
+    /**
+     * Cộng hoặc trừ điểm tích lũy và tự động tính lại hạng thẻ VIP (dùng trong fallback không gọi SP)
+     */
+    private function awardVipPointsAndUpgradeTier(int $userId, int $pointsDelta): void {
+        if ($userId <= 0 || $pointsDelta === 0) {
+            return;
+        }
+        $uStmt = $this->db->prepare("SELECT COALESCE(`diem_tich_luy`, 0) AS pts FROM `hgb_nguoi_dung` WHERE `ma_nguoi_dung` = :uid FOR UPDATE");
+        $uStmt->execute([':uid' => $userId]);
+        $uRow = $uStmt->fetch();
+        $uStmt->closeCursor();
+        if (!$uRow) {
+            return;
+        }
+        $newPoints = max(0, (int)$uRow['pts'] + $pointsDelta);
+        $tierStmt = $this->db->prepare("
+            SELECT `ma_hang`
+            FROM `hgb_hang_thanh_vien`
+            WHERE `diem_toi_thieu` <= :pts
+            ORDER BY `diem_toi_thieu` DESC
+            LIMIT 1
+        ");
+        $tierStmt->execute([':pts' => $newPoints]);
+        $newTier = $tierStmt->fetchColumn();
+        $tierStmt->closeCursor();
+
+        $updUser = $this->db->prepare("
+            UPDATE `hgb_nguoi_dung`
+            SET `diem_tich_luy` = :pts,
+                `ma_hang_thanh_vien` = :tier
+            WHERE `ma_nguoi_dung` = :uid
+        ");
+        $updUser->execute([
+            ':pts'  => $newPoints,
+            ':tier' => ($newTier !== false && $newTier !== null) ? (int)$newTier : null,
+            ':uid'  => $userId,
+        ]);
+    }
+
+    /**
+     * Fallback cập nhật trạng thái đơn hàng bằng PDO Transaction thuần (dành cho Shared Hosting chặn EXECUTE Routine #1370)
+     */
+    private function executeUpdateOrderStatusFallback(int $maDonHang, int $maNhanVien, string $normalizedNew): void {
+        $ordStmt = $this->db->prepare("
+            SELECT `trang_thai_don_hang`, `ma_nguoi_dung`, `tong_tien_thanh_toan`
+            FROM `lnkt_don_hang`
+            WHERE `ma_don_hang` = :id
+            LIMIT 1
+        ");
+        $ordStmt->execute([':id' => $maDonHang]);
+        $orderRow = $ordStmt->fetch();
+        $ordStmt->closeCursor();
+
+        if (!$orderRow) {
+            throw new RuntimeException('Lỗi [LNKT_ERR_04]: Đơn hàng cần xử lý không tồn tại!');
+        }
+        $oldStatus = $this->normalizeStatus((string)$orderRow['trang_thai_don_hang']);
+        if (in_array($oldStatus, ['hoan_tat', 'da_huy'], true)) {
+            throw new RuntimeException('Lỗi [LNKT_ERR_05]: Đơn hàng đã hoàn tất hoặc đã hủy không thể chỉnh sửa trạng thái!');
+        }
+
+        $nvStmt = $this->db->prepare("SELECT `vai_tro` FROM `hgb_nguoi_dung` WHERE `ma_nguoi_dung` = :uid LIMIT 1");
+        $nvStmt->execute([':uid' => $maNhanVien]);
+        $role = strtolower(trim((string)($nvStmt->fetchColumn() ?: '')));
+        $nvStmt->closeCursor();
+        if (!in_array($role, ['nhan_vien', 'quan_tri'], true)) {
+            throw new RuntimeException('Lỗi [LNKT_ERR_06]: Người xử lý đơn hàng phải có thẩm quyền Nhân viên hoặc Quản trị!');
+        }
+
+        $startedTx = !$this->db->inTransaction();
+        if ($startedTx) {
+            $this->db->beginTransaction();
+        }
+        try {
+            if ($normalizedNew === 'da_huy') {
+                $restock = $this->db->prepare("
+                    UPDATE `lbn_san_pham` sp
+                    JOIN `tgb_chi_tiet_don_hang` ct ON sp.`ma_san_pham` = ct.`ma_san_pham`
+                    SET sp.`so_luong_ton_kho` = sp.`so_luong_ton_kho` + ct.`so_luong`
+                    WHERE ct.`ma_don_hang` = :id
+                ");
+                $restock->execute([':id' => $maDonHang]);
+            }
+
+            if ($normalizedNew === 'hoan_tat' && !empty($orderRow['ma_nguoi_dung'])) {
+                $pointsAdd = (int)floor(((float)$orderRow['tong_tien_thanh_toan']) / 10000);
+                if ($pointsAdd > 0) {
+                    $this->awardVipPointsAndUpgradeTier((int)$orderRow['ma_nguoi_dung'], $pointsAdd);
+                }
+            }
+
+            $updOrd = $this->db->prepare("
+                UPDATE `lnkt_don_hang`
+                SET `trang_thai_don_hang` = :st,
+                    `ma_nhan_vien_xu_ly`  = :nv
+                WHERE `ma_don_hang` = :id
+            ");
+            $updOrd->execute([
+                ':st' => $normalizedNew,
+                ':nv' => $maNhanVien,
+                ':id' => $maDonHang,
+            ]);
+
+            if ($startedTx && $this->db->inTransaction()) {
+                $this->db->commit();
+            }
+        } catch (Throwable $ex) {
+            if ($startedTx && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            if ($ex instanceof RuntimeException) {
+                throw $ex;
+            }
+            throw new RuntimeException('Không thể cập nhật trạng thái đơn hàng: ' . $ex->getMessage(), 0, $ex);
+        }
+    }
+
     /**
      * Tạo đơn hàng 1 sản phẩm trực tiếp qua sp_tgb_tao_don_hang_va_chi_tiet (giữ tương thích API cũ)
      */
@@ -888,21 +1011,26 @@ class OrderModel extends Model {
     }
 
     /**
-     * Nhân viên duyệt đơn qua sp_lnkt_cap_nhat_trang_thai_don_hang
+     * Nhân viên duyệt đơn qua sp_lnkt_cap_nhat_trang_thai_don_hang (có fallback SQL thuần khi Hosting chặn EXECUTE)
      */
     public function capNhatTrangThai(int $maDonHang, int $maNhanVien, string $trangThaiMoi): void {
         if ($this->hasConnection()) {
+            $normalizedNew = $this->normalizeStatus($trangThaiMoi);
             try {
                 $stmt = $this->db->prepare("CALL sp_lnkt_cap_nhat_trang_thai_don_hang(:ma_don, :ma_nv, :trang_thai)");
                 $stmt->execute([
                     ':ma_don'     => $maDonHang,
                     ':ma_nv'      => $maNhanVien,
-                    ':trang_thai' => $this->normalizeStatus($trangThaiMoi)
+                    ':trang_thai' => $normalizedNew
                 ]);
                 $stmt->closeCursor();
             } catch (PDOException $e) {
-                error_log("Lỗi cập nhật trạng thái đơn: " . $e->getMessage());
-                throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+                if ($this->isRoutineBusinessError($e)) {
+                    error_log("Lỗi cập nhật trạng thái đơn: " . $e->getMessage());
+                    throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+                }
+                error_log("Fallback SQL cập nhật trạng thái đơn (Hosting không cho EXECUTE SP): " . $e->getMessage());
+                $this->executeUpdateOrderStatusFallback($maDonHang, $maNhanVien, $normalizedNew);
             }
         }
     }
@@ -1622,24 +1750,28 @@ class OrderModel extends Model {
                 ':trang_thai' => $normalizedNew
             ]);
             $stmt->closeCursor();
-
-            if ($normalizedNew === 'hoan_tat') {
-                $payUpd = $this->db->prepare("
-                    UPDATE `lnkt_don_hang`
-                    SET `trang_thai_thanh_toan` = 'da_thanh_toan',
-                        `so_tien_da_nhan`       = COALESCE(`so_tien_da_nhan`, `tong_tien_thanh_toan`),
-                        `thoi_gian_thanh_toan`  = COALESCE(`thoi_gian_thanh_toan`, NOW()),
-                        `ngay_cap_nhat`         = NOW()
-                    WHERE `ma_don_hang` = :id
-                ");
-                $payUpd->execute([':id' => $maDonHang]);
-            } else {
-                $tsUpd = $this->db->prepare("UPDATE `lnkt_don_hang` SET `ngay_cap_nhat` = NOW() WHERE `ma_don_hang` = :id");
-                $tsUpd->execute([':id' => $maDonHang]);
-            }
         } catch (PDOException $e) {
-            error_log("Lỗi sp_lnkt_cap_nhat_trang_thai_don_hang: " . $e->getMessage());
-            throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            if ($this->isRoutineBusinessError($e)) {
+                error_log("Lỗi sp_lnkt_cap_nhat_trang_thai_don_hang: " . $e->getMessage());
+                throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            }
+            error_log("Fallback SQL capNhatTrangThaiDonHangChiTiet (Hosting chặn EXECUTE SP): " . $e->getMessage());
+            $this->executeUpdateOrderStatusFallback($maDonHang, $maNhanVien, $normalizedNew);
+        }
+
+        if ($normalizedNew === 'hoan_tat') {
+            $payUpd = $this->db->prepare("
+                UPDATE `lnkt_don_hang`
+                SET `trang_thai_thanh_toan` = 'da_thanh_toan',
+                    `so_tien_da_nhan`       = COALESCE(`so_tien_da_nhan`, `tong_tien_thanh_toan`),
+                    `thoi_gian_thanh_toan`  = COALESCE(`thoi_gian_thanh_toan`, NOW()),
+                    `ngay_cap_nhat`         = NOW()
+                WHERE `ma_don_hang` = :id
+            ");
+            $payUpd->execute([':id' => $maDonHang]);
+        } else {
+            $tsUpd = $this->db->prepare("UPDATE `lnkt_don_hang` SET `ngay_cap_nhat` = NOW() WHERE `ma_don_hang` = :id");
+            $tsUpd->execute([':id' => $maDonHang]);
         }
 
         if (session_status() === PHP_SESSION_NONE) {
@@ -2478,6 +2610,7 @@ class OrderModel extends Model {
             ? json_encode(array_values($imagePaths), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
             : '';
 
+        $newReturnId = 0;
         try {
             $stmt = $this->db->prepare("
                 CALL sp_lnkt_tao_yeu_cau_hoan_hang(:oid, :uid, :reason, :descr, :imgs, :bank, @new_return_id)
@@ -2494,12 +2627,61 @@ class OrderModel extends Model {
 
             $outRow = $this->db->query("SELECT @new_return_id AS new_id")->fetch();
             $newReturnId = (int)($outRow['new_id'] ?? 0);
-            $created = $this->getReturnRequestById($newReturnId) ?: $this->getReturnRequestByOrderId($orderId);
-            return $created ?? [];
         } catch (PDOException $e) {
-            error_log('[lnkt] createReturnRequest: ' . $e->getMessage());
-            throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            if ($this->isRoutineBusinessError($e)) {
+                error_log('[lnkt] createReturnRequest: ' . $e->getMessage());
+                throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            }
+            error_log('[lnkt] Fallback SQL createReturnRequest: ' . $e->getMessage());
+            $cleanReason = trim($reason);
+            if ($cleanReason === '') {
+                throw new RuntimeException('Lỗi [LNKT_RET_01]: Vui lòng chọn lý do hoàn hàng / trả hàng!');
+            }
+            $chkOrd = $this->db->prepare("
+                SELECT `trang_thai_don_hang`, `tong_tien_thanh_toan`
+                FROM `lnkt_don_hang`
+                WHERE `ma_don_hang` = :oid AND `ma_nguoi_dung` = :uid
+                LIMIT 1
+            ");
+            $chkOrd->execute([':oid' => $orderId, ':uid' => $userId]);
+            $ordInfo = $chkOrd->fetch();
+            $chkOrd->closeCursor();
+            if (!$ordInfo) {
+                throw new RuntimeException('Lỗi [LNKT_RET_02]: Bạn không sở hữu đơn hàng này hoặc đơn hàng không tồn tại!');
+            }
+            if (strtolower(trim((string)$ordInfo['trang_thai_don_hang'])) !== 'hoan_tat') {
+                throw new RuntimeException('Lỗi [LNKT_RET_03]: Chỉ đơn hàng đã giao thành công (hoàn tất) mới được gửi yêu cầu hoàn hàng!');
+            }
+            $dupChk = $this->db->prepare("SELECT 1 FROM `lnkt_yeu_cau_hoan_hang` WHERE `ma_don_hang` = :oid LIMIT 1");
+            $dupChk->execute([':oid' => $orderId]);
+            $already = (bool)$dupChk->fetchColumn();
+            $dupChk->closeCursor();
+            if ($already) {
+                throw new RuntimeException('Lỗi [LNKT_RET_04]: Đơn hàng này đã gửi yêu cầu hoàn hàng / trả hàng trước đó!');
+            }
+
+            $cleanDesc = trim($description);
+            $cleanBank = trim($bankInfo);
+            $ins = $this->db->prepare("
+                INSERT INTO `lnkt_yeu_cau_hoan_hang`
+                    (`ma_don_hang`, `ma_nguoi_dung`, `ma_nhan_vien_xu_ly`, `ly_do_hoan`, `mo_ta_chi_tiet`, `hinh_anh_minh_chung`, `so_tien_hoan`, `thong_tin_nhan_tien`, `trang_thai_hoan`, `ngay_yeu_cau`)
+                VALUES
+                    (:oid, :uid, NULL, :reason, :descr, :imgs, :amt, :bank, 'cho_duyet_hoan', NOW())
+            ");
+            $ins->execute([
+                ':oid'    => $orderId,
+                ':uid'    => $userId,
+                ':reason' => $cleanReason,
+                ':descr'  => ($cleanDesc !== '' ? $cleanDesc : null),
+                ':imgs'   => ($encodedImages !== '' ? $encodedImages : null),
+                ':amt'    => (float)($ordInfo['tong_tien_thanh_toan'] ?? 0),
+                ':bank'   => ($cleanBank !== '' ? $cleanBank : null),
+            ]);
+            $newReturnId = (int)$this->db->lastInsertId();
         }
+
+        $created = $this->getReturnRequestById($newReturnId) ?: $this->getReturnRequestByOrderId($orderId);
+        return $created ?? [];
     }
 
     /**
@@ -2625,8 +2807,96 @@ class OrderModel extends Model {
             ]);
             $stmt->closeCursor();
         } catch (PDOException $e) {
-            error_log('[lnkt] processReturnRequest: ' . $e->getMessage());
-            throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            if ($this->isRoutineBusinessError($e)) {
+                error_log('[lnkt] processReturnRequest: ' . $e->getMessage());
+                throw new RuntimeException($this->cleanSqlErrorMessage($e), 0, $e);
+            }
+            error_log('[lnkt] Fallback SQL processReturnRequest: ' . $e->getMessage());
+
+            $nvStmt = $this->db->prepare("SELECT `vai_tro` FROM `hgb_nguoi_dung` WHERE `ma_nguoi_dung` = :sid LIMIT 1");
+            $nvStmt->execute([':sid' => $staffId]);
+            $role = strtolower(trim((string)($nvStmt->fetchColumn() ?: '')));
+            $nvStmt->closeCursor();
+            if (!in_array($role, ['quan_tri', 'nhan_vien'], true)) {
+                throw new RuntimeException('Lỗi [LNKT_RET_05]: Chỉ Nhân viên hoặc Quản trị viên mới được phép xử lý yêu cầu hoàn hàng!');
+            }
+
+            $retStmt = $this->db->prepare("
+                SELECT `ma_don_hang`, `ma_nguoi_dung`, `so_tien_hoan`, `trang_thai_hoan`
+                FROM `lnkt_yeu_cau_hoan_hang`
+                WHERE `ma_hoan_hang` = :rid
+                LIMIT 1
+            ");
+            $retStmt->execute([':rid' => $returnId]);
+            $retRow = $retStmt->fetch();
+            $retStmt->closeCursor();
+
+            if (!$retRow) {
+                throw new RuntimeException('Lỗi [LNKT_RET_07]: Không tìm thấy yêu cầu hoàn hàng cần xử lý!');
+            }
+            $oldRetStatus = strtolower(trim((string)$retRow['trang_thai_hoan']));
+            if (in_array($oldRetStatus, ['hoan_tat_hoan', 'tu_choi_hoan'], true)) {
+                throw new RuntimeException('Lỗi [LNKT_RET_08]: Yêu cầu hoàn hàng đã kết thúc, không thể thay đổi trạng thái!');
+            }
+            $cleanNote = trim($note);
+            if ($cleanStatus === 'tu_choi_hoan' && $cleanNote === '') {
+                throw new RuntimeException('Lỗi [LNKT_RET_09]: Vui lòng nhập lý do/ghi chú xử lý khi từ chối yêu cầu hoàn hàng!');
+            }
+            if ($cleanStatus === 'dang_thu_hoi' && $oldRetStatus !== 'da_duyet_hoan') {
+                throw new RuntimeException('Lỗi [LNKT_RET_10]: Phải duyệt hoàn hàng trước khi chuyển sang bước đang thu hồi hàng!');
+            }
+            if ($cleanStatus === 'hoan_tat_hoan' && !in_array($oldRetStatus, ['da_duyet_hoan', 'dang_thu_hoi'], true)) {
+                throw new RuntimeException('Lỗi [LNKT_RET_11]: Chỉ có thể hoàn tất hoàn tiền sau khi đã duyệt và thu hồi hàng!');
+            }
+
+            $startedTx = false;
+            if ($cleanStatus === 'hoan_tat_hoan') {
+                $startedTx = !$this->db->inTransaction();
+                if ($startedTx) {
+                    $this->db->beginTransaction();
+                }
+            }
+            try {
+                $updRet = $this->db->prepare("
+                    UPDATE `lnkt_yeu_cau_hoan_hang`
+                    SET `trang_thai_hoan`    = :st,
+                        `ma_nhan_vien_xu_ly` = :sid,
+                        `ghi_chu_xu_ly`      = COALESCE(:noteVal, `ghi_chu_xu_ly`),
+                        `ngay_cap_nhat`      = NOW()
+                    WHERE `ma_hoan_hang` = :rid
+                ");
+                $updRet->execute([
+                    ':st'      => $cleanStatus,
+                    ':sid'     => $staffId,
+                    ':noteVal' => ($cleanNote !== '' ? $cleanNote : null),
+                    ':rid'     => $returnId,
+                ]);
+
+                if ($cleanStatus === 'hoan_tat_hoan') {
+                    $retOrderId = (int)$retRow['ma_don_hang'];
+                    $restock = $this->db->prepare("
+                        UPDATE `lbn_san_pham` sp
+                        JOIN `tgb_chi_tiet_don_hang` ct ON sp.`ma_san_pham` = ct.`ma_san_pham`
+                        SET sp.`so_luong_ton_kho` = sp.`so_luong_ton_kho` + ct.`so_luong`
+                        WHERE ct.`ma_don_hang` = :oid
+                    ");
+                    $restock->execute([':oid' => $retOrderId]);
+
+                    $retUid = !empty($retRow['ma_nguoi_dung']) ? (int)$retRow['ma_nguoi_dung'] : 0;
+                    $diemTru = (int)floor(((float)($retRow['so_tien_hoan'] ?? 0)) / 10000);
+                    if ($retUid > 0 && $diemTru > 0) {
+                        $this->awardVipPointsAndUpgradeTier($retUid, -$diemTru);
+                    }
+                    if ($startedTx && $this->db->inTransaction()) {
+                        $this->db->commit();
+                    }
+                }
+            } catch (Throwable $ex) {
+                if ($startedTx && $this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw new RuntimeException('Không thể xử lý yêu cầu hoàn hàng: ' . $ex->getMessage(), 0, $ex);
+            }
         }
 
         unset($_SESSION['lbn_stock_overrides']);

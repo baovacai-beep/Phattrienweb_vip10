@@ -3485,6 +3485,38 @@ $(document).ready(function () {
                 $btn.prop('disabled', false).html(origBtnHtml);
             },
             success: function (res) {
+                let app = (res && res.application) ? res.application : null;
+                if (app) {
+                    let esc = function (s) {
+                        return $('<div>').text(String(s || '')).html();
+                    };
+                    let listWrap = $('#lnkt_myKolApplicationsList');
+                    if (listWrap.length) {
+                        $('#lnkt_myKolEmptyHint').remove();
+                        let cardHtml =
+                            '<div class="p-3 rounded bg-milk-cream border border-warning mb-2 d-flex align-items-center">' +
+                                '<span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">' +
+                                    '<img src="' + esc(app.image) + '" alt="' + esc(app.baby_name) + '" class="lbn-thumb-img">' +
+                                '</span>' +
+                                '<div class="min-w-0 flex-grow-1">' +
+                                    '<div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-1">' +
+                                        '<strong class="text-slate text-truncate">' + esc(app.baby_name) + '</strong>' +
+                                        '<span class="badge badge-pill badge-gold small text-nowrap flex-shrink-0"><i class="fa-solid fa-clock mr-1"></i>Chờ xét duyệt</span>' +
+                                    '</div>' +
+                                    '<div class="small text-peach font-weight-bold">' + esc(app.code) + ' • Cao ' + esc(app.height_cm) + ' cm • Nặng ' + esc(app.weight_kg) + ' kg</div>' +
+                                    '<small class="text-muted-custom d-block text-truncate">' + esc(app.talent) + '</small>' +
+                                '</div>' +
+                            '</div>';
+                        listWrap.prepend(cardHtml);
+                        $('#lnkt_myKolCountBadge').text(listWrap.children().length + ' hồ sơ');
+                    }
+                    let alertBox = $('#lnkt_kolSubmitResultAlert');
+                    if (alertBox.length) {
+                        alertBox.removeClass('d-none alert-danger').addClass('alert-success').html(
+                            '<i class="fa-solid fa-circle-check mr-1"></i><strong>' + esc(res.message) + '</strong> Hồ sơ đã hiển thị ở mục <strong>"Hồ Sơ KOL Nhí Bạn Đã Nộp"</strong> bên phải và đã gửi lên Bàn Duyệt KOL.'
+                        );
+                    }
+                }
                 alert(
                     (res && res.message) ? res.message : (
                         'Nộp hồ sơ Casting KOL Nhí thành công!\n' +

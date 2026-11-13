@@ -25,8 +25,14 @@ class OrderManagementModel extends OrderModel {
                 $stmt->closeCursor();
                 return true;
             } catch (PDOException $e) {
-                error_log("Lỗi xét duyệt KOL nhí qua sp_lnkt_xet_duyet_kol_nhi: " . $e->getMessage());
-                return false;
+                error_log("Fallback SQL xét duyệt KOL nhí: " . $e->getMessage());
+                try {
+                    $upd = $this->db->prepare("UPDATE lnkt_dang_ky_kol_nhi SET trang_thai_duyet = :st WHERE ma_ho_so = :id");
+                    $upd->execute([':st' => $trangThaiDuyet, ':id' => $maHoSo]);
+                    return $upd->rowCount() > 0;
+                } catch (PDOException $e2) {
+                    return false;
+                }
             }
         }
         return true;
