@@ -473,38 +473,27 @@ class ProductController extends Controller {
             ], 422);
         }
 
-        // Xử lý file ảnh tải lên nếu có
-        $uploadedImagePath = '';
-        if (!empty($_FILES['image']['name']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowedExts, true)) {
-                $this->jsonResponse([
-                    'status'  => 'error',
-                    'code'    => 422,
-                    'errors'  => ['image' => 'Định dạng ảnh không hợp lệ (Chỉ hỗ trợ JPG, PNG, WEBP).'],
-                    'message' => 'Định dạng ảnh tải lên không hợp lệ!'
-                ], 422);
-            }
-            $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($_FILES['image']['name'], PATHINFO_FILENAME));
-            $fileName = time() . '_' . ($safeBase ?: 'sp_lbn') . '.' . $ext;
-            $targetDir = __DIR__ . '/../images/products/';
-            if (!is_dir($targetDir)) {
-                @mkdir($targetDir, 0755, true);
-            }
-            if (is_dir($targetDir) && is_writable($targetDir)) {
-                $destPath = $targetDir . $fileName;
-                if (@move_uploaded_file($_FILES['image']['tmp_name'], $destPath)) {
-                    $uploadedImagePath = '/FashionKids/images/products/' . $fileName;
-                }
-            }
-            if ($uploadedImagePath === '' && empty($productId)) {
-                $uploadedImagePath = '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg';
-            }
+        // Xử lý nhiều ảnh tải lên (Mặt trước, Chi tiết, Cận vải, Bé mặc + Ảnh bổ sung)
+        try {
+            $galleryPayload = $this->collectProductGalleryUploads();
+        } catch (InvalidArgumentException $imgEx) {
+            $this->jsonResponse([
+                'status'  => 'error',
+                'code'    => 422,
+                'errors'  => ['image' => $imgEx->getMessage()],
+                'message' => $imgEx->getMessage()
+            ], 422);
+        }
+        $uploadedImagePath = (string)($galleryPayload['front'] ?? '');
+
+        $rawColorsJson = trim((string)($_POST['colors_json'] ?? ''));
+        $decodedColors = $rawColorsJson !== '' ? json_decode($rawColorsJson, true) : null;
+        if (!is_array($decodedColors)) {
+            $decodedColors = [];
         }
 
         try {
-            $saved = $this->productModel->luuSanPhamKhoHang([
+            $savePayload = [
                 'product_id'     => $productId,
                 'sku'            => $sku,
                 'name'           => $name,
@@ -514,8 +503,13 @@ class ProductController extends Controller {
                 'stock_quantity' => (int)$rawStock,
                 'size_type'      => $sizeType,
                 'description'    => $description,
-                'image_path'     => $uploadedImagePath
-            ]);
+                'image_path'     => $uploadedImagePath,
+                'gallery'        => $galleryPayload,
+            ];
+            if (!empty($decodedColors)) {
+                $savePayload['colors'] = $decodedColors;
+            }
+            $saved = $this->productModel->luuSanPhamKhoHang($savePayload);
 
             $httpCode = $saved['is_edit'] ? 200 : 201;
             $actionText = $saved['is_edit']
@@ -534,5 +528,132 @@ class ProductController extends Controller {
                 'message' => $e->getMessage()
             ], 400);
         }
+    }
+
+    /**
+     * Lưu an toàn 1 tệp ảnh sản phẩm tải lên vào thư mục /images/products/
+     */
+    private function saveSingleUploadedProductFile(string $tmpName, string $origName, int $errorCode, string $slotTag): string {
+        if ($errorCode === UPLOAD_ERR_NO_FILE || $origName === '') {
+            return '';
+        }
+        if ($errorCode !== UPLOAD_ERR_OK || $tmpName === '') {
+            throw new InvalidArgumentException('Tệp ảnh "' . $origName . '" tải lên chưa hoàn tất (Mã lỗi ' . $errorCode . ').');
+        }
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext = strtolower((string)pathinfo($origName, PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedExts, true)) {
+            throw new InvalidArgumentException('Định dạng ảnh "' . $origName . '" không hợp lệ (Chỉ hỗ trợ JPG, PNG, WEBP, GIF).');
+        }
+        $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', (string)pathinfo($origName, PATHINFO_FILENAME));
+        $safeTag  = preg_replace('/[^a-z0-9_-]/i', '', $slotTag) ?: 'img';
+        try {
+            $rand = bin2hex(random_bytes(2));
+        } catch (Exception $e) {
+            $rand = (string)mt_rand(100, 999);
+        }
+        $fileName = time() . '_' . $safeTag . '_' . $rand . '_' . ($safeBase ?: 'sp_lbn') . '.' . $ext;
+        $targetDir = dirname(__DIR__) . '/images/products/';
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+        if (is_dir($targetDir) && is_writable($targetDir)) {
+            if (@move_uploaded_file($tmpName, $targetDir . $fileName)) {
+                return '/FashionKids/images/products/' . $fileName;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Thu thập nhiều ảnh sản phẩm (4 slot chuyên biệt + tệp chọn nhiều gallery_images[])
+     */
+    private function collectProductGalleryUploads(): array {
+        $sanitizeSafeImg = static function ($path): string {
+            $p = trim(str_replace('\\', '/', (string)$path));
+            if ($p === '' || strpos($p, '..') !== false) {
+                return '';
+            }
+            if (strpos($p, '/FashionKids/images/') === 0 || preg_match('#^https?://#i', $p)) {
+                return $p;
+            }
+            return '';
+        };
+
+        $gallery = [
+            'front'  => '',
+            'detail' => '',
+            'fabric' => '',
+            'model'  => '',
+            'extra'  => [],
+        ];
+
+        $rawExisting = trim((string)($_POST['existing_gallery_json'] ?? ''));
+        if ($rawExisting !== '') {
+            $existingDecoded = json_decode($rawExisting, true);
+            if (is_array($existingDecoded)) {
+                foreach (['front', 'detail', 'fabric', 'model'] as $slot) {
+                    if (!empty($existingDecoded[$slot])) {
+                        $gallery[$slot] = $sanitizeSafeImg($existingDecoded[$slot]);
+                    }
+                }
+                if (!empty($existingDecoded['extra']) && is_array($existingDecoded['extra'])) {
+                    foreach ($existingDecoded['extra'] as $ex) {
+                        $clean = $sanitizeSafeImg($ex);
+                        if ($clean !== '') {
+                            $gallery['extra'][] = $clean;
+                        }
+                    }
+                }
+            }
+        }
+
+        $slotInputMap = [
+            'image'        => 'front',
+            'image_detail' => 'detail',
+            'image_fabric' => 'fabric',
+            'image_model'  => 'model',
+        ];
+        foreach ($slotInputMap as $inputName => $slotKey) {
+            if (!empty($_FILES[$inputName]['name']) && !is_array($_FILES[$inputName]['name'])) {
+                $savedPath = $this->saveSingleUploadedProductFile(
+                    (string)($_FILES[$inputName]['tmp_name'] ?? ''),
+                    (string)($_FILES[$inputName]['name'] ?? ''),
+                    (int)($_FILES[$inputName]['error'] ?? UPLOAD_ERR_NO_FILE),
+                    $slotKey
+                );
+                if ($savedPath !== '') {
+                    $gallery[$slotKey] = $savedPath;
+                }
+            }
+        }
+
+        if (!empty($_FILES['gallery_images']['name']) && is_array($_FILES['gallery_images']['name'])) {
+            $count = count($_FILES['gallery_images']['name']);
+            for ($i = 0; $i < $count; $i++) {
+                $savedMulti = $this->saveSingleUploadedProductFile(
+                    (string)($_FILES['gallery_images']['tmp_name'][$i] ?? ''),
+                    (string)($_FILES['gallery_images']['name'][$i] ?? ''),
+                    (int)($_FILES['gallery_images']['error'][$i] ?? UPLOAD_ERR_NO_FILE),
+                    'extra_' . $i
+                );
+                if ($savedMulti === '') {
+                    continue;
+                }
+                if ($gallery['front'] === '') {
+                    $gallery['front'] = $savedMulti;
+                } elseif ($gallery['detail'] === '') {
+                    $gallery['detail'] = $savedMulti;
+                } elseif ($gallery['fabric'] === '') {
+                    $gallery['fabric'] = $savedMulti;
+                } elseif ($gallery['model'] === '') {
+                    $gallery['model'] = $savedMulti;
+                } else {
+                    $gallery['extra'][] = $savedMulti;
+                }
+            }
+        }
+
+        return $gallery;
     }
 }

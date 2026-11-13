@@ -193,7 +193,15 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                                             <div class="small text-muted-custom">Mã SP #<?= $prod['id'] ?></div>
                                         </td>
 
-                                        <td class="text-center"><span class="lbn-inv-thumb"><img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-thumb-img"></span></td>
+                                        <td class="text-center">
+                                            <span class="lbn-inv-thumb"><img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-thumb-img"></span>
+                                            <?php $invImgCount = max(1, (int)($prod['image_count'] ?? 1)); ?>
+                                            <div class="mt-1">
+                                                <span class="badge badge-light border text-muted-custom fk-fs-075">
+                                                    <i class="fa-regular fa-images mr-1 text-peach"></i><?= $invImgCount ?> ảnh
+                                                </span>
+                                            </div>
+                                        </td>
 
                                         <td>
                                             <div class="font-weight-bold text-slate">
@@ -204,6 +212,17 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                                             <small class="text-muted-custom d-block">
                                                 <i class="fa-solid fa-leaf text-success mr-1"></i><?= htmlspecialchars($prod['material']) ?>
                                             </small>
+                                            <?php $rowColors = !empty($prod['colors']) && is_array($prod['colors']) ? $prod['colors'] : []; ?>
+                                            <?php if (!empty($rowColors)): ?>
+                                                <div class="d-flex flex-wrap align-items-center mt-1">
+                                                    <?php foreach ($rowColors as $rc): ?>
+                                                        <span class="badge badge-light border rounded-pill mr-1 mb-1 py-0 px-2 d-inline-flex align-items-center fk-fs-075">
+                                                            <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($rc['code'] ?? '#FAF8F5') ?>"></span>
+                                                            <?= htmlspecialchars($rc['name'] ?? '') ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
 
                                         <td class="text-nowrap">
@@ -258,6 +277,8 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                                                         data-stock="<?= $prod['stock_quantity'] ?>"
                                                         data-type="<?= $prod['type'] ?>"
                                                         data-material="<?= htmlspecialchars($prod['material']) ?>"
+                                                        data-gallery="<?= htmlspecialchars(json_encode($prod['gallery'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>"
+                                                        data-colors="<?= htmlspecialchars(json_encode($prod['colors'] ?? [], JSON_UNESCAPED_UNICODE)) ?>"
                                                         onclick="lbnEditInventoryProduct(this)">
                                                     <i class="fa-solid fa-pen-to-square"></i> Sửa
                                                 </button>
@@ -371,22 +392,121 @@ $summary_text    = (string)($invStats['summary_text'] ?? 'Váy: 0 • Bộ thun:
                         </div>
 
                         <div class="form-group">
-                            <label class="small font-weight-bold text-slate mb-1 d-block">
-                                Khung chọn ảnh sản phẩm tải lên:
-                            </label>
-                            <label for="lbn_productImageInput" class="lbn-upload-dropzone w-100 mb-0">
-                                <i class="fa-solid fa-cloud-arrow-up text-peach h3 mb-2 d-block"></i>
-                                <span id="lbn_uploadFileName" class="small font-weight-bold text-slate d-block">
-                                    Kéo thả hoặc nhấn để chọn ảnh sản phẩm (JPG, PNG, WEBP)
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="small font-weight-bold text-slate mb-0">
+                                    Bộ Sưu Tập Ảnh Sản Phẩm (Tải nhiều góc chụp):
+                                </label>
+                                <span class="badge badge-pastel-mint px-2 py-0 small">4 góc + bổ sung</span>
+                            </div>
+                            <input type="hidden" id="lbn_formExistingGalleryJson" name="existing_gallery_json" value="">
+
+                            <div class="row no-gutters mx-n1 mb-2">
+                                <?php
+                                $uploadSlots = [
+                                    ['key' => 'front',  'input_id' => 'lbn_productImageInput',       'name' => 'image',        'title' => 'Ảnh chính / Mặt trước', 'icon' => 'fa-shirt'],
+                                    ['key' => 'detail', 'input_id' => 'lbn_productDetailImageInput', 'name' => 'image_detail', 'title' => 'Ảnh chi tiết thiết kế', 'icon' => 'fa-magnifying-glass-plus'],
+                                    ['key' => 'fabric', 'input_id' => 'lbn_productFabricImageInput', 'name' => 'image_fabric', 'title' => 'Ảnh cận cảnh sớ vải',  'icon' => 'fa-layer-group'],
+                                    ['key' => 'model',  'input_id' => 'lbn_productModelImageInput',  'name' => 'image_model',  'title' => 'Ảnh bé mẫu mặc',       'icon' => 'fa-child-reaching'],
+                                ];
+                                foreach ($uploadSlots as $slotCfg):
+                                    $sk = $slotCfg['key'];
+                                ?>
+                                    <div class="col-6 p-1">
+                                        <div class="border rounded bg-light p-2 text-center h-100 position-relative">
+                                            <button type="button"
+                                                    id="lbn_clearSlotBtn_<?= $sk ?>"
+                                                    class="btn btn-light btn-sm border rounded-circle py-0 px-1 position-absolute d-none lbn-slot-clear-btn"
+                                                    title="Xóa ảnh góc này"
+                                                    onclick="lbnClearGallerySlot('<?= $sk ?>')">
+                                                <i class="fa-solid fa-xmark text-danger"></i>
+                                            </button>
+                                            <label for="<?= $slotCfg['input_id'] ?>" class="mb-0 d-block fk-cursor-pointer">
+                                                <img id="lbn_slotPreviewImg_<?= $sk ?>" src="" alt="<?= htmlspecialchars($slotCfg['title']) ?>"
+                                                     class="img-fluid rounded border mb-1 d-none lbn-slot-thumb-preview">
+                                                <div id="lbn_slotPlaceholder_<?= $sk ?>" class="py-2 text-muted-custom">
+                                                    <i class="fa-solid <?= $slotCfg['icon'] ?> text-peach h5 mb-1 d-block"></i>
+                                                </div>
+                                                <span class="d-block font-weight-bold text-slate fk-fs-075"><?= htmlspecialchars($slotCfg['title']) ?></span>
+                                                <small id="lbn_slotStatusText_<?= $sk ?>" class="text-muted-custom d-block text-truncate fk-fs-070">Chọn ảnh</small>
+                                            </label>
+                                            <input type="file"
+                                                   id="<?= $slotCfg['input_id'] ?>"
+                                                   name="<?= $slotCfg['name'] ?>"
+                                                   class="d-none lbn-slot-file-input"
+                                                   data-slot="<?= $sk ?>"
+                                                   accept="image/*">
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <label for="lbn_productExtraImagesInput" class="lbn-upload-dropzone w-100 mb-0 py-2 px-3 text-center">
+                                <i class="fa-solid fa-images text-peach mr-1"></i>
+                                <span id="lbn_uploadFileName" class="small font-weight-bold text-slate">
+                                    Chọn thêm nhiều ảnh bổ sung cùng lúc (JPG, PNG, WEBP)
                                 </span>
-                                <small class="text-muted-custom">Kích thước tối ưu: 800x800px (Nền sáng Pastel)</small>
-                                <div id="lbn_uploadPreviewBadge" class="mt-2 d-none">
-                                    <span class="badge badge-mint px-3 py-1 rounded-pill">
-                                        <i class="fa-solid fa-check mr-1"></i>Ảnh hợp lệ sẵn sàng tải lên
+                                <div id="lbn_uploadPreviewBadge" class="mt-1 d-none">
+                                    <span class="badge badge-mint px-2 py-1 rounded-pill">
+                                        <i class="fa-solid fa-check mr-1"></i>Đã chọn ảnh sẵn sàng tải lên
                                     </span>
                                 </div>
                             </label>
-                            <input type="file" id="lbn_productImageInput" name="image" class="d-none" accept="image/*">
+                            <input type="file" id="lbn_productExtraImagesInput" name="gallery_images[]" class="d-none" accept="image/*" multiple>
+                            <div id="lbn_extraImagesPreviewList" class="d-flex flex-wrap mt-2"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="small font-weight-bold text-slate mb-0">
+                                    Màu Sắc Trang Phục (Chọn nhiều màu):
+                                </label>
+                                <small class="text-muted-custom" id="lbn_selectedColorsCountLabel">2 màu</small>
+                            </div>
+                            <input type="hidden" id="lbn_formColorsJson" name="colors_json" value="">
+
+                            <div class="d-flex flex-wrap mb-2" id="lbn_presetColorPalette">
+                                <?php
+                                $presetColors = [
+                                    ['name' => 'Trắng Sữa',    'code' => '#FAF8F5'],
+                                    ['name' => 'Hồng Phấn',    'code' => '#FFD9D4'],
+                                    ['name' => 'Xanh Mint',    'code' => '#A8E6CF'],
+                                    ['name' => 'Vàng Kem',     'code' => '#FFF3B0'],
+                                    ['name' => 'Xanh Denim',   'code' => '#A2D2FF'],
+                                    ['name' => 'Tím Lavender', 'code' => '#E0C3FC'],
+                                    ['name' => 'Cam Đào',      'code' => '#FFAD9F'],
+                                    ['name' => 'Be Nude',      'code' => '#E6CCB2'],
+                                    ['name' => 'Đỏ Berry',     'code' => '#F28482'],
+                                    ['name' => 'Đen Charcoal', 'code' => '#3D405B'],
+                                ];
+                                foreach ($presetColors as $pc):
+                                ?>
+                                    <button type="button"
+                                            class="btn btn-light btn-sm border rounded-pill mr-1 mb-1 py-0 px-2 fk-fs-075 lbn-preset-color-btn"
+                                            data-color-name="<?= htmlspecialchars($pc['name']) ?>"
+                                            data-color-code="<?= htmlspecialchars($pc['code']) ?>"
+                                            onclick="lbnTogglePresetProductColor('<?= htmlspecialchars($pc['name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($pc['code'], ENT_QUOTES) ?>')">
+                                        <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($pc['code']) ?>"></span>
+                                        <?= htmlspecialchars($pc['name']) ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="input-group input-group-sm mb-2">
+                                <div class="input-group-prepend">
+                                    <input type="color" id="lbn_customColorPicker" class="form-control p-1 fk-color-picker-input" value="#FFD9D4" title="Chọn mã màu tùy chỉnh">
+                                </div>
+                                <input type="text" id="lbn_customColorName" class="form-control" placeholder="Nhập tên màu tùy chỉnh (VD: Xanh Bơ, Đỏ Đô...)">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary font-weight-bold" onclick="lbnAddCustomProductColor()">
+                                        <i class="fa-solid fa-plus mr-1"></i>Thêm màu
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="p-2 rounded border bg-light">
+                                <small class="text-muted-custom d-block mb-1">Các màu sẽ hiển thị cho khách hàng chọn:</small>
+                                <div id="lbn_selectedColorsList" class="d-flex flex-wrap"></div>
+                            </div>
                         </div>
 
                         <div class="form-group mb-4">

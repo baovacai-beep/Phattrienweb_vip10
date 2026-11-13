@@ -326,6 +326,10 @@ foreach ($liveCatalog as $liveRow) {
         $lbn_products[$lid]['original_price'] = max((float)$liveRow['price'] + 55000, round($liveRow['price'] * 1.18, -3));
         $lbn_products[$lid]['stock_quantity'] = (int)$liveRow['stock_quantity'];
         $lbn_products[$lid]['image']          = $liveRow['image'];
+        $lbn_products[$lid]['gallery']        = $liveRow['gallery'] ?? [];
+        if (!empty($liveRow['has_custom_colors']) && !empty($liveRow['colors'])) {
+            $lbn_products[$lid]['colors'] = $liveRow['colors'];
+        }
         $lbn_products[$lid]['material']       = $liveRow['material'];
         $lbn_products[$lid]['category_id']    = (int)$liveRow['category_id'];
         $lbn_products[$lid]['category_slug']  = $liveRow['category_slug'];
@@ -340,6 +344,7 @@ foreach ($liveCatalog as $liveRow) {
             'id'             => $lid,
             'sku'            => $liveRow['sku'],
             'image'          => $liveRow['image'],
+            'gallery'        => $liveRow['gallery'] ?? [],
             'category_id'    => (int)$liveRow['category_id'],
             'category_slug'  => $liveRow['category_slug'],
             'category_name'  => $liveRow['category_name'],
@@ -362,7 +367,7 @@ foreach ($liveCatalog as $liveRow) {
             'default_size'   => $isShoes ? 'Size 24 (14cm)' : 'Size 2 (2-3T)',
             'type'           => $liveRow['type'],
             'icon'           => $liveRow['icon'],
-            'colors'         => [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]],
+            'colors'         => !empty($liveRow['colors']) ? $liveRow['colors'] : [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]],
             'description'    => $liveRow['material'],
             'material'       => $liveRow['material'],
             'certifications' => ['OEKO-TEX® Standard 100', 'An toàn cho làn da nhạy cảm của bé'],
@@ -451,74 +456,82 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                             </div>
                         <?php endif; ?>
 
+                        <?php
+                        $gData = $prod['gallery'] ?? [];
+                        $isDemoCatalog = ((int)$prod['id'] <= 109);
+                        $pdpSlides = [
+                            [
+                                'src'   => !empty($gData['front']) ? $gData['front'] : $prod['image'],
+                                'thumb' => 'Mặt Trước',
+                                'title' => 'Ảnh Mặt Trước (Góc Chụp Chuẩn Studio)',
+                                'desc'  => '100% Sợi Tre Organic • Đường May Chìm Êm Da',
+                            ],
+                        ];
+                        $slotDefinitions = [
+                            ['key' => 'detail', 'thumb' => 'Chi Tiết', 'title' => 'Ảnh Chi Tiết Thiết Kế & Đường May',   'desc' => 'Cúc Bấm & Bo Chun An Toàn • Không Cấn Làn Da Bé',   'fallback' => $isDemoCatalog ? $prod['image'] : ''],
+                            ['key' => 'fabric', 'thumb' => 'Cận Vải',  'title' => 'Cận Cảnh Sớ Vải Dệt Kháng Khuẩn',     'desc' => 'Mềm Mịn Như Lụa • Thấm Hút Mồ Hôi Gấp 2 Lần Cotton', 'fallback' => $isDemoCatalog ? $prod['image'] : ''],
+                            ['key' => 'model',  'thumb' => 'Bé Mặc',   'title' => 'Ảnh Bé Mẫu Thực Tế (Lookbook 2026)', 'desc' => 'Hình ảnh mẫu nhí diện sản phẩm thực tế',            'fallback' => $isDemoCatalog ? '/FashionKids/images/banner-mua-he-2026.jpg' : ''],
+                        ];
+                        foreach ($slotDefinitions as $sd) {
+                            $slotSrc = !empty($gData[$sd['key']]) ? (string)$gData[$sd['key']] : (string)$sd['fallback'];
+                            if ($slotSrc !== '') {
+                                $pdpSlides[] = [
+                                    'src'   => $slotSrc,
+                                    'thumb' => $sd['thumb'],
+                                    'title' => $sd['title'],
+                                    'desc'  => $sd['desc'],
+                                ];
+                            }
+                        }
+                        if (!empty($gData['extra']) && is_array($gData['extra'])) {
+                            foreach ($gData['extra'] as $exIdx => $exSrc) {
+                                if (!empty($exSrc)) {
+                                    $pdpSlides[] = [
+                                        'src'   => (string)$exSrc,
+                                        'thumb' => 'Ảnh ' . (count($pdpSlides) + 1),
+                                        'title' => 'Ảnh Chi Tiết Bổ Sung #' . ($exIdx + 1),
+                                        'desc'  => 'Hình ảnh thực tế sản phẩm ' . $prod['name'],
+                                    ];
+                                }
+                            }
+                        }
+                        ?>
+
                         <div class="carousel-inner text-center">
-                            <div class="carousel-item active">
-                                <div class="lbn-pdp-slide-item">
-                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="lbn-pdp-main-img mb-2">
-                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Mặt Trước (Góc Chụp Chuẩn Studio)</h6>
-                                    <small class="text-muted-custom">100% Sợi Tre Organic • Đường May Chìm Êm Da</small>
+                            <?php foreach ($pdpSlides as $sIdx => $slide): ?>
+                                <div class="carousel-item <?= $sIdx === 0 ? 'active' : '' ?>">
+                                    <div class="lbn-pdp-slide-item">
+                                        <img src="<?= htmlspecialchars($slide['src']) ?>" alt="<?= htmlspecialchars($slide['title']) ?>" class="lbn-pdp-main-img mb-2">
+                                        <h6 class="font-weight-bold text-slate mb-0"><?= htmlspecialchars($slide['title']) ?></h6>
+                                        <small class="text-muted-custom"><?= htmlspecialchars($slide['desc']) ?></small>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="lbn-pdp-slide-item">
-                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Chi tiết mặt sau" class="lbn-pdp-main-img mb-2">
-                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Chi Tiết Thiết Kế &amp; Đường May</h6>
-                                    <small class="text-muted-custom">Cúc Bấm &amp; Bo Chun An Toàn • Không Cấn Làn Da Bé</small>
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="lbn-pdp-slide-item">
-                                    <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Cận cảnh sớ vải sợi tre" class="lbn-pdp-main-img mb-2">
-                                    <h6 class="font-weight-bold text-slate mb-0">Cận Cảnh Sớ Vải Dệt Kháng Khuẩn</h6>
-                                    <small class="text-muted-custom">Mềm Mịn Như Lụa • Thấm Hút Mồ Hôi Gấp 2 Lần Cotton</small>
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="lbn-pdp-slide-item">
-                                    <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Lookbook 2026" class="lbn-pdp-main-img mb-2">
-                                    <h6 class="font-weight-bold text-slate mb-0">Ảnh Bé Mẫu Thực Tế (Lookbook 2026)</h6>
-                                    <small class="text-muted-custom">Bé Sam (28 tháng - 13kg) Mặc Vừa Vặn Size 2</small>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
 
-                        <!-- Điều Hướng Trái / Phải -->
-                        <a class="carousel-control-prev" href="#lbn_pdpImageSlider" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#lbn_pdpImageSlider" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                        </a>
+                        <?php if (count($pdpSlides) > 1): ?>
+                            <!-- Điều Hướng Trái / Phải -->
+                            <a class="carousel-control-prev" href="#lbn_pdpImageSlider" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#lbn_pdpImageSlider" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon rounded-circle bg-dark p-2 fk-opacity-50" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Hàng Thumbnail Bấm Đổi Slide Ảnh -->
                     <div class="row no-gutters">
-                        <div class="col-3 p-1">
-                            <div class="lbn-pdp-thumb active" onclick="lbnSwitchPdpSlide(0, this)">
-                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Mặt trước" class="lbn-pdp-thumb-img">
-                                <span class="small font-weight-bold text-slate fk-fs-075">Mặt Trước</span>
+                        <?php foreach ($pdpSlides as $sIdx => $slide): ?>
+                            <div class="col-3 p-1">
+                                <div class="lbn-pdp-thumb <?= $sIdx === 0 ? 'active' : '' ?>" onclick="lbnSwitchPdpSlide(<?= (int)$sIdx ?>, this)">
+                                    <img src="<?= htmlspecialchars($slide['src']) ?>" alt="<?= htmlspecialchars($slide['thumb']) ?>" class="lbn-pdp-thumb-img">
+                                    <span class="small font-weight-bold text-slate fk-fs-075"><?= htmlspecialchars($slide['thumb']) ?></span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-3 p-1">
-                            <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(1, this)">
-                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Chi tiết" class="lbn-pdp-thumb-img">
-                                <span class="small font-weight-bold text-slate fk-fs-075">Chi Tiết</span>
-                            </div>
-                        </div>
-                        <div class="col-3 p-1">
-                            <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(2, this)">
-                                <img src="<?= htmlspecialchars($prod['image']) ?>" alt="Cận vải" class="lbn-pdp-thumb-img">
-                                <span class="small font-weight-bold text-slate fk-fs-075">Cận Vải</span>
-                            </div>
-                        </div>
-                        <div class="col-3 p-1">
-                            <div class="lbn-pdp-thumb" onclick="lbnSwitchPdpSlide(3, this)">
-                                <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="Bé mặc" class="lbn-pdp-thumb-img">
-                                <span class="small font-weight-bold text-slate fk-fs-075">Bé Mặc</span>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
 
                     <!-- 3 Cam Kết Vàng Về Sản Phẩm -->
@@ -628,18 +641,28 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
                     </div>
 
                     <!-- Chọn Màu Sắc -->
+                    <?php
+                    $pdpColors = !empty($prod['colors']) && is_array($prod['colors'])
+                        ? $prod['colors']
+                        : [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]];
+                    $defaultColorName = (string)($pdpColors[0]['name'] ?? 'Bright Pastel');
+                    ?>
                     <div class="mb-3">
                         <label class="small font-weight-bold text-slate mb-2 d-block">
-                            Màu sắc trang phục:
+                            Màu sắc trang phục: <span id="lbn_selectedColorText" class="text-peach font-weight-bold"><?= htmlspecialchars($defaultColorName) ?></span>
                         </label>
-                        <div class="d-flex align-items-center flex-wrap">
-                            <?php foreach ($prod['colors'] as $c): ?>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate text-nowrap <?= $c['active'] ? 'border-primary' : '' ?>">
-                                    <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars($c['code']) ?>"></span>
-                                    <?= htmlspecialchars($c['name']) ?>
+                        <div class="d-flex align-items-center flex-wrap" id="lbn_pdpColorOptionsGroup">
+                            <?php foreach ($pdpColors as $cIdx => $c): ?>
+                                <?php $isActiveColor = ($cIdx === 0); ?>
+                                <button type="button"
+                                        class="btn btn-sm btn-light border rounded-pill mr-2 mb-2 font-weight-bold text-slate text-nowrap lbn-color-chip-btn <?= $isActiveColor ? 'active border-primary shadow-sm' : '' ?>"
+                                        onclick="lbnSelectPdpColor('<?= htmlspecialchars((string)$c['name'], ENT_QUOTES) ?>', this)">
+                                    <span class="d-inline-block rounded-circle mr-1 fk-color-dot" data-fk-bg="<?= htmlspecialchars((string)$c['code']) ?>"></span>
+                                    <?= htmlspecialchars((string)$c['name']) ?>
                                 </button>
                             <?php endforeach; ?>
                         </div>
+                        <input type="hidden" id="lbn_selectedColorInput" value="<?= htmlspecialchars($defaultColorName) ?>">
                     </div>
 
                     <!-- Chọn Kích Cỡ & Nút Gợi Ý Size Thước Dây -->
