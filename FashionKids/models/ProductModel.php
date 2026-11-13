@@ -11,7 +11,9 @@ require_once __DIR__ . '/entities/SanPhamQuanAo.php';
 require_once __DIR__ . '/entities/SanPhamGiayDep.php';
 
 class ProductModel extends Model {
-        private array $mockProducts = [
+    private static bool $mediaSchemaChecked = false;
+
+    private array $mockProducts = [
         [
             'ma_san_pham'     => 101,
             'ma_danh_muc'     => 1,
@@ -171,6 +173,7 @@ class ProductModel extends Model {
      * Lấy danh sách sản phẩm theo danh mục và lọc giá
      */
     public function layDanhSachSanPham(?int $maDanhMuc = null, float $minPrice = 0, float $maxPrice = 10000000): array {
+        $this->ensureProductMediaColumns();
         if ($this->hasConnection()) {
             try {
                 $sql = "SELECT sp.*, dm.ten_danh_muc, dm.gioi_tinh,
@@ -464,6 +467,172 @@ class ProductModel extends Model {
     }
 
     /**
+     * Tự động bổ sung cột lưu nhiều ảnh & nhiều màu cho bảng lbn_san_pham nếu CSDL chưa có
+     */
+    private function ensureProductMediaColumns(): void {
+        if (self::$mediaSchemaChecked || !$this->hasConnection()) {
+            return;
+        }
+        self::$mediaSchemaChecked = true;
+        try {
+            $colsNeeded = [
+                'danh_sach_anh' => 'ALTER TABLE lbn_san_pham ADD COLUMN danh_sach_anh TEXT NULL AFTER duong_dan_anh',
+                'danh_sach_mau' => 'ALTER TABLE lbn_san_pham ADD COLUMN danh_sach_mau TEXT NULL AFTER danh_sach_anh',
+            ];
+            foreach ($colsNeeded as $colName => $alterSql) {
+                $chk = $this->db->query("SHOW COLUMNS FROM lbn_san_pham LIKE '" . $colName . "'");
+                if ($chk && $chk->fetch() === false) {
+                    $this->db->exec($alterSql);
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('[lbn] ensureProductMediaColumns: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Giải mã an toàn dữ liệu JSON (string hoặc array) thành mảng PHP
+     */
+    private function decodeJsonArray($raw): array {
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (is_string($raw) && trim($raw) !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Chuẩn hóa đường dẫn ảnh an toàn trong thư mục web
+     */
+    private function normalizeAssetPath(string $path): string {
+        $p = trim(str_replace('\\', '/', $path));
+        if ($p === '' || strpos($p, '..') !== false) {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $p) || strpos($p, '/') === 0) {
+            return $p;
+        }
+        return '/FashionKids/images/' . ltrim($p, '/');
+    }
+
+    /**
+     * Chuẩn hóa bộ sưu tập nhiều ảnh của sản phẩm (Mặt trước, Chi tiết, Cận vải, Bé mặc + Ảnh bổ sung)
+     */
+    private function parseProductGallery($rawGallery, string $primaryImg): array {
+        $decoded = $this->decodeJsonArray($rawGallery);
+        $slots = ['front', 'detail', 'fabric', 'model'];
+        $gallery = [
+            'front'  => '',
+            'detail' => '',
+            'fabric' => '',
+            'model'  => '',
+            'extra'  => [],
+        ];
+
+        $isList = isset($decoded[0]);
+        if ($isList) {
+            foreach ($decoded as $idx => $item) {
+                $clean = $this->normalizeAssetPath((string)$item);
+                if ($clean === '') {
+                    continue;
+                }
+                if ($idx < count($slots)) {
+                    $gallery[$slots[$idx]] = $clean;
+                } else {
+                    $gallery['extra'][] = $clean;
+                }
+            }
+        } else {
+            foreach ($slots as $slot) {
+                if (!empty($decoded[$slot])) {
+                    $gallery[$slot] = $this->normalizeAssetPath((string)$decoded[$slot]);
+                }
+            }
+            if (!empty($decoded['extra']) && is_array($decoded['extra'])) {
+                foreach ($decoded['extra'] as $item) {
+                    $clean = $this->normalizeAssetPath((string)$item);
+                    if ($clean !== '') {
+                        $gallery['extra'][] = $clean;
+                    }
+                }
+            }
+        }
+
+        if ($gallery['front'] === '') {
+            $gallery['front'] = $this->normalizeAssetPath($primaryImg);
+        }
+
+        $extraClean = [];
+        $seen = array_filter([$gallery['front'], $gallery['detail'], $gallery['fabric'], $gallery['model']]);
+        foreach ($gallery['extra'] as $ex) {
+            if (!in_array($ex, $seen, true) && !in_array($ex, $extraClean, true)) {
+                $extraClean[] = $ex;
+            }
+        }
+        $gallery['extra'] = array_values($extraClean);
+
+        $allImages = [];
+        foreach ([$gallery['front'], $gallery['detail'], $gallery['fabric'], $gallery['model']] as $slotImg) {
+            if ($slotImg !== '' && !in_array($slotImg, $allImages, true)) {
+                $allImages[] = $slotImg;
+            }
+        }
+        foreach ($gallery['extra'] as $ex) {
+            if (!in_array($ex, $allImages, true)) {
+                $allImages[] = $ex;
+            }
+        }
+
+        $gallery['images'] = $allImages;
+        $gallery['count']  = count($allImages);
+        return $gallery;
+    }
+
+    /**
+     * Chuẩn hóa danh sách nhiều màu sắc sản phẩm
+     */
+    private function parseProductColors($rawColors): array {
+        $decoded = $this->decodeJsonArray($rawColors);
+        $colors = [];
+        $seenKeys = [];
+
+        foreach ($decoded as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $name = trim((string)($item['name'] ?? ''));
+            $code = strtoupper(trim((string)($item['code'] ?? '')));
+            if ($name === '') {
+                continue;
+            }
+            if (!preg_match('/^#[0-9A-F]{6}$/', $code)) {
+                if (preg_match('/^#[0-9A-F]{3}$/', $code)) {
+                    $code = '#' . $code[1] . $code[1] . $code[2] . $code[2] . $code[3] . $code[3];
+                } else {
+                    $code = '#FAF8F5';
+                }
+            }
+            $dedupeKey = mb_strtolower($name, 'UTF-8') . '|' . $code;
+            if (isset($seenKeys[$dedupeKey])) {
+                continue;
+            }
+            $seenKeys[$dedupeKey] = true;
+            $colors[] = [
+                'name'   => mb_substr($name, 0, 50, 'UTF-8'),
+                'code'   => $code,
+                'active' => (count($colors) === 0),
+            ];
+        }
+
+        return $colors;
+    }
+
+    /**
      * Chuẩn hóa 1 dòng dữ liệu sản phẩm để phục vụ đồng nhất cho cả MH 02, MH 03 và MH 13
      */
     private function normalizeProductRow(array $row, int $index = 0): array {
@@ -515,6 +684,13 @@ class ProductModel extends Model {
         $avgRating   = $reviewCount > 0 ? round((float)($row['sao_trung_binh'] ?? $row['rating'] ?? 0.0), 1) : 0.0;
         $buyerCount  = max(0, (int)($row['so_nguoi_mua'] ?? $row['buyer_count'] ?? 0));
 
+        $gallery         = $this->parseProductGallery($row['gallery'] ?? $row['danh_sach_anh'] ?? null, $rawImg);
+        $parsedColors    = $this->parseProductColors($row['colors'] ?? $row['danh_sach_mau'] ?? null);
+        $hasCustomColors = !empty($parsedColors);
+        if (!$hasCustomColors) {
+            $parsedColors = [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]];
+        }
+
         return [
             // Các trường chuẩn CSDL
             'ma_san_pham'      => $id,
@@ -523,6 +699,8 @@ class ProductModel extends Model {
             'gia_ban'          => $price,
             'so_luong_ton_kho' => $stock,
             'duong_dan_anh'    => $rawImg,
+            'danh_sach_anh'    => $row['danh_sach_anh'] ?? null,
+            'danh_sach_mau'    => $row['danh_sach_mau'] ?? null,
             'mo_ta_chat_lieu'  => $desc,
             'loai_kich_co'     => $type,
             'ten_danh_muc'     => $catMeta['db_name'],
@@ -531,6 +709,11 @@ class ProductModel extends Model {
             'id'               => $id,
             'sku'              => $sku,
             'image'            => $rawImg,
+            'gallery'          => $gallery,
+            'images'           => $gallery['images'],
+            'image_count'      => $gallery['count'],
+            'colors'           => $parsedColors,
+            'has_custom_colors'=> $hasCustomColors,
             'category_id'      => $catId,
             'category_slug'    => $catMeta['slug'],
             'category_name'    => $catMeta['name'],
@@ -563,6 +746,7 @@ class ProductModel extends Model {
      * Lấy toàn bộ danh sách sản phẩm đã chuẩn hóa (kết hợp CSDL, mockProducts và sản phẩm thêm mới trong phiên)
      */
     public function layTatCaSanPhamChuanHoa(): array {
+        $this->ensureProductMediaColumns();
         $byId = [];
         $loadedFromDb = false;
 
@@ -907,6 +1091,8 @@ class ProductModel extends Model {
      * Thêm mới hoặc Cập nhật sản phẩm vào kho hàng (MH 13 - triệu gọi sp_lbn_them_san_pham_moi)
      */
     public function luuSanPhamKhoHang(array $data): array {
+        $this->ensureProductMediaColumns();
+
         $productId  = !empty($data['product_id']) ? (int)$data['product_id'] : 0;
         $isEdit     = ($productId > 0);
         $catId      = (int)($data['category_id'] ?? 1);
@@ -917,7 +1103,7 @@ class ProductModel extends Model {
         $stock      = (int)($data['stock_quantity'] ?? 0);
         $sizeType   = in_array($data['size_type'] ?? '', ['quan_ao', 'giay_dep'], true) ? $data['size_type'] : 'quan_ao';
         $material   = trim((string)($data['description'] ?? ''));
-        $imagePath  = trim((string)($data['image_path'] ?? ''));
+        $imagePath  = $this->normalizeAssetPath((string)($data['image_path'] ?? ''));
 
         $catMap = $this->getCategoryMetadataMap();
         if (!isset($catMap[$catId])) {
@@ -927,25 +1113,51 @@ class ProductModel extends Model {
             throw new InvalidArgumentException('Tên sản phẩm không được phép để trống!');
         }
 
-        if ($sizeType === 'giay_dep' || $catId === 4) {
-            $entity = new SanPhamGiayDep($productId, $catId, $name, $price, $stock, $imagePath);
-        } else {
-            $entity = new SanPhamQuanAo($productId, $catId, $name, $price, $stock, $imagePath);
-        }
-
-        if ($imagePath === '' && $isEdit && $this->hasConnection()) {
+        $existingImg = '';
+        $existingGalleryRaw = null;
+        $existingColorsRaw = null;
+        if ($isEdit && $this->hasConnection()) {
             try {
-                $imgStmt = $this->db->prepare("SELECT duong_dan_anh FROM lbn_san_pham WHERE ma_san_pham = :id LIMIT 1");
+                $imgStmt = $this->db->prepare("SELECT duong_dan_anh, danh_sach_anh, danh_sach_mau FROM lbn_san_pham WHERE ma_san_pham = :id LIMIT 1");
                 $imgStmt->execute([':id' => $productId]);
                 $imgRow = $imgStmt->fetch();
-                if (!empty($imgRow['duong_dan_anh'])) {
-                    $imagePath = (string)$imgRow['duong_dan_anh'];
+                if ($imgRow) {
+                    $existingImg        = (string)($imgRow['duong_dan_anh'] ?? '');
+                    $existingGalleryRaw = $imgRow['danh_sach_anh'] ?? null;
+                    $existingColorsRaw  = $imgRow['danh_sach_mau'] ?? null;
                 }
             } catch (PDOException $e) {
-                // Giữ nguyên fallback bên dưới nếu không đọc được ảnh cũ
+                try {
+                    $imgStmt = $this->db->prepare("SELECT duong_dan_anh FROM lbn_san_pham WHERE ma_san_pham = :id LIMIT 1");
+                    $imgStmt->execute([':id' => $productId]);
+                    $imgRow = $imgStmt->fetch();
+                    if (!empty($imgRow['duong_dan_anh'])) {
+                        $existingImg = (string)$imgRow['duong_dan_anh'];
+                    }
+                } catch (PDOException $e2) {
+                    // Giữ fallback bên dưới
+                }
             }
         }
 
+        $inputGallery = is_array($data['gallery'] ?? null) ? $data['gallery'] : [];
+        if ($imagePath === '' && !empty($inputGallery['front'])) {
+            $imagePath = $this->normalizeAssetPath((string)$inputGallery['front']);
+        }
+        if ($imagePath === '' && $isEdit && $existingImg !== '') {
+            $imagePath = $this->normalizeAssetPath($existingImg);
+        }
+        if ($imagePath === '') {
+            foreach (['detail', 'fabric', 'model'] as $slotFallback) {
+                if (!empty($inputGallery[$slotFallback])) {
+                    $imagePath = $this->normalizeAssetPath((string)$inputGallery[$slotFallback]);
+                    break;
+                }
+            }
+            if ($imagePath === '' && !empty($inputGallery['extra'][0])) {
+                $imagePath = $this->normalizeAssetPath((string)$inputGallery['extra'][0]);
+            }
+        }
         if ($imagePath === '') {
             $defaultImages = [
                 1 => '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg',
@@ -954,6 +1166,41 @@ class ProductModel extends Model {
                 4 => '/FashionKids/images/giay-sandal-tap-di.jpg'
             ];
             $imagePath = $defaultImages[$catId] ?? '/FashionKids/images/vay-cong-chua-hoa-cuc.jpg';
+        }
+
+        if (!empty($inputGallery)) {
+            $inputGallery['front'] = $imagePath;
+            $galleryData = $this->parseProductGallery($inputGallery, $imagePath);
+        } else {
+            $galleryData = $this->parseProductGallery($existingGalleryRaw, $imagePath);
+            $galleryData['front'] = $imagePath;
+        }
+
+        $hasColorsInput = array_key_exists('colors', $data) || array_key_exists('colors_json', $data);
+        $colorsData = $this->parseProductColors($hasColorsInput ? ($data['colors'] ?? $data['colors_json'] ?? null) : $existingColorsRaw);
+        if (empty($colorsData) && !$hasColorsInput && $existingColorsRaw !== null) {
+            $colorsData = $this->parseProductColors($existingColorsRaw);
+        }
+        if (empty($colorsData)) {
+            $colorsData = [['name' => 'Bright Pastel', 'code' => '#FAF8F5', 'active' => true]];
+        }
+
+        $galleryJson = json_encode([
+            'front'  => $galleryData['front'],
+            'detail' => $galleryData['detail'],
+            'fabric' => $galleryData['fabric'],
+            'model'  => $galleryData['model'],
+            'extra'  => $galleryData['extra'],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $colorsJson = json_encode(array_map(function (array $c): array {
+            return ['name' => $c['name'], 'code' => $c['code']];
+        }, $colorsData), JSON_UNESCAPED_UNICODE);
+
+        if ($sizeType === 'giay_dep' || $catId === 4) {
+            $entity = new SanPhamGiayDep($productId, $catId, $name, $price, $stock, $imagePath);
+        } else {
+            $entity = new SanPhamQuanAo($productId, $catId, $name, $price, $stock, $imagePath);
         }
 
         $usedRoutine = false;
@@ -1053,6 +1300,22 @@ class ProductModel extends Model {
             }
         }
 
+        // Lưu bổ sung danh sách nhiều ảnh & bảng màu (hoạt động độc lập với Stored Procedure trên Hosting)
+        if ($this->hasConnection() && $productId > 0) {
+            try {
+                $mediaStmt = $this->db->prepare(
+                    "UPDATE lbn_san_pham SET danh_sach_anh = :gallery, danh_sach_mau = :colors WHERE ma_san_pham = :id"
+                );
+                $mediaStmt->execute([
+                    ':gallery' => $galleryJson,
+                    ':colors'  => $colorsJson,
+                    ':id'      => $productId
+                ]);
+            } catch (PDOException $e) {
+                error_log('[lbn] update product media/colors: ' . $e->getMessage());
+            }
+        }
+
         if ($sku === '') {
             $skuNum = $productId >= 100 ? ($productId - 100) : $productId;
             $sku = 'FK-LBN-' . str_pad((string)$skuNum, 2, '0', STR_PAD_LEFT);
@@ -1065,6 +1328,8 @@ class ProductModel extends Model {
             'gia_ban'          => $price,
             'so_luong_ton_kho' => $stock,
             'duong_dan_anh'    => $imagePath,
+            'danh_sach_anh'    => $galleryJson,
+            'danh_sach_mau'    => $colorsJson,
             'mo_ta_chat_lieu'  => $material,
             'loai_kich_co'     => $sizeType,
             'sku'              => $sku,

@@ -70,6 +70,8 @@ CREATE TABLE `lbn_san_pham` (
     `gia_ban` DECIMAL(10,2) NOT NULL,
     `so_luong_ton_kho` INT NOT NULL DEFAULT 10,
     `duong_dan_anh` VARCHAR(255) NOT NULL,
+    `danh_sach_anh` TEXT NULL,
+    `danh_sach_mau` TEXT NULL,
     `mo_ta_chat_lieu` TEXT NULL,
     `loai_kich_co` ENUM('quan_ao', 'giay_dep') NOT NULL DEFAULT 'quan_ao',
     `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

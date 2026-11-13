@@ -437,6 +437,14 @@ $(document).ready(function () {
         });
     };
 
+    // Chọn màu sắc trang phục trên PDP
+    window.lbnSelectPdpColor = function (colorName, btnEl) {
+        $('.lbn-color-chip-btn').removeClass('active border-primary shadow-sm');
+        $(btnEl).addClass('active border-primary shadow-sm');
+        $('#lbn_selectedColorText').text(colorName);
+        $('#lbn_selectedColorInput').val(colorName);
+    };
+
     // Chọn kích cỡ trên PDP -> Gọi AJAX kiểm tra tồn kho tương ứng từ lbn_san_pham
     window.lbnSelectPdpSize = function (sizeText, btnEl) {
         $('.lbn-size-option-btn').removeClass('active');
@@ -486,6 +494,8 @@ $(document).ready(function () {
     window.lbnAddToCartPdp = function () {
         let prodName = $('#lbn_pdpProductTitle').text().trim();
         let chosenSize = $('#lbn_selectedSizeInput').val();
+        let chosenColor = ($('#lbn_selectedColorInput').val() || '').trim();
+        let variantText = chosenColor ? (chosenSize + ' - Màu ' + chosenColor) : chosenSize;
         let qty = parseInt($('#lbn_pdpQuantity').val(), 10) || 1;
 
         window.lbnCheckPdpStockAjax('add_to_cart', function (ok, res) {
@@ -496,13 +506,15 @@ $(document).ready(function () {
             let badge = $('.cart-badge-custom').first();
             let nextCount = (res && res.cart_count) ? res.cart_count : ((parseInt(badge.text(), 10) || 0) + qty);
             badge.text(nextCount);
-            alert('Đã kiểm tra tồn kho & thêm ' + qty + ' x "' + prodName + '" (Phân loại: ' + chosenSize + ') vào giỏ hàng thành công!');
+            alert('Đã kiểm tra tồn kho & thêm ' + qty + ' x "' + prodName + '" (Phân loại: ' + variantText + ') vào giỏ hàng thành công!');
         });
     };
 
     window.lbnBuyNowPdp = function () {
         let prodName = $('#lbn_pdpProductTitle').text().trim();
         let chosenSize = $('#lbn_selectedSizeInput').val();
+        let chosenColor = ($('#lbn_selectedColorInput').val() || '').trim();
+        let variantText = chosenColor ? (chosenSize + ' - ' + chosenColor) : chosenSize;
         let qty = parseInt($('#lbn_pdpQuantity').val(), 10) || 1;
 
         window.lbnCheckPdpStockAjax('buy_now', function (ok, res) {
@@ -510,7 +522,7 @@ $(document).ready(function () {
                 alert((res && res.message) ? res.message : 'Số lượng chọn vượt quá tồn kho thực tế!');
                 return;
             }
-            alert('Chuyển đến trang Thanh Toán với ' + qty + ' x "' + prodName + '" (' + chosenSize + ').');
+            alert('Chuyển đến trang Thanh Toán với ' + qty + ' x "' + prodName + '" (' + variantText + ').');
             window.location.href = '/FashionKids/views/pages/checkout.php';
         });
     };
@@ -664,14 +676,186 @@ $(document).ready(function () {
         }
     };
 
-    // Xem trước ảnh tải lên trong Form Thêm/Sửa sản phẩm (MH 13)
-    $('#lbn_productImageInput').on('change', function (e) {
-        let file = e.target.files[0];
-        if (file) {
-            $('#lbn_uploadFileName').text('Đã chọn: ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)');
+    // Quản lý nhiều ảnh & nhiều màu trong Form Thêm/Sửa sản phẩm (MH 13)
+    const LBN_DEFAULT_COLORS = [
+        { name: 'Trắng Sữa', code: '#FAF8F5' },
+        { name: 'Hồng Phấn', code: '#FFD9D4' }
+    ];
+    let lbnFormColors = LBN_DEFAULT_COLORS.map(function (c) { return { name: c.name, code: c.code }; });
+    let lbnExistingGallery = { front: '', detail: '', fabric: '', model: '', extra: [] };
+
+    function lbnSyncGalleryHiddenField() {
+        $('#lbn_formExistingGalleryJson').val(JSON.stringify(lbnExistingGallery));
+    }
+
+    function lbnRenderFormColors() {
+        let $list = $('#lbn_selectedColorsList');
+        if (!$list.length) return;
+        $list.empty();
+
+        lbnFormColors.forEach(function (item, idx) {
+            let $chip = $('<span></span>')
+                .addClass('badge badge-light border rounded-pill mr-1 mb-1 py-1 px-2 d-inline-flex align-items-center text-slate');
+            let $dot = $('<span></span>')
+                .addClass('d-inline-block rounded-circle mr-1 fk-color-dot')
+                .css('background-color', item.code);
+            let $label = $('<span></span>').addClass('mr-1 font-weight-bold').text(item.name);
+            let $del = $('<button type="button"></button>')
+                .addClass('btn btn-link btn-sm p-0 ml-1 text-danger text-decoration-none font-weight-bold')
+                .attr('title', 'Xóa màu ' + item.name)
+                .html('&times;')
+                .on('click', function () {
+                    window.lbnRemoveProductColor(idx);
+                });
+            $chip.append($dot, $label, $del);
+            $list.append($chip);
+        });
+
+        $('.lbn-preset-color-btn').each(function () {
+            let pName = ($(this).attr('data-color-name') || '').toLowerCase();
+            let pCode = ($(this).attr('data-color-code') || '').toUpperCase();
+            let isSelected = lbnFormColors.some(function (c) {
+                return c.name.toLowerCase() === pName && c.code.toUpperCase() === pCode;
+            });
+            $(this).toggleClass('border-primary font-weight-bold bg-white', isSelected);
+        });
+
+        $('#lbn_selectedColorsCountLabel').text(lbnFormColors.length + ' màu');
+        $('#lbn_formColorsJson').val(JSON.stringify(lbnFormColors));
+    }
+
+    window.lbnTogglePresetProductColor = function (name, code) {
+        let cleanName = String(name || '').trim();
+        let cleanCode = String(code || '#FAF8F5').trim().toUpperCase();
+        let foundIdx = lbnFormColors.findIndex(function (c) {
+            return c.name.toLowerCase() === cleanName.toLowerCase() && c.code.toUpperCase() === cleanCode;
+        });
+        if (foundIdx >= 0) {
+            if (lbnFormColors.length <= 1) {
+                alert('Sản phẩm cần giữ ít nhất 1 màu sắc hiển thị.');
+                return;
+            }
+            lbnFormColors.splice(foundIdx, 1);
+        } else {
+            lbnFormColors.push({ name: cleanName, code: cleanCode });
+        }
+        lbnRenderFormColors();
+    };
+
+    window.lbnAddCustomProductColor = function () {
+        let code = ($('#lbn_customColorPicker').val() || '#FFD9D4').toUpperCase();
+        let name = ($('#lbn_customColorName').val() || '').trim();
+        if (!name) {
+            alert('Vui lòng nhập tên màu sắc (VD: Xanh Bơ, Cam San Hô...)');
+            $('#lbn_customColorName').focus();
+            return;
+        }
+        let exists = lbnFormColors.some(function (c) {
+            return c.name.toLowerCase() === name.toLowerCase() && c.code.toUpperCase() === code;
+        });
+        if (!exists) {
+            lbnFormColors.push({ name: name, code: code });
+        }
+        $('#lbn_customColorName').val('');
+        lbnRenderFormColors();
+    };
+
+    window.lbnRemoveProductColor = function (idx) {
+        if (lbnFormColors.length <= 1) {
+            alert('Sản phẩm cần giữ ít nhất 1 màu sắc.');
+            return;
+        }
+        lbnFormColors.splice(idx, 1);
+        lbnRenderFormColors();
+    };
+
+    function lbnSetSlotPreview(slotKey, imgSrc, statusText) {
+        let $img = $('#lbn_slotPreviewImg_' + slotKey);
+        let $ph  = $('#lbn_slotPlaceholder_' + slotKey);
+        let $st  = $('#lbn_slotStatusText_' + slotKey);
+        let $clr = $('#lbn_clearSlotBtn_' + slotKey);
+
+        if (imgSrc) {
+            $img.attr('src', imgSrc).removeClass('d-none');
+            $ph.addClass('d-none');
+            $clr.removeClass('d-none');
+        } else {
+            $img.attr('src', '').addClass('d-none');
+            $ph.removeClass('d-none');
+            $clr.addClass('d-none');
+        }
+        $st.text(statusText || 'Chọn ảnh');
+    }
+
+    window.lbnClearGallerySlot = function (slotKey) {
+        $('.lbn-slot-file-input[data-slot="' + slotKey + '"]').val('');
+        lbnExistingGallery[slotKey] = '';
+        lbnSyncGalleryHiddenField();
+        lbnSetSlotPreview(slotKey, '', 'Chọn ảnh');
+    };
+
+    function lbnRenderExtraImagesPreview(newFiles) {
+        let $wrap = $('#lbn_extraImagesPreviewList');
+        if (!$wrap.length) return;
+        $wrap.empty();
+
+        (lbnExistingGallery.extra || []).forEach(function (src, idx) {
+            let $item = $('<div></div>').addClass('position-relative mr-2 mb-2 border rounded p-1 bg-white');
+            let $img = $('<img>').attr('src', src).addClass('rounded lbn-extra-thumb-img');
+            let $rm = $('<button type="button"></button>')
+                .addClass('btn btn-danger btn-sm rounded-circle py-0 px-1 position-absolute lbn-slot-clear-btn')
+                .html('&times;')
+                .on('click', function () {
+                    lbnExistingGallery.extra.splice(idx, 1);
+                    lbnSyncGalleryHiddenField();
+                    lbnRenderExtraImagesPreview($('#lbn_productExtraImagesInput')[0] ? $('#lbn_productExtraImagesInput')[0].files : null);
+                });
+            $item.append($img, $rm);
+            $wrap.append($item);
+        });
+
+        if (newFiles && newFiles.length > 0) {
+            Array.from(newFiles).forEach(function (file) {
+                let reader = new FileReader();
+                reader.onload = function (ev) {
+                    let $item = $('<div></div>').addClass('position-relative mr-2 mb-2 border rounded p-1 bg-white');
+                    let $img = $('<img>').attr('src', ev.target.result).attr('title', file.name).addClass('rounded lbn-extra-thumb-img');
+                    $item.append($img);
+                    $wrap.append($item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+
+    $('.lbn-slot-file-input').on('change', function (e) {
+        let slotKey = $(this).attr('data-slot');
+        let file = e.target.files && e.target.files[0];
+        if (!file || !slotKey) return;
+        let reader = new FileReader();
+        reader.onload = function (ev) {
+            lbnSetSlotPreview(slotKey, ev.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $('#lbn_productExtraImagesInput').on('change', function (e) {
+        let files = e.target.files;
+        if (files && files.length > 0) {
+            $('#lbn_uploadFileName').text('Đã chọn thêm ' + files.length + ' ảnh bổ sung');
             $('#lbn_uploadPreviewBadge').removeClass('d-none');
+            lbnRenderExtraImagesPreview(files);
+        } else {
+            $('#lbn_uploadFileName').text('Chọn thêm nhiều ảnh bổ sung cùng lúc (JPG, PNG, WEBP)');
+            $('#lbn_uploadPreviewBadge').addClass('d-none');
+            lbnRenderExtraImagesPreview(null);
         }
     });
+
+    if ($('#lbn_formAdminProduct').length) {
+        lbnRenderFormColors();
+        lbnSyncGalleryHiddenField();
+    }
 
     // Đổ dữ liệu sản phẩm cần sửa lên Form quản lý (MH 13)
     window.lbnEditInventoryProduct = function (btnEl) {
@@ -690,6 +874,44 @@ $(document).ready(function () {
         window.lbnToggleSizeTypeGuide(sizeType);
 
         $('#lbn_formProductMaterial').val($btn.attr('data-material'));
+
+        // Khôi phục ảnh từng góc & danh sách màu từ data-* của sản phẩm
+        $('.lbn-slot-file-input').val('');
+        $('#lbn_productExtraImagesInput').val('');
+        let rawGallery = {};
+        try {
+            rawGallery = JSON.parse($btn.attr('data-gallery') || '{}') || {};
+        } catch (err) {
+            rawGallery = {};
+        }
+        lbnExistingGallery = {
+            front:  rawGallery.front  || '',
+            detail: rawGallery.detail || '',
+            fabric: rawGallery.fabric || '',
+            model:  rawGallery.model  || '',
+            extra:  Array.isArray(rawGallery.extra) ? rawGallery.extra.slice() : []
+        };
+        lbnSyncGalleryHiddenField();
+        ['front', 'detail', 'fabric', 'model'].forEach(function (sk) {
+            lbnSetSlotPreview(sk, lbnExistingGallery[sk], lbnExistingGallery[sk] ? 'Ảnh hiện tại' : 'Chọn ảnh');
+        });
+        lbnRenderExtraImagesPreview(null);
+
+        let rawColors = [];
+        try {
+            rawColors = JSON.parse($btn.attr('data-colors') || '[]');
+        } catch (err2) {
+            rawColors = [];
+        }
+        if (Array.isArray(rawColors) && rawColors.length > 0) {
+            lbnFormColors = rawColors.map(function (c) {
+                return { name: c.name || 'Pastel', code: c.code || '#FAF8F5' };
+            });
+        } else {
+            lbnFormColors = LBN_DEFAULT_COLORS.map(function (c) { return { name: c.name, code: c.code }; });
+        }
+        lbnRenderFormColors();
+
         $('#lbn_btnSubmitProduct').html('<i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Cập Nhật Sản Phẩm');
         $('#lbn_btnResetForm').removeClass('d-none');
 
@@ -704,8 +926,16 @@ $(document).ready(function () {
         $('#lbn_formModeTitle').html('<i class="fa-solid fa-plus-circle text-peach mr-1"></i> Thêm Sản Phẩm Mới');
         $('#lbn_btnSubmitProduct').html('<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Thêm Sản Phẩm Vào Kho');
         $('#lbn_btnResetForm').addClass('d-none');
-        $('#lbn_uploadFileName').text('Kéo thả hoặc nhấn để chọn ảnh sản phẩm (JPG, PNG, WEBP)');
+        $('#lbn_uploadFileName').text('Chọn thêm nhiều ảnh bổ sung cùng lúc (JPG, PNG, WEBP)');
         $('#lbn_uploadPreviewBadge').addClass('d-none');
+        lbnExistingGallery = { front: '', detail: '', fabric: '', model: '', extra: [] };
+        lbnSyncGalleryHiddenField();
+        ['front', 'detail', 'fabric', 'model'].forEach(function (sk) {
+            lbnSetSlotPreview(sk, '', 'Chọn ảnh');
+        });
+        lbnRenderExtraImagesPreview(null);
+        lbnFormColors = LBN_DEFAULT_COLORS.map(function (c) { return { name: c.name, code: c.code }; });
+        lbnRenderFormColors();
         window.lbnToggleSizeTypeGuide('quan_ao');
     };
 
@@ -732,6 +962,9 @@ $(document).ready(function () {
             return false;
         }
 
+        lbnSyncGalleryHiddenField();
+        $('#lbn_formColorsJson').val(JSON.stringify(lbnFormColors));
+
         let formData = new FormData(formEl);
         let origHtml = $btn.html();
         $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu kho...');
@@ -750,6 +983,7 @@ $(document).ready(function () {
                 if (res && res.status === 'success') {
                     alert(res.message || ('Đã lưu sản phẩm "' + prodName + '" thành công!'));
                     window.lbnResetProductForm();
+                    window.location.reload();
                 } else {
                     alert((res && res.message) ? res.message : 'Không thể lưu sản phẩm!');
                 }
