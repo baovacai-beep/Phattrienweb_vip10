@@ -7,6 +7,7 @@ require_once __DIR__ . "/../../models/ProductModel.php";
 
 $rtHomeModel       = new RealtimeContentModel();
 $homeArticles      = array_slice($rtHomeModel->getArticles('all', '', 'newest'), 0, 3);
+$homeFeaturedEvents = $rtHomeModel->getFeaturedEvents();
 $homeProductModel  = new ProductModel();
 $allNormalizedProd = $homeProductModel->layTatCaSanPhamChuanHoa();
 $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
@@ -48,6 +49,8 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
         <ol class="carousel-indicators">
             <li data-target="#lnkt_homeBannerCarousel" data-slide-to="0" class="active"></li>
             <li data-target="#lnkt_homeBannerCarousel" data-slide-to="1"></li>
+            <li data-target="#lnkt_homeBannerCarousel" data-slide-to="2"></li>
+            <li data-target="#lnkt_homeBannerCarousel" data-slide-to="3"></li>
         </ol>
 
         <div class="carousel-inner">
@@ -131,6 +134,96 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                                 <div class="mt-3 d-flex flex-wrap justify-content-center fk-btn-toolbar">
                                     <span class="badge badge-gold px-2 py-1 text-nowrap">Quà tặng 15 Triệu</span>
                                     <span class="badge badge-sky px-2 py-1 text-nowrap">Chụp Lookbook Studio</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Sự Kiện Sinh Nhật & Nhật Ký Bé Yêu -->
+            <div class="carousel-item">
+                <div class="lnkt-hero-slide lnkt-slide-birthday p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
+                            <span class="badge badge-peach px-3 py-2 rounded-pill mb-3 shadow-sm badge-wrap-safe">
+                                <i class="fa-solid fa-cake-candles mr-1"></i>Sự Kiện Sinh Nhật &amp; Nhật Ký Bé Yêu
+                            </span>
+                            <h1 class="display-4 font-weight-bold text-slate mb-3 lnkt-hero-title">
+                                Khoảnh Khắc <span class="text-peach">Sinh Nhật &amp; Nhật Ký</span> Lớn Khôn Của Bé
+                            </h1>
+                            <p class="lead text-muted-custom mb-4 lnkt-hero-subtitle">
+                                Lưu giữ từng dấu mốc đáng yêu từ 0–6 tuổi cùng đồ tiệc &amp; đồ mặc nhà sợi tre Organic.
+                                Tặng ngay voucher sinh nhật -15% và hộp quà kỷ niệm cho đơn từ 350.000đ.
+                            </p>
+                            <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+                                <a href="/FashionKids/views/pages/shop-catalog.php"
+                                   class="btn btn-pastel-primary px-4 py-2 font-weight-bold shadow-sm text-nowrap">
+                                    <i class="fa-solid fa-gift mr-2"></i>Chọn Quà Sinh Nhật Cho Bé &raquo;
+                                </a>
+                                <a href="#fk_featuredEventsSection"
+                                   class="btn btn-light border rounded-pill px-3 py-2 small font-weight-bold text-slate text-nowrap">
+                                    <i class="fa-solid fa-calendar-star mr-1 text-peach"></i>Xem Sự Kiện Tiêu Biểu
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-5 text-center">
+                            <div class="lnkt-hero-visual-box mx-auto p-4 shadow-sm">
+                                <div class="lnkt-floating-badge-top badge badge-peach px-3 py-1 rounded-pill shadow-sm">
+                                    <i class="fa-solid fa-heart mr-1"></i>Nhật Ký Bé Yêu
+                                </div>
+                                <img src="/FashionKids/images/banners/banner-sinh-nhat-nhat-ky-be-yeu.webp" alt="Khoảnh Khắc Sinh Nhật & Nhật Ký Bé Yêu" class="lnkt-hero-banner-img lnkt-hero-banner-img-poster my-2">
+                                <h5 class="font-weight-bold text-slate mb-1">Khoảnh Khắc Sinh Nhật Bé</h5>
+                                <small class="text-muted-custom d-block">Kỷ niệm hành trình lớn khôn từ những ngày đầu tiên</small>
+                                <div class="mt-3 d-flex flex-wrap justify-content-center fk-btn-toolbar">
+                                    <span class="badge badge-peach px-2 py-1 text-nowrap">Giảm 15% Tuần Lễ SN</span>
+                                    <span class="badge badge-gold px-2 py-1 text-nowrap">Tặng Hộp Quà &amp; Thiệp</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Lễ Hội Ngôi Sao Nhỏ & Quà Tặng Thú Bông -->
+            <div class="carousel-item">
+                <div class="lnkt-hero-slide lnkt-slide-littlestar p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
+                            <span class="badge badge-mint px-3 py-2 rounded-pill mb-3 shadow-sm badge-wrap-safe">
+                                <i class="fa-solid fa-star mr-1"></i>Lễ Hội Ngôi Sao Nhỏ • Quà Tặng Độc Quyền
+                            </span>
+                            <h1 class="display-4 font-weight-bold text-slate mb-3 lnkt-hero-title">
+                                Lễ Hội <span class="text-peach">Ngôi Sao Nhỏ</span> – Tỏa Sáng Cổ Tích
+                            </h1>
+                            <p class="lead text-muted-custom mb-4 lnkt-hero-subtitle">
+                                Chào đón ấn phẩm đặc biệt Ngôi Sao Nhỏ kết hợp sân chơi Siêu Sao Nhí KOL 2026.
+                                Tặng kèm ngay 01 thú bông xinh xắn phiên bản giới hạn cho bé tỏa sáng rực rỡ.
+                            </p>
+                            <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
+                                <a href="/FashionKids/views/pages/kol-stars.php"
+                                   class="btn btn-pastel-primary px-4 py-2 font-weight-bold shadow-sm text-nowrap">
+                                    <i class="fa-solid fa-crown mr-2"></i>Khám Phá Sao KOL Nhí &raquo;
+                                </a>
+                                <a href="/FashionKids/views/pages/kol-casting.php"
+                                   class="btn btn-light border rounded-pill px-3 py-2 small font-weight-bold text-slate text-nowrap">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1 text-mint"></i>Ứng Tuyển Ngay
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-5 text-center">
+                            <div class="lnkt-hero-visual-box mx-auto p-4 shadow-sm">
+                                <div class="lnkt-floating-badge-top badge badge-mint px-3 py-1 rounded-pill shadow-sm">
+                                    <i class="fa-solid fa-gift mr-1"></i>Tặng 1 Thú Bông Xinh
+                                </div>
+                                <img src="/FashionKids/images/banners/banner-ngoi-sao-nho-qua-tang.webp" alt="Lễ Hội Ngôi Sao Nhỏ & Quà Tặng Thú Bông" class="lnkt-hero-banner-img lnkt-hero-banner-img-poster my-2">
+                                <h5 class="font-weight-bold text-slate mb-1">Ấn Phẩm Ngôi Sao Nhỏ</h5>
+                                <small class="text-muted-custom d-block">Đặc cách chụp hình Lookbook &amp; quà tặng thú bông</small>
+                                <div class="mt-3 d-flex flex-wrap justify-content-center fk-btn-toolbar">
+                                    <span class="badge badge-mint px-2 py-1 text-nowrap">Tặng Kèm Thú Bông</span>
+                                    <span class="badge badge-sky px-2 py-1 text-nowrap">Studio Cổ Tích</span>
                                 </div>
                             </div>
                         </div>
@@ -312,6 +405,71 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                                         Chi tiết
                                     </a>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- 4B. CÁC SỰ KIỆN TIÊU BIỂU FASHIONKIDS 2026 -->
+    <div class="mb-5" id="fk_featuredEventsSection">
+        <div class="d-flex flex-wrap justify-content-between align-items-end fk-card-header-row mb-4">
+            <div class="min-w-0">
+                <span class="badge badge-pill badge-peach px-3 py-1 mb-1">
+                    <i class="fa-solid fa-calendar-star mr-1"></i>Lễ Hội &amp; Hoạt Động Nổi Bật
+                </span>
+                <h3 class="font-weight-bold text-slate mb-0">Các Sự Kiện Tiêu Biểu Cho Bé Yêu</h3>
+            </div>
+            <a href="/FashionKids/views/pages/kol-stars.php" class="btn btn-pastel-outline btn-sm font-weight-bold text-nowrap flex-shrink-0">
+                Khám phá Sao KOL Nhí <i class="fa-solid fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="row">
+            <?php foreach ($homeFeaturedEvents as $fEv): ?>
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card fk-event-featured-card h-100 shadow-sm d-flex flex-column">
+                        <div class="fk-event-banner-wrap">
+                            <span class="badge <?= htmlspecialchars($fEv['badge_class'] ?? 'badge-peach') ?> badge-pill px-3 py-1 fk-event-badge-overlay">
+                                <?= htmlspecialchars($fEv['badge_text'] ?? 'Sự Kiện') ?>
+                            </span>
+                            <span class="fk-event-date-pill">
+                                <i class="fa-regular fa-calendar-check text-peach mr-1"></i><?= htmlspecialchars($fEv['date_label'] ?? '') ?>
+                            </span>
+                            <a href="<?= htmlspecialchars($fEv['target_url'] ?? '#') ?>" class="d-block w-100 h-100">
+                                <img src="<?= htmlspecialchars($fEv['image'] ?? '') ?>"
+                                     alt="<?= htmlspecialchars($fEv['title'] ?? '') ?>"
+                                     class="fk-event-banner-img">
+                            </a>
+                        </div>
+
+                        <div class="card-body d-flex flex-column p-3 p-xl-4">
+                            <h5 class="font-weight-bold text-slate mb-2">
+                                <a href="<?= htmlspecialchars($fEv['target_url'] ?? '#') ?>" class="text-slate text-decoration-none">
+                                    <?= htmlspecialchars($fEv['title'] ?? '') ?>
+                                </a>
+                            </h5>
+                            <p class="text-muted-custom small mb-3 flex-grow-1" style="line-height: 1.55;">
+                                <?= htmlspecialchars($fEv['subtitle'] ?? '') ?>
+                            </p>
+
+                            <?php if (!empty($fEv['perk_pills'])): ?>
+                                <div class="d-flex flex-wrap mb-3" style="gap: 6px;">
+                                    <?php foreach ($fEv['perk_pills'] as $pText): ?>
+                                        <span class="badge badge-pill badge-light border text-slate px-2 py-1 small">
+                                            <i class="fa-solid fa-gift text-peach mr-1"></i><?= htmlspecialchars($pText) ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="pt-3 border-top d-flex align-items-center justify-content-between">
+                                <small class="text-muted-custom font-weight-bold"><?= htmlspecialchars($fEv['code'] ?? '') ?></small>
+                                <a href="<?= htmlspecialchars($fEv['target_url'] ?? '#') ?>" class="btn btn-pastel-primary btn-sm rounded-pill px-3 font-weight-bold shadow-sm text-nowrap">
+                                    <?= htmlspecialchars($fEv['cta_label'] ?? 'Xem chi tiết') ?> <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
                             </div>
                         </div>
                     </div>

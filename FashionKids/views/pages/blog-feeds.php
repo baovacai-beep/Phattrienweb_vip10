@@ -7,7 +7,18 @@ require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 $rtModel  = new RealtimeContentModel();
 $articles = $rtModel->getArticles('all', '', 'newest');
 $featured = $articles[0] ?? null;
-$kolSpotlight = array_slice($rtModel->getKolApplications(), 0, 4);
+
+$allKolsForMag = $rtModel->getKolApplications();
+usort($allKolsForMag, static function ($a, $b) {
+    $prio = ['trung_tuyen' => 1, 'moi_phong_van' => 2, 'cho_duyet' => 3];
+    $pa = $prio[$a['status'] ?? 'cho_duyet'] ?? 9;
+    $pb = $prio[$b['status'] ?? 'cho_duyet'] ?? 9;
+    if ($pa !== $pb) {
+        return $pa <=> $pb;
+    }
+    return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+});
+$kolSpotlight = array_slice($allKolsForMag, 0, 4);
 
 $magSlides = [
     [
@@ -88,6 +99,46 @@ $magSlides = [
         'cta1_js'   => "fkSelectBlogCategory('hau_truong', document.querySelector('#fk_blogCategoryFilterGroup [data-cat=hau_truong]'))",
         'cta1_icon' => 'fa-clapperboard',
         'cta2_text' => 'Ứng Tuyển KOL Nhí',
+        'cta2_js'   => '',
+        'cta2_url'  => '/FashionKids/views/pages/kol-casting.php',
+    ],
+    [
+        'eyebrow'   => '<i class="fa-solid fa-cake-candles mr-1"></i>Sự Kiện Sinh Nhật &amp; Nhật Ký Bé Yêu',
+        'badge_cls' => 'badge-peach',
+        'title'     => 'Khoảnh Khắc <span class="text-peach">Sinh Nhật &amp; Nhật Ký</span> Lớn Khôn Của Bé',
+        'desc'      => 'Lưu giữ từng dấu mốc khôn lớn từ 0–6 tuổi cùng bộ sưu tập đồ tiệc và đồ mặc nhà sợi tre Organic. Tặng ngay voucher sinh nhật -15% và hộp quà kỷ niệm xinh xắn.',
+        'image'     => '/FashionKids/images/banners/banner-sinh-nhat-nhat-ky-be-yeu.webp',
+        'img_pos'   => 'center center',
+        'thumb'     => '/FashionKids/images/banners/banner-sinh-nhat-nhat-ky-be-yeu.webp',
+        'thumb_title' => 'Nhật Ký Sinh Nhật',
+        'thumb_sub'   => 'Giảm 15% + Hộp quà',
+        'photo_tag' => 'Sự Kiện Sinh Nhật Bé Yêu 2026',
+        'photo_sub' => 'Ghi lại hành trình lớn khôn đáng nhớ cùng FashionKids',
+        'kpis'      => ['Tặng Hộp Quà Bé Yêu', 'Voucher -15% Tuần Lễ SN', 'Ảnh Kỷ Niệm Lookbook'],
+        'cta1_text' => 'Chọn Quà Cho Bé',
+        'cta1_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        'cta1_icon' => 'fa-gift',
+        'cta2_text' => 'Sự Kiện Trang Chủ',
+        'cta2_js'   => '',
+        'cta2_url'  => '/FashionKids/views/pages/home.php#fk_featuredEventsSection',
+    ],
+    [
+        'eyebrow'   => '<i class="fa-solid fa-star mr-1"></i>Lễ Hội Ngôi Sao Nhỏ • Quà Tặng Độc Quyền',
+        'badge_cls' => 'badge-mint',
+        'title'     => 'Lễ Hội <span class="text-peach">Ngôi Sao Nhỏ</span> &amp; Quà Tặng Thú Bông',
+        'desc'      => 'Chào đón ấn phẩm đặc biệt Ngôi Sao Nhỏ kết hợp sân chơi Siêu Sao Nhí KOL FashionKids 2026. Tặng kèm 01 thú bông xinh xắn phiên bản giới hạn cho bé tỏa sáng.',
+        'image'     => '/FashionKids/images/banners/banner-ngoi-sao-nho-qua-tang.webp',
+        'img_pos'   => 'center 22%',
+        'thumb'     => '/FashionKids/images/banners/banner-ngoi-sao-nho-qua-tang.webp',
+        'thumb_title' => 'Lễ Hội Ngôi Sao Nhỏ',
+        'thumb_sub'   => 'Tặng kèm thú bông xinh',
+        'photo_tag' => 'Ấn Phẩm Ngôi Sao Nhỏ • Quà Tặng Độc Quyền',
+        'photo_sub' => 'Tặng kèm 01 thú bông xinh xắn cho đơn đầm &amp; hồ sơ KOL',
+        'kpis'      => ['Quà Tặng Thú Bông Xinh', 'Đặc Cách Studio Ngôi Sao', 'BST Công Chúa Cổ Tích'],
+        'cta1_text' => 'Xem Sao KOL Nhí',
+        'cta1_url'  => '/FashionKids/views/pages/kol-stars.php',
+        'cta1_icon' => 'fa-crown',
+        'cta2_text' => 'Ứng Tuyển Ngay',
         'cta2_js'   => '',
         'cta2_url'  => '/FashionKids/views/pages/kol-casting.php',
     ]

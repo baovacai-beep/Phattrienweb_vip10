@@ -24,7 +24,8 @@ usort($kolStars, static function ($a, $b) use ($statusPriority) {
     if ($pa !== $pb) {
         return $pa <=> $pb;
     }
-    return ((int)($a['id'] ?? 0)) <=> ((int)($b['id'] ?? 0));
+    // Đưa các gương mặt siêu sao mới cập nhật (ID cao hơn) lên hàng đầu
+    return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
 });
 
 $countWinner    = 0;
@@ -207,10 +208,48 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
                             </div>
                         </div>
 
-                        <p class="text-muted-custom small mb-3 flex-grow-1" style="line-height: 1.55;">
-                            <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i>
-                            <?= htmlspecialchars($star['talent']) ?>
-                        </p>
+                        <?php
+                        $rawTalent  = (string)($star['talent'] ?? '');
+                        $styleTitle = (string)($star['style_tag'] ?? '');
+                        $outfitInfo = (string)($star['outfit_info'] ?? '');
+                        $noteTalent = $rawTalent;
+
+                        if ($outfitInfo === '' && preg_match('/^Phong cách:\s*([^•]+?)\s*•\s*Outfit:\s*(.+)$/u', $rawTalent, $tm)) {
+                            if ($styleTitle === '') {
+                                $styleTitle = trim($tm[1]);
+                            }
+                            $parts      = preg_split('/(?<=\.)\s+/u', trim($tm[2]), 2);
+                            $outfitInfo = trim($parts[0] ?? $tm[2]);
+                            $noteTalent = trim($parts[1] ?? '');
+                        }
+                        ?>
+
+                        <?php if ($styleTitle !== '' || $outfitInfo !== ''): ?>
+                            <div class="rounded bg-milk-cream border p-2 mb-3 flex-grow-1" style="line-height: 1.45;">
+                                <?php if ($styleTitle !== ''): ?>
+                                    <div class="mb-1">
+                                        <span class="badge badge-pill badge-peach px-2 py-1 small">
+                                            <i class="fa-solid fa-sparkles mr-1"></i><?= htmlspecialchars($styleTitle) ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($outfitInfo !== ''): ?>
+                                    <div class="small text-slate font-weight-bold mb-1">
+                                        <i class="fa-solid fa-shirt text-peach mr-1"></i>Info đồ: <span class="font-weight-normal text-muted-custom"><?= htmlspecialchars($outfitInfo) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($noteTalent !== ''): ?>
+                                    <small class="text-muted-custom d-block">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-info mr-1"></i><?= htmlspecialchars($noteTalent) ?>
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted-custom small mb-3 flex-grow-1" style="line-height: 1.55;">
+                                <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i>
+                                <?= htmlspecialchars($rawTalent) ?>
+                            </p>
+                        <?php endif; ?>
 
                         <div class="pt-3 border-top d-flex align-items-center justify-content-between">
                             <small class="text-muted-custom font-weight-bold">

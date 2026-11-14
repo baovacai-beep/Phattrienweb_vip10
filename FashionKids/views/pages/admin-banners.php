@@ -50,6 +50,36 @@ $lnkt_banners_list = [
         'interval_ms' => 4000,
         'status'      => 'scheduled',
         'icon'        => 'fa-shoe-prints text-info'
+    ],
+    [
+        'id'          => 4,
+        'code'        => 'BN-2026-04',
+        'title'       => 'Khoảnh Khắc Sinh Nhật & Nhật Ký Lớn Khôn Của Bé',
+        'subtitle'    => 'Tặng thiệp, hộp quà kỷ niệm bé yêu và giảm 15% trong tuần lễ sinh nhật bé.',
+        'cta_label'   => 'Chọn Quà Sinh Nhật Cho Bé »',
+        'cta_color'   => '#FF9E93',
+        'target_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        'start_time'  => '2026-06-01T00:00',
+        'end_time'    => '2026-12-31T23:59',
+        'sort_order'  => 4,
+        'interval_ms' => 4000,
+        'status'      => 'active',
+        'icon'        => 'fa-cake-candles text-peach'
+    ],
+    [
+        'id'          => 5,
+        'code'        => 'BN-2026-05',
+        'title'       => 'Lễ Hội Ngôi Sao Nhỏ – Tỏa Sáng Cổ Tích & Quà Tặng Thú Bông',
+        'subtitle'    => 'Quà tặng kèm 01 thú bông xinh xắn phiên bản giới hạn cùng đặc cách Studio Ngôi Sao Nhỏ.',
+        'cta_label'   => 'Khám Phá Ngôi Sao Nhỏ »',
+        'cta_color'   => '#A8DADC',
+        'target_url'  => '/FashionKids/views/pages/kol-stars.php',
+        'start_time'  => '2026-06-15T00:00',
+        'end_time'    => '2026-11-30T23:59',
+        'sort_order'  => 5,
+        'interval_ms' => 4000,
+        'status'      => 'active',
+        'icon'        => 'fa-star text-warning'
     ]
 ];
 ?>

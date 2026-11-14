@@ -20,31 +20,76 @@ $kolStatusBadgeMap = [
 // Danh sách các hồ sơ gương mặt KOL nhí nổi bật
 $lnkt_kol_stars = [
     [
-        'name'   => 'Bé Nguyễn Bảo An (Sữa)',
-        'age'    => '3 tuổi 4 tháng',
-        'spec'   => 'Cao 96 cm • Nặng 14.5 kg',
-        'talent' => 'Tạo dáng Lookbook, Biểu cảm tự nhiên trước ống kính',
-        'badge'  => 'Quán Quân Mùa Xuân',
-        'icon'   => 'fa-crown text-warning',
-        'image'  => '/FashionKids/images/kol/kol-bao-an-sua.jpg'
+        'id'        => 7,
+        'name'      => 'Bé Lê Nhã Uyên (Mochi)',
+        'age'       => '5 tuổi',
+        'spec'      => 'Cao 110 cm • Nặng 18.5 kg',
+        'style_tag' => 'Dân Gian Cá Tính',
+        'outfit'    => 'Áo dài linen kem thêu chim họa mi + Chân váy navy tua rua & Băng đô thổ cẩm',
+        'talent'    => 'Catwalk thần thái high-fashion nhí, biểu cảm sắc sảo trước ống kính',
+        'badge'     => 'Ngôi Sao Sàn Diễn',
+        'icon'      => 'fa-crown text-warning',
+        'image'     => '/FashionKids/images/kol/kol-catwalk-tho-cam.jpg'
     ],
     [
-        'name'   => 'Bé Trần Minh Khôi (Bơ)',
-        'age'    => '4 tuổi 2 tháng',
-        'spec'   => 'Cao 104 cm • Nặng 16.8 kg',
-        'talent' => 'Catwalk năng động, Nhảy hiện đại thiếu nhi',
-        'badge'  => 'Gương Mặt Ấn Tượng',
-        'icon'   => 'fa-star text-peach',
-        'image'  => '/FashionKids/images/kol/kol-minh-khoi-bo.jpg'
+        'id'        => 8,
+        'name'      => 'Bé Nguyễn Minh Nhật (Khoai Tây)',
+        'age'       => '6 tuổi',
+        'spec'      => 'Cao 114 cm • Nặng 20 kg',
+        'style_tag' => 'Nghệ Sĩ Nhí Bảnh Bao',
+        'outfit'    => 'Áo dài cách tân xanh cobalt vẽ phố phường + Quần tây xám & Sneaker trắng',
+        'talent'    => 'Bước đi vững vàng chuẩn mẫu nam nhí, hợp áo dài & smart-casual',
+        'badge'     => 'Hoàng Tử Runway',
+        'icon'      => 'fa-star text-peach',
+        'image'     => '/FashionKids/images/kol/kol-catwalk-ao-dai-trai.jpg'
     ],
     [
-        'name'   => 'Bé Lê Hà My (Bông)',
-        'age'    => '5 tuổi',
-        'spec'   => 'Cao 112 cm • Nặng 19.2 kg',
-        'talent' => 'Cười tỏa nắng, Phối đồ bộ sợi tre thanh lịch',
-        'badge'  => 'Thiên Thần Sợi Tre',
-        'icon'   => 'fa-heart text-danger',
-        'image'  => '/FashionKids/images/kol/kol-ha-my-bong.jpg'
+        'id'        => 9,
+        'name'      => 'Bé Trần Khả Hân (Cốm)',
+        'age'       => '5 tuổi',
+        'spec'      => 'Cao 109 cm • Nặng 18 kg',
+        'style_tag' => 'Streetstyle Pastel',
+        'outfit'    => 'Áo khoác phao tím lilac pop-art + Boots kem & Tóc bím ruy-băng tai thỏ',
+        'talent'    => 'Thần thái cool ngầu đáng yêu, tạo dáng năng động cá tính',
+        'badge'     => 'Biểu Tượng Cá Tính',
+        'icon'      => 'fa-sparkles text-warning',
+        'image'     => '/FashionKids/images/kol/kol-catwalk-street-pastel.jpg'
+    ],
+    [
+        'id'        => 10,
+        'name'      => 'Bé Vũ Ngọc Diệp (Kẹo Bông)',
+        'age'       => '5 tuổi',
+        'spec'      => 'Cao 107 cm • Nặng 17.2 kg',
+        'style_tag' => 'Công Chúa Cổ Tích',
+        'outfit'    => 'Đầm voan tầng trắng đính nơ hồng pastel + Nón hoa pha lê & Mary Jane',
+        'talent'    => 'Phong thái kiêu sa nhẹ nhàng, tỏa sáng trong BST đầm dự tiệc',
+        'badge'     => 'Nàng Thơ Cổ Tích',
+        'icon'      => 'fa-heart text-danger',
+        'image'     => '/FashionKids/images/kol/kol-catwalk-cong-chua-trang.jpg'
+    ],
+    [
+        'id'        => 4,
+        'name'      => 'Bé Nguyễn Bảo An (Sữa)',
+        'age'       => '3 tuổi 4 tháng',
+        'spec'      => 'Cao 96 cm • Nặng 14.5 kg',
+        'style_tag' => 'Nàng Thơ Sợi Tre',
+        'outfit'    => 'Đầm hè sợi tre Bright Pastel cổ sen mềm mại',
+        'talent'    => 'Tạo dáng Lookbook, Biểu cảm tự nhiên trước ống kính',
+        'badge'     => 'Quán Quân Mùa Xuân',
+        'icon'      => 'fa-crown text-warning',
+        'image'     => '/FashionKids/images/kol/kol-bao-an-sua.jpg'
+    ],
+    [
+        'id'        => 3,
+        'name'      => 'Bé Lê Hà My (Bông)',
+        'age'       => '5 tuổi',
+        'spec'      => 'Cao 112 cm • Nặng 19.2 kg',
+        'style_tag' => 'Thiên Thần Sợi Tre',
+        'outfit'    => 'Bộ đồ mặc nhà sợi tre Organic hồng phấn dịu nhẹ',
+        'talent'    => 'Cười tỏa nắng, Phối đồ bộ sợi tre thanh lịch',
+        'badge'     => 'Thiên Thần Sợi Tre',
+        'icon'      => 'fa-heart text-danger',
+        'image'     => '/FashionKids/images/kol/kol-ha-my-bong.jpg'
     ]
 ];
 ?>
@@ -375,23 +420,44 @@ $lnkt_kol_stars = [
 
             <!-- Gương mặt KOL Nhí tiêu biểu -->
             <div class="card card-pastel p-4 shadow-sm">
-                <h6 class="font-weight-bold text-slate mb-3">
-                    <i class="fa-solid fa-sparkles text-warning mr-2"></i>Gương Mặt Siêu Sao Nhí Nổi Bật
-                </h6>
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: 8px;">
+                    <h6 class="font-weight-bold text-slate mb-0">
+                        <i class="fa-solid fa-sparkles text-warning mr-2"></i>Gương Mặt Siêu Sao Nhí Nổi Bật
+                    </h6>
+                    <a href="/FashionKids/views/pages/kol-stars.php" class="badge badge-pill badge-mint px-3 py-2 text-decoration-none">
+                        Xem Sao KOL Nhí <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
                 <?php foreach ($lnkt_kol_stars as $star): ?>
-                    <div class="p-3 rounded bg-milk-cream border mb-3 d-flex align-items-center">
-                        <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
-                            <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
-                        </span>
-                        <div class="min-w-0">
-                            <div class="d-flex flex-wrap align-items-center fk-card-header-row mb-1">
-                                <strong class="text-slate"><?= htmlspecialchars($star['name']) ?></strong>
-                                <span class="badge badge-pill badge-gold small text-nowrap flex-shrink-0"><?= htmlspecialchars($star['badge']) ?></span>
+                    <a href="/FashionKids/views/pages/kol-stars.php?kol_id=<?= (int)($star['id'] ?? 0) ?>" class="text-decoration-none d-block mb-3">
+                        <div class="p-3 rounded bg-milk-cream border d-flex align-items-start">
+                            <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
+                                <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
+                            </span>
+                            <div class="min-w-0 flex-grow-1">
+                                <div class="d-flex flex-wrap align-items-center fk-card-header-row mb-1">
+                                    <strong class="text-slate"><?= htmlspecialchars($star['name']) ?></strong>
+                                    <span class="badge badge-pill badge-gold small text-nowrap flex-shrink-0">
+                                        <i class="fa-solid <?= htmlspecialchars($star['icon']) ?> mr-1"></i><?= htmlspecialchars($star['badge']) ?>
+                                    </span>
+                                </div>
+                                <div class="small font-weight-bold text-peach mb-1"><?= htmlspecialchars($star['age']) ?> • <?= htmlspecialchars($star['spec']) ?></div>
+                                <?php if (!empty($star['style_tag'])): ?>
+                                    <div class="mb-1">
+                                        <span class="badge badge-pill badge-peach small px-2 py-1">
+                                            <i class="fa-solid fa-shirt mr-1"></i><?= htmlspecialchars($star['style_tag']) ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($star['outfit'])): ?>
+                                    <small class="text-slate font-weight-bold d-block mb-1" style="line-height: 1.4;">
+                                        <i class="fa-solid fa-tag text-mint mr-1"></i>Info đồ: <?= htmlspecialchars($star['outfit']) ?>
+                                    </small>
+                                <?php endif; ?>
+                                <small class="text-muted-custom d-block" style="line-height: 1.4;"><?= htmlspecialchars($star['talent']) ?></small>
                             </div>
-                            <div class="small font-weight-bold text-peach"><?= htmlspecialchars($star['age']) ?> • <?= htmlspecialchars($star['spec']) ?></div>
-                            <small class="text-muted-custom d-block"><?= htmlspecialchars($star['talent']) ?></small>
                         </div>
-                    </div>
+                    </a>
                 <?php endforeach; ?>
             </div>
         </div>
