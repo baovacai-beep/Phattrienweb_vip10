@@ -417,6 +417,17 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
 ?>
 
 <div class="container my-4 my-md-5" id="lbn_pdp_section">
+    <?php
+    require_once __DIR__ . "/../partials/editorial-carousel.php";
+    fkRenderEditorialCarousel('fk_pdpTopBannerCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4000,
+        'dot_cls'       => 'fk-shop-dot-btn',
+        'counter_label' => 'Banner Cửa Hàng',
+    ]);
+    ?>
+
     <!-- Breadcrumb Điều Hướng -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb bg-transparent p-0 mb-3 small">
@@ -435,8 +446,8 @@ $isOutOfStock = ((int)$prod['stock_quantity'] <= 0);
             <div class="row">
                 <!-- CỘT TRÁI (6 CỘT): SLIDER ẢNH ĐA GÓC CHỤP & THUMBNAILS -->
                 <div class="col-12 col-lg-6 mb-4 mb-lg-0">
-                    <!-- Khung Carousel Ảnh Chính -->
-                    <div id="lbn_pdpImageSlider" class="carousel slide lbn-pdp-slider-main shadow-sm position-relative mb-3" data-ride="carousel" data-interval="false">
+                    <!-- Khung Carousel Ảnh Chính (Tự động xoay góc chụp sản phẩm) -->
+                    <div id="lbn_pdpImageSlider" class="carousel slide fk-auto-carousel lbn-pdp-slider-main shadow-sm position-relative mb-3" data-ride="carousel" data-pause="false" data-interval="4200">
                         <!-- Badges Nổi Bật -->
                         <div class="position-absolute fk-pos-tl-15 d-flex flex-wrap align-items-center">
                             <span class="lbn-badge-bamboo lbn-pdp-bamboo-badge shadow-sm mr-2 mb-1">

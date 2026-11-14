@@ -1014,14 +1014,75 @@ $(document).ready(function () {
     }
 
     // ------------------------------------------------------------------------
-    // 1. MH 01: Khởi tạo Banner Carousel tự động chuyển slide mỗi 4 giây (4000ms)
+    // 1. Khởi tạo tất cả Banner Carousel xoay tự động + Dots đồng bộ
     // ------------------------------------------------------------------------
-    if ($('#lnkt_homeBannerCarousel').length) {
-        $('#lnkt_homeBannerCarousel').carousel({
-            interval: 4000,
-            ride: 'carousel'
+    $('.fk-editorial-carousel, .fk-auto-carousel').each(function () {
+        let $car = $(this);
+        let rawIv = $car.attr('data-interval');
+        let iv = parseInt(rawIv, 10);
+        if (!iv || iv < 1500) iv = 4200;
+        $car.attr('data-pause', 'false');
+        $car.carousel({
+            interval: iv,
+            pause: false,
+            ride: 'carousel',
+            wrap: true
         });
-    }
+        $car.carousel('cycle');
+
+        $car.on('click', '.fk-slider-dot-btn, .fk-promo-dot', function () {
+            let idx = parseInt($(this).attr('data-slide-to'), 10) || 0;
+            $car.carousel(idx);
+        });
+
+        $car.on('slid.bs.carousel', function (e) {
+            let activeIdx = $(e.relatedTarget).index();
+            $car.find('.fk-promo-dot').each(function () {
+                let dotIdx = parseInt($(this).attr('data-slide-to'), 10);
+                $(this).toggleClass('active', dotIdx === activeIdx);
+            });
+        });
+    });
+
+    // Modal Chi Tiết Sự Kiện Tiêu Biểu (Trang chủ home.php)
+    window.fkOpenEventDetailModal = function (el) {
+        if (!el) return;
+        let $el = $(el);
+        let title = $el.attr('data-title') || 'Sự Kiện FashionKids';
+        let badge = $el.attr('data-badge') || 'Sự Kiện';
+        let badgeCls = $el.attr('data-badge-cls') || 'badge-peach';
+        let subtitle = $el.attr('data-subtitle') || '';
+        let dateStr = $el.attr('data-date') || 'Đang diễn ra';
+        let img = $el.attr('data-image') || '/FashionKids/images/banners/banner-kol-nhi-2026.jpg';
+        let url = $el.attr('data-url') || '/FashionKids/views/pages/shop-catalog.php';
+        let cta = $el.attr('data-cta') || 'Khám phá ngay';
+        let perks = [];
+        try {
+            perks = JSON.parse($el.attr('data-perks') || '[]') || [];
+        } catch (e) {
+            perks = [];
+        }
+
+        $('#fk_evModalImage').attr('src', img).attr('alt', title);
+        $('#fk_evModalBadge').attr('class', 'badge badge-pill ' + badgeCls + ' px-3 py-2 position-absolute shadow-sm').text(badge);
+        $('#fk_evModalDate').text(dateStr);
+        $('#fk_evModalTitle').text(title);
+        $('#fk_evModalSubtitle').text(subtitle);
+        $('#fk_evModalActionBtn').attr('href', url);
+        $('#fk_evModalActionText').text(cta);
+
+        let $perksWrap = $('#fk_evModalPerks').empty();
+        if (Array.isArray(perks) && perks.length) {
+            perks.forEach(function (p) {
+                $perksWrap.append(
+                    '<span class="badge badge-pill badge-light border text-slate px-3 py-2">' +
+                    '<i class="fa-solid fa-gift text-peach mr-1"></i>' + $('<div>').text(p).html() +
+                    '</span>'
+                );
+            });
+        }
+        $('#fk_modalEventDetail').modal('show');
+    };
 
     // ------------------------------------------------------------------------
     // 2. MH 04: Modal Tra cứu & Gợi ý Size Thước Dây (lnkt_suggest_size - Giai đoạn 4 AJAX)
@@ -3776,6 +3837,9 @@ $(document).ready(function () {
     // 8. MH 23: Quản trị Banner Slider & Lịch hẹn giờ (admin-banners.php)
     // ------------------------------------------------------------------------
     window.lnktUpdateBannerPreview = function () {
+        if ($('#lnkt_adminPreviewCarousel').length) {
+            $('#lnkt_adminPreviewCarousel').carousel(0);
+        }
         $('#lnkt_previewBannerTitle').text($('#lnkt_bnTitle').val() || '');
         $('#lnkt_previewBannerSubtitle').text($('#lnkt_bnSubtitle').val() || '');
         $('#lnkt_previewBannerCta')
@@ -3859,6 +3923,40 @@ $(document).ready(function () {
             .replace(/'/g, '&#39;');
     }
 
+    window.fkGetEndpointUrl = function (queryStr) {
+        let ep = ($('meta[name="fk-endpoint"]').attr('content') || '/FashionKids/index.php').trim();
+        return ep + (queryStr || '');
+    };
+
+    window.fkShowToast = function (message, type) {
+        if (!message) return;
+        let $box = $('#fk_globalToastContainer');
+        if (!$box.length) {
+            $box = $('<div id="fk_globalToastContainer" class="fk-toast-container" aria-live="polite"></div>').appendTo('body');
+        }
+        let cls = 'is-info';
+        let iconHtml = '<i class="fa-solid fa-circle-info text-info"></i>';
+        if (type === 'success') {
+            cls = 'is-success';
+            iconHtml = '<i class="fa-solid fa-circle-check text-success"></i>';
+        } else if (type === 'warning') {
+            cls = 'is-warning';
+            iconHtml = '<i class="fa-solid fa-bookmark text-warning"></i>';
+        }
+        let $toast = $(
+            '<div class="fk-toast-pill ' + cls + '">' +
+                iconHtml +
+                '<span>' + fkEsc(message) + '</span>' +
+            '</div>'
+        );
+        $box.append($toast);
+        setTimeout(function () {
+            $toast.fadeOut(220, function () {
+                $(this).remove();
+            });
+        }, 2600);
+    };
+
     // ------------------------------------------------------------------------
     // 1. LIVE PRESS TICKER & EVENT COUNTDOWN REALTIME (blog-feeds.php & home.php)
     // ------------------------------------------------------------------------
@@ -3878,19 +3976,7 @@ $(document).ready(function () {
         }, 5000);
     }
 
-    // Đồng bộ Carousel Banner Tạp Chí & Thumbnail Switcher (blog-feeds.php)
-    if ($('#fk_magHeroCarousel').length) {
-        let $magCarousel = $('#fk_magHeroCarousel');
-        $magCarousel.carousel({ interval: 4600, pause: 'hover', ride: 'carousel' });
-        $magCarousel.on('slide.bs.carousel', function (e) {
-            let nextIdx = typeof e.to === 'number' ? e.to : 0;
-            $('.fk-mag-thumb-item').removeClass('active').eq(nextIdx).addClass('active');
-        });
-        $('.fk-mag-thumb-item').on('click', function () {
-            let idx = parseInt($(this).attr('data-slide-to'), 10) || 0;
-            $magCarousel.carousel(idx);
-        });
-    }
+    // Tích hợp auto-rotate cho các carousel còn lại dùng chung .fk-editorial-carousel ở Mục 1.
 
     window.fkCopyMagVoucher = function (code, btnEl) {
         let text = code || 'FASHION10';
@@ -4025,7 +4111,9 @@ $(document).ready(function () {
 
     window.fkSelectBlogCategory = function (catKey, btnEl) {
         window.fkOnlyBookmarkedMode = false;
-        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary text-white').addClass('btn-light text-slate');
+        $('#fk_emptyBlogTitle').text('Không tìm thấy bài viết phù hợp');
+        $('#fk_emptyBlogDesc').text('Ba mẹ hãy thử từ khóa khác hoặc bấm xem tất cả các chuyên mục tạp chí nhé.');
         $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn').removeClass('active');
         $(btnEl).addClass('active');
         $('#fk_activeBlogCategory').val(catKey);
@@ -4035,11 +4123,27 @@ $(document).ready(function () {
     window.fkFilterSavedBookmarks = function () {
         window.fkOnlyBookmarkedMode = !window.fkOnlyBookmarkedMode;
         if (window.fkOnlyBookmarkedMode) {
-            $('#fk_btnShowBookmarks').removeClass('btn-light').addClass('btn-pastel-primary');
+            $('#fk_btnShowBookmarks').removeClass('btn-light text-slate').addClass('btn-pastel-primary text-white');
+            $('#fk_emptyBlogTitle').text('Bạn chưa lưu bài viết nào');
+            $('#fk_emptyBlogDesc').text('Hãy bấm nút "Lưu" ở góc trái dưới mỗi bài viết tạp chí để lưu lại cẩm nang đọc sau nhé!');
+            let savedCount = $('.fk-blog-col[data-bookmarked="1"]').length;
+            if (typeof window.fkShowToast === 'function') {
+                if (savedCount === 0) {
+                    window.fkShowToast('Bạn chưa lưu bài viết nào. Hãy bấm nút "Lưu" ở bên dưới mỗi bài viết nhé!', 'warning');
+                } else {
+                    window.fkShowToast('Đang hiển thị ' + savedCount + ' bài viết đã lưu của bạn!', 'success');
+                }
+            }
+            window.fkApplyBlogFilters(1, true);
         } else {
-            $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+            $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary text-white').addClass('btn-light text-slate');
+            $('#fk_emptyBlogTitle').text('Không tìm thấy bài viết phù hợp');
+            $('#fk_emptyBlogDesc').text('Ba mẹ hãy thử từ khóa khác hoặc bấm xem tất cả các chuyên mục tạp chí nhé.');
+            if (typeof window.fkShowToast === 'function') {
+                window.fkShowToast('Đang hiển thị toàn bộ bài viết tạp chí.', 'info');
+            }
+            window.fkApplyBlogFilters(1, false);
         }
-        window.fkApplyBlogFilters(1);
     };
 
     window.fkGoToBlogPage = function (pageNum) {
@@ -4192,7 +4296,9 @@ $(document).ready(function () {
 
     window.fkResetBlogFilters = function () {
         window.fkOnlyBookmarkedMode = false;
-        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary').addClass('btn-light');
+        $('#fk_btnShowBookmarks').removeClass('btn-pastel-primary text-white').addClass('btn-light text-slate');
+        $('#fk_emptyBlogTitle').text('Không tìm thấy bài viết phù hợp');
+        $('#fk_emptyBlogDesc').text('Ba mẹ hãy thử từ khóa khác hoặc bấm xem tất cả các chuyên mục tạp chí nhé.');
         $('#fk_activeBlogCategory').val('all');
         $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn').removeClass('active');
         $('#fk_blogCategoryFilterGroup .fk-blog-filter-btn[data-cat="all"]').addClass('active');
@@ -4205,7 +4311,7 @@ $(document).ready(function () {
     window.fkToggleLikeArticle = function (articleId, btnEl) {
         let $btn = $(btnEl);
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxLikeBlog',
+            url: window.fkGetEndpointUrl('?c=home&a=ajaxLikeBlog'),
             type: 'POST',
             dataType: 'json',
             data: { article_id: articleId },
@@ -4220,9 +4326,20 @@ $(document).ready(function () {
                         $('.fk-btn-like-blog[data-article-id="' + articleId + '"]').removeClass('liked');
                         $btn.removeClass('liked');
                     }
+                    if (res.message && typeof window.fkShowToast === 'function') {
+                        window.fkShowToast(res.message, res.is_liked ? 'success' : 'info');
+                    }
+                } else if (res && res.message && typeof window.fkShowToast === 'function') {
+                    window.fkShowToast(res.message, 'warning');
                 }
             },
-            error: function () {
+            error: function (xhr) {
+                if (xhr && xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.message) {
+                    if (typeof window.fkShowToast === 'function') {
+                        window.fkShowToast(xhr.responseJSON.message, 'warning');
+                    }
+                    return;
+                }
                 let $counters = $('.fk-like-count-' + articleId);
                 let cur = parseInt(($counters.first().text() || '0').replace(/\D/g, ''), 10) || 0;
                 let liked = $btn.hasClass('liked');
@@ -4233,25 +4350,69 @@ $(document).ready(function () {
         });
     };
 
+    function fkSyncBookmarkUi(articleId, isBookmarked, totalSaved) {
+        if (typeof totalSaved === 'number' && !isNaN(totalSaved)) {
+            $('#fk_savedCountBadge').text(totalSaved);
+        }
+        let $col = $('.fk-blog-col[data-id="' + articleId + '"]');
+        $col.attr('data-bookmarked', isBookmarked ? '1' : '0');
+
+        let $allBtns = $('.fk-btn-bookmark-blog[data-article-id="' + articleId + '"]');
+        $allBtns.each(function () {
+            let $b = $(this);
+            $b.toggleClass('bookmarked', isBookmarked);
+            let $lbl = $b.find('.fk-bookmark-label');
+            if ($lbl.length) {
+                let defTxt = $b.attr('data-label-default') || 'Lưu';
+                let savTxt = $b.attr('data-label-saved') || 'Đã lưu';
+                $lbl.text(isBookmarked ? savTxt : defTxt);
+            }
+        });
+
+        if (window.fkOnlyBookmarkedMode && !isBookmarked && $('#fk_blogFeedGrid').length) {
+            window.fkApplyBlogFilters(1, false);
+        }
+    }
+
     // Lưu bài viết đọc sau (Bookmark)
     window.fkToggleBookmarkArticle = function (articleId, btnEl) {
         let $btn = $(btnEl);
+        let idInt = parseInt(articleId, 10) || 1;
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxBookmarkBlog',
+            url: window.fkGetEndpointUrl('?c=home&a=ajaxBookmarkBlog'),
             type: 'POST',
             dataType: 'json',
-            data: { article_id: articleId },
+            data: { article_id: idInt },
             success: function (res) {
                 if (res && res.status === 'success') {
-                    $('#fk_savedCountBadge').text(res.total_saved);
-                    let $col = $('.fk-blog-col[data-id="' + articleId + '"]');
-                    if (res.is_bookmarked) {
-                        $btn.addClass('bookmarked');
-                        $col.attr('data-bookmarked', '1');
-                    } else {
-                        $btn.removeClass('bookmarked');
-                        $col.attr('data-bookmarked', '0');
+                    let savedNow = !!res.is_bookmarked;
+                    let totalSaved = parseInt(res.total_saved, 10);
+                    if (isNaN(totalSaved)) {
+                        totalSaved = $('.fk-blog-col[data-bookmarked="1"]').length;
                     }
+                    fkSyncBookmarkUi(idInt, savedNow, totalSaved);
+                    if (typeof window.fkShowToast === 'function') {
+                        window.fkShowToast(
+                            res.message || (savedNow ? 'Đã lưu bài viết vào danh sách đọc sau!' : 'Đã bỏ lưu bài viết.'),
+                            savedNow ? 'success' : 'info'
+                        );
+                    }
+                }
+            },
+            error: function () {
+                let curSaved = $btn.hasClass('bookmarked');
+                let nextSaved = !curSaved;
+                let $col = $('.fk-blog-col[data-id="' + idInt + '"]');
+                if ($col.length) {
+                    $col.attr('data-bookmarked', nextSaved ? '1' : '0');
+                }
+                let nextTotal = $('.fk-blog-col[data-bookmarked="1"]').length;
+                fkSyncBookmarkUi(idInt, nextSaved, nextTotal);
+                if (typeof window.fkShowToast === 'function') {
+                    window.fkShowToast(
+                        nextSaved ? 'Đã lưu bài viết vào danh sách đọc sau!' : 'Đã bỏ lưu bài viết.',
+                        nextSaved ? 'success' : 'info'
+                    );
                 }
             }
         });
@@ -4307,7 +4468,7 @@ $(document).ready(function () {
         $('#fk_btnSubmitComment').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang gửi...');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxPostBlogComment',
+            url: window.fkGetEndpointUrl('?c=home&a=ajaxPostBlogComment'),
             type: 'POST',
             dataType: 'json',
             data: {
@@ -4368,7 +4529,7 @@ $(document).ready(function () {
         let authorName = ($('#fk_commentAuthorName').val() || 'Phụ Huynh Thành Viên').trim();
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxPostBlogComment',
+            url: window.fkGetEndpointUrl('?c=home&a=ajaxPostBlogComment'),
             type: 'POST',
             dataType: 'json',
             data: {
@@ -4418,7 +4579,7 @@ $(document).ready(function () {
         $('#fk_btnSaveCmsBlog').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang xuất bản...');
 
         $.ajax({
-            url: '/FashionKids/index.php?c=home&a=ajaxSaveBlogArticle',
+            url: window.fkGetEndpointUrl('?c=home&a=ajaxSaveBlogArticle'),
             type: 'POST',
             dataType: 'json',
             data: payload,

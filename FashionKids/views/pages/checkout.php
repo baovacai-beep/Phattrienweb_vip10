@@ -132,6 +132,15 @@ unset($_SESSION['checkout_flash_error']);
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_checkout_section">
+    <?php
+    require_once __DIR__ . "/../partials/editorial-carousel.php";
+    fkRenderEditorialCarousel('fk_checkoutBannerCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4200,
+        'counter_label' => 'Banner Giỏ Hàng',
+    ]);
+    ?>
     <!-- Breadcrumb & Tiêu đề trang -->
     <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
         <div class="min-w-0">

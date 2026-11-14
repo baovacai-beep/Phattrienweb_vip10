@@ -105,6 +105,15 @@ foreach ($trackedItems as $ti) {
      data-payment-method="<?= htmlspecialchars($payMethod) ?>"
      data-payment-status="<?= htmlspecialchars($payStatus) ?>"
      data-is-expired="<?= $isExpired ? '1' : '0' ?>">
+    <?php
+    require_once __DIR__ . "/../partials/editorial-carousel.php";
+    fkRenderEditorialCarousel('fk_trackingBannerCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4200,
+        'counter_label' => 'Banner Theo Dõi Đơn',
+    ]);
+    ?>
     <!-- Breadcrumb & Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
         <div class="min-w-0">

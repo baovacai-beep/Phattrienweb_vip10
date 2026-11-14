@@ -3,6 +3,7 @@ $page_title = "Cửa Hàng Thời Trang Sợi Tre - FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/ProductModel.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 
 $catProductModel = new ProductModel();
 $lbn_products    = $catProductModel->layTatCaSanPhamChuanHoa();
@@ -24,25 +25,74 @@ $init_keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '
 ?>
 
 <div class="container my-4 my-md-5" id="lbn_catalog_section">
-    <!-- Breadcrumb & Header Danh Mục -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center fk-card-header-row mb-4">
-        <div class="min-w-0">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent p-0 mb-1 small">
-                    <li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-muted-custom">Trang chủ</a></li>
-                    <li class="breadcrumb-item active text-peach font-weight-bold" aria-current="page">Cửa hàng sản phẩm</li>
-                </ol>
-            </nav>
-            <h3 class="font-weight-bold text-slate mb-0">
-                <i class="fa-solid fa-store text-peach mr-2"></i>Cửa Hàng Thời Trang Sợi Tre Cho Bé
-            </h3>
-        </div>
-        <div class="mt-2 mt-md-0">
-            <span class="badge lbn-badge-bamboo badge-wrap-safe">
-                <i class="fa-solid fa-leaf mr-1"></i> Chuẩn OEKO-TEX® 100 &amp; Sợi Tre Kháng Khuẩn Tự Nhiên
-            </span>
-        </div>
-    </div>
+    <!-- Banner Carousel Cửa Hàng Xoay Tự Động (Trẻ Em Thử Đồ & Phối Set Thực Tế Trong Shop) -->
+    <?php
+    $shopBreadcrumbHtml = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 m-0 small font-weight-bold">'
+        . '<li class="breadcrumb-item"><a href="/FashionKids/views/pages/home.php" class="text-slate">Trang chủ</a></li>'
+        . '<li class="breadcrumb-item active text-peach" aria-current="page">Cửa hàng sản phẩm</li>'
+        . '</ol></nav>';
+
+    $shopHeroSlides = [
+        [
+            'eyebrow'   => '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Phòng Thử Đồ &amp; Mix-Match Sợi Tre 2026',
+            'badge_cls' => 'badge-mint',
+            'title'     => 'Cửa Hàng Thời Trang <span class="text-peach">Sợi Tre Cho Bé</span>',
+            'sub_html'  => $shopBreadcrumbHtml,
+            'image'     => '/FashionKids/images/banners/theme-shop-tryon-boutique.jpg',
+            'url'       => '#lbn_catalogGrid',
+            'cta_text'  => 'Sắm Đồ Ngay',
+            'cta_icon'  => 'fa-bag-shopping',
+            'extra_btn' => '<span class="badge lbn-badge-bamboo badge-wrap-safe d-none d-sm-inline-flex"><i class="fa-solid fa-leaf mr-1"></i>Chuẩn OEKO-TEX® 100</span>',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-crown mr-1"></i>Thử Đồ Tiệc • Đầm Voan Công Chúa Pastel',
+            'badge_cls' => 'badge-peach',
+            'title'     => 'Phòng Thử <span class="text-peach">Đầm Công Chúa</span> Dự Tiệc Tỏa Sáng',
+            'sub'       => 'Đầm voan nơ pastel, váy hoa cúc & giày búp bê mềm nhẹ cho tiệc sinh nhật.',
+            'image'     => '/FashionKids/images/banners/theme-shop-tryon-princess.jpg',
+            'url'       => '/FashionKids/views/pages/shop-catalog.php?category=vay_cong_chua',
+            'cta_text'  => 'Xem Váy Công Chúa',
+            'cta_icon'  => 'fa-wand-magic-sparkles',
+            'cta2_text' => 'Đo Size Bé',
+            'cta2_icon' => 'fa-ruler-horizontal',
+            'cta2_url'  => '/FashionKids/views/pages/home.php#modalSuggestSize',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-child-reaching mr-1"></i>Outfit Sân Chơi &amp; Đi Học Mẫu Giáo',
+            'badge_cls' => 'badge-sky',
+            'title'     => 'Mặc Thử <span class="text-peach">Set Bộ Thun</span> &amp; Hoodie Tai Thỏ Xinh',
+            'sub'       => 'Áo khoác Hoodie tai thỏ, bộ thun Gấu Nhí & Khủng Long thoáng mát cả ngày.',
+            'image'     => '/FashionKids/images/banners/theme-shop-tryon-playground.jpg',
+            'url'       => '/FashionKids/views/pages/shop-catalog.php?category=bo_thun',
+            'cta_text'  => 'Xem Bộ Thun Bé',
+            'cta_icon'  => 'fa-shirt',
+            'cta2_text' => 'Áo Khoác Nhí',
+            'cta2_icon' => 'fa-vest-patches',
+            'cta2_url'  => '/FashionKids/views/pages/shop-catalog.php?category=ao_khoac',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-umbrella-beach mr-1"></i>Showroom Thiết Kế &amp; Chống Nắng Biển UPF 50+',
+            'badge_cls' => 'badge-gold',
+            'title'     => 'Showroom <span class="text-peach">Bright Pastel</span> &amp; Du Lịch Mùa Hè',
+            'sub'       => 'Trải nghiệm bộ trưng bày vải sợi tre cùng áo khoác chống nắng dịu nhẹ cho bé.',
+            'image'     => '/FashionKids/images/banners/theme-shop-showroom-summer.jpg',
+            'url'       => '#lbn_catalogGrid',
+            'cta_text'  => 'Xem Tất Cả Mẫu',
+            'cta_icon'  => 'fa-sparkles',
+            'cta2_text' => 'Giày Sandal Bé',
+            'cta2_icon' => 'fa-shoe-prints',
+            'cta2_url'  => '/FashionKids/views/pages/shop-catalog.php?category=giay_sandal',
+        ],
+    ];
+
+    fkRenderEditorialCarousel('fk_shopHeroCarousel', $shopHeroSlides, [
+        'wrapper_cls'      => 'shadow-sm mb-4',
+        'banner_cls'       => 'fk-editorial-banner-sm',
+        'interval'         => 4500,
+        'heading_first_h1' => true,
+        'counter_label'    => 'Chủ đề mua sắm',
+    ]);
+    ?>
 
     <div class="row">
         <!-- CỘT TRÁI (SIDEBAR FILTER): DANH MỤC, GIỚI TÍNH, KHOẢNG GIÁ -->

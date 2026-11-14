@@ -3,6 +3,7 @@ $page_title = "Cổng Tuyển Chọn Siêu Sao Nhí KOL";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 
 $rtKolModel = new RealtimeContentModel();
 $currentKolUid = Rbac::currentUserId();
@@ -95,35 +96,77 @@ $lnkt_kol_stars = [
 ?>
 
 <div class="container my-4 my-md-5" id="lnkt_kol_casting_section">
-    <!-- Banner Giới Thiệu Cổng Casting KOL Nhí -->
-    <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5 mb-5 shadow-sm rounded-lg">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-8 mb-3 mb-lg-0">
-                <span class="badge badge-gold px-3 py-2 rounded-pill mb-2 shadow-sm badge-wrap-safe">
-                    <i class="fa-solid fa-crown mr-1"></i>Chiến Dịch Tuyển Chọn Đại Sứ Thương Hiệu Nhí 2026
-                </span>
-                <h2 class="font-weight-bold text-slate mb-2">
-                    Cổng Casting <span class="text-peach">Siêu Sao Nhí KOL</span> FashionKids
-                </h2>
-                <p class="text-muted-custom mb-0">
-                    Tìm kiếm những gương mặt thiên thần nhí từ 0 - 6 tuổi đồng hành cùng Bộ Sưu Tập Vải Sợi Tre Mùa Hè 2026. Nhận ngay thẻ VIP Kim Cương và học bổng tài năng nhí.
-                </p>
-            </div>
-            <div class="col-12 col-lg-4 text-lg-right">
-                <?php if (Rbac::isStaffOrAdmin()): ?>
-                    <a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-pastel-primary rounded-pill px-4 py-2 font-weight-bold shadow-sm mr-2 mb-2">
-                        <i class="fa-solid fa-clipboard-check mr-1"></i> Bàn Duyệt KOL
-                    </a>
-                <?php endif; ?>
-                <a href="/FashionKids/views/pages/kol-stars.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mr-2 mb-2">
-                    <i class="fa-solid fa-crown mr-1 text-warning"></i> Danh Sách Sao Nhí
-                </a>
-                <a href="/FashionKids/views/pages/home.php" class="btn btn-light border rounded-pill px-4 py-2 font-weight-bold text-slate shadow-sm mb-2">
-                    <i class="fa-solid fa-arrow-left mr-1 text-peach"></i> Về Trang Chủ
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- Banner Carousel Cổng Casting KOL Nhí (Quay Phim • Runway • Xứ Sở Thần Tiên) -->
+    <?php
+    $staffCastingBtn = Rbac::isStaffOrAdmin()
+        ? '<a href="/FashionKids/views/pages/staff-casting-review.php" class="btn btn-pastel-primary btn-sm rounded-pill px-3 py-1 font-weight-bold shadow-sm text-nowrap"><i class="fa-solid fa-clipboard-check mr-1"></i>Bàn Duyệt KOL</a>'
+        : '';
+
+    $kolCastingHeroSlides = [
+        [
+            'eyebrow'   => '<i class="fa-solid fa-video mr-1"></i>Phim Trường Casting • Quay Phim, Chụp Hình &amp; Đóng Phim',
+            'badge_cls' => 'badge-gold',
+            'title'     => 'Cổng Casting <span class="text-peach">Quay Phim &amp; Chụp Hình</span> Nhí 2026',
+            'sub'       => 'Tuyển diễn viên nhí 0–6 tuổi đóng TVC, Lookbook Studio & nhận gói tài trợ 15 triệu.',
+            'image'     => '/FashionKids/images/banners/theme-kol-film-studio.jpg',
+            'url'       => '#lnkt_kolCastingForm',
+            'cta_text'  => 'Nộp Hồ Sơ Ngay',
+            'cta_icon'  => 'fa-clapperboard',
+            'cta2_text' => 'Danh Sách Sao Nhí',
+            'cta2_icon' => 'fa-crown',
+            'cta2_url'  => '/FashionKids/views/pages/kol-stars.php',
+            'extra_btn' => $staffCastingBtn,
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-person-walking mr-1"></i>Trình Diễn Thời Trang • Kids Fashion Runway',
+            'badge_cls' => 'badge-peach',
+            'title'     => 'Tuyển Chọn <span class="text-peach">Siêu Sao Catwalk</span> Sàn Diễn Thời Trang',
+            'sub'       => 'Cơ hội sải bước trên Tuần Lễ Thời Trang Trẻ Em cùng ekip stylist chuyên nghiệp.',
+            'image'     => '/FashionKids/images/banners/theme-kol-runway-catwalk.jpg',
+            'url'       => '#lnkt_kolCastingForm',
+            'cta_text'  => 'Đăng Ký Catwalk',
+            'cta_icon'  => 'fa-star',
+            'cta2_text' => 'Về Trang Chủ',
+            'cta2_icon' => 'fa-arrow-left',
+            'cta2_url'  => '/FashionKids/views/pages/home.php',
+            'extra_btn' => $staffCastingBtn,
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Chủ Đề Cổ Tích • Trẻ Em Trong Xứ Sở Thần Tiên',
+            'badge_cls' => 'badge-mint',
+            'title'     => 'Hóa Thân Thần Tiên <span class="text-peach">Xứ Sở Cổ Tích</span> FashionKids',
+            'sub'       => 'Bộ ảnh vườn hoa, lâu đài pastel & tặng kèm quà thú bông độc quyền cho bé.',
+            'image'     => '/FashionKids/images/banners/theme-kol-wonderland.jpg',
+            'url'       => '#lnkt_kolCastingForm',
+            'cta_text'  => 'Ứng Tuyển Chủ Đề',
+            'cta_icon'  => 'fa-sparkles',
+            'cta2_text' => 'Xem Đầm Cổ Tích',
+            'cta2_icon' => 'fa-bag-shopping',
+            'cta2_url'  => '/FashionKids/views/pages/shop-catalog.php?category=vay_cong_chua',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-camera-retro mr-1"></i>Đa Phong Cách • Streetstyle, Dự Tiệc &amp; Đi Biển',
+            'badge_cls' => 'badge-sky',
+            'title'     => 'Tỏa Sáng <span class="text-peach">Đa Phong Cách Nhí</span> Tự Tin Trước Ống Kính',
+            'sub'       => 'Chụp miễn phí tại Studio, tặng thẻ VIP Kim Cương & học bổng tài năng cho bé.',
+            'image'     => '/FashionKids/images/banners/theme-casting-multistyle.jpg',
+            'url'       => '#lnkt_kolCastingForm',
+            'cta_text'  => 'Điền Form Casting',
+            'cta_icon'  => 'fa-feather-pointed',
+            'cta2_text' => 'Xem Gương Mặt KOL',
+            'cta2_icon' => 'fa-crown',
+            'cta2_url'  => '/FashionKids/views/pages/kol-stars.php',
+        ],
+    ];
+
+    fkRenderEditorialCarousel('fk_kolCastingHeroCarousel', $kolCastingHeroSlides, [
+        'wrapper_cls'      => 'shadow-sm mb-5',
+        'banner_cls'       => 'fk-editorial-banner-compact',
+        'interval'         => 4500,
+        'heading_first_h1' => true,
+        'counter_label'    => 'Chủ đề Casting',
+    ]);
+    ?>
 
     <div class="row">
         <!-- ================================================================
@@ -429,10 +472,10 @@ $lnkt_kol_stars = [
                     </a>
                 </div>
                 <?php foreach ($lnkt_kol_stars as $star): ?>
-                    <a href="/FashionKids/views/pages/kol-stars.php?kol_id=<?= (int)($star['id'] ?? 0) ?>" class="text-decoration-none d-block mb-3">
+                    <a href="/FashionKids/views/pages/kol-stars.php?kol_id=<?= (int)($star['id'] ?? 0) ?>&amp;kol_name=<?= urlencode($star['name']) ?>" class="text-decoration-none d-block mb-3">
                         <div class="p-3 rounded bg-milk-cream border d-flex align-items-start">
                             <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
-                                <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img">
+                                <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img" onerror="this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
                             </span>
                             <div class="min-w-0 flex-grow-1">
                                 <div class="d-flex flex-wrap align-items-center fk-card-header-row mb-1">

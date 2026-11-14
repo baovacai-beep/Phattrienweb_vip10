@@ -13,6 +13,21 @@ class RealtimeContentModel extends BaseModel {
     public function __construct() {
         parent::__construct();
         if (session_status() === PHP_SESSION_NONE) {
+            $savePath = session_save_path();
+            $canWrite = false;
+            if (!empty($savePath) && is_dir($savePath)) {
+                $probe = @tempnam($savePath, 'fk_');
+                if ($probe !== false) {
+                    @unlink($probe);
+                    $canWrite = true;
+                }
+            }
+            if (!$canWrite) {
+                $tempDir = sys_get_temp_dir();
+                if (is_dir($tempDir)) {
+                    @session_save_path($tempDir);
+                }
+            }
             @session_start();
         }
         $this->ensureSeedDataInDb();
@@ -476,9 +491,10 @@ class RealtimeContentModel extends BaseModel {
                 }
             }
 
-            // Tự động đồng bộ 4 gương mặt Sao Nhí Catwalk mới (nếu CSDL chưa có ảnh tương ứng, tránh đè hồ sơ phụ huynh đã nộp)
-            $chkPhotoStmt = $this->db->prepare("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi` WHERE `danh_sach_anh` LIKE :pat");
+            // Tự động đồng bộ 4 gương mặt Sao Nhí Catwalk mới (nếu CSDL chưa có hoặc bản ghi mẫu cũ chưa có Phong cách/Outfit chuẩn)
+            $chkPhotoStmt = $this->db->prepare("SELECT `ma_ho_so`, `nang_khieu_kinh_nghiem`, `danh_sach_anh` FROM `lnkt_dang_ky_kol_nhi` WHERE `danh_sach_anh` LIKE :pat OR `ho_ten_be` = :bname LIMIT 1");
             $chkIdStmt    = $this->db->prepare("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi` WHERE `ma_ho_so` = :id");
+            $updSeedStmt  = $this->db->prepare("UPDATE `lnkt_dang_ky_kol_nhi` SET `danh_sach_anh` = :photos, `nang_khieu_kinh_nghiem` = :talent, `trang_thai_duyet` = :status WHERE `ma_ho_so` = :id");
             $insWithId    = $this->db->prepare("
                 INSERT INTO `lnkt_dang_ky_kol_nhi`
                     (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`)
@@ -496,12 +512,28 @@ class RealtimeContentModel extends BaseModel {
                     continue;
                 }
                 $baseImg = basename((string)$kol['image']);
-                $chkPhotoStmt->execute([':pat' => '%' . $baseImg . '%']);
-                $existsByImg = (int)$chkPhotoStmt->fetchColumn() > 0;
+                $chkPhotoStmt->execute([
+                    ':pat'   => '%' . $baseImg . '%',
+                    ':bname' => $kol['baby_name']
+                ]);
+                $existingRow = $chkPhotoStmt->fetch(PDO::FETCH_ASSOC);
                 $chkPhotoStmt->closeCursor();
-                if ($existsByImg) {
+                $encodedPhotos = json_encode($kol['photos'], JSON_UNESCAPED_SLASHES);
+
+                if ($existingRow) {
+                    $curTalent = (string)($existingRow['nang_khieu_kinh_nghiem'] ?? '');
+                    $curPhotos = (string)($existingRow['danh_sach_anh'] ?? '');
+                    if (strpos($curTalent, 'Outfit:') === false || strpos($curPhotos, $baseImg) === false) {
+                        $updSeedStmt->execute([
+                            ':photos' => $encodedPhotos,
+                            ':talent' => $kol['talent'],
+                            ':status' => $kol['status'],
+                            ':id'     => (int)$existingRow['ma_ho_so']
+                        ]);
+                    }
                     continue;
                 }
+
                 $chkIdStmt->execute([':id' => $kol['id']]);
                 $idTaken = (int)$chkIdStmt->fetchColumn() > 0;
                 $chkIdStmt->closeCursor();
@@ -515,7 +547,7 @@ class RealtimeContentModel extends BaseModel {
                     ':gender' => $kol['gender'],
                     ':h'      => $kol['height_cm'],
                     ':w'      => $kol['weight_kg'],
-                    ':photos' => json_encode($kol['photos'], JSON_UNESCAPED_SLASHES),
+                    ':photos' => $encodedPhotos,
                     ':talent' => $kol['talent'],
                     ':status' => $kol['status']
                 ];
