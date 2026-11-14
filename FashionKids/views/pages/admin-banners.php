@@ -2,6 +2,7 @@
 $page_title = "Quản Trị Banner Slider & Lịch Chiến Dịch";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 Rbac::enforceCurrentViewAccess();
 
 // Danh sách các chiến dịch Banner Carousel toàn trang (đồng bộ trực tiếp với MH 01 home.php)
@@ -50,6 +51,36 @@ $lnkt_banners_list = [
         'interval_ms' => 4000,
         'status'      => 'scheduled',
         'icon'        => 'fa-shoe-prints text-info'
+    ],
+    [
+        'id'          => 4,
+        'code'        => 'BN-2026-04',
+        'title'       => 'Khoảnh Khắc Sinh Nhật & Nhật Ký Lớn Khôn Của Bé',
+        'subtitle'    => 'Tặng thiệp, hộp quà kỷ niệm bé yêu và giảm 15% trong tuần lễ sinh nhật bé.',
+        'cta_label'   => 'Chọn Quà Sinh Nhật Cho Bé »',
+        'cta_color'   => '#FF9E93',
+        'target_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        'start_time'  => '2026-06-01T00:00',
+        'end_time'    => '2026-12-31T23:59',
+        'sort_order'  => 4,
+        'interval_ms' => 4000,
+        'status'      => 'active',
+        'icon'        => 'fa-cake-candles text-peach'
+    ],
+    [
+        'id'          => 5,
+        'code'        => 'BN-2026-05',
+        'title'       => 'Lễ Hội Ngôi Sao Nhỏ – Tỏa Sáng Cổ Tích & Quà Tặng Thú Bông',
+        'subtitle'    => 'Quà tặng kèm 01 thú bông xinh xắn phiên bản giới hạn cùng đặc cách Studio Ngôi Sao Nhỏ.',
+        'cta_label'   => 'Khám Phá Ngôi Sao Nhỏ »',
+        'cta_color'   => '#A8DADC',
+        'target_url'  => '/FashionKids/views/pages/kol-stars.php',
+        'start_time'  => '2026-06-15T00:00',
+        'end_time'    => '2026-11-30T23:59',
+        'sort_order'  => 5,
+        'interval_ms' => 4000,
+        'status'      => 'active',
+        'icon'        => 'fa-star text-warning'
     ]
 ];
 ?>
@@ -200,19 +231,50 @@ $lnkt_banners_list = [
                     </h6>
                     <span class="badge badge-pill badge-sky px-3 py-1 text-nowrap flex-shrink-0">Chuyển ảnh tự động 4 giây</span>
                 </div>
-                <div class="lnkt-hero-slide lnkt-slide-kol p-4 rounded border">
-                    <span class="badge badge-gold px-3 py-1 rounded-pill mb-2">Xem trước Chiến dịch</span>
-                    <h4 class="font-weight-bold text-slate mb-2" id="lnkt_previewBannerTitle">
-                        Sự kiện tuyển chọn Siêu sao nhí KOL FashionKids 2026
-                    </h4>
-                    <p class="small text-muted-custom mb-3" id="lnkt_previewBannerSubtitle">
-                        Cơ hội tỏa sáng trên Lookbook Mùa Hè, nhận gói tài trợ trang phục 15.000.000đ.
-                    </p>
-                    <a href="/FashionKids/views/pages/kol-casting.php" id="lnkt_previewBannerCta"
-                       class="btn lnkt-btn-cta-peach px-4 py-2 shadow-sm">
-                        Đăng ký cho bé tham gia ngay &raquo;
-                    </a>
-                </div>
+                <?php
+                $adminPreviewSlides = [
+                    [
+                        'eyebrow'     => 'Xem trước Chiến dịch',
+                        'badge_cls'   => 'badge-gold',
+                        'title'       => 'Sự kiện tuyển chọn Siêu sao nhí KOL FashionKids 2026',
+                        'title_id'    => 'lnkt_previewBannerTitle',
+                        'sub'         => 'Cơ hội tỏa sáng trên Lookbook Mùa Hè, nhận gói tài trợ trang phục 15.000.000đ.',
+                        'sub_id'      => 'lnkt_previewBannerSubtitle',
+                        'image'       => '/FashionKids/images/banners/theme-kol-runway-catwalk.jpg',
+                        'url'         => '/FashionKids/views/pages/kol-casting.php',
+                        'cta_text'    => 'Đăng ký cho bé tham gia ngay »',
+                        'cta_id'      => 'lnkt_previewBannerCta',
+                        'cta_btn_cls' => 'btn lnkt-btn-cta-peach btn-sm px-4 py-2 shadow-sm text-nowrap',
+                    ],
+                    [
+                        'eyebrow'     => 'Thử Đồ &amp; Mix-Match Shop',
+                        'badge_cls'   => 'badge-mint',
+                        'title'       => 'BST Mùa Hè 2026 – Vải sợi tre làm mát cho bé',
+                        'sub'         => 'Kết hợp bộ thun Khủng Long, áo khoác Bomber & sơ mi Linen sành điệu.',
+                        'image'       => '/FashionKids/images/banners/theme-shop-tryon-boutique.jpg',
+                        'url'         => '/FashionKids/views/pages/shop-catalog.php',
+                        'cta_text'    => 'Khám Phá BST Hè 2026 »',
+                        'cta_btn_cls' => 'btn lnkt-btn-cta-peach btn-sm px-4 py-2 shadow-sm text-nowrap',
+                    ],
+                    [
+                        'eyebrow'     => 'Chủ Đề Cổ Tích Thần Tiên',
+                        'badge_cls'   => 'badge-peach',
+                        'title'       => 'Công Chúa Xứ Sở Thần Tiên &amp; Vườn Hoa Cổ Tích',
+                        'sub'         => 'Váy voan pastel bồng bềnh & khung cảnh cổ tích cho tiệc sinh nhật.',
+                        'image'       => '/FashionKids/images/banners/theme-kol-wonderland.jpg',
+                        'url'         => '/FashionKids/views/pages/shop-catalog.php?category=vay_cong_chua',
+                        'cta_text'    => 'Xem Đầm Cổ Tích »',
+                        'cta_btn_cls' => 'btn lnkt-btn-cta-peach btn-sm px-4 py-2 shadow-sm text-nowrap',
+                    ],
+                ];
+
+                fkRenderEditorialCarousel('lnkt_adminPreviewCarousel', $adminPreviewSlides, [
+                    'wrapper_cls'   => 'shadow-sm',
+                    'banner_cls'    => 'fk-editorial-banner-preview',
+                    'interval'      => 4000,
+                    'counter_label' => 'Xem trước Banner',
+                ]);
+                ?>
             </div>
         </div>
 

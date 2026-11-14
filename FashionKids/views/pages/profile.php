@@ -66,6 +66,15 @@ $maTheHienThi = ((int)$user['ma_nguoi_dung'] > 0) ? sprintf('#FK-2026-VIP%02d', 
 ?>
 
 <div class="container my-4 my-md-5" id="hgb_profile_section">
+    <?php
+    require_once __DIR__ . "/../partials/editorial-carousel.php";
+    fkRenderEditorialCarousel('fk_profileBannerCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4200,
+        'counter_label' => 'Banner Thành Viên',
+    ]);
+    ?>
     <div class="row">
         <!-- Cột Trái: Thẻ VIP Thành Viên & Tiến Trình -->
         <div class="col-12 col-lg-5 mb-4">

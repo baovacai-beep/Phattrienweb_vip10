@@ -12,7 +12,16 @@ $hgb_turnstile_enabled = TurnstileService::isConfigured();
 $hgb_google_url = APP_ENDPOINT . '?c=auth&a=googleLogin' . ($hgb_redirect_after !== '' ? ('&redirect=' . urlencode((string)$_GET['redirect'])) : '');
 ?>
 
-<div class="container my-5" id="hgb_auth_container">
+<div class="container my-4 my-md-5" id="hgb_auth_container">
+    <?php
+    require_once __DIR__ . "/../partials/editorial-carousel.php";
+    fkRenderEditorialCarousel('fk_loginBannerCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4200,
+        'counter_label' => 'Banner Thời Trang',
+    ]);
+    ?>
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-5">
             <div class="card card-pastel shadow-sm hgb-auth-card border-0">

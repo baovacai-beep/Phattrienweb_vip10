@@ -393,8 +393,10 @@ ON DUPLICATE KEY UPDATE `mo_ta`=VALUES(`mo_ta`);
 
 INSERT INTO `lnkt_banner_su_kien` (`ma_banner`, `tieu_de`, `duong_dan_anh`, `duong_dan_dieu_huong`, `loai_su_kien`, `ngay_bat_dau`, `ngay_ket_thuc`, `dang_kich_hoat`, `thu_tu_hien_thi`) VALUES
 (1, 'Bộ sưu tập Mùa Hè 2026 - Giảm đến 30%', 'banner_mua_he.jpg', '/danh-muc/mua-he', 'theo_mua', '2026-06-01 00:00:00', '2026-08-31 23:59:59', 1, 1),
-(2, 'Tìm Kiếm Ngôi Sao Nhí KOL FashionKids', 'banner_kol_nhi.jpg', '/tuyen-chon-kol', 'tuyen_chon_kol', '2026-06-15 00:00:00', '2026-09-15 23:59:59', 1, 2)
-ON DUPLICATE KEY UPDATE `tieu_de`=VALUES(`tieu_de`);
+(2, 'Tìm Kiếm Ngôi Sao Nhí KOL FashionKids', 'banner_kol_nhi.jpg', '/tuyen-chon-kol', 'tuyen_chon_kol', '2026-06-15 00:00:00', '2026-09-15 23:59:59', 1, 2),
+(3, 'Khoảnh Khắc Sinh Nhật & Nhật Ký Lớn Khôn Của Bé', '/FashionKids/images/banners/banner-sinh-nhat-nhat-ky-be-yeu.webp', '/FashionKids/views/pages/shop-catalog.php', 'khuyen_mai', '2026-06-01 00:00:00', '2026-12-31 23:59:59', 1, 3),
+(4, 'Lễ Hội Ngôi Sao Nhỏ – Tỏa Sáng Cổ Tích & Quà Tặng Thú Bông', '/FashionKids/images/banners/banner-ngoi-sao-nho-qua-tang.webp', '/FashionKids/views/pages/kol-stars.php', 'tuyen_chon_kol', '2026-06-15 00:00:00', '2026-11-30 23:59:59', 1, 4)
+ON DUPLICATE KEY UPDATE `tieu_de`=VALUES(`tieu_de`), `duong_dan_anh`=VALUES(`duong_dan_anh`);
 
 INSERT INTO `lnkt_dang_ky_kol_nhi` (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`) VALUES
 (1, 3, 'Võ Thị Thanh Thảo', '0918889999', 'thanhthao@gmail.com', 'Bé Hồ Bảo Sam (Sam)', '2022-05-15', 'be_gai', 96.5, 14.2, '["/FashionKids/images/kol/kol-bao-sam.jpg", "/FashionKids/images/kol/kol-casting-studio-demo.jpg"]', 'Bé dạn dĩ trước máy ảnh, thích tạo dáng công chúa lookbook', 'cho_duyet'),
@@ -402,7 +404,11 @@ INSERT INTO `lnkt_dang_ky_kol_nhi` (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huy
 (3, 3, 'Chị Thanh Hà', '0989778899', 'thanhha@gmail.com', 'Bé Lê Hà My (Bông)', '2021-04-20', 'be_gai', 112.0, 19.2, '["/FashionKids/images/kol/kol-ha-my-bong.jpg"]', 'Catwalk thiếu nhi chuyên nghiệp, từng chụp Lookbook thời trang', 'trung_tuyen'),
 (4, 3, 'Chị Minh Thư', '0908112233', 'minhthu@gmail.com', 'Bé Nguyễn Bảo An (Sữa)', '2023-05-15', 'be_gai', 96.0, 14.5, '["/FashionKids/images/kol/kol-bao-an-sua.jpg"]', 'Biểu cảm rạng rỡ tự nhiên, hợp các bộ sưu tập đầm hè sợi tre Bright Pastel', 'cho_duyet'),
 (5, 3, 'Chị Lan Hương', '0934556677', 'lanhuong@gmail.com', 'Bé Trần Minh Khôi (Bơ)', '2021-11-08', 'be_trai', 108.0, 17.5, '["/FashionKids/images/kol/kol-minh-khoi-bo.jpg"]', 'Phong thái mini-runway tự tin, phối đồ áo cardigan sợi tre thanh lịch', 'trung_tuyen'),
-(6, 3, 'Chị Thu Trang', '0977223344', 'thutrang@gmail.com', 'Bé Phạm Thảo Chi (Mây)', '2023-08-20', 'be_gai', 94.0, 13.8, '["/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg"]', 'Nét dịu dàng trong veo, hợp chụp Lookbook váy công chúa cổ sen hoa cúc', 'cho_duyet')
+(6, 3, 'Chị Thu Trang', '0977223344', 'thutrang@gmail.com', 'Bé Phạm Thảo Chi (Mây)', '2023-08-20', 'be_gai', 94.0, 13.8, '["/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg"]', 'Nét dịu dàng trong veo, hợp chụp Lookbook váy công chúa cổ sen hoa cúc', 'cho_duyet'),
+(7, 3, 'Chị Minh Ngọc', '0909334455', 'minhngoc@gmail.com', 'Bé Lê Nhã Uyên (Mochi)', '2021-06-12', 'be_gai', 110.0, 18.5, '["/FashionKids/images/kol/kol-catwalk-tho-cam.jpg"]', 'Phong cách: Dân Gian Cá Tính • Outfit: Áo dài linen kem thêu chim họa mi + Chân váy navy tua rua & Băng đô thổ cẩm. Catwalk thần thái high-fashion nhí tự tin trước ánh đèn sân khấu.', 'trung_tuyen'),
+(8, 3, 'Anh Quang Huy', '0916778899', 'quanghuy@gmail.com', 'Bé Nguyễn Minh Nhật (Khoai Tây)', '2020-09-18', 'be_trai', 114.0, 20.0, '["/FashionKids/images/kol/kol-catwalk-ao-dai-trai.jpg"]', 'Phong cách: Nghệ Sĩ Nhí Bảnh Bao • Outfit: Áo dài cách tân xanh cobalt vẽ tranh phố phường + Quần tây xám than & Sneaker trắng. Bước đi vững vàng chuẩn mẫu nam nhí.', 'trung_tuyen'),
+(9, 3, 'Chị Bảo Trân', '0938221199', 'baotran@gmail.com', 'Bé Trần Khả Hân (Cốm)', '2021-03-22', 'be_gai', 109.0, 18.0, '["/FashionKids/images/kol/kol-catwalk-street-pastel.jpg"]', 'Phong cách: Streetstyle Pastel Cá Tính • Outfit: Áo khoác phao tím lilac họa tiết pop-art phối boots kem & tóc bím ruy-băng tai thỏ siêu cưng. Bước catwalk cool ngầu nhưng má phính đáng yêu hết nấc.', 'trung_tuyen'),
+(10, 3, 'Chị Ngọc Mai', '0975664433', 'ngocmai@gmail.com', 'Bé Vũ Ngọc Diệp (Kẹo Bông)', '2021-08-05', 'be_gai', 107.0, 17.2, '["/FashionKids/images/kol/kol-catwalk-cong-chua-trang.jpg"]', 'Phong cách: Công Chúa Cổ Tích Ngọt Ngào • Outfit: Đầm voan tầng trắng tinh khôi phối nơ hồng phấn pastel, nón hoa pha lê & giày búp bê Mary Jane. Phong thái kiêu sa nhẹ nhàng trên sàn diễn.', 'trung_tuyen')
 ON DUPLICATE KEY UPDATE `ho_ten_phu_huynh`=VALUES(`ho_ten_phu_huynh`), `danh_sach_anh`=VALUES(`danh_sach_anh`);
 
 INSERT INTO `tgb_tin_nhan_tu_van` (`ma_tin_nhan`, `ma_phien_khach`, `ma_nguoi_dung`, `nguoi_gui`, `noi_dung_tin_nhan`, `da_xem`) VALUES

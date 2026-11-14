@@ -3,6 +3,7 @@ $page_title = "Danh Sách Siêu Sao & Đại Sứ Nhí KOL 2026";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 
 $rtModel = new RealtimeContentModel();
 $allApplications = $rtModel->getKolApplications();
@@ -24,7 +25,8 @@ usort($kolStars, static function ($a, $b) use ($statusPriority) {
     if ($pa !== $pb) {
         return $pa <=> $pb;
     }
-    return ((int)($a['id'] ?? 0)) <=> ((int)($b['id'] ?? 0));
+    // Đưa các gương mặt siêu sao mới cập nhật (ID cao hơn) lên hàng đầu
+    return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
 });
 
 $countWinner    = 0;
@@ -42,54 +44,75 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
 
 <div class="container my-4 my-md-5" id="fk_kol_stars_directory">
     <!-- ====================================================================
-         1. HERO SHOWCASE DANH SÁCH SAO NHÍ & NÚT NHỎ SANG TRANG ĐĂNG KÝ
+         1. HERO SHOWCASE CAROUSEL SAO NHÍ (TRÌNH DIỄN - THẦN TIÊN - PHIM TRƯỜNG)
          ==================================================================== -->
-    <div class="fk-kol-dir-hero p-4 p-md-5 mb-4 shadow-sm">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-8 mb-3 mb-lg-0">
-                <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 8px;">
-                    <span class="badge badge-pill badge-gold px-3 py-2 shadow-sm">
-                        <i class="fa-solid fa-crown mr-1"></i>ĐẠI SỨ THƯƠNG HIỆU NHÍ FASHIONKIDS 2026
-                    </span>
-                    <span class="badge badge-pill badge-mint px-3 py-2">
-                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i><?= count($kolStars) ?> Gương Mặt Tiêu Biểu
-                    </span>
-                </div>
-                <h1 class="font-weight-bold text-slate mb-2" style="font-size: clamp(1.6rem, 2.5vw, 2.25rem);">
-                    Thiên Thần &amp; <span class="text-peach">Siêu Sao Nhí KOL</span> FashionKids
-                </h1>
-                <p class="text-muted-custom mb-3" style="max-width: 680px; line-height: 1.65;">
-                    Chiêm ngưỡng bộ ảnh Lookbook, thông số chiều cao – cân nặng và năng khiếu nổi bật của các bạn nhỏ đang đồng hành cùng bộ sưu tập Bright Pastel 100% Sợi Tre Organic.
-                </p>
-                <div class="d-flex flex-wrap" style="gap: 8px;">
-                    <span class="fk-mag-kpi-chip">
-                        <i class="fa-solid fa-award text-success mr-1"></i><?= $countWinner ?> Đại Sứ Chính Thức
-                    </span>
-                    <span class="fk-mag-kpi-chip">
-                        <i class="fa-solid fa-microphone-lines text-peach mr-1"></i><?= $countInterview ?> Đang Phỏng Vấn Studio
-                    </span>
-                    <span class="fk-mag-kpi-chip">
-                        <i class="fa-solid fa-star text-info mr-1"></i><?= $countFeatured ?> Gương Mặt Triển Vọng
-                    </span>
-                </div>
-            </div>
-            <div class="col-12 col-lg-4 text-lg-right">
-                <div class="d-inline-flex flex-wrap justify-content-lg-end" style="gap: 8px;">
-                    <a href="/FashionKids/views/pages/blog-feeds.php" class="btn btn-light btn-sm rounded-pill border px-3 py-2 font-weight-bold text-slate shadow-sm">
-                        <i class="fa-solid fa-arrow-left text-peach mr-1"></i>Về Tạp Chí
-                    </a>
-                    <a href="/FashionKids/views/pages/kol-casting.php" class="btn btn-pastel-primary btn-sm rounded-pill px-3 py-2 font-weight-bold shadow-sm">
-                        <i class="fa-solid fa-feather-pointed mr-1"></i>Đăng ký KOL Nhí ngay
-                    </a>
-                </div>
-                <div class="mt-2">
-                    <small class="text-muted-custom font-weight-bold">
-                        <i class="fa-solid fa-shield-heart text-success mr-1"></i>Thông tin liên hệ phụ huynh được bảo mật riêng tư
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php
+    $kolSubSummary = $countWinner . ' Đại sứ chính thức • ' . $countInterview . ' Đang phỏng vấn • ' . $countFeatured . ' Gương mặt triển vọng';
+    $kolStarsHeroSlides = [
+        [
+            'badges'    => [
+                ['cls' => 'badge-gold', 'html' => '<i class="fa-solid fa-crown mr-1"></i>KIDS FASHION RUNWAY WEEK 2026'],
+                ['cls' => 'badge-mint', 'html' => '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>' . count($kolStars) . ' Sao Nhí'],
+            ],
+            'title'     => 'Thiên Thần &amp; <span class="text-peach">Siêu Sao Nhí KOL</span> Trên Sàn Runway',
+            'sub'       => 'Trình diễn Tuần Lễ Thời Trang Trẻ Em đa phong cách từ Couture đến Streetstyle.',
+            'image'     => '/FashionKids/images/banners/theme-kol-runway-catwalk.jpg',
+            'url'       => '/FashionKids/views/pages/kol-casting.php',
+            'cta_text'  => 'Đăng ký KOL Nhí ngay',
+            'cta_icon'  => 'fa-feather-pointed',
+            'cta2_text' => 'Về Tạp Chí',
+            'cta2_icon' => 'fa-arrow-left',
+            'cta2_url'  => '/FashionKids/views/pages/blog-feeds.php',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-sparkles mr-1"></i>Xứ Sở Thần Tiên • Fairytale Wonderland 2026',
+            'badge_cls' => 'badge-peach',
+            'title'     => 'Hóa Thân Công Chúa <span class="text-peach">Xứ Sở Thần Tiên</span> Rực Rỡ',
+            'sub'       => $kolSubSummary,
+            'image'     => '/FashionKids/images/banners/theme-kol-wonderland.jpg',
+            'url'       => '#fk_kolStarsGrid',
+            'cta_text'  => 'Xem Sao Nhí Nổi Bật',
+            'cta_icon'  => 'fa-crown',
+            'cta2_text' => 'Ứng Tuyển Cổ Tích',
+            'cta2_icon' => 'fa-wand-magic-sparkles',
+            'cta2_url'  => '/FashionKids/views/pages/kol-casting.php',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-star mr-1"></i>Sân Khấu Áo Dài &amp; Thời Trang Di Sản',
+            'badge_cls' => 'badge-sky',
+            'title'     => 'Đêm Diễn <span class="text-peach">Sân Khấu Sắc Màu</span> &amp; Di Sản Nhí',
+            'sub'       => 'Các mẫu nhí tự tin catwalk Áo dài thổ cẩm, Áo dài vẽ tay & dạ hội trắng tinh khôi.',
+            'image'     => '/FashionKids/images/banners/theme-kol-catwalk-heritage.jpg',
+            'url'       => '/FashionKids/views/pages/kol-casting.php',
+            'cta_text'  => 'Tham Gia Trình Diễn',
+            'cta_icon'  => 'fa-person-walking',
+            'cta2_text' => 'Tạp Chí Runway',
+            'cta2_icon' => 'fa-book-open',
+            'cta2_url'  => '/FashionKids/views/pages/blog-feeds.php',
+        ],
+        [
+            'eyebrow'   => '<i class="fa-solid fa-video mr-1"></i>Phim Trường Lookbook • Quay Phim &amp; Chụp Hình',
+            'badge_cls' => 'badge-gold',
+            'title'     => 'Tỏa Sáng <span class="text-peach">Phim Trường Studio</span> &amp; Đóng Phim Nhí',
+            'sub'       => 'Khoảnh khắc hậu trường vui nhộn dưới ánh đèn phim trường TVC & bộ ảnh Lookbook 2026.',
+            'image'     => '/FashionKids/images/banners/theme-kol-film-studio.jpg',
+            'url'       => '/FashionKids/views/pages/kol-casting.php',
+            'cta_text'  => 'Thử Vai Ngay',
+            'cta_icon'  => 'fa-clapperboard',
+            'cta2_text' => 'Mua Đồ Lookbook',
+            'cta2_icon' => 'fa-bag-shopping',
+            'cta2_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        ],
+    ];
+
+    fkRenderEditorialCarousel('fk_kolStarsHeroCarousel', $kolStarsHeroSlides, [
+        'wrapper_cls'      => 'shadow-sm mb-4',
+        'banner_cls'       => 'fk-editorial-banner-compact',
+        'interval'         => 4500,
+        'heading_first_h1' => true,
+        'counter_label'    => 'Chủ đề Sao Nhí',
+    ]);
+    ?>
 
     <!-- ====================================================================
          2. THANH LỌC THEO TRẠNG THÁI, GIỚI TÍNH & TÌM KIẾM NHANH
@@ -168,7 +191,8 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
                     <div class="fk-kol-dir-photo-wrap">
                         <img src="<?= htmlspecialchars($star['image']) ?>"
                              alt="<?= htmlspecialchars($star['baby_name']) ?>"
-                             class="fk-kol-dir-photo">
+                             class="fk-kol-dir-photo"
+                             onerror="this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
                         <span class="badge <?= $bInfo[1] ?> fk-kol-dir-status">
                             <i class="fa-solid <?= $bInfo[2] ?> mr-1"></i><?= $bInfo[0] ?>
                         </span>
@@ -207,10 +231,48 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
                             </div>
                         </div>
 
-                        <p class="text-muted-custom small mb-3 flex-grow-1" style="line-height: 1.55;">
-                            <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i>
-                            <?= htmlspecialchars($star['talent']) ?>
-                        </p>
+                        <?php
+                        $rawTalent  = (string)($star['talent'] ?? '');
+                        $styleTitle = (string)($star['style_tag'] ?? '');
+                        $outfitInfo = (string)($star['outfit_info'] ?? '');
+                        $noteTalent = $rawTalent;
+
+                        if ($outfitInfo === '' && preg_match('/^Phong cách:\s*([^•]+?)\s*•\s*Outfit:\s*(.+)$/u', $rawTalent, $tm)) {
+                            if ($styleTitle === '') {
+                                $styleTitle = trim($tm[1]);
+                            }
+                            $parts      = preg_split('/(?<=\.)\s+/u', trim($tm[2]), 2);
+                            $outfitInfo = trim($parts[0] ?? $tm[2]);
+                            $noteTalent = trim($parts[1] ?? '');
+                        }
+                        ?>
+
+                        <?php if ($styleTitle !== '' || $outfitInfo !== ''): ?>
+                            <div class="rounded bg-milk-cream border p-2 mb-3 flex-grow-1" style="line-height: 1.45;">
+                                <?php if ($styleTitle !== ''): ?>
+                                    <div class="mb-1">
+                                        <span class="badge badge-pill badge-peach px-2 py-1 small">
+                                            <i class="fa-solid fa-sparkles mr-1"></i><?= htmlspecialchars($styleTitle) ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($outfitInfo !== ''): ?>
+                                    <div class="small text-slate font-weight-bold mb-1">
+                                        <i class="fa-solid fa-shirt text-peach mr-1"></i>Info đồ: <span class="font-weight-normal text-muted-custom"><?= htmlspecialchars($outfitInfo) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($noteTalent !== ''): ?>
+                                    <small class="text-muted-custom d-block">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-info mr-1"></i><?= htmlspecialchars($noteTalent) ?>
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted-custom small mb-3 flex-grow-1" style="line-height: 1.55;">
+                                <i class="fa-solid fa-wand-magic-sparkles text-peach mr-1"></i>
+                                <?= htmlspecialchars($rawTalent) ?>
+                            </p>
+                        <?php endif; ?>
 
                         <div class="pt-3 border-top d-flex align-items-center justify-content-between">
                             <small class="text-muted-custom font-weight-bold">
@@ -351,11 +413,15 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var requestedId = <?= (int)$requestedKolId ?>;
-    if (requestedId > 0) {
-        var btn = document.querySelector('.fk-btn-open-kol-modal[data-id="' + requestedId + '"]');
-        if (btn && typeof window.fkOpenKolStarModal === 'function') {
-            setTimeout(function () { window.fkOpenKolStarModal(btn); }, 250);
-        }
+    var requestedName = <?= json_encode(trim((string)($_GET['kol_name'] ?? '')), JSON_UNESCAPED_UNICODE) ?>;
+    var btn = requestedName
+        ? document.querySelector('.fk-btn-open-kol-modal[data-name="' + requestedName.replace(/"/g, '\\"') + '"]')
+        : null;
+    if (!btn && requestedId > 0) {
+        btn = document.querySelector('.fk-btn-open-kol-modal[data-id="' + requestedId + '"]');
+    }
+    if (btn && typeof window.fkOpenKolStarModal === 'function') {
+        setTimeout(function () { window.fkOpenKolStarModal(btn); }, 250);
     }
 });
 </script>

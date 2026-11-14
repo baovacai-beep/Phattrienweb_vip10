@@ -10,6 +10,7 @@ $allPosts  = $rtModel->getArticles('all', '', 'newest');
 $page_title = $article['title'] . " - Tạp Chí FashionKids";
 require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 
 // Danh sách sản phẩm gợi ý gắn kèm bài viết
 $relatedProductsCatalog = [
@@ -45,6 +46,17 @@ $relatedProductsCatalog = [
 ?>
 
 <div class="container my-4 my-md-5" id="fk_blog_detail_section">
+    <!-- Banner Tạp Chí Xoay Tự Động -->
+    <?php
+    fkRenderEditorialCarousel('fk_blogDetailTopCarousel', fkGetCompactPromoSlides(), [
+        'wrapper_cls'   => 'shadow-sm mb-4',
+        'banner_cls'    => 'fk-editorial-banner-strip',
+        'interval'      => 4000,
+        'dot_cls'       => 'fk-mag-dot-btn',
+        'counter_label' => 'Banner Tạp Chí',
+    ]);
+    ?>
+
     <!-- Breadcrumb Điều Hướng -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb bg-white rounded-pill px-4 py-2 shadow-sm border mb-0 small">
@@ -128,8 +140,10 @@ $relatedProductsCatalog = [
                         <button type="button"
                                 onclick="fkToggleBookmarkArticle(<?= $article['id'] ?>, this)"
                                 class="btn btn-light border fk-btn-bookmark-blog px-3 py-2 shadow-sm text-nowrap <?= !empty($article['is_bookmarked']) ? 'bookmarked' : '' ?>"
-                                data-article-id="<?= $article['id'] ?>">
-                            <i class="fa-solid fa-bookmark text-warning mr-1"></i>Lưu cẩm nang
+                                data-article-id="<?= $article['id'] ?>"
+                                data-label-default="Lưu cẩm nang"
+                                data-label-saved="Đã lưu cẩm nang">
+                            <i class="fa-solid fa-bookmark text-warning mr-1"></i><span class="fk-bookmark-label"><?= !empty($article['is_bookmarked']) ? 'Đã lưu cẩm nang' : 'Lưu cẩm nang' ?></span>
                         </button>
                     </div>
                     <div class="d-flex align-items-center flex-shrink-0">
@@ -281,6 +295,11 @@ $relatedProductsCatalog = [
              CỘT PHẢI (4 CỘT): SẢN PHẨM GỢI Ý TRONG BÀI & BÀI VIẾT LIÊN QUAN
              ================================================================ -->
         <div class="col-12 col-lg-4">
+            <!-- Poster Chiến Dịch Tự Động Xoay -->
+            <div class="mb-4" style="min-height: 340px;">
+                <?php fkRenderSidebarPromoCarousel('fk_blogDetailSidebarCarousel', 3800); ?>
+            </div>
+
             <!-- Sản phẩm xuất hiện trong bài viết -->
             <div class="card card-pastel border-0 shadow-sm p-4 mb-4 bg-white">
                 <h6 class="font-weight-bold text-slate mb-3">

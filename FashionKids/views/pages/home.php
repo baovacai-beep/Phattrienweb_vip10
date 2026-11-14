@@ -4,9 +4,11 @@ require_once __DIR__ . "/../layouts/header.php";
 require_once __DIR__ . "/../layouts/navbar.php";
 require_once __DIR__ . "/../../models/RealtimeContentModel.php";
 require_once __DIR__ . "/../../models/ProductModel.php";
+require_once __DIR__ . "/../partials/editorial-carousel.php";
 
 $rtHomeModel       = new RealtimeContentModel();
 $homeArticles      = array_slice($rtHomeModel->getArticles('all', '', 'newest'), 0, 3);
+$homeFeaturedEvents = $rtHomeModel->getFeaturedEvents();
 $homeProductModel  = new ProductModel();
 $allNormalizedProd = $homeProductModel->layTatCaSanPhamChuanHoa();
 $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
@@ -43,115 +45,90 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
         </div>
     </div>
 
-    <!-- 1. BANNER CAROUSEL -->
-    <div id="lnkt_homeBannerCarousel" class="carousel slide lnkt-hero-carousel shadow-sm mb-5" data-ride="carousel" data-interval="4000">
-        <ol class="carousel-indicators">
-            <li data-target="#lnkt_homeBannerCarousel" data-slide-to="0" class="active"></li>
-            <li data-target="#lnkt_homeBannerCarousel" data-slide-to="1"></li>
-        </ol>
+    <!-- 1. BANNER CAROUSEL FULL-BLEED EDITORIAL (XOAY VÒNG ĐA CHỦ ĐỀ THỜI TRANG) -->
+    <?php
+    $homeHeroSlides = [
+        [
+            'badge_cls' => 'badge-mint',
+            'eyebrow'   => '<i class="fa-solid fa-leaf mr-1"></i>BST MÙA HÈ 2026 • SỢI TRE ORGANIC',
+            'title'     => 'Thời Trang <span class="text-peach">Vải Sợi Tre</span> Mát Dịu &amp; Đa Phong Cách',
+            'sub'       => 'Lookbook mùa hè vải sợi tre Organic chuẩn OEKO-TEX® cho bé 0–6 tuổi.',
+            'image'     => '/FashionKids/images/banners/theme-home-lookbook-pastels.jpg',
+            'url'       => '/FashionKids/views/pages/shop-catalog.php',
+            'cta_text'  => 'Khám Phá BST »',
+            'cta_icon'  => 'fa-bag-shopping',
+            'extra_btn' => '<button type="button" class="btn btn-light btn-sm border rounded-pill px-3 py-1 font-weight-bold text-slate text-nowrap" data-toggle="modal" data-target="#modalSuggestSize"><i class="fa-solid fa-ruler-horizontal mr-1 text-peach"></i>Đo Size Bé</button>',
+        ],
+        [
+            'badge_cls' => 'badge-peach',
+            'eyebrow'   => '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>PHÒNG THỬ ĐỒ &amp; PHỐI SET TRONG SHOP',
+            'title'     => 'Thử Đồ Xinh <span class="text-peach">Phối Set Cực Chất</span> Cùng FashionKids',
+            'sub'       => 'Kết hợp bộ thun Khủng Long, áo khoác Bomber & sơ mi Linen sành điệu cho bé.',
+            'image'     => '/FashionKids/images/banners/theme-shop-tryon-boutique.jpg',
+            'url'       => '/FashionKids/views/pages/shop-catalog.php',
+            'cta_text'  => 'Mặc Thử Ngay »',
+            'cta_icon'  => 'fa-shirt',
+            'cta2_text' => 'Đo Size Bé',
+            'cta2_icon' => 'fa-ruler-horizontal',
+            'cta2_js'   => "$('#modalSuggestSize').modal('show')",
+        ],
+        [
+            'badge_cls' => 'badge-gold',
+            'eyebrow'   => '<i class="fa-solid fa-crown mr-1"></i>TUẦN LỄ THỜI TRANG NHÍ • RUNWAY SHOW',
+            'title'     => 'Sân Khấu <span class="text-peach">Trình Diễn Thời Trang</span> Siêu Sao Nhí KOL',
+            'sub'       => 'Tỏa sáng trên sàn catwalk chuyên nghiệp & nhận gói tài trợ 15 triệu đồng.',
+            'image'     => '/FashionKids/images/banners/theme-kol-runway-catwalk.jpg',
+            'url'       => '/FashionKids/views/pages/kol-stars.php',
+            'cta_text'  => 'Xem Sao Runway »',
+            'cta_icon'  => 'fa-crown',
+            'extra_btn' => Rbac::isAdmin() ? '<a href="/FashionKids/views/pages/admin-banners.php" class="btn btn-light btn-sm border rounded-pill px-3 py-1 font-weight-bold text-slate text-nowrap"><i class="fa-solid fa-sliders mr-1 text-peach"></i>Quản lý Banner</a>' : '',
+        ],
+        [
+            'badge_cls' => 'badge-sky',
+            'eyebrow'   => '<i class="fa-solid fa-sparkles mr-1"></i>CHỦ ĐỀ XỨ SỞ THẦN TIÊN 2026',
+            'title'     => 'Công Chúa <span class="text-peach">Xứ Sở Thần Tiên</span> &amp; Vườn Hoa Cổ Tích',
+            'sub'       => 'Váy voan pastel bồng bềnh & khung cảnh cổ tích lung linh cho tiệc sinh nhật.',
+            'image'     => '/FashionKids/images/banners/theme-kol-wonderland.jpg',
+            'url'       => '/FashionKids/views/pages/shop-catalog.php?category=vay_cong_chua',
+            'cta_text'  => 'Xem Đầm Cổ Tích »',
+            'cta_icon'  => 'fa-wand-magic-sparkles',
+            'cta2_text' => 'Sự Kiện Lễ Hội',
+            'cta2_icon' => 'fa-calendar-star',
+            'cta2_url'  => '#fk_featuredEventsSection',
+        ],
+        [
+            'badge_cls' => 'badge-gold',
+            'eyebrow'   => '<i class="fa-solid fa-video mr-1"></i>CASTING QUAY PHIM • CHỤP HÌNH • ĐÓNG PHIM',
+            'title'     => 'Tuyển Diễn Viên <span class="text-peach">Phim Trường Nhí</span> &amp; Mẫu Studio',
+            'sub'       => 'Trải nghiệm quay TVC, chụp Lookbook thực tế cùng đạo diễn hình ảnh & stylist.',
+            'image'     => '/FashionKids/images/banners/theme-kol-film-studio.jpg',
+            'url'       => '/FashionKids/views/pages/kol-casting.php',
+            'cta_text'  => 'Ứng Tuyển Ngay »',
+            'cta_icon'  => 'fa-clapperboard',
+        ],
+        [
+            'badge_cls' => 'badge-peach',
+            'eyebrow'   => '<i class="fa-solid fa-cake-candles mr-1"></i>SỰ KIỆN SINH NHẬT &amp; LỄ HỘI NGÔI SAO NHỎ',
+            'title'     => 'Khoảnh Khắc <span class="text-peach">Sinh Nhật &amp; Nhật Ký</span> Lớn Khôn',
+            'sub'       => 'Tặng hộp quà kỷ niệm, thú bông xinh & ưu đãi -15% tuần lễ sinh nhật bé.',
+            'image'     => '/FashionKids/images/banners/hero-event-birthday-2026.jpg',
+            'url'       => '#fk_featuredEventsSection',
+            'cta_text'  => 'Khám Phá Sự Kiện »',
+            'cta_icon'  => 'fa-gift',
+            'cta2_text' => 'Chọn Quà Cho Bé',
+            'cta2_icon' => 'fa-bag-shopping',
+            'cta2_url'  => '/FashionKids/views/pages/shop-catalog.php',
+        ],
+    ];
 
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <div class="lnkt-hero-slide lnkt-slide-summer p-4 p-md-5">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
-                            <div class="badge badge-mint badge-wrap-safe px-3 py-2 rounded-pill mb-3 shadow-sm">
-                                <i class="fa-solid fa-leaf mr-2"></i>100% Organic Bamboo • Chuẩn OEKO-TEX® Standard 100
-                            </div>
-                            <h1 class="font-weight-bold text-slate mb-3 lnkt-hero-title">
-                                BST Mùa Hè 2026 – <span class="text-peach">Vải Sợi Tre Làm Mát</span> Chống Nóng Dành Cho Làn Da Nhạy Cảm
-                            </h1>
-                            <p class="text-muted-custom mb-4 h6 font-weight-normal">
-                                Công nghệ dệt sợi tre tự nhiên kháng khuẩn 99.8%, hạ nhiệt độ bề mặt da bé -2°C và thấm hút mồ hôi gấp 2 lần cotton truyền thống.
-                            </p>
-                            <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
-                                <a href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary px-4 py-2 shadow-sm text-nowrap">
-                                    <i class="fa-solid fa-bag-shopping mr-2"></i>Khám Phá BST Hè 2026 &raquo;
-                                </a>
-                                <button type="button" class="btn btn-pastel-sky px-4 py-2 shadow-sm text-nowrap"
-                                        data-toggle="modal" data-target="#modalSuggestSize">
-                                    <i class="fa-solid fa-ruler-horizontal mr-1 text-peach"></i>Đo Size Cho Bé
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-lg-5 text-center">
-                            <div class="lnkt-hero-visual-box mx-auto p-4 shadow-sm">
-                                <div class="lnkt-floating-badge-top badge badge-gold px-3 py-1 rounded-pill shadow-sm">
-                                    <i class="fa-solid fa-sun mr-1"></i>Chống Tia UV UPF 50+
-                                </div>
-                                <img src="/FashionKids/images/banner-mua-he-2026.jpg" alt="BST Mùa Hè 2026" class="lnkt-hero-banner-img my-2">
-                                <h5 class="font-weight-bold text-slate mb-1">Mềm Mịn Như Vòng Tay Mẹ</h5>
-                                <small class="text-muted-custom d-block">Dành cho bé từ Sơ sinh đến 6 tuổi (50cm - 125cm)</small>
-                                <div class="mt-3 d-flex flex-wrap justify-content-center fk-btn-toolbar">
-                                    <span class="badge badge-mint px-2 py-1 text-nowrap">Kháng khuẩn 99.8%</span>
-                                    <span class="badge badge-sky px-2 py-1 text-nowrap">Co giãn 4 chiều</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="lnkt-hero-slide lnkt-slide-kol p-4 p-md-5">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
-                            <div class="badge badge-gold badge-wrap-safe px-3 py-2 rounded-pill mb-3 shadow-sm">
-                                <i class="fa-solid fa-crown mr-2"></i>Chiến Dịch Truyền Thông Đặc Biệt • Casting Đại Sứ Nhí
-                            </div>
-                            <h2 class="font-weight-bold text-slate mb-3 lnkt-hero-title">
-                                Sự Kiện Tuyển Chọn <span class="text-peach">Siêu Sao Nhí KOL</span> FashionKids 2026
-                            </h2>
-                            <p class="text-muted-custom mb-4 h6 font-weight-normal">
-                                Cơ hội để bé tỏa sáng trên Lookbook BST Mùa Hè 2026, nhận gói tài trợ trang phục sợi tre cả năm trị giá 15.000.000đ và thẻ VIP Kim Cương.
-                            </p>
-                            <div class="d-flex flex-wrap align-items-center fk-btn-toolbar">
-                                <a href="/FashionKids/views/pages/kol-casting.php"
-                                   class="btn lnkt-btn-cta-peach px-4 py-2 shadow text-nowrap">
-                                    Đăng ký cho bé tham gia ngay &raquo;
-                                </a>
-                                <?php if (Rbac::isAdmin()): ?>
-                                    <a href="/FashionKids/views/pages/admin-banners.php"
-                                       class="btn btn-light border rounded-pill px-3 py-2 small font-weight-bold text-slate text-nowrap">
-                                        <i class="fa-solid fa-sliders mr-1 text-peach"></i>Quản lý Banner
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-lg-5 text-center">
-                            <div class="lnkt-hero-visual-box mx-auto p-4 shadow-sm">
-                                <div class="lnkt-floating-badge-top badge badge-mint px-3 py-1 rounded-pill shadow-sm">
-                                    <i class="fa-solid fa-camera-retro mr-1"></i>Casting Toàn Quốc
-                                </div>
-                                <img src="/FashionKids/images/banner-kol-nhi-2026.jpg" alt="Siêu Sao Nhí KOL 2026" class="lnkt-hero-banner-img my-2">
-                                <h5 class="font-weight-bold text-slate mb-1">Gương Mặt Đại Sứ Nhí 2026</h5>
-                                <small class="text-muted-custom d-block">Dành cho bé từ 6 tháng đến 6 tuổi tự tin trước ống kính</small>
-                                <div class="mt-3 d-flex flex-wrap justify-content-center fk-btn-toolbar">
-                                    <span class="badge badge-gold px-2 py-1 text-nowrap">Quà tặng 15 Triệu</span>
-                                    <span class="badge badge-sky px-2 py-1 text-nowrap">Chụp Lookbook Studio</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <a class="carousel-control-prev" href="#lnkt_homeBannerCarousel" role="button" data-slide="prev">
-            <span class="lnkt-carousel-nav-btn shadow-sm" aria-hidden="true">
-                <i class="fa-solid fa-chevron-left text-slate"></i>
-            </span>
-            <span class="sr-only">Slide trước</span>
-        </a>
-        <a class="carousel-control-next" href="#lnkt_homeBannerCarousel" role="button" data-slide="next">
-            <span class="lnkt-carousel-nav-btn shadow-sm" aria-hidden="true">
-                <i class="fa-solid fa-chevron-right text-slate"></i>
-            </span>
-            <span class="sr-only">Slide tiếp theo</span>
-        </a>
-    </div>
+    fkRenderEditorialCarousel('lnkt_homeBannerCarousel', $homeHeroSlides, [
+        'wrapper_cls'   => 'lnkt-hero-carousel shadow-sm mb-5',
+        'banner_cls'    => '',
+        'interval'      => 4500,
+        'dot_cls'       => 'fk-home-dot-btn',
+        'counter_label' => 'Trang sự kiện',
+    ]);
+    ?>
 
     <!-- 2. ĐIỀU HƯỚNG NHANH DANH MỤC -->
     <div class="text-center mb-5">
@@ -320,6 +297,59 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
         </div>
     </div>
 
+    <!-- 4B. CÁC SỰ KIỆN TIÊU BIỂU FASHIONKIDS 2026 (CLICK MỞ CHI TIẾT) -->
+    <div class="mb-5" id="fk_featuredEventsSection">
+        <div class="d-flex flex-wrap justify-content-between align-items-end fk-card-header-row mb-4">
+            <div class="min-w-0">
+                <span class="badge badge-pill badge-peach px-3 py-1 mb-1">
+                    <i class="fa-solid fa-calendar-star mr-1"></i>Lễ Hội &amp; Hoạt Động Nổi Bật
+                </span>
+                <h3 class="font-weight-bold text-slate mb-0">Các Sự Kiện Tiêu Biểu Cho Bé Yêu</h3>
+            </div>
+            <a href="/FashionKids/views/pages/kol-stars.php" class="btn btn-pastel-outline btn-sm font-weight-bold text-nowrap flex-shrink-0">
+                Khám phá Sao KOL Nhí <i class="fa-solid fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="row">
+            <?php foreach ($homeFeaturedEvents as $fEv):
+                $evPerksJson = htmlspecialchars(json_encode($fEv['perk_pills'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8');
+            ?>
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="fk-event-poster-card shadow-sm"
+                         role="button"
+                         tabindex="0"
+                         data-title="<?= htmlspecialchars($fEv['title'] ?? '') ?>"
+                         data-badge="<?= htmlspecialchars($fEv['badge_text'] ?? 'Sự Kiện') ?>"
+                         data-badge-cls="<?= htmlspecialchars($fEv['badge_class'] ?? 'badge-peach') ?>"
+                         data-subtitle="<?= htmlspecialchars($fEv['subtitle'] ?? '') ?>"
+                         data-date="<?= htmlspecialchars($fEv['date_label'] ?? '') ?>"
+                         data-image="<?= htmlspecialchars($fEv['image'] ?? '') ?>"
+                         data-url="<?= htmlspecialchars($fEv['target_url'] ?? '#') ?>"
+                         data-cta="<?= htmlspecialchars($fEv['cta_label'] ?? 'Xem sự kiện') ?>"
+                         data-perks="<?= $evPerksJson ?>"
+                         onclick="fkOpenEventDetailModal(this)"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();fkOpenEventDetailModal(this);}">
+                        <img src="<?= htmlspecialchars($fEv['image'] ?? '') ?>"
+                             alt="<?= htmlspecialchars($fEv['title'] ?? '') ?>"
+                             class="fk-event-poster-bg"
+                             onerror="this.onerror=null;this.src='/FashionKids/images/banner-kol-nhi-2026.jpg';">
+                        <div class="fk-event-poster-scrim"></div>
+                        <span class="badge <?= htmlspecialchars($fEv['badge_class'] ?? 'badge-peach') ?> badge-pill px-3 py-1 fk-event-poster-badge">
+                            <?= htmlspecialchars($fEv['badge_text'] ?? 'Sự Kiện') ?>
+                        </span>
+                        <div class="fk-event-poster-footer">
+                            <h5 class="fk-event-poster-title"><?= htmlspecialchars($fEv['title'] ?? '') ?></h5>
+                            <span class="fk-event-poster-hint">
+                                Nhấn xem thông tin sự kiện <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
     <!-- 5. TIÊU ĐIỂM TẠP CHÍ MẪU NHÍ & ĐIỂM TIN BÁO CHÍ -->
     <div class="mb-5">
         <div class="d-flex flex-wrap justify-content-between align-items-end fk-card-header-row mb-4">
@@ -436,6 +466,39 @@ $lnkt_featured_products = array_slice($allNormalizedProd, 0, 4);
                     </a>
                 </div>
             <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi Tiết Sự Kiện Tiêu Biểu -->
+<div class="modal fade" id="fk_modalEventDetail" tabindex="-1" role="dialog" aria-labelledby="fk_evModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="position-relative" style="background: #FFF9F5;">
+                <img id="fk_evModalImage" src="" alt="Banner Sự Kiện" class="w-100" style="max-height: 360px; object-fit: cover; object-position: center 22%;">
+                <button type="button" class="close position-absolute bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                        data-dismiss="modal" aria-label="Đóng"
+                        style="top: 14px; right: 14px; width: 38px; height: 38px; opacity: 1;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <span id="fk_evModalBadge" class="badge badge-pill badge-peach px-3 py-2 position-absolute shadow-sm" style="bottom: 14px; left: 18px;">
+                    Sự Kiện
+                </span>
+            </div>
+            <div class="modal-body p-4">
+                <div class="small font-weight-bold text-peach mb-2">
+                    <i class="fa-regular fa-calendar-check mr-1"></i><span id="fk_evModalDate">Đang diễn ra</span>
+                </div>
+                <h4 class="font-weight-bold text-slate mb-3" id="fk_evModalTitle">Tiêu đề sự kiện</h4>
+                <p class="text-muted-custom mb-3" id="fk_evModalSubtitle" style="line-height: 1.65;"></p>
+                <div id="fk_evModalPerks" class="d-flex flex-wrap mb-2" style="gap: 8px;"></div>
+            </div>
+            <div class="modal-footer bg-milk-cream border-top d-flex justify-content-between align-items-center px-4 py-3">
+                <button type="button" class="btn btn-light border rounded-pill px-4 font-weight-bold text-slate" data-dismiss="modal">Đóng</button>
+                <a id="fk_evModalActionBtn" href="/FashionKids/views/pages/shop-catalog.php" class="btn btn-pastel-primary rounded-pill px-4 font-weight-bold shadow-sm">
+                    <span id="fk_evModalActionText">Khám phá ngay</span> <i class="fa-solid fa-arrow-right ml-1"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>

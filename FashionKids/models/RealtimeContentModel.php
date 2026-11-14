@@ -13,6 +13,21 @@ class RealtimeContentModel extends BaseModel {
     public function __construct() {
         parent::__construct();
         if (session_status() === PHP_SESSION_NONE) {
+            $savePath = session_save_path();
+            $canWrite = false;
+            if (!empty($savePath) && is_dir($savePath)) {
+                $probe = @tempnam($savePath, 'fk_');
+                if ($probe !== false) {
+                    @unlink($probe);
+                    $canWrite = true;
+                }
+            }
+            if (!$canWrite) {
+                $tempDir = sys_get_temp_dir();
+                if (is_dir($tempDir)) {
+                    @session_save_path($tempDir);
+                }
+            }
             @session_start();
         }
         $this->ensureSeedDataInDb();
@@ -445,8 +460,8 @@ class RealtimeContentModel extends BaseModel {
 
             $kolCount = (int)$this->db->query("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi`")->fetchColumn();
             $kolLegacyCount = (int)$this->db->query("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi` WHERE `ma_ho_so` <= 6 AND (`danh_sach_anh` IS NULL OR `danh_sach_anh` LIKE '%uploads/casting/%' OR `danh_sach_anh` NOT LIKE '%/FashionKids/images/kol/%')")->fetchColumn();
+            $kolDefaults = $this->getDefaultKolCandidates();
             if ($kolCount < 6 || $kolLegacyCount > 0) {
-                $kolDefaults = $this->getDefaultKolCandidates();
                 $kolStmt = $this->db->prepare("
                     INSERT INTO `lnkt_dang_ky_kol_nhi`
                         (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`)
@@ -456,6 +471,9 @@ class RealtimeContentModel extends BaseModel {
                         `danh_sach_anh` = IF(`danh_sach_anh` IS NULL OR `danh_sach_anh` LIKE '%uploads/casting/%' OR `danh_sach_anh` NOT LIKE '%/FashionKids/images/kol/%', VALUES(`danh_sach_anh`), `danh_sach_anh`)
                 ");
                 foreach ($kolDefaults as $kol) {
+                    if ((int)$kol['id'] > 6) {
+                        continue;
+                    }
                     $kolStmt->execute([
                         ':id'     => $kol['id'],
                         ':parent' => $kol['guardian_name'],
@@ -469,6 +487,104 @@ class RealtimeContentModel extends BaseModel {
                         ':photos' => json_encode($kol['photos'], JSON_UNESCAPED_SLASHES),
                         ':talent' => $kol['talent'],
                         ':status' => $kol['status']
+                    ]);
+                }
+            }
+
+            // Tự động đồng bộ 4 gương mặt Sao Nhí Catwalk mới (nếu CSDL chưa có hoặc bản ghi mẫu cũ chưa có Phong cách/Outfit chuẩn)
+            $chkPhotoStmt = $this->db->prepare("SELECT `ma_ho_so`, `nang_khieu_kinh_nghiem`, `danh_sach_anh` FROM `lnkt_dang_ky_kol_nhi` WHERE `danh_sach_anh` LIKE :pat OR `ho_ten_be` = :bname LIMIT 1");
+            $chkIdStmt    = $this->db->prepare("SELECT COUNT(*) FROM `lnkt_dang_ky_kol_nhi` WHERE `ma_ho_so` = :id");
+            $updSeedStmt  = $this->db->prepare("UPDATE `lnkt_dang_ky_kol_nhi` SET `danh_sach_anh` = :photos, `nang_khieu_kinh_nghiem` = :talent, `trang_thai_duyet` = :status WHERE `ma_ho_so` = :id");
+            $insWithId    = $this->db->prepare("
+                INSERT INTO `lnkt_dang_ky_kol_nhi`
+                    (`ma_ho_so`, `ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`)
+                VALUES
+                    (:id, 3, :parent, :phone, :email, :baby, :dob, :gender, :h, :w, :photos, :talent, :status)
+            ");
+            $insAutoId    = $this->db->prepare("
+                INSERT INTO `lnkt_dang_ky_kol_nhi`
+                    (`ma_nguoi_dung`, `ho_ten_phu_huynh`, `so_dien_thoai`, `thu_dien_tu`, `ho_ten_be`, `ngay_sinh_be`, `gioi_tinh_be`, `chieu_cao_be`, `can_nang_be`, `danh_sach_anh`, `nang_khieu_kinh_nghiem`, `trang_thai_duyet`)
+                VALUES
+                    (3, :parent, :phone, :email, :baby, :dob, :gender, :h, :w, :photos, :talent, :status)
+            ");
+            foreach ($kolDefaults as $kol) {
+                if ((int)$kol['id'] <= 6) {
+                    continue;
+                }
+                $baseImg = basename((string)$kol['image']);
+                $chkPhotoStmt->execute([
+                    ':pat'   => '%' . $baseImg . '%',
+                    ':bname' => $kol['baby_name']
+                ]);
+                $existingRow = $chkPhotoStmt->fetch(PDO::FETCH_ASSOC);
+                $chkPhotoStmt->closeCursor();
+                $encodedPhotos = json_encode($kol['photos'], JSON_UNESCAPED_SLASHES);
+
+                if ($existingRow) {
+                    $curTalent = (string)($existingRow['nang_khieu_kinh_nghiem'] ?? '');
+                    $curPhotos = (string)($existingRow['danh_sach_anh'] ?? '');
+                    if (strpos($curTalent, 'Outfit:') === false || strpos($curPhotos, $baseImg) === false) {
+                        $updSeedStmt->execute([
+                            ':photos' => $encodedPhotos,
+                            ':talent' => $kol['talent'],
+                            ':status' => $kol['status'],
+                            ':id'     => (int)$existingRow['ma_ho_so']
+                        ]);
+                    }
+                    continue;
+                }
+
+                $chkIdStmt->execute([':id' => $kol['id']]);
+                $idTaken = (int)$chkIdStmt->fetchColumn() > 0;
+                $chkIdStmt->closeCursor();
+
+                $params = [
+                    ':parent' => $kol['guardian_name'],
+                    ':phone'  => $kol['phone'],
+                    ':email'  => 'kol' . $kol['id'] . '@fashionkids.vn',
+                    ':baby'   => $kol['baby_name'],
+                    ':dob'    => $kol['birth_date'],
+                    ':gender' => $kol['gender'],
+                    ':h'      => $kol['height_cm'],
+                    ':w'      => $kol['weight_kg'],
+                    ':photos' => $encodedPhotos,
+                    ':talent' => $kol['talent'],
+                    ':status' => $kol['status']
+                ];
+                if (!$idTaken) {
+                    $params[':id'] = $kol['id'];
+                    $insWithId->execute($params);
+                } else {
+                    $insAutoId->execute($params);
+                }
+            }
+
+            // Tự động đồng bộ 2 Banner Sự Kiện mới vào bảng lnkt_banner_su_kien nếu chưa tồn tại
+            $eventBannerSeeds = $this->getFeaturedEvents();
+            $chkBnStmt = $this->db->prepare("SELECT COUNT(*) FROM `lnkt_banner_su_kien` WHERE `duong_dan_anh` LIKE :pat");
+            $insBnStmt = $this->db->prepare("
+                INSERT INTO `lnkt_banner_su_kien`
+                    (`tieu_de`, `duong_dan_anh`, `duong_dan_dieu_huong`, `loai_su_kien`, `ngay_bat_dau`, `ngay_ket_thuc`, `dang_kich_hoat`, `thu_tu_hien_thi`)
+                VALUES
+                    (:title, :img, :url, :etype, :sdate, :edate, 1, :sorder)
+            ");
+            foreach ($eventBannerSeeds as $ev) {
+                if (empty($ev['sync_to_banner_db'])) {
+                    continue;
+                }
+                $imgBase = basename((string)$ev['image']);
+                $chkBnStmt->execute([':pat' => '%' . $imgBase . '%']);
+                $bnExists = (int)$chkBnStmt->fetchColumn() > 0;
+                $chkBnStmt->closeCursor();
+                if (!$bnExists) {
+                    $insBnStmt->execute([
+                        ':title'  => $ev['title'],
+                        ':img'    => $ev['image'],
+                        ':url'    => $ev['target_url'],
+                        ':etype'  => $ev['db_type'],
+                        ':sdate'  => $ev['db_start'],
+                        ':edate'  => $ev['db_end'],
+                        ':sorder' => $ev['sort_order']
                     ]);
                 }
             }
@@ -1545,7 +1661,145 @@ class RealtimeContentModel extends BaseModel {
                 'image'         => '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg',
                 'photos'        => ['/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg'],
                 'status'        => 'cho_duyet'
+            ],
+            7 => [
+                'id'            => 7,
+                'code'          => 'KOL-2026-07',
+                'baby_name'     => 'Bé Lê Nhã Uyên (Mochi)',
+                'birth_date'    => '2021-06-12',
+                'age_label'     => '5 tuổi',
+                'age_group'     => '5_6',
+                'gender'        => 'be_gai',
+                'height_cm'     => 110,
+                'weight_kg'     => 18.5,
+                'guardian_name' => 'Chị Minh Ngọc',
+                'phone'         => '0909334455',
+                'style_tag'     => 'Dân Gian Cá Tính',
+                'outfit_info'   => 'Áo dài linen kem thêu chim họa mi + Chân váy navy tua rua + Băng đô thổ cẩm & chùm pom-pom sắc màu',
+                'talent'        => 'Phong cách: Dân Gian Cá Tính • Outfit: Áo dài linen kem thêu chim họa mi phối chân váy xanh navy tua rua, băng đô thổ cẩm & chùm pom-pom sắc màu. Thần thái catwalk chuẩn "nàng thơ phố núi", tạo dáng cực cuốn trước ống kính.',
+                'image'         => '/FashionKids/images/kol/kol-catwalk-tho-cam.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-catwalk-tho-cam.jpg'],
+                'status'        => 'trung_tuyen'
+            ],
+            8 => [
+                'id'            => 8,
+                'code'          => 'KOL-2026-08',
+                'baby_name'     => 'Bé Nguyễn Minh Nhật (Khoai Tây)',
+                'birth_date'    => '2020-09-18',
+                'age_label'     => '6 tuổi',
+                'age_group'     => '5_6',
+                'gender'        => 'be_trai',
+                'height_cm'     => 114,
+                'weight_kg'     => 20,
+                'guardian_name' => 'Anh Quang Huy',
+                'phone'         => '0916778822',
+                'style_tag'     => 'Nghệ Sĩ Nhí Bảnh Bao',
+                'outfit_info'   => 'Áo dài cách tân xanh cobalt vẽ tranh phố phường tuổi thơ + Quần tây xám than & Sneaker trắng năng động',
+                'talent'        => 'Phong cách: Nghệ Sĩ Nhí Bảnh Bao • Outfit: Áo dài cách tân xanh cobalt vẽ tranh sắc màu tuổi thơ phối quần tây & sneaker trắng năng động. Sải bước sân khấu lớn cực tự tin, gương mặt sáng chuẩn soái ca nhí.',
+                'image'         => '/FashionKids/images/kol/kol-catwalk-ao-dai-trai.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-catwalk-ao-dai-trai.jpg'],
+                'status'        => 'trung_tuyen'
+            ],
+            9 => [
+                'id'            => 9,
+                'code'          => 'KOL-2026-09',
+                'baby_name'     => 'Bé Trần Khả Hân (Cốm)',
+                'birth_date'    => '2021-03-22',
+                'age_label'     => '5 tuổi',
+                'age_group'     => '5_6',
+                'gender'        => 'be_gai',
+                'height_cm'     => 109,
+                'weight_kg'     => 18,
+                'guardian_name' => 'Chị Bảo Trân',
+                'phone'         => '0938221199',
+                'style_tag'     => 'Streetstyle Pastel',
+                'outfit_info'   => 'Áo khoác phao tím lilac họa tiết pop-art + Boots kem cổ thấp & Tóc bím ruy-băng tai thỏ cực chất',
+                'talent'        => 'Phong cách: Streetstyle Pastel Cá Tính • Outfit: Áo khoác phao tím lilac họa tiết pop-art phối boots kem & tóc bím ruy-băng tai thỏ siêu cưng. Bước catwalk cool ngầu nhưng má phính đáng yêu hết nấc.',
+                'image'         => '/FashionKids/images/kol/kol-catwalk-street-pastel.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-catwalk-street-pastel.jpg'],
+                'status'        => 'trung_tuyen'
+            ],
+            10 => [
+                'id'            => 10,
+                'code'          => 'KOL-2026-10',
+                'baby_name'     => 'Bé Vũ Ngọc Diệp (Kẹo Bông)',
+                'birth_date'    => '2021-08-05',
+                'age_label'     => '5 tuổi',
+                'age_group'     => '5_6',
+                'gender'        => 'be_gai',
+                'height_cm'     => 107,
+                'weight_kg'     => 17.2,
+                'guardian_name' => 'Chị Ngọc Mai',
+                'phone'         => '0975664433',
+                'style_tag'     => 'Công Chúa Cổ Tích',
+                'outfit_info'   => 'Đầm voan tầng trắng tinh khôi đính nơ hồng pastel + Nón hoa pha lê lấp lánh & Giày búp bê Mary Jane',
+                'talent'        => 'Phong cách: Công Chúa Cổ Tích Ngọt Ngào • Outfit: Đầm voan tầng trắng tinh khôi phối nơ hồng phấn pastel, nón hoa pha lê & giày búp bê Mary Jane. Phong thái kiêu sa nhẹ nhàng trên sàn diễn.',
+                'image'         => '/FashionKids/images/kol/kol-catwalk-cong-chua-trang.jpg',
+                'photos'        => ['/FashionKids/images/kol/kol-catwalk-cong-chua-trang.jpg'],
+                'status'        => 'trung_tuyen'
             ]
+        ];
+    }
+
+    /**
+     * Danh sách Sự Kiện Tiêu Biểu & Banner Sự Kiện FashionKids 2026
+     */
+    public function getFeaturedEvents(): array {
+        return [
+            [
+                'id'                => 1,
+                'code'              => 'EV-2026-01',
+                'badge_text'        => 'Sự Kiện Sinh Nhật & Kỷ Niệm Bé Yêu',
+                'badge_class'       => 'badge-peach',
+                'title'             => 'Khoảnh Khắc Sinh Nhật & Nhật Ký Lớn Khôn Của Bé',
+                'subtitle'          => 'Lưu giữ từng dấu mốc khôn lớn từ 0–6 tuổi cùng bộ sưu tập đồ tiệc & đồ mặc nhà sợi tre Organic. Tặng ngay voucher sinh nhật -15% và hộp quà kỷ niệm cho đơn từ 350.000đ.',
+                'image'             => '/FashionKids/images/banners/banner-sinh-nhat-nhat-ky-be-yeu.webp',
+                'date_label'        => '01/06/2026 – 31/12/2026',
+                'perk_pills'        => ['Tặng Thiệp & Hộp Quà Bé Yêu', 'Giảm 15% Tuần Lễ Sinh Nhật'],
+                'cta_label'         => 'Chọn Quà Sinh Nhật Cho Bé',
+                'target_url'        => '/FashionKids/views/pages/shop-catalog.php',
+                'db_type'           => 'khuyen_mai',
+                'db_start'          => '2026-06-01 00:00:00',
+                'db_end'            => '2026-12-31 23:59:59',
+                'sort_order'        => 3,
+                'sync_to_banner_db' => true,
+            ],
+            [
+                'id'                => 2,
+                'code'              => 'EV-2026-02',
+                'badge_text'        => 'Ấn Phẩm & Lễ Hội Ngôi Sao Nhỏ',
+                'badge_class'       => 'badge-mint',
+                'title'             => 'Lễ Hội Ngôi Sao Nhỏ – Tỏa Sáng Cổ Tích & Quà Tặng Thú Bông',
+                'subtitle'          => 'Chào đón ấn phẩm đặc biệt Ngôi Sao Nhỏ cùng sân chơi Siêu Sao Nhí KOL FashionKids 2026. Tặng ngay 01 thú bông xinh xắn phiên bản giới hạn cho bé ứng tuyển KOL hoặc đơn đầm công chúa.',
+                'image'             => '/FashionKids/images/banners/banner-ngoi-sao-nho-qua-tang.webp',
+                'date_label'        => '15/06/2026 – 30/11/2026',
+                'perk_pills'        => ['Quà Tặng Kèm 01 Thú Bông Xinh', 'Đặc Cách Studio Ngôi Sao Nhỏ'],
+                'cta_label'         => 'Khám Phá Ngôi Sao Nhỏ',
+                'target_url'        => '/FashionKids/views/pages/kol-stars.php',
+                'db_type'           => 'tuyen_chon_kol',
+                'db_start'          => '2026-06-15 00:00:00',
+                'db_end'            => '2026-11-30 23:59:59',
+                'sort_order'        => 4,
+                'sync_to_banner_db' => true,
+            ],
+            [
+                'id'                => 3,
+                'code'              => 'EV-2026-03',
+                'badge_text'        => 'Chiến Dịch Casting Toàn Quốc',
+                'badge_class'       => 'badge-gold',
+                'title'             => 'Tuyển Chọn Siêu Sao Nhí KOL & Lookbook Sợi Tre 2026',
+                'subtitle'          => 'Cơ hội sải bước trên sàn diễn chuyên nghiệp, chụp ảnh Lookbook tại Studio Quận 1 và nhận gói tài trợ trang phục 15.000.000đ cùng thẻ VIP Kim Cương.',
+                'image'             => '/FashionKids/images/banners/banner-kol-nhi-2026.jpg',
+                'date_label'        => 'Đang mở cổng nhận hồ sơ',
+                'perk_pills'        => ['Tài Trợ Trang Phục 15 Triệu', 'Thẻ VIP Kim Cương (-15%)'],
+                'cta_label'         => 'Nộp Hồ Sơ KOL Nhí',
+                'target_url'        => '/FashionKids/views/pages/kol-casting.php',
+                'db_type'           => 'tuyen_chon_kol',
+                'db_start'          => '2026-05-15 08:00:00',
+                'db_end'            => '2026-12-30 22:00:00',
+                'sort_order'        => 2,
+                'sync_to_banner_db' => false,
+            ],
         ];
     }
 
