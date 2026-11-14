@@ -192,7 +192,7 @@ $requestedKolId = isset($_GET['kol_id']) ? (int)$_GET['kol_id'] : 0;
                         <img src="<?= htmlspecialchars($star['image']) ?>"
                              alt="<?= htmlspecialchars($star['baby_name']) ?>"
                              class="fk-kol-dir-photo"
-                             onerror="this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
+                             onerror="if(!this.dataset.fkRetried){this.dataset.fkRetried='1';var u=this.src;this.src=u+(u.indexOf('?')>=0?'&':'?')+'retry=1';return;}this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
                         <span class="badge <?= $bInfo[1] ?> fk-kol-dir-status">
                             <i class="fa-solid <?= $bInfo[2] ?> mr-1"></i><?= $bInfo[0] ?>
                         </span>

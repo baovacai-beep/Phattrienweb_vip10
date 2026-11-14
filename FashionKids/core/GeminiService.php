@@ -8,6 +8,17 @@
 require_once __DIR__ . '/../config/integrations.php';
 
 class GeminiService {
+    /**
+     * Bảng quy chuẩn Size Quần Áo FashionKids (kết hợp cả Chiều cao cm & Cân nặng kg)
+     */
+    private const CLOTH_SIZE_BANDS = [
+        1 => ['label' => 'Size 1 (1-2T)', 'h_min' => 75,  'h_max' => 89,  'w_min' => 9.0,  'w_max' => 12.0],
+        2 => ['label' => 'Size 2 (2-3T)', 'h_min' => 90,  'h_max' => 100, 'w_min' => 12.1, 'w_max' => 15.0],
+        3 => ['label' => 'Size 3 (3-4T)', 'h_min' => 101, 'h_max' => 110, 'w_min' => 15.1, 'w_max' => 18.0],
+        4 => ['label' => 'Size 4 (4-5T)', 'h_min' => 111, 'h_max' => 120, 'w_min' => 18.1, 'w_max' => 22.0],
+        5 => ['label' => 'Size 5 (5-6T)', 'h_min' => 121, 'h_max' => 132, 'w_min' => 22.1, 'w_max' => 26.0],
+    ];
+
     public static function isConfigured(): bool {
         return defined('GEMINI_API_KEY') && trim((string)GEMINI_API_KEY) !== '';
     }
@@ -24,7 +35,7 @@ class GeminiService {
                 return [
                     'ok'     => true,
                     'source' => 'gemini',
-                    'text'   => trim($aiText),
+                    'text'   => self::cleanChatText($aiText),
                 ];
             }
         }
@@ -32,7 +43,188 @@ class GeminiService {
         return [
             'ok'     => true,
             'source' => 'local_ai',
-            'text'   => self::buildSmartFallbackReply($userMessage, $sizeCharts, $products),
+            'text'   => self::cleanChatText(self::buildSmartFallbackReply($userMessage, $history, $sizeCharts, $products)),
+        ];
+    }
+
+    /**
+     * Làm sạch ký tự Markdown (** / * / # / `) vì khung chat hiển thị text thuần
+     */
+    private static function cleanChatText(string $text): string {
+        $text = str_replace(["\r\n", "\r"], "\n", trim($text));
+        $text = preg_replace('/\*\*([^\*\n]+)\*\*/u', '$1', $text);
+        $text = preg_replace('/__([^_\n]+)__/u', '$1', $text);
+        $text = preg_replace('/`([^`\n]+)`/u', '$1', $text);
+        $text = preg_replace('/^\s*\*\s+/mu', '- ', $text);
+        $text = preg_replace('/^\s*#{1,6}\s+/mu', '', $text);
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        return trim((string)$text);
+    }
+
+    /**
+     * Chuẩn hóa tin nhắn từ lịch sử (hỗ trợ cả key từ DB thô và key từ getChatMessages())
+     */
+    private static function extractHistoryEntry(array $h): ?array {
+        $txt = trim((string)($h['content'] ?? $h['noi_dung_tin_nhan'] ?? ''));
+        if ($txt === '') {
+            return null;
+        }
+        $sender = (string)($h['sender'] ?? $h['nguoi_gui'] ?? '');
+        $role = ($sender === 'khach_hang') ? 'user' : 'model';
+        return ['role' => $role, 'text' => $txt];
+    }
+
+    /**
+     * Trích xuất chiều cao (cm), cân nặng (kg), dài bàn chân (cm) từ tin nhắn mới và hội thoại gần đây
+     */
+    private static function extractMeasurements(string $userMessage, array $history): array {
+        $texts = [$userMessage];
+        $recent = array_slice($history, -8);
+        for ($i = count($recent) - 1; $i >= 0; $i--) {
+            $entry = self::extractHistoryEntry($recent[$i]);
+            if ($entry && $entry['role'] === 'user' && $entry['text'] !== trim($userMessage)) {
+                $texts[] = $entry['text'];
+            }
+        }
+
+        $height = null;
+        $weight = null;
+        $foot   = null;
+
+        foreach ($texts as $idx => $raw) {
+            // Chỉ lấy từ lịch sử khi tin mới chưa có đủ số đo, không dùng số đo cũ nếu tin mới đã nhập bộ số mới
+            if ($idx > 0 && $height !== null && $weight !== null) {
+                break;
+            }
+            $lower = mb_strtolower($raw, 'UTF-8');
+            $asksFoot = (str_contains($lower, 'chân') || str_contains($lower, 'giày') || str_contains($lower, 'dép') || str_contains($lower, 'sandal'));
+
+            // Định dạng mét: 1m05, 1m1, 1.15m
+            if ($height === null && preg_match('/\b1\s*m\s*([0-9]{1,2})\b/iu', $lower, $m)) {
+                $sub = $m[1];
+                $cm = (strlen($sub) === 1) ? (100 + ((int)$sub * 10)) : (100 + (int)$sub);
+                if ($cm >= 95 && $cm <= 165) {
+                    $height = (float)$cm;
+                }
+            }
+
+            // Số đo có đơn vị cm / xăng / phân
+            if (preg_match_all('/(\d+(?:[\.,]\d+)?)\s*(cm|xăng|phan|phân)/iu', $lower, $matches)) {
+                foreach ($matches[1] as $numStr) {
+                    $val = (float)str_replace(',', '.', $numStr);
+                    if ($val >= 45 && $val <= 165 && $height === null && !$asksFoot) {
+                        $height = $val;
+                    } elseif ($val >= 9 && $val <= 26 && $foot === null) {
+                        $foot = $val;
+                    } elseif ($val >= 45 && $val <= 165 && $height === null) {
+                        $height = $val;
+                    }
+                }
+            }
+
+            // Số đo chiều cao dạng "cao 95" (không ghi cm)
+            if ($height === null && preg_match('/(?:cao|chiều\s*cao)\s*[:=]?\s*(\d+(?:[\.,]\d+)?)\b/iu', $lower, $m)) {
+                $val = (float)str_replace(',', '.', $m[1]);
+                if ($val >= 45 && $val <= 165) {
+                    $height = $val;
+                }
+            }
+
+            // Số đo cân nặng có đơn vị kg / ký / cân
+            if ($weight === null && preg_match('/(\d+(?:[\.,]\d+)?)\s*(kg|ky|ký|ki|kí|cân)/iu', $lower, $m)) {
+                $val = (float)str_replace(',', '.', $m[1]);
+                if ($val >= 3 && $val <= 55) {
+                    $weight = $val;
+                }
+            }
+
+            // Số đo cân nặng dạng "nặng 15" (không ghi kg)
+            if ($weight === null && preg_match('/(?:nặng|cân\s*nặng)\s*[:=]?\s*(\d+(?:[\.,]\d+)?)\b/iu', $lower, $m)) {
+                $val = (float)str_replace(',', '.', $m[1]);
+                if ($val >= 3 && $val <= 55) {
+                    $weight = $val;
+                }
+            }
+        }
+
+        return [
+            'height' => $height,
+            'weight' => $weight,
+            'foot'   => $foot,
+        ];
+    }
+
+    /**
+     * Tính size chuẩn xác theo cả chiều cao & cân nặng (luôn lấy size lớn hơn để bé mặc không bị chật)
+     */
+    private static function resolveClothRecommendation(?float $height, ?float $weight, array $sizeCharts): array {
+        $hBand = null;
+        if ($height !== null) {
+            if ($height < 90)       $hBand = 1;
+            elseif ($height <= 100) $hBand = 2;
+            elseif ($height <= 110) $hBand = 3;
+            elseif ($height <= 120) $hBand = 4;
+            else                    $hBand = 5;
+        }
+
+        $wBand = null;
+        if ($weight !== null) {
+            if ($weight <= 12.0)      $wBand = 1;
+            elseif ($weight <= 15.0)  $wBand = 2;
+            elseif ($weight <= 18.0)  $wBand = 3;
+            elseif ($weight <= 22.0)  $wBand = 4;
+            else                      $wBand = 5;
+        }
+
+        $finalBand = 2;
+        $reason = 'theo bảng size chuẩn FashionKids';
+        if ($hBand !== null && $wBand !== null) {
+            if ($wBand > $hBand) {
+                $finalBand = $wBand;
+                $reason = "ưu tiên theo cân nặng {$weight}kg để bé mặc rộng rãi, không chật bụng";
+            } elseif ($hBand > $wBand) {
+                $finalBand = $hBand;
+                $reason = "ưu tiên theo chiều cao {$height}cm để đủ chiều dài váy/áo";
+            } else {
+                $finalBand = $hBand;
+                $reason = "khớp chuẩn cả chiều cao {$height}cm và cân nặng {$weight}kg";
+            }
+        } elseif ($hBand !== null) {
+            $finalBand = $hBand;
+            $reason = "theo chiều cao {$height}cm";
+        } elseif ($wBand !== null) {
+            $finalBand = $wBand;
+            $reason = "theo cân nặng {$weight}kg";
+        }
+
+        // Bám sát tên size trong DB nếu DB có định nghĩa khớp band (1..4)
+        $label = self::CLOTH_SIZE_BANDS[$finalBand]['label'] ?? 'Size 2 (2-3T)';
+        if (!empty($sizeCharts)) {
+            $prefix = 'Size ' . $finalBand;
+            foreach ($sizeCharts as $row) {
+                if (($row['loai_hang'] ?? '') === 'giay_dep') continue;
+                $name = (string)($row['ten_kich_co'] ?? '');
+                if (stripos($name, $prefix) === 0) {
+                    $label = $name;
+                    break;
+                }
+            }
+        }
+
+        $bandInfo = self::CLOTH_SIZE_BANDS[$finalBand];
+        $edgeTip = '';
+        if (($height !== null && $height >= $bandInfo['h_max'] - 1) || ($weight !== null && $weight >= $bandInfo['w_max'] - 0.5)) {
+            if ($finalBand < 5) {
+                $nextLabel = self::CLOTH_SIZE_BANDS[$finalBand + 1]['label'];
+                $edgeTip = "Nếu muốn bé mặc thoải mái lâu dài hơn, Ba Mẹ có thể cân nhắc nhích lên {$nextLabel}.";
+            }
+        }
+
+        return [
+            'band'   => $finalBand,
+            'label'  => $label,
+            'reason' => $reason,
+            'tip'    => $edgeTip,
         ];
     }
 
@@ -53,36 +245,74 @@ class GeminiService {
 
         $chartSummary = self::formatSizeChartsForPrompt($sizeCharts);
         $prodSummary  = self::formatProductsForPrompt($products);
+        $meas         = self::extractMeasurements($userMessage, $history);
 
-        $systemPrompt = implode("\n", [
-            'Bạn là Trợ lý AI Chăm sóc Khách hàng thân thiện của thương hiệu thời trang trẻ em FashionKids (chuyên đồ sợi tre Organic Bamboo kháng khuẩn cho bé 0-6 tuổi).',
-            'QUY TẮC TRẢ LỜI:',
-            '- Trả lời bằng tiếng Việt ấm áp, xưng "Em" và gọi khách là "Ba Mẹ", súc tích (tối đa 4-6 câu hoặc gạch đầu dòng ngắn gọn).',
-            '- CHỈ sử dụng số liệu size và giá sản phẩm có trong dữ liệu cửa hàng bên dưới; không tự bịa sản phẩm không có.',
-            '- Khi Ba Mẹ nêu chiều cao (cm), cân nặng (kg) hoặc chiều dài chân (cm), hãy đối chiếu chính xác BẢNG SIZE chuẩn để gợi ý 1-2 size phù hợp nhất (nếu bé hơi mũm mĩm gợi ý nhích lên 1 size).',
-            '- Mã giảm giá đang mở tại trang Thanh toán: FASHION10 (giảm 10% tối đa 50.000đ cho đơn từ 200.000đ), SOITRE30K (giảm 30.000đ cho đơn từ 250.000đ), FREESHIPFK (hỗ trợ phí vận chuyển tối đa 35.000đ đơn từ 150.000đ).',
-            '',
-            "BẢNG SIZE CHUẨN FASHIONKIDS:\n" . $chartSummary,
-            '',
-            "MỘT SỐ SẢN PHẨM NỔI BẬT TRONG KHO:\n" . $prodSummary,
-        ]);
+        $precomputedNote = '';
+        if ($meas['foot'] !== null) {
+            $shoeSize = self::guessShoeSize($meas['foot'], $sizeCharts);
+            $precomputedNote = "KẾT QUẢ ĐỐI CHIẾU SỐ ĐO HIỆN TẠI CỦA KHÁCH: Dài chân {$meas['foot']}cm => Chọn chính xác {$shoeSize}.";
+        } elseif ($meas['height'] !== null || $meas['weight'] !== null) {
+            $rec = self::resolveClothRecommendation($meas['height'], $meas['weight'], $sizeCharts);
+            $parts = [];
+            if ($meas['height'] !== null) $parts[] = "cao {$meas['height']}cm";
+            if ($meas['weight'] !== null) $parts[] = "nặng {$meas['weight']}kg";
+            $precomputedNote = "KẾT QUẢ ĐỐI CHIẾU SỐ ĐO HIỆN TẠI CỦA KHÁCH (" . implode(', ', $parts) . "): "
+                . "BẮT BUỘC khuyên dùng {$rec['label']} ({$rec['reason']}). " . $rec['tip'];
+        }
 
+        $systemLines = [
+            'Bạn là Trợ lý CSKH của shop thời trang trẻ em FashionKids (đồ sợi tre Organic Bamboo cho bé 0-6 tuổi).',
+            'QUY TẮC BẮT BUỘC:',
+            '1. TRẢ LỜI NGẮN GỌN, ĐÚNG TRỌNG TÂM: Tối đa 2-3 câu ngắn (khoảng 25-55 từ). Đi thẳng vào câu hỏi của khách.',
+            '2. KHÔNG DÙNG MARKDOWN: Tuyệt đối không viết **, *, #, hay ` trong câu trả lời vì khung chat hiển thị văn bản thuần.',
+            '3. KHÔNG QUẢNG CÁO THỪA: Nếu khách chỉ chào hoặc chỉ hỏi size, KHÔNG tự ý liệt kê nhiều sản phẩm hay mã giảm giá; chỉ nhắc sản phẩm/mã giảm giá khi khách hỏi.',
+            '4. TƯ VẤN SIZE CHÍNH XÁC: Luôn dùng cả chiều cao (cm) và cân nặng (kg) theo bảng size bên dưới; nếu 2 chỉ số lệch nhau, luôn lấy size lớn hơn để bé mặc không bị chật. Nếu có mục KẾT QUẢ ĐỐI CHIẾU SỐ ĐO, phải trả lời đúng theo size đã tính đó.',
+            '5. Xưng "Em", gọi khách là "Ba Mẹ", giọng tự nhiên, thân thiện.',
+            '',
+            "BẢNG SIZE CHUẨN FASHIONKIDS (CHIỀU CAO & CÂN NẶNG):\n" . $chartSummary,
+            '',
+            "DANH MỤC SẢN PHẨM ĐANG BÁN (chỉ trích dẫn khi khách hỏi gợi ý/giá):\n" . $prodSummary,
+            'MÃ GIẢM GIÁ (chỉ nhắc khi khách hỏi ưu đãi/thanh toán): FASHION10 (-10% đơn từ 200k), SOITRE30K (-30k đơn từ 250k), FREESHIPFK (hỗ trợ ship tới 35k đơn từ 150k).',
+        ];
+        if ($precomputedNote !== '') {
+            $systemLines[] = '';
+            $systemLines[] = $precomputedNote;
+        }
+        $systemPrompt = implode("\n", $systemLines);
+
+        // Chuẩn hóa lịch sử hội thoại, loại bỏ tin mới bị trùng từ DB và ghép lượt cùng role liên tiếp
         $contents = [];
-        $tailHistory = array_slice($history, -6);
+        $tailHistory = array_slice($history, -8);
+        $trimmedUserMsg = trim($userMessage);
+        if (!empty($tailHistory)) {
+            $lastParsed = self::extractHistoryEntry($tailHistory[count($tailHistory) - 1]);
+            if ($lastParsed && $lastParsed['role'] === 'user' && $lastParsed['text'] === $trimmedUserMsg) {
+                array_pop($tailHistory);
+            }
+        }
         foreach ($tailHistory as $h) {
-            $txt = trim((string)($h['noi_dung_tin_nhan'] ?? ''));
-            if ($txt === '') {
+            $entry = self::extractHistoryEntry($h);
+            if (!$entry) {
                 continue;
             }
-            $role = (($h['nguoi_gui'] ?? '') === 'khach_hang') ? 'user' : 'model';
-            $contents[] = ['role' => $role, 'parts' => [['text' => $txt]]];
+            $lastIdx = count($contents) - 1;
+            if ($lastIdx >= 0 && $contents[$lastIdx]['role'] === $entry['role']) {
+                $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $entry['text'];
+            } else {
+                $contents[] = ['role' => $entry['role'], 'parts' => [['text' => $entry['text']]]];
+            }
         }
-        $contents[] = ['role' => 'user', 'parts' => [['text' => $userMessage]]];
+        $lastIdx = count($contents) - 1;
+        if ($lastIdx >= 0 && $contents[$lastIdx]['role'] === 'user') {
+            $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $trimmedUserMsg;
+        } else {
+            $contents[] = ['role' => 'user', 'parts' => [['text' => $trimmedUserMsg]]];
+        }
 
         foreach ($candidateModels as $model) {
             $genConfig = [
-                'temperature'     => 0.45,
-                'maxOutputTokens' => 1200,
+                'temperature'     => 0.25,
+                'maxOutputTokens' => 280,
             ];
             if (stripos($model, 'flash') !== false) {
                 // Tắt thinking tokens cho model Flash để phản hồi chat nhanh và không bị cắt câu do hao hụt token
@@ -137,87 +367,57 @@ class GeminiService {
         return null;
     }
 
-    private static function buildSmartFallbackReply(string $msg, array $sizeCharts, array $products): string {
+    private static function buildSmartFallbackReply(string $msg, array $history, array $sizeCharts, array $products): string {
         $lower = mb_strtolower($msg, 'UTF-8');
+        $meas = self::extractMeasurements($msg, $history);
+        $height = $meas['height'];
+        $weight = $meas['weight'];
+        $foot   = $meas['foot'];
 
-        // 1. Trích xuất số đo chiều cao / cân nặng / dài chân nếu có
-        $height = null;
-        $weight = null;
-        $foot   = null;
-        if (preg_match('/(\d+(?:[\.,]\d+)?)\s*(cm|xăng|phan)/iu', $lower, $m)) {
-            $val = (float)str_replace(',', '.', $m[1]);
-            if ($val >= 50) {
-                $height = $val;
-            } elseif ($val >= 9 && $val <= 25) {
-                $foot = $val;
-            }
-        }
-        if (preg_match('/(\d+(?:[\.,]\d+)?)\s*(kg|ky|kí|cân)/iu', $lower, $m)) {
-            $weight = (float)str_replace(',', '.', $m[1]);
+        if ($foot !== null && (str_contains($lower, 'chân') || str_contains($lower, 'giày') || str_contains($lower, 'dép') || str_contains($lower, 'size') || $height === null)) {
+            $shoeSize = self::guessShoeSize($foot, $sizeCharts);
+            return "Dạ với chiều dài bàn chân {$foot}cm, Ba Mẹ chọn {$shoeSize} để bé đi êm ái và thoáng mũi chân ạ.";
         }
 
-        if ($height !== null || $weight !== null || $foot !== null || str_contains($lower, 'size') || str_contains($lower, 'kích cỡ')) {
-            if ($foot !== null) {
-                $shoeSize = self::guessShoeSize($foot, $sizeCharts);
-                return "🤖 [Trợ lý FashionKids] Dạ với chiều dài bàn chân bé khoảng {$foot}cm, Ba Mẹ chọn **{$shoeSize}** giúp bé đi êm ái và dư mũi thoáng chân ạ. Ba Mẹ có thể mở Thước Dây Gợi Ý Size ở trang chi tiết sản phẩm để đối chiếu thêm nha!";
-            }
-            $estHeight = $height;
-            if ($estHeight === null && $weight !== null) {
-                if ($weight <= 9)       $estHeight = 72;
-                elseif ($weight <= 12)  $estHeight = 84;
-                elseif ($weight <= 15)  $estHeight = 95;
-                elseif ($weight <= 18)  $estHeight = 105;
-                elseif ($weight <= 22)  $estHeight = 115;
-                else                    $estHeight = 125;
-            }
-            $clothSize = self::guessClothSize($estHeight, $sizeCharts);
+        if ($height !== null || $weight !== null) {
+            $rec = self::resolveClothRecommendation($height, $weight, $sizeCharts);
             $measureText = [];
             if ($height !== null) $measureText[] = "cao {$height}cm";
             if ($weight !== null) $measureText[] = "nặng {$weight}kg";
-            $desc = !empty($measureText) ? ('với bé ' . implode(', ', $measureText)) : 'theo bảng size sợi tre chuẩn của shop';
-            return "🤖 [Trợ lý FashionKids] Dạ {$desc}, em gợi ý Ba Mẹ chọn **{$clothSize}** ạ. Chất vải sợi tre co giãn 4 chiều rất mềm, nếu bé hơi bụ bẫm Ba Mẹ có thể nhích lên 1 size cho bé mặc thoải mái hơn nhé!";
+            $reply = "Dạ với bé " . implode(', ', $measureText) . ", Ba Mẹ chọn {$rec['label']} ({$rec['reason']}) ạ.";
+            if ($rec['tip'] !== '') {
+                $reply .= ' ' . $rec['tip'];
+            }
+            return $reply;
+        }
+
+        if (str_contains($lower, 'size') || str_contains($lower, 'kích cỡ')) {
+            return "Dạ Ba Mẹ cho em xin chiều cao (cm) và cân nặng (kg) của bé để em chọn chuẩn size ngay ạ.";
         }
 
         if (str_contains($lower, 'sợi tre') || str_contains($lower, 'bamboo') || str_contains($lower, 'vải') || str_contains($lower, 'chất')) {
-            return "🌿 [Trợ lý FashionKids] Vải **100% Sợi Tre Organic (Bamboo)** tại FashionKids nổi bật với khả năng kháng khuẩn tự nhiên 75%, thấm hút mồ hôi gấp 2 lần cotton và bề mặt siêu mịn không gây hằn đỏ làn da nhạy cảm của bé sơ sinh - 6 tuổi ạ.";
+            return "Dạ vải 100% Sợi Tre Organic tại FashionKids mềm mịn, thoáng khí, kháng khuẩn 75% và an toàn cho làn da nhạy cảm của bé 0-6 tuổi ạ.";
         }
 
         if (str_contains($lower, 'kol') || str_contains($lower, 'casting') || str_contains($lower, 'siêu sao')) {
-            return "👑 [Trợ lý FashionKids] Chiến dịch **Tuyển KOL Nhí 2026** đang mở nhận hồ sơ trực tuyến! Ba Mẹ chỉ cần đăng nhập và vào mục **Tuyển KOL Nhí** trên thanh menu, tải từ 2-5 ảnh rõ mặt/toàn thân của bé để ứng tuyển (giải thưởng tài trợ đồ sợi tre 1 năm & nâng hạng VIP Kim Cương -15%).";
+            return "Dạ Ba Mẹ đăng nhập và vào mục Tuyển KOL Nhí trên menu để nộp 2-5 ảnh của bé ứng tuyển Đại sứ nhí 2026 ạ.";
         }
 
         if (str_contains($lower, 'mã giảm') || str_contains($lower, 'voucher') || str_contains($lower, 'ship') || str_contains($lower, 'vận chuyển') || str_contains($lower, 'giảm giá')) {
-            return "🏷️ [Trợ lý FashionKids] Tại trang Thanh toán, Ba Mẹ có thể nhập mã **FASHION10** (giảm 10% đơn từ 200k), **SOITRE30K** (giảm 30.000đ đơn từ 250k) hoặc **FREESHIPFK** (hỗ trợ phí ship GHN tới 35.000đ). Hệ thống cũng tự động áp dụng thêm ưu đãi VIP hiện có của Ba Mẹ ạ!";
+            return "Dạ tại trang Thanh toán Ba Mẹ có thể dùng mã FASHION10 (-10% đơn từ 200k), SOITRE30K (-30k đơn từ 250k) hoặc FREESHIPFK (giảm ship tới 35k) ạ.";
         }
 
-        if (!empty($products)) {
-            $first = $products[0];
-            $pName = (string)($first['ten_san_pham'] ?? 'Đầm công chúa sợi tre');
-            $pPrice = number_format((float)($first['gia_ban'] ?? 250000), 0, ',', '.');
-            return "🤖 [Trợ lý FashionKids] Dạ em đã tiếp nhận tin nhắn của Ba Mẹ ạ! Hiện shop đang có mẫu nổi bật **{$pName}** ({$pPrice}đ) làm từ sợi tre kháng khuẩn. Ba Mẹ có thể nhắn chiều cao + cân nặng của bé để em chọn đúng size ngay, hoặc đợi nhân viên CSKH hỗ trợ chi tiết hơn nhé!";
-        }
-
-        return "🤖 [Trợ lý FashionKids] Dạ em đã ghi nhận tin nhắn của Ba Mẹ! Ba Mẹ vui lòng cho em biết chiều cao (cm) & cân nặng (kg) của bé để em tư vấn size chuẩn sợi tre ngay trong 5 giây ạ.";
-    }
-
-    private static function guessClothSize(?float $height, array $sizeCharts): string {
-        if ($height !== null && !empty($sizeCharts)) {
-            foreach ($sizeCharts as $row) {
-                if (($row['loai_hang'] ?? '') === 'giay_dep') continue;
-                $min = (float)($row['chieu_cao_toi_thieu'] ?? 0);
-                $max = (float)($row['chieu_cao_toi_da'] ?? 0);
-                if ($max > 0 && $height >= $min && $height <= $max) {
-                    return (string)($row['ten_kich_co'] ?? 'Size 2 (2-3T)');
+        if (str_contains($lower, 'mẫu') || str_contains($lower, 'váy') || str_contains($lower, 'bộ') || str_contains($lower, 'áo') || str_contains($lower, 'giá')) {
+            if (!empty($products)) {
+                $picks = [];
+                foreach (array_slice($products, 0, 2) as $p) {
+                    $picks[] = ($p['ten_san_pham'] ?? 'Đồ sợi tre') . ' (' . number_format((float)($p['gia_ban'] ?? 250000), 0, ',', '.') . 'đ)';
                 }
+                return "Dạ shop đang sẵn các mẫu nổi bật: " . implode(', ', $picks) . ". Ba Mẹ nhắn thêm chiều cao, cân nặng để em chốt size cho bé nhé!";
             }
         }
-        $h = $height ?? 92;
-        if ($h <= 75) return 'Size 1 (0-1T)';
-        if ($h < 90)  return 'Size 1 (1-2T)';
-        if ($h <= 100) return 'Size 2 (2-3T)';
-        if ($h <= 110) return 'Size 3 (3-4T)';
-        if ($h <= 122) return 'Size 4 (4-5T)';
-        return 'Size 5 (5-6T)';
+
+        return "Dạ em chào Ba Mẹ ạ! Ba Mẹ cần tư vấn mẫu nào hoặc cho em xin chiều cao và cân nặng của bé để em chọn size chuẩn nhé.";
     }
 
     private static function guessShoeSize(float $footCm, array $sizeCharts): string {
@@ -239,25 +439,30 @@ class GeminiService {
     }
 
     private static function formatSizeChartsForPrompt(array $sizeCharts): string {
-        if (empty($sizeCharts)) {
-            return "- Quần áo: Size 1 (70-89cm), Size 2 (90-100cm / 12-15kg), Size 3 (101-110cm / 15-18kg), Size 4 (111-122cm / 18-22kg), Size 5 (123-132cm / 22-26kg)\n- Giày dép: Size 21 (12-12.5cm), Size 22 (13-13.5cm), Size 24 (14-14.9cm), Size 26 (15-15.9cm), Size 28 (16-17cm)";
-        }
-        $lines = [];
-        foreach (array_slice($sizeCharts, 0, 14) as $r) {
-            $sizeName = (string)($r['ten_kich_co'] ?? 'N/A');
+        $lines = [
+            '- Quần áo Size 1 (1-2T): cao 75-89cm, nặng 9-12kg',
+            '- Quần áo Size 2 (2-3T): cao 90-100cm, nặng 12.1-15kg',
+            '- Quần áo Size 3 (3-4T): cao 101-110cm, nặng 15.1-18kg',
+            '- Quần áo Size 4 (4-5T): cao 111-120cm, nặng 18.1-22kg',
+            '- Quần áo Size 5 (5-6T): cao 121-132cm, nặng 22.1-26kg',
+        ];
+        $shoeLines = [];
+        foreach ($sizeCharts as $r) {
             if (($r['loai_hang'] ?? '') === 'giay_dep') {
-                $minFoot = $r['chieu_dai_chan_toi_thieu'] ?? '?';
-                $maxFoot = $r['chieu_dai_chan_toi_da'] ?? '?';
-                $lines[] = "- Giày {$sizeName}: dài chân {$minFoot}-{$maxFoot}cm";
-            } else {
-                $minH = $r['chieu_cao_toi_thieu'] ?? $r['chieu_cao_tu'] ?? $r['chieu_cao_min'] ?? '?';
-                $maxH = $r['chieu_cao_toi_da'] ?? $r['chieu_cao_den'] ?? $r['chieu_cao_max'] ?? '?';
-                $minC = $r['vong_nguc_toi_thieu'] ?? '?';
-                $maxC = $r['vong_nguc_toi_da'] ?? '?';
-                $lines[] = "- Quần áo {$sizeName}: cao {$minH}-{$maxH}cm, ngực {$minC}-{$maxC}cm";
+                $sizeName = (string)($r['ten_kich_co'] ?? 'N/A');
+                $minFoot  = $r['chieu_dai_chan_toi_thieu'] ?? '?';
+                $maxFoot  = $r['chieu_dai_chan_toi_da'] ?? '?';
+                $shoeLines[] = "- Giày {$sizeName}: dài chân {$minFoot}-{$maxFoot}cm";
             }
         }
-        return implode("\n", $lines);
+        if (empty($shoeLines)) {
+            $shoeLines = [
+                '- Giày Size 24: dài chân 14.0-14.9cm',
+                '- Giày Size 26: dài chân 15.0-15.9cm',
+                '- Giày Size 28: dài chân 16.0-16.9cm',
+            ];
+        }
+        return implode("\n", array_merge($lines, $shoeLines));
     }
 
     private static function formatProductsForPrompt(array $products): string {
@@ -269,8 +474,7 @@ class GeminiService {
             $name  = (string)($p['ten_san_pham'] ?? '');
             $price = number_format((float)($p['gia_ban'] ?? 0), 0, ',', '.');
             $stock = (int)($p['so_luong_ton_kho'] ?? 0);
-            $mat   = mb_substr(strip_tags((string)($p['mo_ta_chat_lieu'] ?? 'Sợi tre Organic')), 0, 80);
-            $lines[] = "- {$name}: {$price}đ (Còn {$stock} sp) - {$mat}";
+            $lines[] = "- {$name}: {$price}đ (Còn {$stock} sp)";
         }
         return implode("\n", $lines);
     }

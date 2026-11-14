@@ -1521,6 +1521,20 @@ class RealtimeContentModel extends BaseModel {
      * PHÂN HỆ 3: LỊCH SỰ KIỆN & TUYỂN CHỌN KOL NHÍ (lnkt_dang_ky_kol_nhi)
      * ========================================================================
      */
+    /**
+     * Gắn tham số phiên bản ?v=<mtime> cho đường dẫn ảnh nội bộ để trình duyệt tự bỏ cache lỗi cũ
+     */
+    public function versionedLocalUrl(string $url): string {
+        $url = trim($url);
+        if ($url === '' || preg_match('#^https?://#i', $url) || strpos($url, '?') !== false) {
+            return $url;
+        }
+        $rel = preg_replace('#^/?FashionKids/#i', '', ltrim($url, '/'));
+        $diskPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+        $ver = @filemtime($diskPath) ?: '20261114';
+        return '/FashionKids/' . $rel . '?v=' . $ver;
+    }
+
     private function resolveKolImages(?string $danhSachAnhJson, int $id, string $gender, array $defaultMap): array {
         $resolved = [];
         $baseDir = dirname(__DIR__);
@@ -1539,7 +1553,7 @@ class RealtimeContentModel extends BaseModel {
                     $rel = preg_replace('#^/?FashionKids/#i', '', ltrim($p, '/'));
                     $diskPath = $baseDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
                     if (is_file($diskPath)) {
-                        $resolved[] = '/FashionKids/' . $rel;
+                        $resolved[] = $this->versionedLocalUrl('/FashionKids/' . $rel);
                     }
                 }
             }
@@ -1548,13 +1562,15 @@ class RealtimeContentModel extends BaseModel {
             return $resolved;
         }
         if (!empty($defaultMap[$id]['image'])) {
-            return [$defaultMap[$id]['image']];
+            return [$this->versionedLocalUrl($defaultMap[$id]['image'])];
         }
         return [
-            $gender === 'be_trai'
-                ? '/FashionKids/images/kol/kol-minh-khoi-bo.jpg'
-                : '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg',
-            '/FashionKids/images/kol/kol-casting-studio-demo.jpg'
+            $this->versionedLocalUrl(
+                $gender === 'be_trai'
+                    ? '/FashionKids/images/kol/kol-minh-khoi-bo.jpg'
+                    : '/FashionKids/images/kol/kol-thien-than-hoa-cuc.jpg'
+            ),
+            $this->versionedLocalUrl('/FashionKids/images/kol/kol-casting-studio-demo.jpg')
         ];
     }
 
@@ -1865,6 +1881,8 @@ class RealtimeContentModel extends BaseModel {
         // Bổ sung các hồ sơ mẫu nếu DB chưa có
         foreach ($defaults as $defId => $defItem) {
             if (!isset($ordered[$defId])) {
+                $defItem['image'] = $this->versionedLocalUrl($defItem['image'] ?? '');
+                $defItem['photos'] = array_map([$this, 'versionedLocalUrl'], $defItem['photos'] ?? []);
                 $ordered[$defId] = $defItem;
             }
         }

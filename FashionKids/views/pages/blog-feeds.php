@@ -233,7 +233,7 @@ foreach ($articles as $a) {
                                         <img src="<?= htmlspecialchars($kol['image']) ?>"
                                              alt="<?= htmlspecialchars($kol['baby_name']) ?>"
                                              class="fk-kol-mini-photo"
-                                             onerror="this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
+                                             onerror="if(!this.dataset.fkRetried){this.dataset.fkRetried='1';var u=this.src;this.src=u+(u.indexOf('?')>=0?'&':'?')+'retry=1';return;}this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
                                         <span class="badge <?= $stInfo[1] ?> fk-kol-mini-badge"><?= $stInfo[0] ?></span>
                                         <span class="fk-kol-age-chip">
                                             <?= htmlspecialchars($kol['age_label']) ?> • <?= (int)($kol['height_cm'] ?? 95) ?>cm
