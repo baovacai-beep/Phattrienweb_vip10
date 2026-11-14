@@ -4682,9 +4682,35 @@ $(document).ready(function () {
         return ep ? ep : '/FashionKids/index.php';
     }
 
-    function fkRenderClientChatList(messages) {
+    function fkBuildChatSignature(messages, prefix) {
+        if (!Array.isArray(messages)) return String(prefix || '') + '|0';
+        let last = messages.length ? messages[messages.length - 1] : null;
+        return [
+            String(prefix || ''),
+            messages.length,
+            last ? String(last.id || '') : '',
+            last ? String(last.sender || '') : '',
+            last ? String((last.content || '').length) : ''
+        ].join('|');
+    }
+
+    function fkIsNearBottom(el) {
+        if (!el) return true;
+        return (el.scrollHeight - el.scrollTop - el.clientHeight) <= 80;
+    }
+
+    function fkRenderClientChatList(messages, forceScroll) {
         let $area = $('#fk_clientChatMessagesArea');
         if (!$area.length || !Array.isArray(messages)) return;
+        let areaEl = $area[0];
+        let sig = fkBuildChatSignature(messages, $area.attr('data-session-id') || 'client');
+        let prevSig = $area.data('fkMsgSig');
+        if (prevSig === sig && !forceScroll) {
+            return;
+        }
+        let prevScrollTop = areaEl.scrollTop;
+        let shouldStickBottom = Boolean(forceScroll) || prevSig === undefined || fkIsNearBottom(areaEl);
+
         let html = '';
         if (messages.length === 0) {
             html =
@@ -4699,7 +4725,7 @@ $(document).ready(function () {
                     html +=
                         '<div class="d-flex justify-content-end mb-3">' +
                             '<div class="p-3 small shadow-sm chat-bubble-sent">' +
-                                '<div>' + fkEsc(m.content) + '</div>' +
+                                '<div style="white-space: pre-line;">' + fkEsc(m.content) + '</div>' +
                                 (m.time ? '<div class="small text-light opacity-75 mt-1" style="font-size:0.7rem;">Bạn • ' + fkEsc(m.time) + '</div>' : '') +
                             '</div>' +
                         '</div>';
@@ -4708,19 +4734,34 @@ $(document).ready(function () {
                         '<div class="d-flex mb-3">' +
                             '<div class="p-3 bg-white text-slate small shadow-sm chat-bubble-received">' +
                                 '<div class="small font-weight-bold text-peach mb-1" style="font-size:0.72rem;"><i class="fa-solid fa-headset mr-1"></i>FashionKids CSKH' + (m.time ? ' • ' + fkEsc(m.time) : '') + '</div>' +
-                                '<div>' + fkEsc(m.content) + '</div>' +
+                                '<div style="white-space: pre-line;">' + fkEsc(m.content) + '</div>' +
                             '</div>' +
                         '</div>';
                 }
             });
         }
+        $area.data('fkMsgSig', sig);
         $area.html(html);
-        $area.scrollTop($area[0].scrollHeight);
+        if (shouldStickBottom) {
+            areaEl.scrollTop = areaEl.scrollHeight;
+        } else {
+            areaEl.scrollTop = prevScrollTop;
+        }
     }
 
-    function fkRenderStaffChatList(messages) {
+    function fkRenderStaffChatList(messages, forceScroll) {
         let $box = $('#fk_staffChatMessagesBox');
         if (!$box.length || !Array.isArray(messages)) return;
+        let boxEl = $box[0];
+        let activeSid = $('#fk_staffCurrentSessionId').val() || 'staff';
+        let sig = fkBuildChatSignature(messages, activeSid);
+        let prevSig = $box.data('fkMsgSig');
+        if (prevSig === sig && !forceScroll) {
+            return;
+        }
+        let prevScrollTop = boxEl.scrollTop;
+        let shouldStickBottom = Boolean(forceScroll) || prevSig === undefined || fkIsNearBottom(boxEl);
+
         let html = '';
         if (messages.length === 0) {
             html =
@@ -4735,7 +4776,7 @@ $(document).ready(function () {
                         '<div class="d-flex mb-3">' +
                             '<div class="p-3 bg-white text-slate shadow-sm chat-bubble-received border">' +
                                 '<div class="small font-weight-bold text-peach mb-1"><i class="fa-solid fa-user mr-1"></i>Phụ huynh • ' + fkEsc(m.time || '') + '</div>' +
-                                '<div>' + fkEsc(m.content) + '</div>' +
+                                '<div style="white-space: pre-line;">' + fkEsc(m.content) + '</div>' +
                             '</div>' +
                         '</div>';
                 } else {
@@ -4743,19 +4784,32 @@ $(document).ready(function () {
                         '<div class="d-flex justify-content-end mb-3">' +
                             '<div class="p-3 shadow-sm chat-bubble-sent">' +
                                 '<div class="small text-light mb-1"><i class="fa-solid fa-headset mr-1"></i>Chuyên viên CSKH • ' + fkEsc(m.time || '') + '</div>' +
-                                '<div>' + fkEsc(m.content) + '</div>' +
+                                '<div style="white-space: pre-line;">' + fkEsc(m.content) + '</div>' +
                             '</div>' +
                         '</div>';
                 }
             });
         }
+        $box.data('fkMsgSig', sig);
         $box.html(html);
-        $box.scrollTop($box[0].scrollHeight);
+        if (shouldStickBottom) {
+            boxEl.scrollTop = boxEl.scrollHeight;
+        } else {
+            boxEl.scrollTop = prevScrollTop;
+        }
     }
 
     function fkRenderStaffSessionList(sessions, activeSessionId) {
         let $list = $('#fk_staffSessionList');
         if (!$list.length || !Array.isArray(sessions)) return;
+        let listSig = String(activeSessionId || '') + '|' + sessions.map(function (s) {
+            return [s.session_id, s.unread || 0, s.last_time || '', (s.last_message || '').length].join(':');
+        }).join(',');
+        if ($list.data('fkSessSig') === listSig) {
+            return;
+        }
+        $list.data('fkSessSig', listSig);
+        let prevListScroll = $list[0].scrollTop;
         if ($('#fk_staffSessionCount').length) {
             $('#fk_staffSessionCount').text(sessions.length);
         }
@@ -4784,6 +4838,7 @@ $(document).ready(function () {
                 '</a>';
         });
         $list.html(html);
+        $list[0].scrollTop = prevListScroll;
     }
 
     window.fkSendQuickClientChat = function (questionText) {
@@ -4811,12 +4866,12 @@ $(document).ready(function () {
             },
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
-                    fkRenderClientChatList(res.messages);
+                    fkRenderClientChatList(res.messages, true);
                     if ($('#fk_staff_chat_section').length && Array.isArray(res.sessions)) {
                         let curStaffSid = $('#fk_staffCurrentSessionId').val() || sessionId;
                         fkRenderStaffSessionList(res.sessions, curStaffSid);
                         if (curStaffSid === sessionId) {
-                            fkRenderStaffChatList(res.messages);
+                            fkRenderStaffChatList(res.messages, true);
                         }
                     }
                 }
@@ -4852,12 +4907,12 @@ $(document).ready(function () {
             },
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
-                    fkRenderStaffChatList(res.messages);
+                    fkRenderStaffChatList(res.messages, true);
                     if (Array.isArray(res.sessions)) {
                         fkRenderStaffSessionList(res.sessions, sessionId);
                     }
                     if ($('#customerChatWidget').hasClass('show') && $('#fk_clientChatMessagesArea').attr('data-session-id') === sessionId) {
-                        fkRenderClientChatList(res.messages);
+                        fkRenderClientChatList(res.messages, true);
                     }
                 } else if (res && res.message && $errBox.length) {
                     $errBox.removeClass('d-none').text(res.message);
@@ -4894,7 +4949,7 @@ $(document).ready(function () {
             data: { session_id: sessionId },
             success: function (res) {
                 if (res && res.status === 'success' && Array.isArray(res.messages)) {
-                    fkRenderStaffChatList(res.messages);
+                    fkRenderStaffChatList(res.messages, true);
                     if (Array.isArray(res.sessions)) {
                         fkRenderStaffSessionList(res.sessions, sessionId);
                     }

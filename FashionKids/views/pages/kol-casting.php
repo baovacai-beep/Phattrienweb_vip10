@@ -475,7 +475,7 @@ $lnkt_kol_stars = [
                     <a href="/FashionKids/views/pages/kol-stars.php?kol_id=<?= (int)($star['id'] ?? 0) ?>&amp;kol_name=<?= urlencode($star['name']) ?>" class="text-decoration-none d-block mb-3">
                         <div class="p-3 rounded bg-milk-cream border d-flex align-items-start">
                             <span class="lbn-inv-thumb fk-kol-star-thumb mr-3 flex-shrink-0">
-                                <img src="<?= htmlspecialchars($star['image']) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img" onerror="this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
+                                <img src="<?= htmlspecialchars($rtKolModel->versionedLocalUrl($star['image'])) ?>" alt="<?= htmlspecialchars($star['name']) ?>" class="lbn-thumb-img" onerror="if(!this.dataset.fkRetried){this.dataset.fkRetried='1';var u=this.src;this.src=u+(u.indexOf('?')>=0?'&':'?')+'retry=1';return;}this.onerror=null;this.src='/FashionKids/images/kol/kol-bao-sam.jpg';">
                             </span>
                             <div class="min-w-0 flex-grow-1">
                                 <div class="d-flex flex-wrap align-items-center fk-card-header-row mb-1">
